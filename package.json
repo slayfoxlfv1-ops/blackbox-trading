@@ -2,5 +2,6 @@
   "name": "blackbox-trading",
   "version": "1.0.0",
   "description": "BlackBox Trading Journal",
+  "type": "module",
   "engines": { "node": "22.x" }
 }
