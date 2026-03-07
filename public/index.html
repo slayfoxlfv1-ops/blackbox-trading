@@ -2360,23 +2360,39 @@ function buildMindView(trades) {
     }
   }
 
-  // Loss streaks
-  var maxStreak = 0, curStreak = 0, streakAlerts = [];
+  // ── Advanced streak tracking ──
+  var maxLossStreak = 0, maxWinStreak = 0;
+  var curLoss = 0, curWin = 0;
+  var streakAlerts = [];
+  var allStreaks = []; // [{type,len,trades}]
+  var curStreakTrades = [];
+
   sortedTrades.forEach(function(t) {
-    if ((t.pnl||0) < 0) {
-      curStreak++;
-      if (curStreak >= 3) streakAlerts.push(t);
+    var won = (t.pnl||0) > 0;
+    if (won) {
+      if (curLoss > 0) { allStreaks.push({type:'loss',len:curLoss}); curLoss=0; curStreakTrades=[]; }
+      curWin++;
+      curStreakTrades.push(t);
+      if (curWin > maxWinStreak) maxWinStreak = curWin;
+      if (curWin >= 3) streakAlerts.push({type:'win',trade:t,streak:curWin});
     } else {
-      if (curStreak > maxStreak) maxStreak = curStreak;
-      curStreak = 0;
+      if (curWin > 0) { allStreaks.push({type:'win',len:curWin}); curWin=0; curStreakTrades=[]; }
+      curLoss++;
+      curStreakTrades.push(t);
+      if (curLoss > maxLossStreak) maxLossStreak = curLoss;
+      if (curLoss >= 3) streakAlerts.push({type:'loss',trade:t,streak:curLoss});
     }
   });
-  if (curStreak > maxStreak) maxStreak = curStreak;
+  if (curLoss > 0) allStreaks.push({type:'loss',len:curLoss});
+  if (curWin  > 0) allStreaks.push({type:'win', len:curWin});
+  var maxStreak = maxLossStreak; // backward compat
 
-  // Current streak
-  var currentLossStreak = 0;
+  // Current streak (from most recent)
+  var currentLossStreak = 0, currentWinStreak = 0;
   for (var j = sortedTrades.length-1; j >= 0; j--) {
-    if ((sortedTrades[j].pnl||0) < 0) currentLossStreak++;
+    var _p = (sortedTrades[j].pnl||0);
+    if (_p < 0) { if (currentWinStreak===0) currentLossStreak++; else break; }
+    else if (_p > 0) { if (currentLossStreak===0) currentWinStreak++; else break; }
     else break;
   }
 
@@ -2442,21 +2458,9 @@ function buildMindView(trades) {
 
   // Revenge + streak card
   html += '<div class="panel" style="padding:20px">'
-    + '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px">Alertas psicológicas</div>'
-    + '<div style="display:flex;flex-direction:column;gap:10px">'
-    + '<div style="display:flex;justify-content:space-between;align-items:center">'
-    + '<span style="font-size:11px;color:var(--text2)">Revenge trades</span>'
-    + '<span style="font-size:16px;font-weight:700;color:'+(revengeTrades.length>0?'var(--red)':'var(--green)')+'">'+revengeTrades.length+'</span></div>'
-    + '<div style="display:flex;justify-content:space-between;align-items:center">'
-    + '<span style="font-size:11px;color:var(--text2)">Racha máx pérdida</span>'
-    + '<span style="font-size:16px;font-weight:700;color:'+(maxStreak>=3?'var(--red)':maxStreak>=2?'var(--amber)':'var(--green)')+'">'+maxStreak+'</span></div>'
-    + '<div style="display:flex;justify-content:space-between;align-items:center">'
-    + '<span style="font-size:11px;color:var(--text2)">Racha actual pérdida</span>'
-    + '<span style="font-size:16px;font-weight:700;color:'+(currentLossStreak>=2?'var(--red)':currentLossStreak>=1?'var(--amber)':'var(--green)')+'">'+currentLossStreak+'</span></div>'
-    + '<div style="display:flex;justify-content:space-between;align-items:center">'
-    + '<span style="font-size:11px;color:var(--text2)">% Clean trades</span>'
-    + '<span style="font-size:16px;font-weight:700;color:'+(cleanPct>=60?'var(--green)':cleanPct>=40?'var(--amber)':'var(--red)')+'">'+cleanPct+'%</span></div>'
-    + '</div></div>';
+    + '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px">Streaks & Alertas</div>'    + '<div style="display:flex;flex-direction:column;gap:0">'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'    + '<span style="font-size:11px;color:var(--text2)">Racha wins actual</span>'    + '<span style="font-size:16px;font-weight:700;color:'+(currentWinStreak>=3?'var(--green)':currentWinStreak>=1?'var(--text)':'var(--text3)')+'">'+currentWinStreak+'</span></div>'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'    + '<span style="font-size:11px;color:var(--text2)">Racha pérdidas actual</span>'    + '<span style="font-size:16px;font-weight:700;color:'+(currentLossStreak>=2?'var(--red)':currentLossStreak>=1?'var(--amber)':'var(--text3)')+'">'+currentLossStreak+'</span></div>'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'    + '<span style="font-size:11px;color:var(--text2)">Hot streak máx <span style="font-size:9px;color:var(--text3)">(wins seguidos)</span></span>'    + '<span style="font-size:16px;font-weight:700;color:var(--green)">'+maxWinStreak+'</span></div>'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'    + '<span style="font-size:11px;color:var(--text2)">Racha pérdidas máx</span>'    + '<span style="font-size:16px;font-weight:700;color:'+(maxLossStreak>=4?'var(--red)':maxLossStreak>=2?'var(--amber)':'var(--text)')+'">'+maxLossStreak+'</span></div>'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'    + '<span style="font-size:11px;color:var(--text2)">Revenge trades</span>'    + '<span style="font-size:16px;font-weight:700;color:'+(revengeTrades.length>0?'var(--red)':'var(--green)')+'">'+revengeTrades.length+'</span></div>'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0">'    + '<span style="font-size:11px;color:var(--text2)">% Clean trades</span>'    + '<span style="font-size:16px;font-weight:700;color:'+(cleanPct>=60?'var(--green)':cleanPct>=40?'var(--amber)':'var(--red)')+'">'+cleanPct+'%</span></div>'    + (currentWinStreak>=4 ? '<div style="background:var(--green-bg);border:1px solid var(--green-bd);border-left:3px solid var(--green);border-radius:7px;padding:9px 12px;margin-top:8px;font-size:10px;color:var(--text2);line-height:1.5">🔥 <strong>Hot streak de '+currentWinStreak+' wins.</strong> Cuidado con el exceso de confianza — es cuando más errores se cometen por sobre-dimensionar posiciones.</div>' : '')    + '</div></div>';
+
+  html += '</div>'; // end row 1
 
   html += '</div>'; // end row 1
 
