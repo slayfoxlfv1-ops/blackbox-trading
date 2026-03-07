@@ -610,7 +610,7 @@ const SUPABASE_URL = 'https://qljuusxpzsiqxnpfpdgg.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFsanV1c3hwenNpcXhucGZwZGdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1OTQ5NzUsImV4cCI6MjA4ODE3MDk3NX0.rUEwuG4zFE_EpAM4s3hWqVF81xiW9q_MSwQKKXYZmlk';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let currentUser = null, accounts = [], currentAccountId = null, currentTrades = [], currentChecklistSessions = [], currentView = 'overview', authTab = 'login', editingTradeId = null;
+let currentUser = null, accounts = [], currentAccountId = null, currentTrades = [], currentChecklistSessions = [], currentMoodSessions = [], currentView = 'overview', authTab = 'login', editingTradeId = null;
 let tlFilters = { date:'', ticker:'', result:'all' };
 let repFilters = { period:'month', result:'all', ticker:'', dateFrom:'', dateTo:'' };
 let coachAnalysis = null, coachLoading = false;
@@ -1139,6 +1139,14 @@ async function loadAccountData(id) {
     .order('session_date', { ascending: false })
     .limit(60);
   currentChecklistSessions = (clRes.data || []);
+
+  // Load all mood sessions for psychological analysis (last 90 days)
+  var moodAllRes = await sb.from('mood_sessions')
+    .select('answers,score,level,session_date')
+    .eq('account_id', id)
+    .order('session_date', { ascending: false })
+    .limit(90);
+  currentMoodSessions = (moodAllRes.data || []);
 
   // Sync checklist items from Supabase → bbStore (so offline also works)
   var clItemsRes = await sb.from('checklist_items')
@@ -1705,6 +1713,76 @@ function buildOnboardingScreen(acc) {
     + '<div style="font-size:16px;margin-bottom:6px">⚖️</div><div style="font-size:10px;font-weight:600;color:var(--text)">Define tus reglas</div><div style="font-size:9px;color:var(--text3);margin-top:2px">Daily loss limit, max drawdown</div></div>'
     + '</div></div>'
     + '</div>';
+}
+
+
+// ══════════════════════════════════════════════════════════════
+// DISCIPLINE STREAKS
+// ══════════════════════════════════════════════════════════════
+function calcDisciplineStreaks(trades, clSessions) {
+  // Sort trades by date ascending
+  var sorted = trades.slice().sort(function(a,b){
+    return new Date(a.entry_time||0) - new Date(b.entry_time||0);
+  });
+
+  // Get unique trading days
+  var tradingDays = [];
+  var seen = {};
+  sorted.forEach(function(t) {
+    if (!t.entry_time) return;
+    var d = t.entry_time.slice(0,10);
+    if (!seen[d]) { seen[d] = true; tradingDays.push(d); }
+  });
+
+  // ── Streak 1: Days without revenge trading ──
+  function isRevengeDay(date) {
+    var dayTrades = sorted.filter(function(t){ return t.entry_time && t.entry_time.slice(0,10)===date; });
+    // Revenge = trade taken within 3min of a loss, OR discipline_tag impulse/fomo after a loss
+    for (var i=1; i<dayTrades.length; i++) {
+      var prev = dayTrades[i-1], curr = dayTrades[i];
+      if ((prev.pnl||0)<0) {
+        var gap = (new Date(curr.entry_time)-new Date(prev.exit_time||prev.entry_time))/60000;
+        if (gap < 5) return true;
+        if (curr.discipline_tag==='impulse' || curr.discipline_tag==='fomo') return true;
+      }
+    }
+    return false;
+  }
+
+  var noRevengeStreak=0, noRevengeBest=0, tempRevenge=0;
+  tradingDays.forEach(function(d) {
+    if (!isRevengeDay(d)) { tempRevenge++; noRevengeBest=Math.max(noRevengeBest,tempRevenge); }
+    else { tempRevenge=0; }
+  });
+  noRevengeStreak = tempRevenge;
+
+  // ── Streak 2: Days with checklist >= 80% ──
+  var checklistStreak=0, checklistBest=0, tempCl=0;
+  tradingDays.forEach(function(d) {
+    var s = (clSessions||[]).find(function(cs){ return cs.session_date===d; });
+    if (s && s.score_pct >= 80) { tempCl++; checklistBest=Math.max(checklistBest,tempCl); }
+    else { tempCl=0; }
+  });
+  checklistStreak = tempCl;
+
+  // ── Streak 3: Clean trade days (no discipline errors) ──
+  function isCleanDay(date) {
+    var dayTrades = sorted.filter(function(t){ return t.entry_time && t.entry_time.slice(0,10)===date; });
+    return dayTrades.every(function(t){ return (t.discipline_tag||'clean')==='clean' && !t.moved_sl && !t.scaled_in_loss; });
+  }
+
+  var cleanStreak=0, cleanBest=0, tempClean=0;
+  tradingDays.forEach(function(d) {
+    if (isCleanDay(d)) { tempClean++; cleanBest=Math.max(cleanBest,tempClean); }
+    else { tempClean=0; }
+  });
+  cleanStreak = tempClean;
+
+  return [
+    { emoji:'🧱', label:'Sin Revenge Trading', desc:'Días seguidos sin trades impulsivos post-pérdida', current:noRevengeStreak, goal:5, best:noRevengeBest },
+    { emoji:'📋', label:'Checklist ≥80%',       desc:'Días seguidos completando el checklist correctamente', current:checklistStreak, goal:7, best:checklistBest },
+    { emoji:'✨', label:'Días Limpios',          desc:'Días seguidos sin errores de disciplina', current:cleanStreak, goal:10, best:cleanBest }
+  ];
 }
 
 // CALENDAR BUILD
@@ -2680,7 +2758,90 @@ function renderOperativaTab(el) {
     '<div class="panel"><div class="panel-head"><span class="panel-title">Violation Breakdown</span></div>'+
     [['ok','Clean trades',disc.counts.clean],['warn','Moved SL',disc.counts.moved_sl],['bad','Scaled into loss',disc.counts.scaled_in],['bad','Impulse',disc.counts.impulse],['bad','No confirmation',disc.counts.no_confirmation],['warn','Overtrading',disc.counts.overtrading],['bad','FOMO',disc.counts.fomo]].map(function(r){
       return '<div class="disc-row"><div class="d-dot '+r[0]+'"></div><div class="d-desc">'+r[1]+'</div><div class="d-val">'+r[2]+'</div></div>';
-    }).join('')+'</div>';
+    }).join('')+'</div>' +
+
+    // ── Checklist Items vs Trade Outcome ──
+    (function() {
+      var items = []; try { items = JSON.parse(bbStore.get('checklist_' + currentAccountId) || '[]'); } catch(e) {}
+      var clSessions = currentChecklistSessions || [];
+      if (!items.length || !clSessions.length) return '';
+
+      // For each checklist item, find days when it was marked vs not marked, compare P&L
+      var itemStats = items.map(function(itemText, idx) {
+        var itemKey = 'item_' + idx;
+        var markedDays = [], unmarkedDays = [];
+        clSessions.forEach(function(s) {
+          if (!s.items) return;
+          var checked = s.items[itemKey];
+          // Get trades that day
+          var dayTrades = trades.filter(function(t){ return t.entry_time && t.entry_time.slice(0,10) === s.session_date; });
+          if (!dayTrades.length) return;
+          var dayPnl = dayTrades.reduce(function(sum,t){return sum+(t.pnl||0);},0);
+          var dayWins = dayTrades.filter(function(t){return (t.pnl||0)>0;}).length;
+          var dayWr = Math.round(dayWins/dayTrades.length*100);
+          if (checked) markedDays.push({pnl:dayPnl, wr:dayWr, count:dayTrades.length});
+          else         unmarkedDays.push({pnl:dayPnl, wr:dayWr, count:dayTrades.length});
+        });
+
+        if (markedDays.length < 2 || unmarkedDays.length < 2) return null;
+
+        var avgMarkedPnl   = Math.round(markedDays.reduce(function(s,d){return s+d.pnl;},0)/markedDays.length);
+        var avgUnmarkedPnl = Math.round(unmarkedDays.reduce(function(s,d){return s+d.pnl;},0)/unmarkedDays.length);
+        var avgMarkedWr    = Math.round(markedDays.reduce(function(s,d){return s+d.wr;},0)/markedDays.length);
+        var avgUnmarkedWr  = Math.round(unmarkedDays.reduce(function(s,d){return s+d.wr;},0)/unmarkedDays.length);
+        var impact = avgMarkedPnl - avgUnmarkedPnl;
+
+        return {
+          text:         itemText,
+          markedDays:   markedDays.length,
+          unmarkedDays: unmarkedDays.length,
+          avgMarkedPnl:   avgMarkedPnl,
+          avgUnmarkedPnl: avgUnmarkedPnl,
+          avgMarkedWr:    avgMarkedWr,
+          avgUnmarkedWr:  avgUnmarkedWr,
+          impact: impact,
+          matters: Math.abs(impact) > 30
+        };
+      }).filter(Boolean);
+
+      if (!itemStats.length) return '';
+
+      itemStats.sort(function(a,b){return Math.abs(b.impact)-Math.abs(a.impact);});
+
+      var worst = itemStats.filter(function(s){return s.impact > 30;})[0];
+      var insightHtml = worst
+        ? '<div style="margin-bottom:14px;padding:10px 14px;border-radius:8px;background:var(--red-bg);border:1px solid var(--red-bd);font-size:10px;color:var(--text2);line-height:1.6">'
+          + '<strong style="color:var(--red)">⚠ Item más crítico:</strong> Cuando NO marcas <em>"'+worst.text+'"</em>, tu P&L diario promedio baja $'+Math.abs(worst.impact)+' y tu WR cae de '+worst.avgMarkedWr+'% a '+worst.avgUnmarkedWr+'%.'
+          + '</div>'
+        : '';
+
+      var rows = itemStats.map(function(s) {
+        var mClr = s.avgMarkedPnl   >= 0 ? 'var(--green)' : 'var(--red)';
+        var uClr = s.avgUnmarkedPnl >= 0 ? 'var(--green)' : 'var(--red)';
+        var tag  = s.impact > 30
+          ? '<span style="font-size:8px;padding:2px 7px;border-radius:9px;background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd)">crítico</span>'
+          : s.impact > 0
+            ? '<span style="font-size:8px;padding:2px 7px;border-radius:9px;background:var(--green-bg);color:var(--green);border:1px solid var(--green-bd)">ayuda</span>'
+            : '<span style="font-size:8px;padding:2px 7px;border-radius:9px;background:var(--surface2);color:var(--text3)">neutro</span>';
+        return '<div style="display:grid;grid-template-columns:1fr auto auto auto;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)">'
+          + '<div style="font-size:9px;color:var(--text)">' + s.text + '</div>'
+          + '<div style="text-align:right"><div style="font-size:8px;color:var(--text3)">✓ marcado ('+s.markedDays+'d)</div><div style="font-size:10px;font-weight:700;color:'+mClr+'">'+(s.avgMarkedPnl>=0?'+':'')+s.avgMarkedPnl+' · '+s.avgMarkedWr+'% WR</div></div>'
+          + '<div style="text-align:right"><div style="font-size:8px;color:var(--text3)">✗ omitido ('+s.unmarkedDays+'d)</div><div style="font-size:10px;font-weight:700;color:'+uClr+'">'+(s.avgUnmarkedPnl>=0?'+':'')+s.avgUnmarkedPnl+' · '+s.avgUnmarkedWr+'% WR</div></div>'
+          + '<div>'+tag+'</div>'
+          + '</div>';
+      }).join('');
+
+      return '<div class="panel" style="margin-top:12px">'
+        + '<div class="panel-head"><span class="panel-title">Checklist Item Impact</span><span class="panel-cap" style="color:var(--text3)">Qué items realmente importan</span></div>'
+        + '<div style="padding:14px 18px">'
+        + insightHtml
+        + '<div style="display:grid;grid-template-columns:1fr auto auto auto;gap:10px;padding:0 0 6px;border-bottom:1px solid var(--border2)">'
+        + ['Item del checklist','✓ Cuando marcas','✗ Cuando omites',''].map(function(h){return '<div style="font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">'+h+'</div>';}).join('')
+        + '</div>'
+        + rows
+        + '</div></div>';
+    })();
+
 }
 
 // COACH TAB
@@ -3458,6 +3619,127 @@ function buildMindView(trades) {
         : '')
 
       + '</div>';
+  })();
+
+
+  // ── ROW 7: Mood Factors vs P&L Analysis ──
+  (function() {
+    var moodSessions = currentMoodSessions || [];
+    var allTrades = currentTrades || [];
+    if (moodSessions.length < 3) return;
+
+    // Build daily trade map
+    var dailyPnl = {}, dailyWins = {}, dailyCount = {};
+    allTrades.forEach(function(t) {
+      if (!t.entry_time) return;
+      var d = t.entry_time.slice(0,10);
+      dailyPnl[d]   = (dailyPnl[d]||0) + (t.pnl||0);
+      dailyCount[d] = (dailyCount[d]||0) + 1;
+      if ((t.pnl||0) > 0) dailyWins[d] = (dailyWins[d]||0) + 1;
+    });
+
+    var factors = [
+      { id:'sleep',    label:'Sueño',            goodVals:[0,1], badVals:[2,3], goodLabel:'Bien descansado', badLabel:'Mal sueño' },
+      { id:'stress',   label:'Estrés',            goodVals:[0,1], badVals:[2,3], goodLabel:'Sin estrés',      badLabel:'Estresado' },
+      { id:'focus',    label:'Concentración',     goodVals:[0,1], badVals:[2,3], goodLabel:'Concentrado',     badLabel:'Distraído' },
+      { id:'pressure', label:'Presión de dinero', goodVals:[0,1], badVals:[2,3], goodLabel:'Sin presión',     badLabel:'Con presión' }
+    ];
+
+    var factorStats = [];
+    factors.forEach(function(fac) {
+      var goodDays = [], badDays = [];
+      moodSessions.forEach(function(ms) {
+        if (!ms.answers || !ms.session_date) return;
+        var val = ms.answers[fac.id];
+        if (val === undefined || val === null) return;
+        var date = ms.session_date;
+        if (dailyCount[date] === undefined) return;
+        var dayData = { pnl: dailyPnl[date]||0, wins: dailyWins[date]||0, count: dailyCount[date]||0 };
+        if (fac.goodVals.indexOf(val) >= 0) goodDays.push(dayData);
+        else badDays.push(dayData);
+      });
+      if (goodDays.length < 2 || badDays.length < 2) return;
+      var goodPnl    = goodDays.reduce(function(s,d){return s+d.pnl;},0);
+      var badPnl     = badDays.reduce(function(s,d){return s+d.pnl;},0);
+      var goodTrades = goodDays.reduce(function(s,d){return s+d.count;},0);
+      var badTrades  = badDays.reduce(function(s,d){return s+d.count;},0);
+      var goodW      = goodDays.reduce(function(s,d){return s+d.wins;},0);
+      var badW       = badDays.reduce(function(s,d){return s+d.wins;},0);
+      var goodWr     = Math.round(goodW/goodTrades*100);
+      var badWr      = Math.round(badW/badTrades*100);
+      var avgGoodPnl = Math.round(goodPnl/goodDays.length);
+      var avgBadPnl  = Math.round(badPnl/badDays.length);
+      factorStats.push({
+        label:fac.label, goodLabel:fac.goodLabel, badLabel:fac.badLabel,
+        goodDays:goodDays.length, badDays:badDays.length,
+        avgGoodPnl:avgGoodPnl, avgBadPnl:avgBadPnl,
+        goodWr:goodWr, badWr:badWr,
+        impact:Math.abs(avgGoodPnl-avgBadPnl), hurts:avgBadPnl < avgGoodPnl
+      });
+    });
+    if (!factorStats.length) return;
+    factorStats.sort(function(a,b){return b.impact-a.impact;});
+
+    var rowsHtml = factorStats.map(function(f) {
+      var goodClr = f.avgGoodPnl >= 0 ? 'var(--green)' : 'var(--red)';
+      var badClr  = f.avgBadPnl  >= 0 ? 'var(--green)' : 'var(--red)';
+      var tag = f.hurts
+        ? '<span style="font-size:8px;padding:2px 7px;border-radius:9px;background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd)">te afecta</span>'
+        : '<span style="font-size:8px;padding:2px 7px;border-radius:9px;background:var(--green-bg);color:var(--green);border:1px solid var(--green-bd)">sin impacto</span>';
+      return '<div style="display:grid;grid-template-columns:110px 1fr 1fr auto;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)">'
+        + '<div style="font-size:10px;color:var(--text);font-weight:600">'+f.label+'</div>'
+        + '<div><div style="font-size:9px;color:var(--text3)">'+f.goodLabel+' ('+f.goodDays+'d)</div><div style="font-size:11px;font-weight:700;color:'+goodClr+'">'+(f.avgGoodPnl>=0?'+':'')+f.avgGoodPnl+'<span style="font-size:8px;color:var(--text3)"> · '+f.goodWr+'% WR</span></div></div>'
+        + '<div><div style="font-size:9px;color:var(--text3)">'+f.badLabel+' ('+f.badDays+'d)</div><div style="font-size:11px;font-weight:700;color:'+badClr+'">'+(f.avgBadPnl>=0?'+':'')+f.avgBadPnl+'<span style="font-size:8px;color:var(--text3)"> · '+f.badWr+'% WR</span></div></div>'
+        + '<div>'+tag+'</div></div>';
+    }).join('');
+
+    var worst = factorStats.filter(function(f){return f.hurts;})[0];
+    var insightHtml = worst
+      ? '<div style="margin-bottom:14px;padding:10px 14px;border-radius:8px;background:var(--red-bg);border:1px solid var(--red-bd);font-size:10px;color:var(--text2);line-height:1.6">'
+        + '<strong style="color:var(--red)">⚠ Mayor impacto:</strong> Cuando '+worst.badLabel.toLowerCase()+', tu P&L diario promedio es '
+        + '<strong style="color:var(--red)">'+(worst.avgBadPnl>=0?'+':'')+worst.avgBadPnl+'</strong>'
+        + ' vs <strong style="color:var(--green)">'+(worst.avgGoodPnl>=0?'+':'')+worst.avgGoodPnl+'</strong> en días normales. Diferencia: $'+worst.impact+' por día.'
+        + '</div>'
+      : '';
+
+    html += '<div class="panel" style="margin-bottom:12px">'
+      + '<div class="panel-head"><span class="panel-title">Mood vs Performance</span><span class="panel-cap" style="color:var(--text3)">'+moodSessions.length+' días analizados</span></div>'
+      + '<div style="padding:14px 18px">'
+      + insightHtml
+      + '<div style="display:grid;grid-template-columns:110px 1fr 1fr auto;gap:8px;padding:0 0 6px;border-bottom:1px solid var(--border2)">'
+      + ['Factor','Días buenos','Días malos',''].map(function(h){return '<div style="font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px">'+h+'</div>';}).join('')
+      + '</div>'
+      + rowsHtml
+      + '</div></div>';
+  })();
+
+  // ── ROW 8: Discipline Streaks ──
+  (function() {
+    var allTrades = currentTrades || [];
+    var clSessions = currentChecklistSessions || [];
+    if (!allTrades.length) return;
+    var streaks = calcDisciplineStreaks(allTrades, clSessions);
+    var cards = streaks.map(function(s) {
+      var clr = s.current >= s.goal ? 'var(--green)' : s.current >= Math.floor(s.goal/2) ? 'var(--amber)' : 'var(--text3)';
+      var pct = Math.min(100, Math.round(s.current/s.goal*100));
+      return '<div style="padding:14px 16px;background:var(--surface2);border-radius:10px;border:1px solid '+(s.current>=s.goal?'var(--green-bd)':'var(--border)')+';background:'+(s.current>=s.goal?'var(--green-bg)':'var(--surface2)')+';">'
+        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
+        + '<div style="font-size:16px">'+s.emoji+'</div>'
+        + '<div style="font-size:22px;font-weight:700;color:'+clr+'">'+s.current+'<span style="font-size:10px;color:var(--text3);font-weight:400">/'+s.goal+'d</span></div>'
+        + '</div>'
+        + '<div style="font-size:10px;color:var(--text);font-weight:600;margin-bottom:2px">'+s.label+'</div>'
+        + '<div style="font-size:8px;color:var(--text3);margin-bottom:8px">'+s.desc+'</div>'
+        + '<div style="height:3px;background:var(--border);border-radius:2px"><div style="height:100%;width:'+pct+'%;background:'+clr+';border-radius:2px"></div></div>'
+        + (s.best ? '<div style="font-size:8px;color:var(--text3);margin-top:5px">Mejor racha: '+s.best+' días</div>' : '')
+        + (s.current >= s.goal ? '<div style="font-size:9px;color:var(--green);margin-top:5px;font-weight:600">🏆 Meta alcanzada!</div>' : '')
+        + '</div>';
+    }).join('');
+
+    html += '<div class="panel" style="margin-bottom:12px">'
+      + '<div class="panel-head"><span class="panel-title">Discipline Streaks</span><span class="panel-cap" style="color:var(--amber)">Racha activa</span></div>'
+      + '<div style="padding:14px 18px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px">'
+      + cards
+      + '</div></div>';
   })();
 
   // ── ROW 5: AI Coach ──
