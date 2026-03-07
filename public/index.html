@@ -1139,6 +1139,30 @@ async function loadAccountData(id) {
     .order('session_date', { ascending: false })
     .limit(60);
   currentChecklistSessions = (clRes.data || []);
+
+  // Sync checklist items from Supabase → bbStore (so offline also works)
+  var clItemsRes = await sb.from('checklist_items')
+    .select('items').eq('account_id', id).limit(1);
+  if (clItemsRes.data && clItemsRes.data[0] && clItemsRes.data[0].items) {
+    bbStore.set('checklist_' + id, JSON.stringify(clItemsRes.data[0].items));
+  }
+
+  // Sync mood from Supabase for today
+  var todayStr3 = new Date().toISOString().slice(0,10);
+  var moodDbRes = await sb.from('mood_sessions')
+    .select('answers,score,level,session_date')
+    .eq('account_id', id).eq('session_date', todayStr3).limit(1);
+  if (moodDbRes.data && moodDbRes.data[0]) {
+    var moodFromDb = moodDbRes.data[0];
+    bbStore.set('mood_today_' + id, JSON.stringify({
+      date: moodFromDb.session_date,
+      answers: moodFromDb.answers,
+      score: moodFromDb.score,
+      level: moodFromDb.level
+    }));
+    // Mark as done so popup doesn't show again today
+    try { localStorage.setItem('mood_' + id + '_' + todayStr3, JSON.stringify(moodFromDb)); } catch(e) {}
+  }
   // Cache screenshot_url from DB into bbStore so extension-imported photos show up
   trades.forEach(function(t) {
     if (t.screenshot_url && !bbStore.get('sc_' + t.id)) {
@@ -2273,15 +2297,31 @@ function buildChecklistHistory() {
   return html;
 }
 
-function toggleCheck(idx) {
-  var todayKey='checks_'+currentAccountId+'_'+new Date().toISOString().slice(0,10);
+async function toggleCheck(idx) {
+  var today3=new Date().toISOString().slice(0,10);
+  var todayKey='checks_'+currentAccountId+'_'+today3;
+  var storageKey='checklist_'+currentAccountId;
+  var items=[]; try { items=JSON.parse(bbStore.get(storageKey)||'[]'); } catch(e){}
   var checks={}; try { checks=JSON.parse(bbStore.get(todayKey)||'{}'); } catch(e){}
   checks[idx]=!checks[idx];
   bbStore.set(todayKey, JSON.stringify(checks));
+  var done=Object.values(checks).filter(Boolean).length;
+  var pct=items.length?Math.round(done/items.length*100):0;
+  var verdict=pct>=100?'ready':pct>=70?'caution':'no_trade';
+  // Sync to Supabase checklist_sessions
+  await sb.from('checklist_sessions').upsert({
+    account_id: currentAccountId,
+    user_id: currentUser.id,
+    session_date: today3,
+    items: checks,
+    score_pct: pct,
+    verdict: verdict,
+    updated_at: new Date().toISOString()
+  }, { onConflict: 'account_id,session_date' });
   switchDiscTab('checklist');
 }
 
-function addChecklistItem() {
+async function addChecklistItem() {
   var input=document.getElementById('new-check-input');
   var val=input&&input.value&&input.value.trim();
   if (!val) return;
@@ -2289,14 +2329,27 @@ function addChecklistItem() {
   var items=[]; try { items=JSON.parse(bbStore.get(storageKey)||'[]'); } catch(e){}
   items.push(val);
   bbStore.set(storageKey, JSON.stringify(items));
+  // Sync to Supabase
+  await sb.from('checklist_items').upsert({
+    account_id: currentAccountId,
+    user_id: currentUser.id,
+    items: items,
+    updated_at: new Date().toISOString()
+  }, { onConflict: 'account_id' });
   switchDiscTab('checklist');
 }
 
-function deleteChecklistItem(idx) {
+async function deleteChecklistItem(idx) {
   var storageKey='checklist_'+currentAccountId;
   var items=[]; try { items=JSON.parse(bbStore.get(storageKey)||'[]'); } catch(e){}
   items.splice(idx,1);
   bbStore.set(storageKey, JSON.stringify(items));
+  await sb.from('checklist_items').upsert({
+    account_id: currentAccountId,
+    user_id: currentUser.id,
+    items: items,
+    updated_at: new Date().toISOString()
+  }, { onConflict: 'account_id' });
   switchDiscTab('checklist');
 }
 
@@ -3390,6 +3443,17 @@ function showMoodCheck(accountId) {
     var moodData = { date: today, answers: answers, score: score, level: result.level };
     try { localStorage.setItem('mood_' + accountId + '_' + today, JSON.stringify(moodData)); } catch(e) {}
     bbStore.set('mood_today_' + accountId, JSON.stringify(moodData));
+    // Sync to Supabase mood_sessions
+    if (currentUser && currentAccountId) {
+      sb.from('mood_sessions').upsert({
+        account_id: currentAccountId,
+        user_id: currentUser.id,
+        session_date: today,
+        answers: answers,
+        score: score,
+        level: result.level
+      }, { onConflict: 'account_id,session_date' }).catch(function(){});
+    }
 
     // Show result screen
     overlay.innerHTML = '<div style="background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:32px;width:440px;max-width:90vw;text-align:center;animation:fadeIn .2s ease">'
