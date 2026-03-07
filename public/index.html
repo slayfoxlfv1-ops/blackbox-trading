@@ -4032,10 +4032,10 @@ function showOnboardingGuide() {
       + (!isLast ? '<div style="text-align:center;margin-top:10px"><button id="ob-skip" style="background:none;border:none;color:var(--text3);font-size:9px;cursor:pointer;font-family:inherit">Saltar guía</button></div>' : '')
       + '</div>';
 
-    // Attach events AFTER setting innerHTML
-    var nextBtn = document.getElementById('ob-next');
-    var backBtn = document.getElementById('ob-back');
-    var skipBtn = document.getElementById('ob-skip');
+    // Attach events AFTER setting innerHTML — search within overlay container
+    var nextBtn = overlay.querySelector('#ob-next');
+    var backBtn = overlay.querySelector('#ob-back');
+    var skipBtn = overlay.querySelector('#ob-skip');
 
     if (nextBtn) nextBtn.addEventListener('click', function() {
       if (isLast) {
@@ -4058,8 +4058,8 @@ function showOnboardingGuide() {
     });
   }
 
+  document.body.appendChild(overlay); // append BEFORE first renderStep so querySelector works
   renderStep();
-  document.body.appendChild(overlay);
 }
 
 // Allow re-opening from Settings
