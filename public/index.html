@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BlackBox - Trading Journal</title>
+<title>BlackBoss - Trading Journal</title>
 <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -279,7 +279,7 @@ tr:hover td { background:var(--hover); }
 <!-- AUTH -->
 <div id="auth-screen" class="auth-screen">
   <div class="auth-box">
-    <div class="auth-logo">BlackBox</div>
+    <div class="auth-logo">BlackBoss</div>
     <div class="auth-sub">TRADING JOURNAL</div>
     <div class="auth-tabs">
       <button class="auth-tab active" onclick="setTab('login')">Sign In</button>
@@ -306,7 +306,7 @@ tr:hover td { background:var(--hover); }
 <div class="layout" id="app" style="display:none">
   <aside class="sidebar">
     <div class="logo">
-      <div class="logo-name">BlackBox</div>
+      <div class="logo-name">BlackBoss</div>
       <div class="logo-tag">TRADING JOURNAL</div>
     </div>
     <div class="section">
@@ -347,7 +347,7 @@ tr:hover td { background:var(--hover); }
     <div class="content" id="main-content">
       <div class="empty-state">
         <div class="empty-icon">&#9672;</div>
-        <div class="empty-title">Welcome to BlackBox</div>
+        <div class="empty-title">Welcome to BlackBoss</div>
         <div class="empty-msg">Add your first trading account to get started.</div>
         <button class="btn btn-solid" onclick="openModal()">+ Add account</button>
       </div>
@@ -1454,7 +1454,7 @@ function renderRulesView() {
     html += '<div style="background:#1e2a2a;border:1px solid #2a3e3e;border-left:3px solid #5a9e9e;border-radius:9px;padding:16px 18px;margin-bottom:20px;display:flex;gap:12px;align-items:flex-start">'
       + '<span style="font-size:18px">◈</span>'
       + '<div>'
-      + '<div style="font-size:12px;font-weight:600;color:#5a9e9e;margin-bottom:4px">BlackBox recomienda definir tus reglas</div>'
+      + '<div style="font-size:12px;font-weight:600;color:#5a9e9e;margin-bottom:4px">BlackBoss recomienda definir tus reglas</div>'
       + '<div style="font-size:11px;color:var(--text3);line-height:1.6">Los traders con reglas claras cometen un 40% menos errores de disciplina. Define tu número máximo de trades, horario de sesión y condiciones de stop. El Coach IA usará estas reglas para evaluar tu cumplimiento.</div>'
       + '</div>'
       + '</div>';
@@ -2247,7 +2247,7 @@ async function generateCoachAnalysis() {
     var text = await callCoach(prompt, 1000);
     coachAnalysis = text || "No se pudo generar.";
   } catch(e) {
-    coachAnalysis = 'Error conectando con el coach. Asegúrate de abrir BlackBox desde tu URL de Vercel.';
+    coachAnalysis = 'Error conectando con el coach. Asegúrate de abrir BlackBoss desde tu URL de Vercel.';
   }
   coachLoading = false;
   var tabEl2 = document.getElementById("disc-tab-content");
@@ -3014,7 +3014,7 @@ async function generateMindCoach() {
     var text = await callCoach(prompt, 1000);
     mindCoachAnalysis = text || 'No se pudo generar el análisis.';
   } catch(e) {
-    mindCoachAnalysis = 'Error al conectar. Abre BlackBox desde tu URL de Vercel.';
+    mindCoachAnalysis = 'Error al conectar. Abre BlackBoss desde tu URL de Vercel.';
   }
 
   mindCoachLoading = false;
@@ -3153,7 +3153,7 @@ function renderSettings() {
     '<a href="#" style="font-size:12px;color:var(--blue)">Terms of Service</a>'+
     '<a href="#" style="font-size:12px;color:var(--blue)">Privacy Policy</a>'+
     '<a href="#" style="font-size:12px;color:var(--blue)">Risk Disclaimer</a>'+
-    '<div style="font-size:9px;color:var(--text3);margin-top:4px">BlackBox Journal v0.5 - 2026</div>'+
+    '<div style="font-size:9px;color:var(--text3);margin-top:4px">BlackBoss Journal v0.5 - 2026</div>'+
     '</div></div>'+
     '<div class="panel"><div class="panel-head"><span class="panel-title">Contact & Support</span></div>'+
     '<div style="padding:18px">'+
