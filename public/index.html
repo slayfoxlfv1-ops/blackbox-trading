@@ -2266,20 +2266,53 @@ function buildMindView(trades) {
   }
 
   // ── ROW 5: AI Coach ──
+  var acctId2   = currentAccountId || '';
+  var coachFreq = getCoachFrequency(acctId2);
+  var freqMode  = coachFreq.mode || 'biweekly';
+  var freqOpts  = [
+    { val:'daily',    lbl:'Cada día' },
+    { val:'biweekly', lbl:'Mié y Vie' },
+    { val:'weekly',   lbl:'Semanal' },
+    { val:'monthly',  lbl:'Mensual' },
+    { val:'custom',   lbl:'Personalizado' }
+  ];
+
   html += '<div class="panel" style="padding:20px">'
-    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">'
-    + '<div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Coach IA — Análisis psicológico</div>'
-    + '<div style="font-size:11px;color:var(--text3);margin-top:3px">Análisis personalizado basado en tus datos reales</div></div>'
-    + '<button class="btn btn-solid" id="mind-coach-btn" style="white-space:nowrap" onclick="generateMindCoach()">'+
-    (mindCoachLoading?'<span class="spinner" style="width:12px;height:12px;margin-right:6px"></span>Analizando...':'⚡ Analizar ahora')+'</button>'
+    + '<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;gap:12px">'
+    + '<div>'
+    + '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Coach IA — Análisis psicológico</div>'
+    + '<div style="font-size:11px;color:var(--text3);margin-top:3px">Evolución: 2 días · semana · semana anterior · mes · mes anterior</div>'
+    + '</div>'
+    + '<button class="btn btn-solid" id="mind-coach-btn" style="white-space:nowrap;flex-shrink:0" onclick="generateMindCoach()">'
+    + (mindCoachLoading ? '<span class="spinner" style="width:12px;height:12px;margin-right:6px"></span>Analizando...' : '⚡ Analizar ahora')
+    + '</button>'
+    + '</div>'
+    + '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:11px;margin-bottom:14px">'
+    + '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:9px">Frecuencia del análisis automático</div>'
+    + '<div style="display:flex;gap:5px;flex-wrap:wrap">'
+    + freqOpts.map(function(o) {
+        var isActive = freqMode === o.val;
+        return '<button onclick="setCoachFrequency(\'' + o.val + '\')" style="padding:5px 11px;border-radius:20px;border:1px solid '
+          + (isActive ? '#5a9e9e;background:#1e2a2a;color:#5a9e9e' : 'var(--border);background:transparent;color:var(--text3)')
+          + ';font-size:10px;cursor:pointer;font-family:inherit">' + o.lbl + '</button>';
+      }).join('')
+    + '</div>'
+    + (freqMode === 'custom'
+        ? '<div style="margin-top:9px;display:flex;align-items:center;gap:8px">'
+          + '<span style="font-size:10px;color:var(--text3)">Cada</span>'
+          + '<input id="custom-freq-days" type="number" min="1" max="30" value="' + (coachFreq.customDays||7) + '" style="width:50px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-size:12px;font-family:inherit;text-align:center">'
+          + '<span style="font-size:10px;color:var(--text3)">días</span>'
+          + '<button onclick="saveCustomFreqDays()" style="padding:4px 10px;background:#5a9e9e;border:none;border-radius:6px;color:#fff;font-size:10px;cursor:pointer;font-family:inherit">Guardar</button>'
+          + '</div>'
+        : '')
     + '</div>'
     + '<div id="mind-coach-output">';
 
   if (mindCoachAnalysis) {
-    html += '<div style="font-size:13px;color:var(--text2);line-height:1.8;white-space:pre-wrap;background:var(--surface2);border-radius:8px;padding:16px">'+mindCoachAnalysis+'</div>'
+    html += '<div style="font-size:13px;color:var(--text2);line-height:1.8;white-space:pre-wrap;background:var(--surface2);border-radius:8px;padding:16px">' + mindCoachAnalysis + '</div>'
       + '<button class="btn btn-ghost" style="margin-top:10px;font-size:11px" onclick="mindCoachAnalysis=\'\';renderMindView()">Limpiar</button>';
   } else {
-    html += '<div style="font-size:11px;color:var(--text3);text-align:center;padding:24px 0">Presiona "Analizar ahora" para recibir un diagnóstico psicológico personalizado basado en todos tus trades.</div>';
+    html += '<div style="font-size:11px;color:var(--text3);text-align:center;padding:24px 0">Presiona "Analizar ahora" para recibir un diagnóstico basado en tu evolución histórica.</div>';
   }
   html += '</div></div>';
 
@@ -2294,8 +2327,8 @@ function buildMindView(trades) {
       var dt      = item.ts ? new Date(item.ts) : null;
       var dateStr = dt ? (String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0')+' '+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0')) : '';
       var isError = item.type === 'error_alert';
-      var accent  = isError ? 'var(--red)' : '#6c8bff';
-      var badge   = isError ? 'Alerta' : 'Semanal';
+      var accent  = isError ? 'var(--red)' : '#5a9e9e';
+      var badge   = isError ? 'Alerta' : item.type === 'error_alert' ? 'Alerta' : 'Auto-Coach';
       var preview = (item.message||'').slice(0,180) + ((item.message||'').length > 180 ? '...' : '');
 
       html += '<div style="background:var(--surface2);border-radius:8px;padding:14px;border-left:3px solid '+accent+'">'
@@ -2331,12 +2364,44 @@ function saveCoachMemory(accountId, mem) {
   bbStore.set('coach_mem_' + accountId, JSON.stringify(mem));
 }
 
+// ── Coach frequency settings ──
+function getCoachFrequency(accountId) {
+  try { return JSON.parse(bbStore.get('coach_freq_' + accountId) || 'null') || { mode: 'biweekly' }; } catch(e) { return { mode: 'biweekly' }; }
+}
+function saveCoachFrequency(accountId, freq) {
+  bbStore.set('coach_freq_' + accountId, JSON.stringify(freq));
+}
+
+function shouldRunFullAnalysis(mem, freq, todayStr, dayOfWeek) {
+  var last = mem.lastFullAnalysis || '';
+  if (last === todayStr) return false; // Already ran today
+  var mode = freq.mode || 'biweekly';
+  if (mode === 'biweekly')  return dayOfWeek === 3 || dayOfWeek === 5;
+  if (mode === 'weekly')    return dayOfWeek === 5; // Fridays
+  if (mode === 'daily')     return true;
+  if (mode === 'monthly') {
+    if (!last) return true;
+    var lastDate = new Date(last);
+    var today    = new Date(todayStr);
+    var diffDays = (today - lastDate) / 86400000;
+    return diffDays >= 28;
+  }
+  if (mode === 'custom') {
+    var days = parseInt(freq.customDays) || 7;
+    if (!last) return true;
+    var diffDays2 = (new Date(todayStr) - new Date(last)) / 86400000;
+    return diffDays2 >= days;
+  }
+  return false;
+}
+
 async function autoCoachCheck(trades, accountId) {
   if (!trades || trades.length < 3) return;
-  var mem    = getCoachMemory(accountId);
-  var today  = new Date();
-  var todayStr = today.toISOString().slice(0,10);
-  var dayOfWeek = today.getDay(); // 3=Wed, 5=Fri
+  var mem       = getCoachMemory(accountId);
+  var freq      = getCoachFrequency(accountId);
+  var today     = new Date();
+  var todayStr  = today.toISOString().slice(0,10);
+  var dayOfWeek = today.getDay();
 
   // ── 1. Repeated error detection ──
   var last10   = trades.slice(-10).filter(function(t){ return t.discipline_tag; });
@@ -2345,30 +2410,24 @@ async function autoCoachCheck(trades, accountId) {
     var tag = t.discipline_tag;
     if (tag && tag !== 'clean') tagCount[tag] = (tagCount[tag]||0)+1;
   });
-
   var repeatedErrors = Object.keys(tagCount).filter(function(k){ return tagCount[k] >= 2; });
 
   if (repeatedErrors.length > 0) {
-    var lastErrorAlert = mem.lastErrorAlert || '';
     var errorKey = repeatedErrors.sort().join(',');
-    // Only alert if this is a new pattern we haven't warned about today
-    if (errorKey !== lastErrorAlert) {
+    if (errorKey !== (mem.lastErrorAlert || '')) {
       mem.lastErrorAlert = errorKey;
       saveCoachMemory(accountId, mem);
-      // Generate targeted error alert
       await generateErrorAlert(repeatedErrors, tagCount, trades, accountId);
-      return; // Don't also do full analysis
+      return;
     }
   }
 
-  // ── 2. Wednesday / Friday full analysis ──
-  if (dayOfWeek === 3 || dayOfWeek === 5) {
-    var lastFullAnalysis = mem.lastFullAnalysis || '';
-    if (lastFullAnalysis !== todayStr) {
-      mem.lastFullAnalysis = todayStr;
-      saveCoachMemory(accountId, mem);
-      await generateAutoFullAnalysis(trades, accountId, dayOfWeek === 5 ? 'viernes' : 'miercoles');
-    }
+  // ── 2. Full analysis based on frequency setting ──
+  if (shouldRunFullAnalysis(mem, freq, todayStr, dayOfWeek)) {
+    mem.lastFullAnalysis = todayStr;
+    saveCoachMemory(accountId, mem);
+    var dayName = ['domingo','lunes','martes','miercoles','jueves','viernes','sabado'][dayOfWeek];
+    await generateAutoFullAnalysis(trades, accountId, dayName);
   }
 }
 
@@ -2404,55 +2463,102 @@ async function generateErrorAlert(errors, tagCount, trades, accountId) {
 }
 
 // ── Full auto analysis (Wed/Fri) ──
+// ── Helper: summarize trades in a period ──
+function summarizePeriod(trades, label) {
+  if (!trades.length) return label + ': sin trades';
+  var wins   = trades.filter(function(t){ return (t.pnl||0) > 0; });
+  var pnl    = trades.reduce(function(s,t){ return s+(t.pnl||0); }, 0);
+  var wr     = Math.round(wins.length/trades.length*100);
+  var tagCnt = {};
+  trades.forEach(function(t){ var tg=t.discipline_tag||'clean'; tagCnt[tg]=(tagCnt[tg]||0)+1; });
+  var topTag = Object.keys(tagCnt).sort(function(a,b){ return tagCnt[b]-tagCnt[a]; })[0];
+  var notes  = trades.filter(function(t){ return t.notes; }).slice(-4)
+    .map(function(t){ return (t.pnl>=0?'+':'-')+'$'+Math.abs(Math.round(t.pnl))+' '+t.ticker+': '+(t.notes||'').slice(0,60); }).join(' | ');
+  return label+': '+trades.length+' trades | P&L $'+Math.round(pnl)+' | WR '+wr+'% | error_dominante:'+topTag
+    + (notes ? ' | notas: '+notes : '');
+}
+
 async function generateAutoFullAnalysis(trades, accountId, day) {
-  var wins    = trades.filter(function(t){return (t.pnl||0)>0;});
-  var losses  = trades.filter(function(t){return (t.pnl||0)<0;});
-  var totalPnl = trades.reduce(function(s,t){return s+(t.pnl||0);},0);
-  var winRate  = trades.length ? Math.round(wins.length/trades.length*100) : 0;
+  var now      = new Date();
+  var msDay    = 86400000;
 
-  // Discipline summary
-  var discCount = {};
-  trades.forEach(function(t){ var tag=t.discipline_tag||'sin_tag'; discCount[tag]=(discCount[tag]||0)+1; });
-  var discStr = Object.entries(discCount).map(function(e){return e[0]+':'+e[1];}).join(', ');
-
-  // Emotion summary
-  var emoData = {};
-  trades.forEach(function(t) {
-    var m = (t.notes||'').match(/Emocion: ([^\n]+)/);
-    if (m) { var e=m[1].trim(); emoData[e]=(emoData[e]||0)+1; }
+  // Slice trades by period
+  var t2days  = trades.filter(function(t){ return t.entry_time && (now - new Date(t.entry_time)) < 2*msDay; });
+  var t7days  = trades.filter(function(t){ return t.entry_time && (now - new Date(t.entry_time)) < 7*msDay; });
+  var t30days = trades.filter(function(t){ return t.entry_time && (now - new Date(t.entry_time)) < 30*msDay; });
+  var tPrevWeek = trades.filter(function(t) {
+    if (!t.entry_time) return false;
+    var age = (now - new Date(t.entry_time)) / msDay;
+    return age >= 7 && age < 14;
   });
-  var emoStr = Object.entries(emoData).map(function(e){return e[0]+':'+e[1];}).join(', ') || 'sin datos';
+  var tPrevMonth = trades.filter(function(t) {
+    if (!t.entry_time) return false;
+    var age = (now - new Date(t.entry_time)) / msDay;
+    return age >= 30 && age < 60;
+  });
 
-  // Recent notes
-  var notes = trades.filter(function(t){return t.notes;}).slice(-8)
-    .map(function(t){return (t.pnl>=0?'WIN':'LOSS')+' '+t.ticker+': '+(t.notes||'').slice(0,80);}).join('\n');
+  var periodSummary = [
+    summarizePeriod(t2days,    'ULTIMOS 2 DIAS'),
+    summarizePeriod(t7days,    'ESTA SEMANA'),
+    summarizePeriod(tPrevWeek, 'SEMANA ANTERIOR'),
+    summarizePeriod(t30days,   'ESTE MES'),
+    summarizePeriod(tPrevMonth,'MES ANTERIOR')
+  ].join('\n');
 
-  // Get previous coach memory for continuity
+  // Emotion trend
+  var emoRecent = {}; var emoOld = {};
+  t7days.forEach(function(t){ var m=(t.notes||'').match(/Emocion: ([^\n]+)/); if(m){var e=m[1].trim();emoRecent[e]=(emoRecent[e]||0)+1;} });
+  tPrevWeek.forEach(function(t){ var m=(t.notes||'').match(/Emocion: ([^\n]+)/); if(m){var e=m[1].trim();emoOld[e]=(emoOld[e]||0)+1;} });
+  var emoStr = 'Esta semana: ' + (Object.entries(emoRecent).map(function(e){return e[0]+':'+e[1];}).join(', ')||'sin datos')
+    + ' | Semana pasada: ' + (Object.entries(emoOld).map(function(e){return e[0]+':'+e[1];}).join(', ')||'sin datos');
+
   var mem = getCoachMemory(accountId);
-  var prevContext = mem.lastFullMessage ? ('Tu analisis anterior decia: ' + mem.lastFullMessage.slice(0,200) + '...') : '';
+  var prevContext = mem.lastFullMessage ? ('Tu analisis anterior ('+mem.lastAnalysisDay+') decia: ' + mem.lastFullMessage.slice(0,200) + '...') : '';
 
-  var prompt = 'Eres el coach personal de este trader. Es ' + day + ' y es momento de tu analisis semanal. '
-    + (prevContext ? prevContext + ' Muestra continuidad y progreso respecto a eso. ' : '')
-    + 'DATOS ACTUALES: '
-    + 'Trades totales: ' + trades.length + ' | P&L: $' + totalPnl.toFixed(0) + ' | WR: ' + winRate + '% | '
-    + 'Disciplina: ' + discStr + ' | Emociones: ' + emoStr + '\n'
-    + 'Notas recientes:\n' + (notes || 'sin notas') + '\n\n'
-    + 'Genera un analisis completo como coach que CONOCE a este trader, con memoria de sesiones anteriores. '
-    + 'Estructura: 1) Como vas esta semana (con datos) 2) Tu patron psicologico dominante ahora mismo '
-    + '3) Lo que mejoraste desde la ultima vez 4) El error que sigues repitiendo '
-    + '5) Tu plan especifico para los proximos dias 6) Una frase personalizada que te motive. '
-    + 'Habla en segunda persona, con personalidad, no robotico. Max 400 palabras.';
+  var prompt = 'Eres el coach de psico-trading personal de este trader. Hoy es ' + day + '.'
+    + (prevContext ? ' ' + prevContext + ' Muestra evolucion respecto a eso.' : '')
+    + '\n\nDATOS POR PERIODO:\n' + periodSummary
+    + '\n\nEMOCIONES: ' + emoStr
+    + '\n\nAnaliza la EVOLUCION en el tiempo, no solo el momento actual. '
+    + 'Estructura tu respuesta: '
+    + '1) TENDENCIA: Como ha evolucionado su performance (2 dias vs semana vs mes) '
+    + '2) PATRON PSICOLOGICO: El patron mental dominante que ves en sus notas y disciplina '
+    + '3) PROGRESO: Que ha mejorado comparado con el periodo anterior '
+    + '4) ERROR PERSISTENTE: El error que sigue repitiendo a lo largo del tiempo '
+    + '5) PLAN: 3 acciones concretas y especificas para la proxima sesion '
+    + '6) MENSAJE: Una frase poderosa y personalizada. '
+    + 'Habla directo, con personalidad, como un coach real. Max 450 palabras.';
 
   try {
-    var msg = await callCoach(prompt, 900);
+    var msg = await callCoach(prompt, 1000);
     if (msg) {
-      mem.lastFullMessage = msg;
+      mem.lastFullMessage  = msg;
+      mem.lastAnalysisDay  = day;
       saveCoachMemory(accountId, mem);
       saveCoachMessage(accountId, { type: 'weekly', day: day, message: msg, ts: new Date().toISOString() });
       mindCoachAnalysis = msg;
       showCoachNotification(msg, 'weekly', []);
     }
   } catch(e) { console.warn('Auto full analysis failed:', e); }
+}
+
+// ── Coach frequency UI handlers ──
+function setCoachFrequency(mode) {
+  var acctId = currentAccountId || '';
+  var freq   = getCoachFrequency(acctId);
+  freq.mode  = mode;
+  saveCoachFrequency(acctId, freq);
+  renderMindView(); // Re-render to show updated selection
+}
+
+function saveCustomFreqDays() {
+  var acctId = currentAccountId || '';
+  var freq   = getCoachFrequency(acctId);
+  var inp    = document.getElementById('custom-freq-days');
+  if (inp) freq.customDays = parseInt(inp.value) || 7;
+  saveCoachFrequency(acctId, freq);
+  var btn = inp && inp.nextElementSibling;
+  if (btn) { btn.textContent = '✓'; setTimeout(function(){ btn.textContent = 'Guardar'; }, 1500); }
 }
 
 // ── Persist coach messages history ──
