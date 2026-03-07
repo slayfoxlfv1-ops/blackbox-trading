@@ -2566,19 +2566,102 @@ function buildMindView(trades) {
 
   html += '</div>'; // end row 1
 
-  // ── ROW 2: Heatmap horas + días ──
+  // ── ROW 2: Heatmap + Deep Hour Analysis ──
+
+  // ── Session buckets (London, NY Open, NY Midday, NY Close) ──
+  var sessions = [
+    { name:'Pre-market', start:6,  end:8,  color:'#5a7a9e' },
+    { name:'London',     start:8,  end:11, color:'#5a9e9e' },
+    { name:'NY Open',    start:11, end:14, color:'#5a9e72' },
+    { name:'NY Midday',  start:14, end:16, color:'#9e8050' },
+    { name:'NY Close',   start:16, end:18, color:'#9e5a5a' }
+  ];
+  var sessionStats = {};
+  sessions.forEach(function(s) { sessionStats[s.name] = {pnl:0,count:0,wins:0}; });
+  trades.forEach(function(t) {
+    if (!t.entry_time) return;
+    var h = new Date(t.entry_time).getHours();
+    sessions.forEach(function(s) {
+      if (h >= s.start && h < s.end) {
+        sessionStats[s.name].pnl   += (t.pnl||0);
+        sessionStats[s.name].count++;
+        if ((t.pnl||0) > 0) sessionStats[s.name].wins++;
+      }
+    });
+  });
+
   html += '<div class="panel" style="padding:20px">'
-    + '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:16px">Heatmap — Hora × Día de la semana</div>';
+    + '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:16px">Análisis por horario</div>';
 
-  // Build heatmap grid
-  var hours = [];
-  for (var hh=8; hh<=17; hh++) hours.push(hh);
-  var days  = [1,2,3,4,5]; // Mon-Fri
+  // ── Session cards row ──
+  html += '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:20px">';
+  sessions.forEach(function(s) {
+    var st = sessionStats[s.name];
+    var wr = st.count ? Math.round(st.wins/st.count*100) : 0;
+    var hasData = st.count > 0;
+    var pnlColor = st.pnl >= 0 ? 'var(--green)' : 'var(--red)';
+    html += '<div style="background:var(--surface2);border-radius:8px;padding:10px 8px;border-top:2px solid '+(hasData?s.color:'var(--border)')+';text-align:center">'
+      + '<div style="font-size:9px;color:var(--text3);margin-bottom:4px">'+s.name+'</div>'
+      + '<div style="font-size:9px;color:var(--text3);margin-bottom:6px">'+s.start+':00–'+s.end+':00</div>'
+      + (hasData
+          ? '<div style="font-size:13px;font-weight:700;color:'+pnlColor+'">'+(st.pnl>=0?'+':'')+'$'+Math.round(st.pnl)+'</div>'
+          + '<div style="font-size:9px;color:var(--text3)">'+st.count+'t · '+wr+'% WR</div>'
+          : '<div style="font-size:10px;color:var(--text3)">sin datos</div>')
+      + '</div>';
+  });
+  html += '</div>';
 
-  // Find max abs pnl for color scaling
+  // ── Top 3 best / worst hours bar chart ──
+  if (hourArr.length >= 2) {
+    var top3Best  = hourArr.slice(0,3);
+    var top3Worst = hourArr.slice().reverse().slice(0,3);
+    var maxBar    = Math.max.apply(null, hourArr.map(function(h){ return Math.abs(h.pnl); })) || 1;
+
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">';
+
+    // Best hours
+    html += '<div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">🏆 Mejores horas</div>'
+      + '<div style="display:flex;flex-direction:column;gap:6px">';
+    top3Best.forEach(function(h) {
+      var barPct = Math.round(Math.abs(h.pnl)/maxBar*100);
+      html += '<div>'
+        + '<div style="display:flex;justify-content:space-between;margin-bottom:3px">'
+        + '<span style="font-size:10px;color:var(--text2);font-weight:600">'+h.h+':00</span>'
+        + '<span style="font-size:10px;color:var(--green)">+'+(h.pnl>=0?'$':'')+Math.abs(Math.round(h.pnl))+' · '+h.wr+'% WR · '+h.count+'t</span>'
+        + '</div>'
+        + '<div style="background:var(--surface2);border-radius:3px;height:6px">'
+        + '<div style="height:100%;width:'+barPct+'%;background:var(--green);border-radius:3px;opacity:.8"></div>'
+        + '</div></div>';
+    });
+    html += '</div></div>';
+
+    // Worst hours
+    html += '<div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">⚠ Peores horas</div>'
+      + '<div style="display:flex;flex-direction:column;gap:6px">';
+    top3Worst.forEach(function(h) {
+      var barPct = Math.round(Math.abs(h.pnl)/maxBar*100);
+      html += '<div>'
+        + '<div style="display:flex;justify-content:space-between;margin-bottom:3px">'
+        + '<span style="font-size:10px;color:var(--text2);font-weight:600">'+h.h+':00</span>'
+        + '<span style="font-size:10px;color:var(--red)">'+(h.pnl>=0?'+':'-')+'$'+Math.abs(Math.round(h.pnl))+' · '+h.wr+'% WR · '+h.count+'t</span>'
+        + '</div>'
+        + '<div style="background:var(--surface2);border-radius:3px;height:6px">'
+        + '<div style="height:100%;width:'+barPct+'%;background:var(--red);border-radius:3px;opacity:.8"></div>'
+        + '</div></div>';
+    });
+    html += '</div></div>';
+    html += '</div>'; // end grid
+  }
+
+  // ── Heatmap ──
+  html += '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Heatmap — Hora × Día</div>';
+
+  var hmHours = [];
+  for (var hh=8; hh<=17; hh++) hmHours.push(hh);
+  var hmDays  = [1,2,3,4,5];
   var maxAbsPnl = 1;
-  days.forEach(function(dw) {
-    hours.forEach(function(hh) {
+  hmDays.forEach(function(dw) {
+    hmHours.forEach(function(hh) {
       var k = dw+'_'+hh;
       if (heatmap[k]) maxAbsPnl = Math.max(maxAbsPnl, Math.abs(heatmap[k].pnl));
     });
@@ -2586,14 +2669,13 @@ function buildMindView(trades) {
 
   html += '<div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%">'
     + '<thead><tr><th style="font-size:9px;color:var(--text3);padding:3px 6px;text-align:left;font-weight:500">Hora</th>';
-  days.forEach(function(dw) {
+  hmDays.forEach(function(dw) {
     html += '<th style="font-size:9px;color:var(--text3);padding:3px 8px;text-align:center;font-weight:500">'+dayNames[dw]+'</th>';
   });
   html += '</tr></thead><tbody>';
-
-  hours.forEach(function(hh) {
+  hmHours.forEach(function(hh) {
     html += '<tr><td style="font-size:9px;color:var(--text3);padding:3px 6px;white-space:nowrap">'+hh+':00</td>';
-    days.forEach(function(dw) {
+    hmDays.forEach(function(dw) {
       var k   = dw+'_'+hh;
       var val = heatmap[k];
       var bg  = 'var(--surface2)';
@@ -2601,10 +2683,9 @@ function buildMindView(trades) {
       var tip = '';
       if (val && val.count) {
         var intensity = Math.min(0.9, Math.abs(val.pnl) / maxAbsPnl);
-        var r = val.pnl >= 0
-          ? 'rgba(94,194,106,' + (0.15 + intensity*0.75) + ')'
-          : 'rgba(224,92,92,'  + (0.15 + intensity*0.75) + ')';
-        bg  = r;
+        bg  = val.pnl >= 0
+          ? 'rgba(94,194,106,'  + (0.15 + intensity*0.75) + ')'
+          : 'rgba(224,92,92,'   + (0.15 + intensity*0.75) + ')';
         txt = (val.pnl>=0?'+':'')+Math.round(val.pnl);
         tip = val.count+'t '+(val.pnl>=0?'+$':'-$')+Math.abs(Math.round(val.pnl));
       }
@@ -2616,48 +2697,88 @@ function buildMindView(trades) {
     });
     html += '</tr>';
   });
-
   html += '</tbody></table></div>';
 
-  // Best/worst hour summary
+  // Insight box
   if (bestHour && worstHour) {
-    html += '<div style="display:flex;gap:20px;margin-top:14px">'
-      + '<div style="flex:1;background:var(--surface2);border-radius:8px;padding:10px 14px">'
-      + '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;margin-bottom:4px">Mejor hora</div>'
-      + '<div style="font-size:16px;font-weight:700;color:var(--green)">'+bestHour.h+':00</div>'
-      + '<div style="font-size:10px;color:var(--text3)">'+bestHour.wr+'% WR · '+(bestHour.pnl>=0?'+$':'-$')+Math.abs(Math.round(bestHour.pnl))+' acum.</div>'
+    html += '<div style="display:flex;gap:10px;margin-top:14px">'
+      + '<div style="flex:1;background:var(--green-bg);border:1px solid var(--green-bd);border-left:3px solid var(--green);border-radius:8px;padding:10px 14px">'
+      + '<div style="font-size:9px;color:var(--text3);margin-bottom:4px">MEJOR HORA</div>'
+      + '<div style="font-size:18px;font-weight:700;color:var(--green)">'+bestHour.h+':00</div>'
+      + '<div style="font-size:9px;color:var(--text3)">'+bestHour.wr+'% WR · +'+'$'+Math.abs(Math.round(bestHour.pnl))+'</div>'
       + '</div>'
-      + '<div style="flex:1;background:var(--surface2);border-radius:8px;padding:10px 14px">'
-      + '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;margin-bottom:4px">Peor hora</div>'
-      + '<div style="font-size:16px;font-weight:700;color:var(--red)">'+worstHour.h+':00</div>'
-      + '<div style="font-size:10px;color:var(--text3)">'+worstHour.wr+'% WR · '+(worstHour.pnl>=0?'+$':'-$')+Math.abs(Math.round(worstHour.pnl))+' acum.</div>'
+      + '<div style="flex:1;background:var(--red-bg);border:1px solid var(--red-bd);border-left:3px solid var(--red);border-radius:8px;padding:10px 14px">'
+      + '<div style="font-size:9px;color:var(--text3);margin-bottom:4px">PEOR HORA</div>'
+      + '<div style="font-size:18px;font-weight:700;color:var(--red)">'+worstHour.h+':00</div>'
+      + '<div style="font-size:9px;color:var(--text3)">'+worstHour.wr+'% WR · -'+'$'+Math.abs(Math.round(worstHour.pnl))+'</div>'
       + '</div></div>';
   }
-  html += '</div>'; // end heatmap panel
+  html += '</div>'; // end panel
 
   // ── ROW 3: Emotions + P&L by discipline ──
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">';
 
-  // Emotions
+  // ── Confidence Calibration ──
+  var calibData = {};
+  Object.keys(emoCounts).forEach(function(emo) {
+    var tradesWithEmo = [];
+    trades.forEach(function(t) {
+      var m = (t.notes||'').match(/Emocion: ([^\n]+)/);
+      var noteEmo = m ? m[1].trim() : '';
+      if ((t.emotion||'')===emo || noteEmo===emo) tradesWithEmo.push(t);
+    });
+    var emoWins  = tradesWithEmo.filter(function(t){ return (t.pnl||0)>0; }).length;
+    var avgPnl2  = emoPnl[emo] / emoCounts[emo];
+    var winRate2 = emoCounts[emo] ? Math.round(emoWins/emoCounts[emo]*100) : 0;
+    var positiveEmos = ['Tranquilo','Disciplinado','Seguro','En zona'];
+    var negativeEmos = ['Ansioso','Impulsivo','Con miedo','Frustrado'];
+    var isPos = positiveEmos.includes(emo);
+    var isNeg = negativeEmos.includes(emo);
+    var cs = 0;
+    if (isPos) cs = winRate2 - 50;
+    if (isNeg) cs = 50 - winRate2;
+    calibData[emo] = { count:emoCounts[emo], avgPnl:avgPnl2, winRate:winRate2, calibScore:cs };
+  });
+
   html += '<div class="panel" style="padding:20px">'
-    + '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px">Emociones ↔ Resultados</div>';
-  if (Object.keys(emoCounts).length) {
-    html += '<div style="display:flex;flex-direction:column;gap:8px">';
-    Object.keys(emoCounts).sort(function(a,b){ return emoCounts[b]-emoCounts[a]; }).forEach(function(emo) {
-      var avgPnl = emoPnl[emo] / emoCounts[emo];
-      html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--surface2);border-radius:7px">'
-        + '<div>'
-        + '<div style="font-size:11px;color:var(--text);font-weight:600">'+emo+'</div>'
-        + '<div style="font-size:9px;color:var(--text3)">'+emoCounts[emo]+' trade'+(emoCounts[emo]>1?'s':'')+'</div>'
+    + '<div style="display:flex;align-items:baseline;gap:8px;margin-bottom:4px">'
+    + '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Confidence Calibration</div>'
+    + '</div>'
+    + '<div style="font-size:10px;color:var(--text3);margin-bottom:12px;line-height:1.5">¿Tu autopercepción es precisa? Cuando dices "Seguro", ¿realmente ganas más?</div>';
+
+  if (Object.keys(calibData).length) {
+    html += '<div style="display:flex;flex-direction:column;gap:6px">';
+    Object.keys(calibData).sort(function(a,b){ return calibData[b].calibScore-calibData[a].calibScore; }).forEach(function(emo) {
+      var d = calibData[emo];
+      if (d.count < 2) return;
+      var barW = Math.min(100, Math.abs(d.calibScore));
+      var isGood = d.calibScore > 10;
+      var isBad  = d.calibScore < -10;
+      var barColor   = isGood ? 'var(--green)' : isBad ? 'var(--red)' : 'var(--amber)';
+      var labelColor = barColor;
+      var label      = isGood ? '✓ Preciso' : isBad ? '✗ Descalibrado' : '~ Neutral';
+      html += '<div style="background:var(--surface2);border-radius:8px;padding:10px 12px">'
+        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
+        + '<div><div style="font-size:11px;color:var(--text);font-weight:600">'+emo+'</div>'
+        + '<div style="font-size:9px;color:var(--text3)">'+d.count+' trades · '+d.winRate+'% WR · avg '+(d.avgPnl>=0?'+':'')+'$'+Math.round(d.avgPnl)+'</div></div>'
+        + '<span style="font-size:9px;font-weight:700;color:'+labelColor+'">'+label+'</span>'
         + '</div>'
-        + '<div style="text-align:right">'
-        + '<div style="font-size:13px;font-weight:700;color:'+(avgPnl>=0?'var(--green)':'var(--red)')+'">'+( avgPnl>=0?'+':'')+Math.round(avgPnl)+' avg</div>'
-        + '<div style="font-size:9px;color:var(--text3)">'+(emoPnl[emo]>=0?'+':'')+Math.round(emoPnl[emo])+' total</div>'
+        + '<div style="background:var(--surface3);border-radius:4px;height:5px;overflow:hidden">'
+        + '<div style="height:100%;width:'+barW+'%;background:'+barColor+';border-radius:4px"></div>'
         + '</div></div>';
     });
     html += '</div>';
+    var emos2 = Object.keys(calibData).filter(function(e){ return calibData[e].count>=2; });
+    var bestE  = emos2.sort(function(a,b){ return calibData[b].calibScore-calibData[a].calibScore; })[0];
+    var worstE = emos2.sort(function(a,b){ return calibData[a].calibScore-calibData[b].calibScore; })[0];
+    if (bestE || worstE) {
+      html += '<div style="margin-top:10px;padding:10px;background:var(--surface3);border-radius:7px;font-size:10px;color:var(--text2);line-height:1.6">';
+      if (bestE && calibData[bestE].calibScore>10) html += '✓ <strong>'+bestE+'</strong> es tu emoción más precisa. ';
+      if (worstE && calibData[worstE].calibScore<-10) html += '⚠ <strong>'+worstE+'</strong> te engaña — tus resultados no coinciden con lo que sientes.';
+      html += '</div>';
+    }
   } else {
-    html += '<div style="font-size:11px;color:var(--text3);text-align:center;padding:20px">Aún sin emociones registradas.<br>Usa el popup al cerrar un trade.</div>';
+    html += '<div style="font-size:11px;color:var(--text3);text-align:center;padding:20px">Registra al menos 2 trades con la misma emoción para ver tu calibración.</div>';
   }
   html += '</div>';
 
