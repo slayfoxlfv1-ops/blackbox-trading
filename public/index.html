@@ -705,6 +705,8 @@ async function selectAccount(id) {
   var lastView = 'overview';
   try { lastView = localStorage.getItem('bb_last_view') || 'overview'; } catch(e) {}
   navigateTo(lastView);
+  // Show mood check once per day
+  checkAndShowMoodCheck(id);
 }
 
 // ACCOUNT MODAL
@@ -1096,6 +1098,14 @@ async function loadAccountData(id) {
   var worstDay = negVals.length ? Math.min.apply(null,negVals) : null;
 
   var disc = calcDiscipline(trades);
+  var todayMood = null;
+  try {
+    var moodRaw = bbStore.get('mood_today_' + id);
+    if (moodRaw) todayMood = JSON.parse(moodRaw);
+    // Only valid if from today
+    var todayStr2 = new Date().toISOString().slice(0,10);
+    if (todayMood && todayMood.date !== todayStr2) todayMood = null;
+  } catch(e) {}
   var pnlSign = netPnl>=0 ? '+' : '-';
   var pnlCls  = netPnl>0?'pos':netPnl<0?'neg':'neutral';
 
@@ -1238,6 +1248,7 @@ async function loadAccountData(id) {
     '<div><div class="ov-val neutral">'+wr+'%</div><div class="ov-lbl">Win Rate</div></div><div class="ov-sep"></div>' +
     '<div><div class="ov-val '+(pf==='--'||pf==='INF'?'neutral':parseFloat(pf)>=1.5?'pos':'neg')+'">'+pf+'</div><div class="ov-lbl">Profit Factor</div></div><div class="ov-sep"></div>' +
     '<div><div class="ov-val '+(disc.score>=60?'pos':disc.score>=40?'amber':'neg')+'">'+disc.score+'</div><div class="ov-lbl">Discipline</div></div>' +
+    (todayMood ? '<div class="ov-sep"></div><div><div class="ov-val '+(todayMood.level==='green'?'pos':todayMood.level==='yellow'?'amber':'neg')+'">'+(todayMood.level==='green'?'GREEN':todayMood.level==='yellow'?'YELLOW':'RED')+'</div><div class="ov-lbl">Hoy</div></div>' : '') +
     (function() {
       var tilt = detectTilt(trades);
       if (!tilt) return '';
@@ -2747,6 +2758,121 @@ async function autoCoachCheck(trades, accountId) {
     var dayName = ['domingo','lunes','martes','miercoles','jueves','viernes','sabado'][dayOfWeek];
     await generateAutoFullAnalysis(trades, accountId, dayName);
   }
+}
+
+// ══════════════════════════════════════════════════════════════
+// PRE-SESSION MOOD CHECK
+// Shown once per day after account load
+// 4 questions → Green/Yellow/Red day decision
+// ══════════════════════════════════════════════════════════════
+
+function checkAndShowMoodCheck(accountId) {
+  var today = new Date().toISOString().slice(0, 10);
+  var key   = 'mood_' + accountId + '_' + today;
+  try {
+    if (localStorage.getItem(key)) return; // Already done today
+  } catch(e) {}
+  // Small delay so dashboard renders first
+  setTimeout(function() { showMoodCheck(accountId); }, 800);
+}
+
+function showMoodCheck(accountId) {
+  var existing = document.getElementById('mood-overlay');
+  if (existing) existing.remove();
+
+  var questions = [
+    { id:'sleep',   text:'¿Cómo dormiste anoche?',                        opts:['Muy bien','Bien','Regular','Mal'] },
+    { id:'stress',  text:'¿Cómo es tu nivel de estrés ahora mismo?',      opts:['Sin estrés','Poco estrés','Estresado','Muy estresado'] },
+    { id:'focus',   text:'¿Puedes concentrarte bien hoy?',                opts:['Totalmente','Bastante','Con dificultad','No puedo'] },
+    { id:'pressure',text:'¿Sientes presión de hacer dinero hoy?',         opts:['Para nada','Un poco','Bastante','Mucho'] }
+  ];
+
+  var answers = {};
+
+  var overlay = document.createElement('div');
+  overlay.id  = 'mood-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:99998;display:flex;align-items:center;justify-content:center;font-family:Geist,sans-serif;backdrop-filter:blur(4px)';
+
+  function renderMoodContent() {
+    var allAnswered = questions.every(function(q) { return answers[q.id] !== undefined; });
+
+    var html = '<div style="background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:28px;width:440px;max-width:90vw;animation:fadeIn .2s ease">'
+      + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">'
+      + '<span style="font-size:20px">🌅</span>'
+      + '<div style="font-size:15px;font-weight:700;color:var(--text)">Check pre-sesión</div>'
+      + '</div>'
+      + '<div style="font-size:11px;color:var(--text3);margin-bottom:22px">Responde honestamente. BlackBoss decide si es tu día para operar.</div>';
+
+    questions.forEach(function(q) {
+      html += '<div style="margin-bottom:16px">'
+        + '<div style="font-size:11px;color:var(--text2);margin-bottom:8px;font-weight:500">' + q.text + '</div>'
+        + '<div style="display:flex;gap:6px;flex-wrap:wrap">';
+
+      q.opts.forEach(function(opt, i) {
+        var isSelected = answers[q.id] === i;
+        var colors = ['#5a9e72','#5a9e9e','#9e8050','#9e5a5a'];
+        var selBg  = isSelected ? colors[i] + '22' : 'transparent';
+        var selBd  = isSelected ? colors[i] : 'var(--border)';
+        var selTxt = isSelected ? colors[i] : 'var(--text3)';
+        html += '<button onclick="moodAnswer(\'' + q.id + '\',' + i + ')" '
+          + 'style="padding:6px 12px;border-radius:20px;border:1px solid ' + selBd + ';background:' + selBg + ';color:' + selTxt + ';font-size:10px;cursor:pointer;font-family:inherit;transition:all .15s">'
+          + opt + '</button>';
+      });
+
+      html += '</div></div>';
+    });
+
+    html += '<button onclick="submitMoodCheck()" '
+      + 'style="width:100%;padding:11px;background:' + (allAnswered ? '#5a9e9e' : 'var(--surface3)') + ';border:none;border-radius:9px;color:' + (allAnswered ? '#fff' : 'var(--text3)') + ';font-size:12px;font-weight:700;cursor:' + (allAnswered ? 'pointer' : 'not-allowed') + ';font-family:inherit;margin-top:4px">'
+      + 'Ver mi día de trading →</button>'
+      + '<button onclick="skipMoodCheck(\'' + accountId + '\')" style="width:100%;padding:8px;background:none;border:none;color:var(--text3);font-size:10px;cursor:pointer;font-family:inherit;margin-top:6px">Omitir hoy</button>'
+      + '</div>';
+
+    overlay.innerHTML = html;
+  }
+
+  window.moodAnswer = function(qid, val) {
+    answers[qid] = val;
+    renderMoodContent();
+  };
+
+  window.skipMoodCheck = function(accId) {
+    var today = new Date().toISOString().slice(0,10);
+    try { localStorage.setItem('mood_' + accId + '_' + today, 'skipped'); } catch(e) {}
+    overlay.remove();
+  };
+
+  window.submitMoodCheck = function() {
+    var allAnswered = questions.every(function(q) { return answers[q.id] !== undefined; });
+    if (!allAnswered) return;
+
+    // Score: 0=best(0pts) 1=ok(1pt) 2=warn(2pts) 3=bad(3pts)
+    var score = Object.values(answers).reduce(function(s, v) { return s + v; }, 0);
+    var maxScore = questions.length * 3;
+    var pct = score / maxScore;
+
+    var result;
+    if (pct <= 0.33)      result = { level:'green',  emoji:'🟢', title:'Green Day',  color:'var(--green)',  bg:'var(--green-bg)', bd:'var(--green-bd)', msg:'Estás en buenas condiciones. Opera con tu plan normal y confía en tu proceso.' };
+    else if (pct <= 0.66) result = { level:'yellow', emoji:'🟡', title:'Yellow Day', color:'var(--amber)',  bg:'var(--amber-bg)', bd:'var(--amber-bd)', msg:'Hay factores que pueden afectar tu juicio. Reduce el tamaño de posición a la mitad y sé más selectivo con los setups.' };
+    else                  result = { level:'red',    emoji:'🔴', title:'Red Day',    color:'var(--red)',    bg:'var(--red-bg)',   bd:'var(--red-bd)',   msg:'Las condiciones no son óptimas para operar. Considera no tomar trades hoy o usar tamaño mínimo. Tu capital es más importante que no perderte un movimiento.' };
+
+    // Save result
+    var today = new Date().toISOString().slice(0,10);
+    var moodData = { date: today, answers: answers, score: score, level: result.level };
+    try { localStorage.setItem('mood_' + accountId + '_' + today, JSON.stringify(moodData)); } catch(e) {}
+    bbStore.set('mood_today_' + accountId, JSON.stringify(moodData));
+
+    // Show result screen
+    overlay.innerHTML = '<div style="background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:32px;width:440px;max-width:90vw;text-align:center;animation:fadeIn .2s ease">'
+      + '<div style="font-size:48px;margin-bottom:12px">' + result.emoji + '</div>'
+      + '<div style="font-size:22px;font-weight:700;color:' + result.color + ';margin-bottom:8px">' + result.title + '</div>'
+      + '<div style="background:' + result.bg + ';border:1px solid ' + result.bd + ';border-radius:10px;padding:14px 18px;margin-bottom:20px;font-size:12px;color:var(--text2);line-height:1.7">' + result.msg + '</div>'
+      + '<button onclick="document.getElementById(\'mood-overlay\').remove()" style="padding:11px 32px;background:' + result.color + ';border:none;border-radius:9px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Entendido, empezar</button>'
+      + '</div>';
+  };
+
+  document.body.appendChild(overlay);
+  renderMoodContent();
 }
 
 // ══════════════════════════════════════════════════════════════
