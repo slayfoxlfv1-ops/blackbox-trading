@@ -1131,7 +1131,93 @@ async function loadAccountData(id) {
       '<td><span class="mono-xs">'+time+'</span></td></tr>';
   }).join('');
 
+  // Build coach alert banner for overview
+  var coachAlertHtml = '';
+  try {
+    var coachHistory = [];
+    try { coachHistory = JSON.parse(bbStore.get('coach_history_' + id) || '[]'); } catch(e) {}
+    var lastMsg = coachHistory.length ? coachHistory[coachHistory.length - 1] : null;
+    var coachMem = {};
+    try { coachMem = JSON.parse(bbStore.get('coach_mem_' + id) || '{}'); } catch(e) {}
+
+    // Current loss streak alert
+    var lossStreak = 0;
+    var sortedByExit = trades.slice().sort(function(a,b){ return new Date(b.exit_time||b.entry_time) - new Date(a.exit_time||a.entry_time); });
+    for (var _i=0; _i<sortedByExit.length; _i++) {
+      if ((sortedByExit[_i].pnl||0) < 0) lossStreak++;
+      else break;
+    }
+
+    // Check repeated discipline errors in last 10 trades
+    var last10 = trades.slice(-10);
+    var errorCounts = {};
+    last10.forEach(function(t) {
+      var dt = t.discipline_tag;
+      if (dt && dt !== 'clean') errorCounts[dt] = (errorCounts[dt]||0) + 1;
+    });
+    var topError = Object.keys(errorCounts).sort(function(a,b){ return errorCounts[b]-errorCounts[a]; })[0];
+    var topErrorCount = topError ? errorCounts[topError] : 0;
+    var errorLabels = {moved_sl:'Moved SL',scaled_loss:'Scaled into loss',impulse:'Impulse trade',no_confirmation:'No confirmation',overtrading:'Overtrading',fomo:'FOMO'};
+
+    var alerts = [];
+
+    if (lossStreak >= 2) {
+      alerts.push({
+        type: 'danger',
+        icon: '⚠',
+        text: 'Llevas <strong>' + lossStreak + ' trades perdedores consecutivos</strong>. Considera tomar un break antes de operar de nuevo.',
+        action: 'mind'
+      });
+    }
+
+    if (topErrorCount >= 2) {
+      alerts.push({
+        type: 'warn',
+        icon: '↻',
+        text: 'Error repetido: <strong>' + (errorLabels[topError]||topError) + '</strong> aparece ' + topErrorCount + ' veces en tus últimos 10 trades.',
+        action: 'mind'
+      });
+    }
+
+    if (lastMsg && lastMsg.type === 'weekly') {
+      var msgDate = new Date(lastMsg.ts);
+      var hoursAgo = (Date.now() - msgDate.getTime()) / 3600000;
+      if (hoursAgo < 48) {
+        alerts.push({
+          type: 'coach',
+          icon: '✦',
+          text: '<strong>Coach IA</strong> — ' + lastMsg.message.slice(0, 160) + (lastMsg.message.length > 160 ? '...' : ''),
+          action: 'mind'
+        });
+      }
+    }
+
+    if (alerts.length) {
+      var alertStyles = {
+        danger: 'background:var(--red-bg);border:1px solid var(--red-bd);border-left:3px solid var(--red)',
+        warn:   'background:var(--amber-bg);border:1px solid var(--amber-bd);border-left:3px solid var(--amber)',
+        coach:  'background:#1e2a2a;border:1px solid #2a3e3e;border-left:3px solid #5a9e9e'
+      };
+      var alertTextColors = { danger: 'var(--red)', warn: 'var(--amber)', coach: '#5a9e9e' };
+
+      var alertParts = alerts.map(function(a) {
+          var st = alertStyles[a.type];
+          var tc = alertTextColors[a.type];
+          var ac = a.action;
+          return '<div style="' + st + ';border-radius:8px;padding:11px 14px;display:flex;align-items:flex-start;gap:10px;cursor:pointer" onclick="navigateTo(\'' + ac + '\')">'
+            + '<span style="font-size:14px;color:' + tc + ';flex-shrink:0;margin-top:1px">' + a.icon + '</span>'
+            + '<div style="flex:1;font-size:11px;color:var(--text2);line-height:1.5">' + a.text + '</div>'
+            + '<span style="font-size:9px;color:var(--text3);flex-shrink:0;margin-top:2px;letter-spacing:.5px">VER →</span>'
+            + '</div>';
+        });
+      coachAlertHtml = '<div style="margin-bottom:12px;display:flex;flex-direction:column;gap:7px">'
+        + alertParts.join('')
+        + '</div>';
+    }
+  } catch(e) {}
+
   el.innerHTML = '<div class="fade-in">' +
+    coachAlertHtml +
     '<div class="panel" style="margin-bottom:12px"><div class="ov-bar">' +
     '<div><div class="ov-val '+(netPnl>=0?'pos':'neg')+'">'+pnlSign+'$'+Math.abs(Math.round(netPnl)).toLocaleString()+'</div><div class="ov-lbl">Net P&L</div></div><div class="ov-sep"></div>' +
     '<div><div class="ov-val neutral">'+total+'</div><div class="ov-lbl">Trades</div></div><div class="ov-sep"></div>' +
