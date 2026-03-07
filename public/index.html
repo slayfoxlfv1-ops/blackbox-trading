@@ -998,10 +998,10 @@ function navigateTo(view) {
   document.querySelectorAll('.nav-item').forEach(function(i){i.classList.remove('active');});
   var navEl = document.querySelector('.nav-item[data-view="'+view+'"]');
   if (navEl) navEl.classList.add('active');
-  var titles = { overview:'Overview', tradelog:'Trade Log', replay:'Replay', calendar:'Calendar', discipline:'Discipline', mind:'Mind', reports:'Reports', settings:'Settings' };
+  var titles = { overview:'Overview', tradelog:'Trade Log', replay:'Replay', calendar:'Calendar', discipline:'Discipline', mind:'Mind', rules:'Rules', reports:'Reports', settings:'Settings' };
   var acc = accounts.find(function(a){return a.id===currentAccountId;});
   document.getElementById('page-title').textContent = acc ? acc.name : titles[view];
-  document.getElementById('page-sub').textContent = titles[view].toUpperCase();
+  document.getElementById('page-sub').textContent = (titles[view] || view || '').toUpperCase();
   document.getElementById('log-btn').style.display = (currentAccountId && view!=='settings') ? 'inline-flex' : 'none';
   if (!currentAccountId && view!=='settings') {
     document.getElementById('main-content').innerHTML = '<div class="empty-state"><div class="empty-icon">*</div><div class="empty-title">No account selected</div><div class="empty-msg">Select or create an account first.</div></div>';
