@@ -323,6 +323,7 @@ tr:hover td { background:var(--hover); }
       <div class="nav-item" data-view="calendar"><span class="nav-icon">&#8862;</span> Calendar</div>
       <div class="nav-item" data-view="discipline"><span class="nav-icon">&#10095;</span> Discipline</div>
       <div class="nav-item" data-view="mind"><span class="nav-icon">&#9679;</span> Mind</div>
+      <div class="nav-item" data-view="rules"><span class="nav-icon">&#9724;</span> Rules</div>
       <div class="nav-item" data-view="reports"><span class="nav-icon">&#8595;</span> Reports</div>
       <div class="nav-item" data-view="settings"><span class="nav-icon">&#9711;</span> Settings</div>
     </div>
@@ -1012,6 +1013,7 @@ function navigateTo(view) {
   if (view==='calendar')   renderCalendarView();
   if (view==='discipline') renderDisciplineView();
   if (view==='mind')       renderMindView();
+  if (view==='rules')      renderRulesView();
   if (view==='reports')    renderReports();
   if (view==='settings')   renderSettings();
 }
@@ -1192,6 +1194,17 @@ async function loadAccountData(id) {
       }
     }
 
+    // Rule violations from personal rules
+    var ruleViolations = getRuleViolationAlerts(trades);
+    ruleViolations.forEach(function(v) {
+      alerts.push({
+        type:   'warn',
+        icon:   '⊘',
+        text:   'Regla incumplida: <strong>' + v.rule.label + '</strong> — ' + v.detail,
+        action: 'rules'
+      });
+    });
+
     if (alerts.length) {
       var alertStyles = {
         danger: 'background:var(--red-bg);border:1px solid var(--red-bd);border-left:3px solid var(--red)',
@@ -1348,6 +1361,302 @@ function buildEquitySvg(trades) {
 }
 
 // RULES
+// ══════════════════════════════════════════════════════════════
+// PERSONAL RULES SYSTEM
+// User defines custom rules → Coach detects violations
+// ══════════════════════════════════════════════════════════════
+
+function getPersonalRules(accountId) {
+  try { return JSON.parse(bbStore.get('rules_' + accountId) || '[]'); } catch(e) { return []; }
+}
+function savePersonalRules(accountId, rules) {
+  bbStore.set('rules_' + accountId, JSON.stringify(rules));
+}
+
+// Check rule violations against today's trades
+function checkRuleViolations(rules, trades) {
+  var now      = new Date();
+  var todayStr = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+  var todayTrades = trades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(todayStr); });
+  var violations  = [];
+
+  rules.forEach(function(rule) {
+    if (!rule.active) return;
+    var type = rule.type;
+    var val  = rule.value;
+
+    if (type === 'max_trades_day') {
+      var limit = parseInt(val) || 1;
+      if (todayTrades.length > limit) {
+        violations.push({ rule: rule, detail: 'Tomaste ' + todayTrades.length + ' trades hoy (límite: ' + limit + ')' });
+      }
+    }
+    else if (type === 'no_trade_after_loss') {
+      // No trading after X consecutive losses
+      var streak = 0;
+      todayTrades.slice().reverse().forEach(function(t){ if ((t.pnl||0)<0) streak++; else streak=0; });
+      var lossLimit = parseInt(val) || 2;
+      if (streak >= lossLimit) {
+        violations.push({ rule: rule, detail: 'Llevas ' + streak + ' pérdidas consecutivas hoy (límite: ' + lossLimit + ')' });
+      }
+    }
+    else if (type === 'session') {
+      // Only trade during specific session hours
+      // val = "09:30-11:00" format
+      var parts = (val||'').split('-');
+      if (parts.length === 2) {
+        var badTrades = todayTrades.filter(function(t) {
+          if (!t.entry_time) return false;
+          var d = new Date(t.entry_time);
+          var hhmm = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+          return hhmm < parts[0] || hhmm > parts[1];
+        });
+        if (badTrades.length > 0) {
+          violations.push({ rule: rule, detail: badTrades.length + ' trade(s) fuera de la sesión ' + val });
+        }
+      }
+    }
+    else if (type === 'custom') {
+      // Custom text rule — just show as reminder, no auto-detect
+    }
+  });
+
+  return violations;
+}
+
+function renderRulesView() {
+  var el      = document.getElementById('main-content');
+  var acctId  = currentAccountId || '';
+  var rules   = getPersonalRules(acctId);
+  var trades  = currentTrades || [];
+  var violations = checkRuleViolations(rules, trades);
+
+  var ruleTypes = [
+    { val:'max_trades_day',      lbl:'Máximo trades por día',        ph:'ej: 2',          hint:'Número máximo de trades permitidos por sesión' },
+    { val:'no_trade_after_loss', lbl:'Stop tras N pérdidas seguidas', ph:'ej: 2',          hint:'Para de operar tras X pérdidas consecutivas' },
+    { val:'session',             lbl:'Solo operar en horario',        ph:'ej: 09:30-11:00',hint:'Formato HH:MM-HH:MM en hora del mercado' },
+    { val:'custom',              lbl:'Regla personalizada',           ph:'ej: No operar el lunes', hint:'Describe tu regla en texto libre' }
+  ];
+
+  var html = '<div style="padding:24px;max-width:740px">';
+
+  // Header
+  html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">'
+    + '<div>'
+    + '<div style="font-size:18px;font-weight:700;color:var(--text);letter-spacing:-.3px">Mis Reglas</div>'
+    + '<div style="font-size:12px;color:var(--text3);margin-top:3px">Define las reglas que te has comprometido a seguir como trader</div>'
+    + '</div>'
+    + '<button onclick="openAddRuleModal()" class="btn btn-solid" style="white-space:nowrap">+ Agregar regla</button>'
+    + '</div>';
+
+  // Recommendation banner if no rules
+  if (!rules.length) {
+    html += '<div style="background:#1e2a2a;border:1px solid #2a3e3e;border-left:3px solid #5a9e9e;border-radius:9px;padding:16px 18px;margin-bottom:20px;display:flex;gap:12px;align-items:flex-start">'
+      + '<span style="font-size:18px">◈</span>'
+      + '<div>'
+      + '<div style="font-size:12px;font-weight:600;color:#5a9e9e;margin-bottom:4px">BlackBox recomienda definir tus reglas</div>'
+      + '<div style="font-size:11px;color:var(--text3);line-height:1.6">Los traders con reglas claras cometen un 40% menos errores de disciplina. Define tu número máximo de trades, horario de sesión y condiciones de stop. El Coach IA usará estas reglas para evaluar tu cumplimiento.</div>'
+      + '</div>'
+      + '</div>';
+  }
+
+  // Violations banner
+  if (violations.length) {
+    html += '<div style="background:var(--red-bg);border:1px solid var(--red-bd);border-left:3px solid var(--red);border-radius:9px;padding:14px 16px;margin-bottom:16px">'
+      + '<div style="font-size:10px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">⚠ Reglas incumplidas hoy</div>'
+      + violations.map(function(v) {
+          return '<div style="font-size:11px;color:var(--text2);padding:5px 0;border-bottom:1px solid var(--red-bd);display:flex;gap:8px;align-items:center">'
+            + '<span style="color:var(--red);flex-shrink:0">✕</span>'
+            + '<span><strong>' + v.rule.label + '</strong> — ' + v.detail + '</span>'
+            + '</div>';
+        }).join('')
+      + '</div>';
+  }
+
+  // Rules list
+  if (rules.length) {
+    html += '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">';
+    rules.forEach(function(rule, idx) {
+      var violated = violations.find(function(v){ return v.rule.id === rule.id; });
+      var borderColor = violated ? 'var(--red)' : (rule.active ? '#5a9e9e' : 'var(--border)');
+      var bgColor     = violated ? 'var(--red-bg)' : 'var(--surface)';
+      var typeLabel   = ruleTypes.find(function(t){ return t.val === rule.type; });
+      var typeLbl     = typeLabel ? typeLabel.lbl : rule.type;
+
+      html += '<div style="background:' + bgColor + ';border:1px solid ' + borderColor + ';border-radius:9px;padding:13px 16px;display:flex;align-items:center;gap:12px">'
+        + '<div style="flex:1;min-width:0">'
+        + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">'
+        + '<span style="font-size:9px;padding:2px 7px;border-radius:10px;background:' + (rule.active ? '#1e2a2a' : 'var(--surface2)') + ';color:' + (rule.active ? '#5a9e9e' : 'var(--text3)') + ';border:1px solid ' + (rule.active ? '#2a3e3e' : 'var(--border)') + '">' + typeLbl + '</span>'
+        + (violated ? '<span style="font-size:9px;color:var(--red);font-weight:600">● INCUMPLIDA HOY</span>' : '')
+        + '</div>'
+        + '<div style="font-size:13px;color:var(--text);font-weight:500">' + (rule.label || rule.value || '') + '</div>'
+        + (rule.value && rule.type !== 'custom' ? '<div style="font-size:10px;color:var(--text3);margin-top:2px">Valor: ' + rule.value + '</div>' : '')
+        + '</div>'
+        + '<div style="display:flex;align-items:center;gap:8px;flex-shrink:0">'
+        + '<label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:10px;color:var(--text3)">'
+        + '<input type="checkbox" ' + (rule.active ? 'checked' : '') + ' onchange="toggleRule(' + idx + ')" style="accent-color:#5a9e9e;width:13px;height:13px"> Activa</label>'
+        + '<button onclick="deleteRule(' + idx + ')" style="background:none;border:1px solid var(--border);border-radius:5px;color:var(--text3);font-size:10px;padding:3px 8px;cursor:pointer">✕</button>'
+        + '</div>'
+        + '</div>';
+    });
+    html += '</div>';
+  }
+
+  // Coach analysis of rules
+  html += '<div class="panel" style="padding:18px">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
+    + '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Análisis de cumplimiento</div>'
+    + '<button onclick="generateRulesCoach()" class="btn btn-solid" style="font-size:10px;padding:6px 12px">⚡ Analizar cumplimiento</button>'
+    + '</div>'
+    + '<div id="rules-coach-output"><div style="font-size:11px;color:var(--text3);text-align:center;padding:16px 0">El Coach IA analizará qué reglas cumples y cuáles rompes con más frecuencia.</div></div>'
+    + '</div>';
+
+  html += '</div>';
+
+  // Add Rule Modal (hidden)
+  html += '<div id="add-rule-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center">'
+    + '<div style="background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:24px;width:420px;max-width:90vw">'
+    + '<div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:16px">Nueva regla</div>'
+
+    + '<div style="margin-bottom:12px">'
+    + '<label style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:5px">Tipo de regla</label>'
+    + '<select id="rule-type-sel" onchange="updateRuleForm()" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:12px;font-family:inherit">'
+    + ruleTypes.map(function(t){ return '<option value="' + t.val + '">' + t.lbl + '</option>'; }).join('')
+    + '</select>'
+    + '</div>'
+
+    + '<div style="margin-bottom:12px">'
+    + '<label style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:5px">Descripción <span style="color:var(--text3)">(para ti)</span></label>'
+    + '<input id="rule-label-inp" type="text" placeholder="ej: Solo opero NY session" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:12px;font-family:inherit">'
+    + '</div>'
+
+    + '<div id="rule-value-wrap" style="margin-bottom:16px">'
+    + '<label style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:5px" id="rule-value-lbl">Valor</label>'
+    + '<input id="rule-value-inp" type="text" placeholder="ej: 2" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:12px;font-family:inherit">'
+    + '<div id="rule-hint" style="font-size:10px;color:var(--text3);margin-top:5px"></div>'
+    + '</div>'
+
+    + '<div style="display:flex;gap:8px">'
+    + '<button onclick="closeAddRuleModal()" style="flex:1;padding:9px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text3);cursor:pointer;font-size:11px;font-family:inherit">Cancelar</button>'
+    + '<button onclick="saveNewRule()" style="flex:2;padding:9px;background:#5a9e9e;border:none;border-radius:8px;color:#fff;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit">Guardar regla</button>'
+    + '</div>'
+    + '</div>'
+    + '</div>';
+
+  el.innerHTML = html;
+
+  // Hide modal by default after render
+  var modal = document.getElementById('add-rule-modal');
+  if (modal) modal.style.display = 'none';
+  updateRuleForm();
+}
+
+// ── Rule UI helpers ──
+function openAddRuleModal() {
+  var modal = document.getElementById('add-rule-modal');
+  if (modal) modal.style.display = 'flex';
+}
+function closeAddRuleModal() {
+  var modal = document.getElementById('add-rule-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+function updateRuleForm() {
+  var type = document.getElementById('rule-type-sel');
+  var hint = document.getElementById('rule-hint');
+  var wrap = document.getElementById('rule-value-wrap');
+  var lbl  = document.getElementById('rule-value-lbl');
+  if (!type) return;
+  var hints = {
+    max_trades_day:      { show:true,  lbl:'Número máximo',    hint:'Cuántos trades máximo por sesión (ej: 2)' },
+    no_trade_after_loss: { show:true,  lbl:'Pérdidas seguidas',hint:'Para tras X pérdidas consecutivas (ej: 2)' },
+    session:             { show:true,  lbl:'Horario (HH:MM-HH:MM)', hint:'Rango horario permitido, ej: 09:30-11:00' },
+    custom:              { show:false, lbl:'',                  hint:'' }
+  };
+  var h = hints[type.value] || { show:false };
+  if (wrap) wrap.style.display = h.show ? 'block' : 'none';
+  if (lbl && h.lbl) lbl.textContent = h.lbl;
+  if (hint) hint.textContent = h.hint || '';
+}
+
+function saveNewRule() {
+  var acctId = currentAccountId || '';
+  var rules  = getPersonalRules(acctId);
+  var type   = (document.getElementById('rule-type-sel')   || {}).value || 'custom';
+  var label  = (document.getElementById('rule-label-inp')  || {}).value || '';
+  var value  = (document.getElementById('rule-value-inp')  || {}).value || '';
+  if (!label.trim()) { alert('Escribe una descripción para la regla'); return; }
+  rules.push({ id: Date.now(), type: type, label: label.trim(), value: value.trim(), active: true });
+  savePersonalRules(acctId, rules);
+  closeAddRuleModal();
+  renderRulesView();
+}
+
+function toggleRule(idx) {
+  var acctId = currentAccountId || '';
+  var rules  = getPersonalRules(acctId);
+  if (rules[idx]) rules[idx].active = !rules[idx].active;
+  savePersonalRules(acctId, rules);
+  renderRulesView();
+}
+
+function deleteRule(idx) {
+  var acctId = currentAccountId || '';
+  var rules  = getPersonalRules(acctId);
+  rules.splice(idx, 1);
+  savePersonalRules(acctId, rules);
+  renderRulesView();
+}
+
+async function generateRulesCoach() {
+  var acctId  = currentAccountId || '';
+  var rules   = getPersonalRules(acctId);
+  var trades  = currentTrades || [];
+  var outEl   = document.getElementById('rules-coach-output');
+  if (!outEl) return;
+
+  if (!rules.length) {
+    outEl.innerHTML = '<div style="font-size:11px;color:var(--text3);text-align:center;padding:16px">Agrega al menos una regla para analizar tu cumplimiento.</div>';
+    return;
+  }
+
+  outEl.innerHTML = '<div class="spinner" style="margin:16px auto"></div>';
+
+  var violations = checkRuleViolations(rules, trades);
+  var activeRules = rules.filter(function(r){ return r.active; });
+
+  // Build discipline context from trades
+  var last20 = trades.slice(-20);
+  var tagCount = {};
+  last20.forEach(function(t){ var tg = t.discipline_tag||'clean'; tagCount[tg]=(tagCount[tg]||0)+1; });
+
+  var prompt = 'Eres el coach de este trader. Estas son sus reglas personales:\n'
+    + activeRules.map(function(r){ return '- ' + r.label + (r.value ? ' (valor: '+r.value+')' : ''); }).join('\n')
+    + '\n\nViolaciones detectadas HOY:\n'
+    + (violations.length ? violations.map(function(v){ return '- ' + v.rule.label + ': ' + v.detail; }).join('\n') : 'Ninguna detectada automaticamente')
+    + '\n\nDisciplina ultimos 20 trades: ' + Object.entries(tagCount).map(function(e){return e[0]+':'+e[1];}).join(', ')
+    + '\n\nAnaliza: 1) Que reglas cumple bien 2) En cuales falla mas 3) Por que crees que falla en esas reglas especificas (patron psicologico) 4) Una tecnica concreta para cada regla que incumple. Directo y personalizado. Max 300 palabras.';
+
+  try {
+    var msg = await callCoach(prompt, 800);
+    if (msg) {
+      outEl.innerHTML = '<div style="font-size:12px;color:var(--text2);line-height:1.8;white-space:pre-wrap;background:var(--surface2);border-radius:8px;padding:14px">' + msg + '</div>';
+    } else {
+      outEl.innerHTML = '<div style="font-size:11px;color:var(--red);text-align:center;padding:16px">No se pudo generar el análisis.</div>';
+    }
+  } catch(e) {
+    outEl.innerHTML = '<div style="font-size:11px;color:var(--red);text-align:center;padding:16px">Error al contactar el Coach.</div>';
+  }
+}
+
+// Inject rule violations into overview alert banner
+function getRuleViolationAlerts(trades) {
+  var acctId     = currentAccountId || '';
+  var rules      = getPersonalRules(acctId);
+  var violations = checkRuleViolations(rules, trades);
+  return violations;
+}
+
 function buildRules(acc, s) {
   var dllLimit=Math.abs(acc.daily_loss_limit||0);
   var ddLimit=Math.abs(acc.max_drawdown||0);
