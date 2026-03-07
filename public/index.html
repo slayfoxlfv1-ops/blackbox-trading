@@ -1054,6 +1054,7 @@ async function loadAccountData(id) {
   });
   // Auto-coach checks (runs silently in background)
   setTimeout(function() { autoCoachCheck(trades, id); }, 2000);
+  startTiltMonitor(); // Start real-time tilt monitoring
 
   // Calculate stats
   var total = trades.length;
@@ -1237,6 +1238,14 @@ async function loadAccountData(id) {
     '<div><div class="ov-val neutral">'+wr+'%</div><div class="ov-lbl">Win Rate</div></div><div class="ov-sep"></div>' +
     '<div><div class="ov-val '+(pf==='--'||pf==='INF'?'neutral':parseFloat(pf)>=1.5?'pos':'neg')+'">'+pf+'</div><div class="ov-lbl">Profit Factor</div></div><div class="ov-sep"></div>' +
     '<div><div class="ov-val '+(disc.score>=60?'pos':disc.score>=40?'amber':'neg')+'">'+disc.score+'</div><div class="ov-lbl">Discipline</div></div>' +
+    (function() {
+      var tilt = detectTilt(trades);
+      if (!tilt) return '';
+      return '<div class="ov-sep"></div><div style="cursor:pointer" onclick="showTiltAlert(detectTilt(currentTrades))">'
+        + '<div class="ov-val ' + (tilt.level==='danger'?'neg':'amber') + '">' + (tilt.level==='danger'?'TILT':'RIESGO') + '</div>'
+        + '<div class="ov-lbl">Estado mental</div>'
+        + '</div>';
+    })() +
     '</div></div>' +
 
     '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px">' +
@@ -2738,6 +2747,211 @@ async function autoCoachCheck(trades, accountId) {
     var dayName = ['domingo','lunes','martes','miercoles','jueves','viernes','sabado'][dayOfWeek];
     await generateAutoFullAnalysis(trades, accountId, dayName);
   }
+}
+
+// ══════════════════════════════════════════════════════════════
+// TILT DETECTOR
+// Monitors real-time trade patterns for tilt signals:
+// - < 3 min between trades (revenge speed)
+// - 3+ trades in 30 min window
+// - Position size increase after loss
+// - Loss streak >= 3
+// ══════════════════════════════════════════════════════════════
+
+var tiltCheckInterval = null;
+var lastTiltAlert     = 0; // timestamp of last tilt notification (avoid spam)
+
+function detectTilt(trades) {
+  if (!trades || trades.length < 2) return null;
+
+  var now      = Date.now();
+  var msMin    = 60000;
+  var signals  = [];
+  var score    = 0;
+
+  // Sort by exit time descending
+  var sorted = trades.slice().sort(function(a, b) {
+    return new Date(b.exit_time || b.entry_time) - new Date(a.exit_time || a.entry_time);
+  });
+
+  var recent = sorted.slice(0, 10); // last 10 trades
+
+  // ── Signal 1: Speed — trades < 3 min apart ──
+  for (var i = 0; i < recent.length - 1; i++) {
+    var t1 = new Date(recent[i].entry_time || recent[i].exit_time);
+    var t2 = new Date(recent[i+1].exit_time || recent[i+1].entry_time);
+    var gap = Math.abs(t1 - t2) / msMin;
+    if (gap < 3 && gap > 0) {
+      signals.push({ type: 'speed', detail: 'Entraste en menos de ' + Math.round(gap*60) + 's después del trade anterior' });
+      score += 25;
+      break;
+    }
+  }
+
+  // ── Signal 2: Frequency — 3+ trades in 30 min ──
+  var now30  = new Date(Date.now() - 30 * msMin);
+  var last30 = recent.filter(function(t) {
+    var d = new Date(t.entry_time || t.exit_time);
+    return d > now30;
+  });
+  if (last30.length >= 3) {
+    signals.push({ type: 'frequency', detail: last30.length + ' trades en los últimos 30 minutos' });
+    score += 30;
+  }
+
+  // ── Signal 3: Size escalation after loss ──
+  if (recent.length >= 2) {
+    var lastTrade = recent[0];
+    var prevTrade = recent[1];
+    if ((prevTrade.pnl || 0) < 0 && (lastTrade.quantity || 0) > (prevTrade.quantity || 0)) {
+      signals.push({ type: 'size', detail: 'Aumentaste el tamaño de posición después de una pérdida' });
+      score += 35;
+    }
+  }
+
+  // ── Signal 4: Loss streak ──
+  var streak = 0;
+  for (var j = 0; j < recent.length; j++) {
+    if ((recent[j].pnl || 0) < 0) streak++;
+    else break;
+  }
+  if (streak >= 3) {
+    signals.push({ type: 'streak', detail: streak + ' pérdidas consecutivas' });
+    score += 20 + (streak * 5);
+  }
+
+  if (signals.length === 0) return null;
+
+  var level = score >= 70 ? 'danger' : score >= 40 ? 'warn' : null;
+  if (!level) return null;
+
+  return { score: score, level: level, signals: signals };
+}
+
+function showTiltAlert(tilt) {
+  // Don't spam — max 1 alert per 15 minutes
+  if (Date.now() - lastTiltAlert < 15 * 60000) return;
+  lastTiltAlert = Date.now();
+
+  var existing = document.getElementById('tilt-notif');
+  if (existing) existing.remove();
+
+  var isDanger = tilt.level === 'danger';
+  var bg       = isDanger ? 'var(--red-bg)'   : 'var(--amber-bg)';
+  var border   = isDanger ? 'var(--red-bd)'   : 'var(--amber-bd)';
+  var accent   = isDanger ? 'var(--red)'      : 'var(--amber)';
+  var title    = isDanger ? '🔴 TILT DETECTADO' : '⚠ Señales de tilt';
+  var msg      = isDanger
+    ? 'Estás en tilt. Para ahora, cierra los gráficos y toma un break de mínimo 15 minutos.'
+    : 'Hay señales de que podrías estar perdiendo objetividad. Revisa antes del próximo trade.';
+
+  var notif = document.createElement('div');
+  notif.id  = 'tilt-notif';
+  notif.style.cssText = [
+    'position:fixed', 'bottom:24px', 'right:24px', 'z-index:99999',
+    'background:' + bg,
+    'border:1px solid ' + border,
+    'border-left:4px solid ' + accent,
+    'border-radius:12px', 'padding:16px 18px',
+    'width:320px',
+    'box-shadow:0 8px 32px rgba(0,0,0,.6)',
+    'font-family:Geist,sans-serif',
+    'transform:translateX(120%)',
+    'transition:transform .4s cubic-bezier(.16,1,.3,1)'
+  ].join(';');
+
+  notif.innerHTML = [
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">',
+      '<span style="font-size:11px;font-weight:700;color:' + accent + ';letter-spacing:.5px">' + title + '</span>',
+      '<button id="tilt-close" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:0">×</button>',
+    '</div>',
+    '<div style="font-size:11px;color:var(--text2);line-height:1.6;margin-bottom:10px">' + msg + '</div>',
+    '<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">',
+      tilt.signals.map(function(s) {
+        return '<div style="font-size:10px;color:var(--text3);display:flex;gap:6px;align-items:center">'
+          + '<span style="color:' + accent + '">▸</span>' + s.detail + '</div>';
+      }).join(''),
+    '</div>',
+    '<div style="display:flex;gap:7px">',
+      '<button id="tilt-break" style="flex:1;padding:8px;background:' + accent + ';border:none;border-radius:7px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Tomar break</button>',
+      '<button id="tilt-dismiss" style="flex:1;padding:8px;background:transparent;border:1px solid ' + border + ';border-radius:7px;color:var(--text3);font-size:11px;cursor:pointer;font-family:inherit">Ignorar</button>',
+    '</div>'
+  ].join('');
+
+  document.body.appendChild(notif);
+  setTimeout(function() { notif.style.transform = 'translateX(0)'; }, 50);
+
+  document.getElementById('tilt-close').onclick   = function() { notif.remove(); };
+  document.getElementById('tilt-dismiss').onclick = function() { notif.remove(); };
+  document.getElementById('tilt-break').onclick   = function() {
+    notif.remove();
+    // Show break timer overlay
+    showBreakTimer(15);
+  };
+
+  // Auto-dismiss after 60s
+  setTimeout(function() { if (notif.parentNode) notif.remove(); }, 60000);
+}
+
+function showBreakTimer(minutes) {
+  var existing = document.getElementById('break-overlay');
+  if (existing) existing.remove();
+
+  var overlay = document.createElement('div');
+  overlay.id  = 'break-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:999999;display:flex;align-items:center;justify-content:center;font-family:Geist,sans-serif';
+
+  var totalSecs = minutes * 60;
+  var remaining = totalSecs;
+
+  overlay.innerHTML = [
+    '<div style="text-align:center;padding:40px">',
+      '<div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:16px">Break obligatorio</div>',
+      '<div id="break-timer" style="font-size:72px;font-weight:700;color:var(--text);letter-spacing:-2px;font-family:Geist Mono,monospace">' + String(minutes).padStart(2,'0') + ':00</div>',
+      '<div style="font-size:13px;color:var(--text3);margin-top:12px;max-width:280px;line-height:1.6">Aléjate de los gráficos. Respira. Vuelve con la mente clara.</div>',
+      '<button id="break-skip" style="margin-top:24px;padding:10px 24px;background:transparent;border:1px solid var(--border2);border-radius:8px;color:var(--text3);font-size:11px;cursor:pointer;font-family:inherit">Terminar antes</button>',
+    '</div>'
+  ].join('');
+
+  document.body.appendChild(overlay);
+
+  var timerEl = document.getElementById('break-timer');
+  var interval = setInterval(function() {
+    remaining--;
+    var m = Math.floor(remaining / 60);
+    var s = remaining % 60;
+    if (timerEl) timerEl.textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+    if (remaining <= 0) {
+      clearInterval(interval);
+      var doneDiv = document.createElement('div');
+      doneDiv.style.cssText = 'text-align:center;padding:40px';
+      doneDiv.innerHTML = '<div style="font-size:48px;margin-bottom:16px">✓</div>'
+        + '<div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px">Break completado</div>'
+        + '<div style="font-size:13px;color:var(--text3);margin-bottom:24px">Ya puedes volver. Recuerda tu plan.</div>';
+      var backBtn = document.createElement('button');
+      backBtn.textContent = 'Volver al dashboard';
+      backBtn.style.cssText = 'padding:10px 24px;background:#5a9e9e;border:none;border-radius:8px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit';
+      backBtn.onclick = function() { document.getElementById('break-overlay').remove(); };
+      doneDiv.appendChild(backBtn);
+      overlay.innerHTML = '';
+      overlay.appendChild(doneDiv);
+    }
+  }, 1000);
+
+  document.getElementById('break-skip').onclick = function() {
+    clearInterval(interval);
+    overlay.remove();
+  };
+}
+
+// Run tilt check every 2 minutes when trades are loaded
+function startTiltMonitor() {
+  if (tiltCheckInterval) clearInterval(tiltCheckInterval);
+  tiltCheckInterval = setInterval(function() {
+    if (!currentTrades || !currentTrades.length) return;
+    var tilt = detectTilt(currentTrades);
+    if (tilt) showTiltAlert(tilt);
+  }, 2 * 60000);
 }
 
 // ── Targeted error alert ──
