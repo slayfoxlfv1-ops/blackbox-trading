@@ -1236,6 +1236,12 @@ async function loadAccountData(id) {
   var emoMap = {great:'F',good:'G',neutral:'N',bad:'B',terrible:'T'};
   var tagMap = {clean:'clean',moved_sl:'moved sl',scaled_in:'scale in',impulse:'impulse',no_confirmation:'no confirm',overtrading:'overtrading',fomo:'fomo'};
 
+  // ── ONBOARDING: first-time user with no trades ──
+  if (!trades.length) {
+    el.innerHTML = buildOnboardingScreen(acc);
+    return;
+  }
+
   var tradeRows = trades.slice().reverse().slice(0,20).map(function(t) {
     var pnl = t.pnl||0;
     var pnlDisp = (pnl>=0?'+':'-') + '$' + Math.abs(pnl).toLocaleString();
@@ -1374,63 +1380,331 @@ async function loadAccountData(id) {
     }
   } catch(e) {}
 
+  // ── Compute new features ──
+  var readiness   = calcReadinessScore(todayMood, currentChecklistSessions, trades);
+  var rdColor     = readiness.score>=70?'var(--green)':readiness.score>=40?'var(--amber)':'var(--red)';
+  var bigMistakes = calcBiggestMistakes(trades);
+  var discProg    = calcDisciplineProgress(trades);
+  var badges      = calcBadges(trades, currentChecklistSessions);
+  var tilt2       = detectTilt(trades);
+  var moodBg2     = todayMood?(todayMood.level==='green'?'var(--green-bg)':todayMood.level==='yellow'?'var(--amber-bg)':'var(--red-bg)'):'var(--surface2)';
+  var moodBd2     = todayMood?(todayMood.level==='green'?'var(--green-bd)':todayMood.level==='yellow'?'#3d3020':'var(--red-bd)'):'var(--border)';
+  var moodClr2    = todayMood?(todayMood.level==='green'?'var(--green)':todayMood.level==='yellow'?'var(--amber)':'var(--red)'):'var(--text3)';
+  var moodLabel2  = todayMood?(todayMood.level==='green'?'🟢 Green Day':todayMood.level==='yellow'?'🟡 Yellow Day':'🔴 Red Day'):'—';
+
   el.innerHTML = '<div class="fade-in">' +
-    coachAlertHtml +
-    '<div class="panel" style="margin-bottom:12px"><div class="ov-bar">' +
-    '<div><div class="ov-val '+(netPnl>=0?'pos':'neg')+'">'+pnlSign+'$'+Math.abs(Math.round(netPnl)).toLocaleString()+'</div><div class="ov-lbl">Net P&L</div></div><div class="ov-sep"></div>' +
-    '<div><div class="ov-val neutral">'+total+'</div><div class="ov-lbl">Trades</div></div><div class="ov-sep"></div>' +
-    '<div><div class="ov-val neutral">'+wr+'%</div><div class="ov-lbl">Win Rate</div></div><div class="ov-sep"></div>' +
-    '<div><div class="ov-val '+(pf==='--'||pf==='INF'?'neutral':parseFloat(pf)>=1.5?'pos':'neg')+'">'+pf+'</div><div class="ov-lbl">Profit Factor</div></div><div class="ov-sep"></div>' +
-    '<div><div class="ov-val '+(disc.score>=60?'pos':disc.score>=40?'amber':'neg')+'">'+disc.score+'</div><div class="ov-lbl">Discipline</div></div>' +
-    (todayMood ? '<div class="ov-sep"></div><div><div class="ov-val '+(todayMood.level==='green'?'pos':todayMood.level==='yellow'?'amber':'neg')+'">'+(todayMood.level==='green'?'GREEN':todayMood.level==='yellow'?'YELLOW':'RED')+'</div><div class="ov-lbl">Hoy</div></div>' : '') +
-    (function() {
-      var tilt = detectTilt(trades);
-      if (!tilt) return '';
-      return '<div class="ov-sep"></div><div style="cursor:pointer" onclick="showTiltAlert(detectTilt(currentTrades))">'
-        + '<div class="ov-val ' + (tilt.level==='danger'?'neg':'amber') + '">' + (tilt.level==='danger'?'TILT':'RIESGO') + '</div>'
-        + '<div class="ov-lbl">Estado mental</div>'
-        + '</div>';
-    })() +
-    '</div></div>' +
+  coachAlertHtml +
 
-    '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px">' +
-    '<div class="metric"><div class="m-label">Avg. Win <span class="tip-wrap"><span class="tip-btn">?</span><span class="tip-box">Sum of winning trades / number of wins.</span></span></div><div class="m-val pos">$'+avgWin+'</div></div>' +
-    '<div class="metric"><div class="m-label">Avg. Loss <span class="tip-wrap"><span class="tip-btn">?</span><span class="tip-box">Sum of losing trades / number of losses.</span></span></div><div class="m-val neg">$'+avgLoss+'</div></div>' +
-    '<div class="metric"><div class="m-label">Best Day</div><div class="m-val pos">'+(bestDay!==null?'+$'+Math.round(bestDay).toLocaleString():'--')+'</div></div>' +
-    '<div class="metric"><div class="m-label">Worst Day</div><div class="m-val neg">'+(worstDay!==null?'-$'+Math.abs(Math.round(worstDay)).toLocaleString():'--')+'</div></div>' +
-    '</div>' +
+  '<div style="display:grid;grid-template-columns:180px 1fr 1fr;gap:12px;margin-bottom:12px;align-items:stretch">' +
 
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">' +
-    '<div class="panel"><div class="panel-head"><span class="panel-title">Equity Curve</span><span class="panel-cap" style="color:'+(netPnl>=0?'var(--green)':'var(--red)')+'">'+pnlSign+'$'+Math.abs(Math.round(netPnl)).toLocaleString()+'</span></div><div style="padding:14px 18px;height:100px">'+equitySvg+'</div></div>' +
-    '<div class="panel"><div class="panel-head"><span class="panel-title">Account Rules</span></div>'+rulesHtml+'</div>' +
-    '</div>' +
+  '<div class="panel" style="padding:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center">' +
+  buildDisciplineRing(disc.score) +
+  '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-top:10px">Discipline Score</div>' +
+  '<div style="font-size:11px;color:'+(disc.score>=60?'var(--green)':disc.score>=40?'var(--amber)':'var(--red)')+';margin-top:4px;font-weight:600">'+disc.lbl+'</div>' +
+  '<div style="display:flex;gap:4px;margin-top:8px;flex-wrap:wrap;justify-content:center">' +
+  [['Clean',disc.counts.clean],['SL moved',disc.counts.moved_sl],['Impulse',disc.counts.impulse+disc.counts.fomo+disc.counts.overtrading]].map(function(r){ return '<span style="font-size:8px;padding:2px 6px;border-radius:9px;background:var(--surface2);color:var(--text3);border:1px solid var(--border)">'+r[0]+' <b style="color:var(--text2)">'+r[1]+'</b></span>'; }).join('') +
+  '</div></div>' +
 
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' +
-    '<div class="panel"><div class="panel-head"><span class="panel-title">P&L Calendar</span></div>' +
-    '<div class="cal-hdr">'+['M','T','W','T','F','S','S'].map(function(d){return '<div class="cal-hdr-day">'+d+'</div>';}).join('')+'</div>' +
-    '<div class="cal-grid">'+calHtml+'</div></div>' +
-    '<div class="panel"><div class="panel-head"><span class="panel-title">Discipline</span></div>' +
-    '<div style="padding:14px 18px"><div class="disc-num" style="color:'+(disc.score>=60?'var(--green)':disc.score>=40?'var(--amber)':'var(--red)')+'">'+disc.score+'</div>' +
-    '<div class="disc-lbl">'+disc.lbl+'</div>' +
-    '<div class="disc-bar"><div class="disc-fill" style="width:'+disc.score+'%;background:'+(disc.score>=60?'var(--green)':disc.score>=40?'var(--amber)':'var(--red)')+'"></div></div></div>' +
-    '<div class="disc-rows">' +
-    [['ok','Clean trades',disc.counts.clean],['warn','Moved SL',disc.counts.moved_sl],['bad','Scaled into loss',disc.counts.scaled_in],['bad','Impulse',disc.counts.impulse],['bad','No confirmation',disc.counts.no_confirmation],['warn','Overtrading',disc.counts.overtrading],['bad','FOMO',disc.counts.fomo]].map(function(row) {
-      return '<div class="disc-row"><div class="d-dot '+row[0]+'"></div><div class="d-desc">'+row[1]+'</div><div class="d-val">'+row[2]+'</div></div>';
-    }).join('') +
-    '</div></div>' +
-    '</div>' +
+  '<div class="panel" style="padding:18px;cursor:pointer" onclick="navigateTo(\'mind\')">' +
+  '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Trading Readiness Today</div>' +
+  '<div style="display:flex;align-items:baseline;gap:5px;margin-bottom:10px"><div style="font-size:46px;font-weight:700;color:'+rdColor+';line-height:1;letter-spacing:-2px">'+readiness.score+'</div><div style="font-size:13px;color:var(--text3)">/100</div></div>' +
+  '<div style="height:5px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-bottom:10px"><div style="height:100%;width:'+readiness.score+'%;background:'+rdColor+';border-radius:3px"></div></div>' +
+  '<div style="font-size:10px;color:var(--text2);line-height:1.6;margin-bottom:10px">'+readiness.recommendation+'</div>' +
+  '<div style="display:flex;gap:5px;flex-wrap:wrap">'+readiness.factors.map(function(f){ return '<span style="font-size:8px;padding:2px 8px;border-radius:10px;background:'+f.bg+';color:'+f.color+';border:1px solid '+f.border+'">'+f.label+'</span>'; }).join('')+'</div></div>' +
 
-    '<div class="panel" style="margin-top:12px"><div class="panel-head"><span class="panel-title">Recent Trades</span><span class="panel-cap">Last 20</span></div>' +
-    '<div class="table-scroll"><table><thead><tr><th>Ticker</th><th>Side</th><th>P&L</th><th>R:R</th><th>Discipline</th><th>Time</th></tr></thead>' +
-    '<tbody>'+(tradeRows||'<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text3);font-family:Geist Mono,monospace;font-size:11px">No trades yet</td></tr>')+'</tbody></table></div></div>' +
-    '</div>';
+  '<div class="panel" style="padding:18px">' +
+  '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">Performance</div>' +
+  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">' +
+  '<div><div style="font-size:28px;font-weight:700;color:'+(netPnl>=0?'var(--green)':'var(--red)')+';line-height:1;letter-spacing:-1px">'+pnlSign+'$'+Math.abs(Math.round(netPnl)).toLocaleString()+'</div><div style="font-size:9px;color:var(--text3);margin-top:3px">Net P&L</div></div>' +
+  '<div><div style="font-size:28px;font-weight:700;color:var(--text);line-height:1">'+wr+'%</div><div style="font-size:9px;color:var(--text3);margin-top:3px">Win Rate</div></div>' +
+  '<div><div style="font-size:18px;font-weight:700;color:var(--text)">'+total+'</div><div style="font-size:9px;color:var(--text3);margin-top:2px">Trades</div></div>' +
+  '<div><div style="font-size:18px;font-weight:700;color:'+(pf==='--'||pf==='INF'?'var(--text)':parseFloat(pf)>=1.5?'var(--green)':'var(--red)')+'">'+pf+'</div><div style="font-size:9px;color:var(--text3);margin-top:2px">Profit Factor</div></div>' +
+  '</div>' +
+  (todayMood?'<div style="padding:6px 10px;border-radius:7px;background:'+moodBg2+';border:1px solid '+moodBd2+';font-size:9px;color:'+moodClr2+'">'+moodLabel2+'</div>':'') +
+  (tilt2?'<div style="padding:6px 10px;border-radius:7px;background:var(--red-bg);border:1px solid var(--red-bd);font-size:9px;color:var(--red);margin-top:6px;cursor:pointer" onclick="showTiltAlert(detectTilt(currentTrades))">⚡ '+(tilt2.level==='danger'?'TILT detectado':'Riesgo de tilt')+' — ver detalle</div>':'') +
+  '</div></div>' +
 
+  '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px">' +
+
+  '<div class="panel" style="padding:18px">' +
+  '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px"><span style="color:var(--red)">⚠</span> Biggest Mistakes</div>' +
+  (bigMistakes.length?bigMistakes.map(function(m,i){ return '<div style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid '+(i<bigMistakes.length-1?'var(--border)':'transparent')+'"><span style="font-size:11px;font-weight:700;color:var(--text3);min-width:16px">'+(i+1)+'.</span><div style="flex:1"><div style="font-size:10px;color:var(--text);font-weight:500">'+m.label+'</div><div style="font-size:9px;color:var(--text3);margin-top:2px">'+m.detail+'</div></div></div>'; }).join(''):'<div style="font-size:10px;color:var(--green);padding:8px 0">✓ Sin errores significativos</div>') +
+  '</div>' +
+
+  '<div class="panel" style="padding:18px">' +
+  '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px"><span style="color:var(--green)">↗</span> Discipline Progress</div>' +
+  (discProg.length>=2?discProg.map(function(m,i){ var prev=i>0?discProg[i-1].score:null; var delta=prev!==null?m.score-prev:null; var dStr=delta!==null?(delta>=0?'<span style="color:var(--green);font-size:9px;min-width:24px">+'+delta+'</span>':'<span style="color:var(--red);font-size:9px;min-width:24px">'+delta+'</span>'):'<span style="min-width:24px"></span>'; return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid '+(i<discProg.length-1?'var(--border)':'transparent')+'"><div style="font-size:9px;color:var(--text3);min-width:52px">'+m.month+'</div><div style="flex:1;height:4px;background:var(--surface2);border-radius:2px;overflow:hidden"><div style="height:100%;width:'+m.score+'%;background:'+(m.score>=60?'var(--green)':m.score>=40?'var(--amber)':'var(--red)')+';border-radius:2px"></div></div><div style="font-size:10px;font-weight:700;color:'+(m.score>=60?'var(--green)':m.score>=40?'var(--amber)':'var(--red)')+';min-width:24px;text-align:right">'+m.score+'</div>'+dStr+'</div>'; }).join(''):'<div style="font-size:10px;color:var(--text3);padding:8px 0">Opera más para ver tu progreso mensual</div>') +
+  '</div>' +
+
+  '<div class="panel" style="padding:18px">' +
+  '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px"><span style="color:var(--amber)">★</span> Achievements</div>' +
+  (badges.earned.length?badges.earned.slice(0,4).map(function(b){ return '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-size:16px">'+b.emoji+'</span><div><div style="font-size:10px;color:var(--text);font-weight:500">'+b.name+'</div><div style="font-size:8px;color:var(--text3)">'+b.desc+'</div></div></div>'; }).join('') + (badges.next?'<div style="margin-top:8px;padding:8px;background:var(--surface2);border-radius:7px;border:1px dashed var(--border2)"><div style="font-size:8px;color:var(--text3);margin-bottom:2px">PRÓXIMO</div><div style="font-size:9px;color:var(--text2)">'+badges.next.emoji+' '+badges.next.name+' — '+badges.next.progress+'</div></div>':''):'<div style="font-size:10px;color:var(--text3);padding:8px 0">Opera más trades para desbloquear logros</div>') +
+  '</div></div>' +
+
+  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">' +
+  '<div class="panel"><div class="panel-head"><span class="panel-title">Equity Curve</span><span class="panel-cap" style="color:'+(netPnl>=0?'var(--green)':'var(--red)')+'">'+pnlSign+'$'+Math.abs(Math.round(netPnl)).toLocaleString()+'</span></div><div style="padding:14px 18px;height:100px">'+equitySvg+'</div></div>' +
+  '<div class="panel"><div class="panel-head"><span class="panel-title">Account Rules</span></div>'+rulesHtml+'</div>' +
+  '</div>' +
+
+  '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px">' +
+  '<div class="metric"><div class="m-label">Avg. Win</div><div class="m-val pos">$'+avgWin+'</div></div>' +
+  '<div class="metric"><div class="m-label">Avg. Loss</div><div class="m-val neg">$'+avgLoss+'</div></div>' +
+  '<div class="metric"><div class="m-label">Best Day</div><div class="m-val pos">'+(bestDay!==null?'+$'+Math.round(bestDay).toLocaleString():'--')+'</div></div>' +
+  '<div class="metric"><div class="m-label">Worst Day</div><div class="m-val neg">'+(worstDay!==null?'-$'+Math.abs(Math.round(worstDay)).toLocaleString():'--')+'</div></div>' +
+  '</div>' +
+
+  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">' +
+  '<div class="panel"><div class="panel-head"><span class="panel-title">P&L Calendar</span></div>' +
+  '<div class="cal-hdr">'+['M','T','W','T','F','S','S'].map(function(d){return '<div class="cal-hdr-day">'+d+'</div>';}).join('')+'</div>' +
+  '<div class="cal-grid">'+calHtml+'</div></div>' +
+  '<div class="panel"><div class="panel-head"><span class="panel-title">Discipline Breakdown</span></div>' +
+  '<div style="padding:14px 18px"><div class="disc-bar"><div class="disc-fill" style="width:'+disc.score+'%;background:'+(disc.score>=60?'var(--green)':disc.score>=40?'var(--amber)':'var(--red)')+'"></div></div></div>' +
+  '<div class="disc-rows">' +
+  [['ok','Clean trades',disc.counts.clean],['warn','Moved SL',disc.counts.moved_sl],['bad','Scaled into loss',disc.counts.scaled_in],['bad','Impulse',disc.counts.impulse],['bad','No confirmation',disc.counts.no_confirmation],['warn','Overtrading',disc.counts.overtrading],['bad','FOMO',disc.counts.fomo]].map(function(row){ return '<div class="disc-row"><div class="d-dot '+row[0]+'"></div><div class="d-desc">'+row[1]+'</div><div class="d-val">'+row[2]+'</div></div>'; }).join('') +
+  '</div></div></div>' +
+
+  '<div class="panel" style="margin-bottom:12px"><div class="panel-head"><span class="panel-title">Recent Trades</span><span class="panel-cap">Last 20</span></div>' +
+  '<div class="table-scroll"><table><thead><tr><th>Ticker</th><th>Side</th><th>P&L</th><th>R:R</th><th>Discipline</th><th>Time</th></tr></thead>' +
+  '<tbody>'+(tradeRows||'<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text3);font-size:11px">No trades yet</td></tr>')+'</tbody></table></div></div>' +
+
+  '</div>';
   // Update sidebar PNL
   var pnlEl = document.getElementById('pnl-'+id);
   if (pnlEl) {
     pnlEl.textContent = (netPnl>=0?'+':'-')+'$'+Math.abs(Math.round(netPnl)).toLocaleString();
     pnlEl.className = 'acc-pnl ' + (netPnl>0?'pos':netPnl<0?'neg':'zero');
   }
+}
+
+
+// ══════════════════════════════════════════════════════════════
+// NEW OVERVIEW HELPERS
+// ══════════════════════════════════════════════════════════════
+
+// ── Discipline Ring SVG ──
+function buildDisciplineRing(score) {
+  var color = score>=60?'#5a9e72':score>=40?'#9e8050':'#9e5a5a';
+  var r = 52, cx = 60, cy = 60;
+  var circ = 2 * Math.PI * r;
+  var fill = circ * (score/100);
+  var dash = fill + ' ' + (circ - fill);
+  return '<svg width="120" height="120" style="overflow:visible">'
+    + '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="var(--surface2)" stroke-width="8"/>'
+    + '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+color+'" stroke-width="8"'
+    + ' stroke-dasharray="'+dash+'" stroke-dashoffset="'+circ*0.25+'"'
+    + ' stroke-linecap="round" style="transition:stroke-dasharray .8s ease"/>'
+    + '<text x="'+cx+'" y="'+(cy+6)+'" text-anchor="middle" font-family="Geist Mono,monospace" font-size="22" font-weight="700" fill="'+color+'">'+score+'</text>'
+    + '</svg>';
+}
+
+// ── Readiness Score (0-100) ──
+function calcReadinessScore(todayMood, clSessions, trades) {
+  var score = 50; // base
+  var factors = [];
+  var today = new Date().toISOString().slice(0,10);
+
+  // Mood (40%)
+  if (todayMood && todayMood.date === today) {
+    var moodPts = todayMood.level==='green'?40:todayMood.level==='yellow'?20:0;
+    score += moodPts - 20; // relative to base
+    var moodCol = todayMood.level==='green'?'#5a9e72':todayMood.level==='yellow'?'#9e8050':'#9e5a5a';
+    var moodBg  = todayMood.level==='green'?'var(--green-bg)':todayMood.level==='yellow'?'var(--amber-bg)':'var(--red-bg)';
+    var moodBd  = todayMood.level==='green'?'var(--green-bd)':'#3d3020';
+    factors.push({label: todayMood.level==='green'?'😴 Buen descanso':todayMood.level==='yellow'?'😐 Descanso regular':'😫 Mal descanso', color:moodCol, bg:moodBg, border:moodBd});
+  } else {
+    factors.push({label:'❓ Sin mood check', color:'var(--text3)', bg:'var(--surface2)', border:'var(--border)'});
+  }
+
+  // Checklist (25%) — did user complete checklist today?
+  var todayCl = (clSessions||[]).find(function(s){ return s.session_date===today; });
+  if (todayCl) {
+    var clPts = Math.round((todayCl.score_pct/100)*25) - 12;
+    score += clPts;
+    var clCol = todayCl.score_pct>=80?'#5a9e72':todayCl.score_pct>=50?'#9e8050':'#9e5a5a';
+    factors.push({label:'✓ Checklist '+todayCl.score_pct+'%', color:clCol, bg:todayCl.score_pct>=80?'var(--green-bg)':'var(--amber-bg)', border:todayCl.score_pct>=80?'var(--green-bd)':'#3d3020'});
+  } else {
+    score -= 10;
+    factors.push({label:'☐ Sin checklist', color:'var(--text3)', bg:'var(--surface2)', border:'var(--border)'});
+  }
+
+  // Loss streak (20%) — penalize for active streak
+  var lossStreak = 0;
+  var sorted = (trades||[]).slice().sort(function(a,b){ return new Date(b.exit_time||b.entry_time)-new Date(a.exit_time||a.entry_time); });
+  for (var i=0; i<sorted.length; i++) {
+    if ((sorted[i].pnl||0)<0) lossStreak++;
+    else break;
+  }
+  if (lossStreak>=3) { score -= 20; factors.push({label:'📉 Racha perdedora ('+lossStreak+')', color:'#9e5a5a', bg:'var(--red-bg)', border:'var(--red-bd)'}); }
+  else if (lossStreak>=1) { score -= 8; factors.push({label:'📉 '+lossStreak+' pérdidas seguidas', color:'#9e8050', bg:'var(--amber-bg)', border:'#3d3020'}); }
+
+  // Win streak bonus
+  var winStreak = 0;
+  for (var j=0; j<sorted.length; j++) {
+    if ((sorted[j].pnl||0)>0) winStreak++;
+    else break;
+  }
+  if (winStreak>=3) { score += 5; factors.push({label:'🔥 Racha ganadora ('+winStreak+')', color:'#5a9e72', bg:'var(--green-bg)', border:'var(--green-bd)'}); }
+
+  // Tilt (15%)
+  var tiltData = detectTilt(trades||[]);
+  if (tiltData && tiltData.level==='danger') { score -= 15; factors.push({label:'⚡ Tilt detectado', color:'#9e5a5a', bg:'var(--red-bg)', border:'var(--red-bd)'}); }
+  else if (tiltData && tiltData.level==='warning') { score -= 7; factors.push({label:'⚠ Riesgo de tilt', color:'#9e8050', bg:'var(--amber-bg)', border:'#3d3020'}); }
+
+  score = Math.max(0, Math.min(100, Math.round(score)));
+
+  var rec;
+  if (score>=70)      rec = 'Condiciones óptimas. Opera con tamaño normal y sigue tu plan.';
+  else if (score>=50) rec = 'Condiciones aceptables. Sé selectivo, reduce tamaño a 75%.';
+  else if (score>=30) rec = 'Condiciones difíciles. Considera reducir tamaño al 50%.';
+  else                rec = 'Condiciones no óptimas. Considera no operar hoy.';
+
+  return { score:score, recommendation:rec, factors:factors.slice(0,4) };
+}
+
+// ── Biggest Mistakes ──
+function calcBiggestMistakes(trades) {
+  if (!trades || trades.length < 5) return [];
+  var mistakes = [];
+  var errorLabels = {
+    moved_sl:'Movió el Stop Loss', scaled_in:'Escaló en pérdida',
+    impulse:'Trades impulsivos', no_confirmation:'Sin confirmación', overtrading:'Overtrading', fomo:'FOMO'
+  };
+
+  // 1. Worst discipline error
+  var counts = {};
+  trades.forEach(function(t) {
+    var dt = t.discipline_tag;
+    if (dt && dt!=='clean') counts[dt] = (counts[dt]||0)+1;
+  });
+  var topErr = Object.keys(counts).sort(function(a,b){return counts[b]-counts[a];})[0];
+  if (topErr && counts[topErr]>=2) {
+    var errTrades = trades.filter(function(t){return t.discipline_tag===topErr;});
+    var errPnl    = errTrades.reduce(function(s,t){return s+(t.pnl||0);},0);
+    mistakes.push({ label: errorLabels[topErr]||topErr, detail: counts[topErr]+' veces · P&L: '+(errPnl>=0?'+':'')+Math.round(errPnl) });
+  }
+
+  // 2. Worst hour
+  var hourStats = {};
+  trades.forEach(function(t) {
+    if (!t.entry_time) return;
+    var h = new Date(t.entry_time).getHours();
+    if (!hourStats[h]) hourStats[h]={pnl:0,count:0,wins:0};
+    hourStats[h].pnl+=(t.pnl||0); hourStats[h].count++;
+    if ((t.pnl||0)>0) hourStats[h].wins++;
+  });
+  var worstHour = Object.keys(hourStats).filter(function(h){return hourStats[h].count>=3;}).sort(function(a,b){return hourStats[a].pnl-hourStats[b].pnl;})[0];
+  if (worstHour) {
+    var hs = hourStats[worstHour];
+    var hwr = Math.round(hs.wins/hs.count*100);
+    mistakes.push({ label:'Hora '+worstHour+':00 — tu peor horario', detail: hwr+'% WR · P&L: '+(hs.pnl>=0?'+':'')+Math.round(hs.pnl) });
+  }
+
+  // 3. After-loss behavior
+  var postLossTrades = [];
+  for (var i=1; i<trades.length; i++) {
+    if ((trades[i-1].pnl||0)<0) postLossTrades.push(trades[i]);
+  }
+  if (postLossTrades.length>=3) {
+    var plWins = postLossTrades.filter(function(t){return (t.pnl||0)>0;}).length;
+    var plWr   = Math.round(plWins/postLossTrades.length*100);
+    if (plWr < 40) {
+      mistakes.push({ label:'Revenge trading', detail: 'WR después de pérdida: '+plWr+'% ('+postLossTrades.length+' casos)' });
+    }
+  }
+
+  return mistakes.slice(0,3);
+}
+
+// ── Discipline Progress by Month ──
+function calcDisciplineProgress(trades) {
+  if (!trades || !trades.length) return [];
+  var byMonth = {};
+  trades.forEach(function(t) {
+    if (!t.entry_time) return;
+    var d = new Date(t.entry_time);
+    var key = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    if (!byMonth[key]) byMonth[key] = [];
+    byMonth[key].push(t);
+  });
+  var months = Object.keys(byMonth).sort().slice(-6); // last 6 months
+  var monthNames = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  return months.map(function(key) {
+    var parts = key.split('-');
+    var label = monthNames[parseInt(parts[1])-1]+' '+parts[0].slice(2);
+    var disc  = calcDiscipline(byMonth[key]);
+    return { month:label, score:disc.score };
+  });
+}
+
+// ── Badges / Achievements ──
+function calcBadges(trades, clSessions) {
+  var earned = [];
+  var all = [
+    { id:'first_trade',   emoji:'🚀', name:'First Trade',     desc:'Registraste tu primer trade', check:function(t){ return t.length>=1; }},
+    { id:'calm_10',       emoji:'🧘', name:'Calm Trader',     desc:'10 trades con emoción tranquilo/seguro', check:function(t){ return t.filter(function(x){return x.emotion==='Tranquilo'||x.emotion==='Seguro';}).length>=10; }},
+    { id:'clean_20',      emoji:'✨', name:'Clean Week',      desc:'20 trades consecutivos sin errores', check:function(t){ var c=0,max=0; t.forEach(function(x){if((x.discipline_tag||'clean')==='clean'){c++;max=Math.max(max,c);}else c=0;}); return max>=20; }},
+    { id:'no_revenge_5',  emoji:'🧱', name:'Revenge Guard',   desc:'5 días sin revenge trading', check:function(t,cl){ return calcDisciplineProgress(t).filter(function(m){return m.score>=80;}).length>=1; }},
+    { id:'checklist_7',   emoji:'📋', name:'Plan Follower',   desc:'7 días con checklist ≥80%', check:function(t,cl){ return (cl||[]).filter(function(s){return s.score_pct>=80;}).length>=7; }},
+    { id:'profit_100',    emoji:'💰', name:'First $100',      desc:'Alcanzaste $100 de P&L acumulado', check:function(t){ return t.reduce(function(s,x){return s+(x.pnl||0);},0)>=100; }},
+    { id:'wr_60',         emoji:'🎯', name:'Sharp Shooter',   desc:'Win rate ≥60% con ≥20 trades', check:function(t){ if(t.length<20)return false; var w=t.filter(function(x){return(x.pnl||0)>0;}).length; return w/t.length>=0.6; }},
+    { id:'trades_50',     emoji:'⚡', name:'50 Trades',       desc:'50 trades registrados', check:function(t){ return t.length>=50; }},
+    { id:'trades_100',    emoji:'💎', name:'100 Trades',      desc:'100 trades — eres serio', check:function(t){ return t.length>=100; }},
+    { id:'no_sl_10',      emoji:'🛡',  name:'SL Protector',   desc:'10 trades seguidos sin mover SL', check:function(t){ var c=0,max=0; t.forEach(function(x){if(!x.moved_sl&&x.discipline_tag!=='moved_sl'){c++;max=Math.max(max,c);}else c=0;}); return max>=10; }},
+  ];
+
+  var nextBadge = null;
+  all.forEach(function(badge) {
+    if (badge.check(trades||[], clSessions||[])) {
+      earned.push(badge);
+    } else if (!nextBadge) {
+      nextBadge = badge;
+    }
+  });
+
+  // Progress hint for next badge
+  var nextInfo = null;
+  if (nextBadge) {
+    var progHints = {
+      first_trade:  trades.length+'/1 trades',
+      calm_10:      trades.filter(function(t){return t.emotion==='Tranquilo'||t.emotion==='Seguro';}).length+'/10 trades calm',
+      clean_20:     (function(){ var c=0,max=0; (trades||[]).forEach(function(x){if((x.discipline_tag||'clean')==='clean'){c++;max=Math.max(max,c);}else c=0;}); return max+'/20 consecutivos'; })(),
+      checklist_7:  (clSessions||[]).filter(function(s){return s.score_pct>=80;}).length+'/7 días',
+      profit_100:   '$'+Math.round(trades.reduce(function(s,t){return s+(t.pnl||0);},0))+'/$100',
+      wr_60:        trades.length+'/20 trades',
+      trades_50:    trades.length+'/50 trades',
+      trades_100:   trades.length+'/100 trades',
+      no_sl_10:     '10 seguidos sin mover SL',
+      no_revenge_5: '5 días disciplinados',
+    };
+    nextInfo = { emoji:nextBadge.emoji, name:nextBadge.name, progress:progHints[nextBadge.id]||'' };
+  }
+
+  return { earned:earned, next:nextInfo };
+}
+
+// ── Onboarding Screen ──
+function buildOnboardingScreen(acc) {
+  return '<div class="fade-in" style="max-width:560px;margin:40px auto;padding:0 16px">'
+    + '<div style="text-align:center;margin-bottom:32px">'
+    + '<div style="font-size:40px;margin-bottom:12px">👋</div>'
+    + '<div style="font-size:20px;font-weight:700;color:var(--text);margin-bottom:8px">Bienvenido a BlackBoss</div>'
+    + '<div style="font-size:12px;color:var(--text3);line-height:1.7">Tu trading psychology engine. Instala la extensión y empieza a operar<br>para ver tu análisis personalizado aquí.</div>'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:28px">'
+    + ['<div class="panel" style="padding:20px;text-align:center"><div style="font-size:28px;margin-bottom:10px">🔌</div><div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:6px">1. Instala la extensión</div><div style="font-size:9px;color:var(--text3);line-height:1.6">Descarga la extensión de Chrome y conecta tu cuenta BlackBoss</div></div>',
+       '<div class="panel" style="padding:20px;text-align:center"><div style="font-size:28px;margin-bottom:10px">📊</div><div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:6px">2. Opera en TopstepX</div><div style="font-size:9px;color:var(--text3);line-height:1.6">Tus trades se capturan automáticamente mientras operas</div></div>',
+       '<div class="panel" style="padding:20px;text-align:center"><div style="font-size:28px;margin-bottom:10px">🧠</div><div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:6px">3. Analiza tu psicología</div><div style="font-size:9px;color:var(--text3);line-height:1.6">Con 20+ trades verás tus patrones, errores y métricas en tiempo real</div></div>'
+    ].join('')
+    + '</div>'
+    + '<div class="panel" style="padding:20px;margin-bottom:16px">'
+    + '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px">Mientras tanto, configura tu herramienta</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+    + '<div style="padding:12px;background:var(--surface2);border-radius:8px;cursor:pointer;border:1px solid var(--border)" onclick="navigateTo(\'discipline\')">'
+    + '<div style="font-size:16px;margin-bottom:6px">📋</div><div style="font-size:10px;font-weight:600;color:var(--text)">Crea tu checklist</div><div style="font-size:9px;color:var(--text3);margin-top:2px">Define tus reglas pre-trade</div></div>'
+    + '<div style="padding:12px;background:var(--surface2);border-radius:8px;cursor:pointer;border:1px solid var(--border)" onclick="navigateTo(\'rules\')">'
+    + '<div style="font-size:16px;margin-bottom:6px">⚖️</div><div style="font-size:10px;font-weight:600;color:var(--text)">Define tus reglas</div><div style="font-size:9px;color:var(--text3);margin-top:2px">Daily loss limit, max drawdown</div></div>'
+    + '</div></div>'
+    + '</div>';
 }
 
 // CALENDAR BUILD
