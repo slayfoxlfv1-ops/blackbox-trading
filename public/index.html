@@ -610,7 +610,7 @@ const SUPABASE_URL = 'https://qljuusxpzsiqxnpfpdgg.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFsanV1c3hwenNpcXhucGZwZGdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1OTQ5NzUsImV4cCI6MjA4ODE3MDk3NX0.rUEwuG4zFE_EpAM4s3hWqVF81xiW9q_MSwQKKXYZmlk';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let currentUser = null, accounts = [], currentAccountId = null, currentTrades = [], currentView = 'overview', authTab = 'login', editingTradeId = null;
+let currentUser = null, accounts = [], currentAccountId = null, currentTrades = [], currentChecklistSessions = [], currentView = 'overview', authTab = 'login', editingTradeId = null;
 let tlFilters = { date:'', ticker:'', result:'all' };
 let repFilters = { period:'month', result:'all', ticker:'', dateFrom:'', dateTo:'' };
 let coachAnalysis = null, coachLoading = false;
@@ -1132,6 +1132,13 @@ async function loadAccountData(id) {
   var res = await sb.from('trades').select('*').eq('account_id', id).order('entry_time', { ascending: true });
   var trades = res.data || [];
   currentTrades = trades;
+  // Load checklist sessions for this account
+  var clRes = await sb.from('checklist_sessions')
+    .select('session_date,items,score_pct,verdict')
+    .eq('account_id', id)
+    .order('session_date', { ascending: false })
+    .limit(60);
+  currentChecklistSessions = (clRes.data || []);
   // Cache screenshot_url from DB into bbStore so extension-imported photos show up
   trades.forEach(function(t) {
     if (t.screenshot_url && !bbStore.get('sc_' + t.id)) {
@@ -1219,6 +1226,16 @@ async function loadAccountData(id) {
     }
     var dtag = t.discipline_tag||(t.moved_sl?'moved_sl':t.scaled_in_loss?'scaled_in':'clean');
     var tagLabel = tagMap[dtag]||'clean';
+    // Checklist badge for this trade's date
+    var tradeDate = t.entry_time ? t.entry_time.slice(0,10) : null;
+    var clSession = tradeDate ? (currentChecklistSessions||[]).find(function(s){ return s.session_date===tradeDate; }) : null;
+    var clBadge = '';
+    if (clSession) {
+      var clColor = clSession.verdict==='ready' ? 'var(--green)' : clSession.verdict==='caution' ? 'var(--amber)' : 'var(--red)';
+      var clBg    = clSession.verdict==='ready' ? 'var(--green-bg)' : clSession.verdict==='caution' ? 'var(--amber-bg)' : 'var(--red-bg)';
+      var clIcon  = clSession.verdict==='ready' ? '✓' : clSession.verdict==='caution' ? '~' : '✗';
+      clBadge = '<span title="Checklist: '+clSession.score_pct+'%" style="font-size:8px;padding:1px 5px;border-radius:9px;background:'+clBg+';color:'+clColor+';border:1px solid '+clColor+'44;margin-left:3px">'+clIcon+' '+clSession.score_pct+'%</span>';
+    }
     var tagCls = dtag==='clean'?'clean':(dtag==='moved_sl'||dtag==='no_confirmation'?'sl':'scale');
     // Setup tags pills
     var setupTagsHtml = '';
@@ -1229,7 +1246,7 @@ async function loadAccountData(id) {
         if (found) setupTagsHtml += '<span style="font-size:8px;padding:2px 6px;border-radius:10px;background:'+found.color+'22;color:'+found.color+';border:1px solid '+found.color+'44;margin-left:3px">'+found.label+'</span>';
       });
     }
-    return '<tr class="'+(flagged?'flagged':'')+'"><td><span class="ticker">'+(t.ticker||'--')+'</span>'+setupTagsHtml+'</td>' +
+    return '<tr class="'+(flagged?'flagged':'')+'"><td><span class="ticker">'+(t.ticker||'--')+'</span>'+setupTagsHtml+clBadge+'</td>' +
       '<td><span class="side-badge '+(t.side||'long')+'">'+(t.side||'').toUpperCase()+'</span></td>' +
       '<td><span class="pnl '+pnlCls2+'">'+pnlDisp+'</span></td>' +
       '<td><span class="rr '+rrCls+'">'+rr+'</span></td>' +
@@ -3012,6 +3029,98 @@ function buildMindView(trades) {
         + '</div></div>';
     });
     html += '</div></div>';
+  })();
+
+  // ── ROW 6: Checklist Compliance ──
+  (function() {
+    var sessions = currentChecklistSessions || [];
+    if (!sessions.length) return;
+
+    // Stats
+    var avgScore  = Math.round(sessions.reduce(function(s,x){return s+(x.score_pct||0);},0)/sessions.length);
+    var readyDays = sessions.filter(function(s){return s.verdict==='ready';}).length;
+    var cautionDays = sessions.filter(function(s){return s.verdict==='caution';}).length;
+    var noTradeDays = sessions.filter(function(s){return s.verdict==='no_trade';}).length;
+
+    // Worst items (most often unchecked)
+    var itemFails = {};
+    sessions.forEach(function(s) {
+      if (!s.items) return;
+      ['trend','setup','sl','rr','size','no_fomo','emotion'].forEach(function(k) {
+        if (!s.items[k]) itemFails[k] = (itemFails[k]||0)+1;
+      });
+    });
+    var itemLabels = {
+      trend:'Tendencia identificada', setup:'Setup completo', sl:'SL definido antes',
+      rr:'R:R mínimo cumplido', size:'Tamaño correcto', no_fomo:'Sin FOMO', emotion:'Estado emocional OK'
+    };
+    var worstItems = Object.keys(itemFails)
+      .sort(function(a,b){return itemFails[b]-itemFails[a];})
+      .slice(0,3);
+
+    // Correlation: checklist score vs P&L
+    var correlation = [];
+    sessions.forEach(function(s) {
+      var dayTrades = (currentTrades||[]).filter(function(t){
+        return t.entry_time && t.entry_time.slice(0,10)===s.session_date;
+      });
+      if (!dayTrades.length) return;
+      var dayPnl = dayTrades.reduce(function(acc,t){return acc+(t.pnl||0);},0);
+      correlation.push({ score: s.score_pct, pnl: dayPnl, verdict: s.verdict });
+    });
+    var readyPnl   = correlation.filter(function(x){return x.verdict==='ready';});
+    var nontradePnl= correlation.filter(function(x){return x.verdict==='no_trade';});
+    var avgReadyPnl    = readyPnl.length    ? Math.round(readyPnl.reduce(function(s,x){return s+x.pnl;},0)/readyPnl.length)    : null;
+    var avgNoTradePnl  = nontradePnl.length ? Math.round(nontradePnl.reduce(function(s,x){return s+x.pnl;},0)/nontradePnl.length) : null;
+
+    html += '<div class="panel" style="padding:20px">'
+      + '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px">Pre-trade Checklist — Compliance</div>'
+
+      // Summary stats row
+      + '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px">'
+      + '<div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center">'
+      + '<div style="font-size:18px;font-weight:700;color:var(--text)">'+avgScore+'%</div>'
+      + '<div style="font-size:9px;color:var(--text3);margin-top:2px">Avg score</div></div>'
+      + '<div style="background:var(--green-bg);border:1px solid var(--green-bd);border-radius:8px;padding:10px;text-align:center">'
+      + '<div style="font-size:18px;font-weight:700;color:var(--green)">'+readyDays+'</div>'
+      + '<div style="font-size:9px;color:var(--text3);margin-top:2px">🟢 Ready</div></div>'
+      + '<div style="background:var(--amber-bg);border:1px solid #3d3020;border-radius:8px;padding:10px;text-align:center">'
+      + '<div style="font-size:18px;font-weight:700;color:var(--amber)">'+cautionDays+'</div>'
+      + '<div style="font-size:9px;color:var(--text3);margin-top:2px">🟡 Caution</div></div>'
+      + '<div style="background:var(--red-bg);border:1px solid var(--red-bd);border-radius:8px;padding:10px;text-align:center">'
+      + '<div style="font-size:18px;font-weight:700;color:var(--red)">'+noTradeDays+'</div>'
+      + '<div style="font-size:9px;color:var(--text3);margin-top:2px">🔴 No trade</div></div>'
+      + '</div>'
+
+      // Correlation insight
+      + (avgReadyPnl!==null || avgNoTradePnl!==null
+        ? '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">'
+          + (avgReadyPnl!==null ? '<div style="background:var(--green-bg);border:1px solid var(--green-bd);border-left:3px solid var(--green);border-radius:8px;padding:10px 12px">'
+            + '<div style="font-size:9px;color:var(--text3);margin-bottom:3px">P&L promedio días 🟢</div>'
+            + '<div style="font-size:16px;font-weight:700;color:'+(avgReadyPnl>=0?'var(--green)':'var(--red)')+'">'+(avgReadyPnl>=0?'+':'')+avgReadyPnl+'</div>'
+            + '</div>' : '')
+          + (avgNoTradePnl!==null ? '<div style="background:var(--red-bg);border:1px solid var(--red-bd);border-left:3px solid var(--red);border-radius:8px;padding:10px 12px">'
+            + '<div style="font-size:9px;color:var(--text3);margin-bottom:3px">P&L promedio días 🔴</div>'
+            + '<div style="font-size:16px;font-weight:700;color:'+(avgNoTradePnl>=0?'var(--green)':'var(--red)')+'">'+(avgNoTradePnl>=0?'+':'')+avgNoTradePnl+'</div>'
+            + '</div>' : '')
+          + '</div>'
+        : '')
+
+      // Worst items
+      + (worstItems.length
+        ? '<div style="background:var(--surface2);border-radius:8px;padding:12px">'
+          + '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Puntos que más saltas</div>'
+          + worstItems.map(function(k) {
+              var failPct = Math.round(itemFails[k]/sessions.length*100);
+              return '<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)">'
+                + '<span style="font-size:10px;color:var(--text2)">'+itemLabels[k]+'</span>'
+                + '<span style="font-size:10px;font-weight:700;color:var(--red)">'+failPct+'% días</span>'
+                + '</div>';
+            }).join('')
+          + '</div>'
+        : '')
+
+      + '</div>';
   })();
 
   // ── ROW 5: AI Coach ──
