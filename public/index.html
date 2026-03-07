@@ -272,6 +272,40 @@ tr:hover td { background:var(--hover); }
 .ov-sep { width:1px; height:28px; background:var(--border); flex-shrink:0; }
 .add-acc-btn { width:100%; padding:8px; border:1px dashed var(--border2); background:transparent; border-radius:7px; color:var(--text3); font-size:12px; cursor:pointer; margin-top:4px; font-family:'Geist',sans-serif; }
 .add-acc-btn:hover { border-color:var(--text2); color:var(--text2); background:var(--hover); }
+
+/* ── Print / PDF export ────────────────── */
+@media print {
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  body { background: #fff !important; color: #111 !important; font-family: 'Geist Mono', monospace; }
+  #sidebar, #auth-screen, #log-modal, #trade-notes-modal,
+  #mood-overlay, #tilt-notif, #break-overlay, #coach-notif,
+  .nav-item, #log-btn, #bb-overlay { display: none !important; }
+  #app-shell { display: block !important; }
+  #main-area  { margin: 0 !important; padding: 0 !important; }
+  #main-content { padding: 0 !important; }
+  .pdf-only   { display: block !important; }
+  .pdf-filter-bar { display: none !important; }
+  .panel { background: #f8f8f8 !important; border: 1px solid #ddd !important; break-inside: avoid; margin-bottom: 12px !important; }
+  .panel-head { background: #eee !important; border-bottom: 1px solid #ddd !important; }
+  .panel-title { color: #111 !important; }
+  .metric { background: #f8f8f8 !important; border: 1px solid #ddd !important; }
+  .m-label { color: #555 !important; }
+  .m-val { color: #111 !important; }
+  .m-val.pos { color: #2a7a45 !important; }
+  .m-val.neg { color: #8b1c1c !important; }
+  .ticker { background: #eee !important; color: #111 !important; }
+  .side-badge.long  { background: #d4edda !important; color: #155724 !important; }
+  .side-badge.short { background: #f8d7da !important; color: #721c24 !important; }
+  .pnl.pos { color: #2a7a45 !important; }
+  .pnl.neg { color: #8b1c1c !important; }
+  table { border-collapse: collapse !important; width: 100% !important; }
+  th, td { border: 1px solid #ddd !important; padding: 5px 8px !important; color: #111 !important; font-size: 10px !important; }
+  thead th { background: #eee !important; }
+  tr.flagged { background: #fff3f3 !important; }
+  svg path, svg line { stroke-opacity: 1 !important; }
+  @page { margin: 15mm; size: A4 portrait; }
+}
+.pdf-only { display: none; }
 </style>
 </head>
 <body>
@@ -3791,7 +3825,7 @@ function buildReports(allTrades) {
     '</select>'+
     '<input class="form-input" style="width:110px;padding:6px 10px" type="text" placeholder="Ticker..." value="'+repFilters.ticker+'" oninput="repFilters.ticker=this.value;buildReports(currentTrades||[])">'+
     '<button class="btn btn-ghost" style="font-size:11px" onclick="repFilters={period:\'month\',result:\'all\',ticker:\'\',dateFrom:\'\',dateTo:\'\'};buildReports(currentTrades||[])">Clear</button>'+
-    '<button class="btn btn-ghost" style="font-size:11px;margin-left:auto" onclick="alert(\'PDF export - coming soon\')">Export PDF</button>'+
+    '<button class="btn btn-solid" style="font-size:11px;margin-left:auto;background:#5a9e9e;border-color:#5a9e9e" onclick="exportReportPDF()">⬇ Export PDF</button>'+
     '</div>';
   if (!trades.length) {
     el.innerHTML=filterBar+'<div class="empty-state"><div class="empty-icon">v</div><div class="empty-title">No trades for this period</div></div>';
@@ -3832,6 +3866,200 @@ function buildReports(allTrades) {
     '<div style="padding:14px 18px;height:100px">'+equitySvg+'</div></div>'+
     '<div class="panel"><div class="panel-head"><span class="panel-title">Trade List</span><span class="panel-cap">'+total+' trades'+(total>50?' (showing 50)':'')+'</span></div>'+
     '<div class="table-scroll"><table><thead><tr><th>Date</th><th>Ticker</th><th>Side</th><th>P&L</th></tr></thead><tbody>'+tradeRows+'</tbody></table></div></div>';
+}
+
+function exportReportPDF() {
+  // Build a snapshot of the current report view for printing
+  var trades = currentTrades || [];
+  var now    = new Date();
+
+  // Period label
+  var periodMap = { week:'Esta semana', month:'Este mes', year:'Este año', all:'Historial completo', range:'Período personalizado' };
+  var period    = periodMap[repFilters.period] || 'Período';
+
+  // Filter trades same as buildReports
+  var weekStart = new Date(); weekStart.setDate(weekStart.getDate()-weekStart.getDay()+(weekStart.getDay()===0?-6:1)); weekStart.setHours(0,0,0,0);
+  var weekEnd   = new Date(weekStart); weekEnd.setDate(weekStart.getDate()+6); weekEnd.setHours(23,59,59,999);
+  var filtered  = trades.filter(function(t) {
+    if (!t.entry_time) return false;
+    var d = new Date(t.entry_time);
+    if (repFilters.period==='week'  && (d<weekStart||d>weekEnd)) return false;
+    if (repFilters.period==='month' && (d.getMonth()!==now.getMonth()||d.getFullYear()!==now.getFullYear())) return false;
+    if (repFilters.period==='year'  && d.getFullYear()!==now.getFullYear()) return false;
+    if (repFilters.period==='range') {
+      if (repFilters.dateFrom && d<new Date(repFilters.dateFrom)) return false;
+      if (repFilters.dateTo   && d>new Date(repFilters.dateTo+'T23:59:59')) return false;
+    }
+    return true;
+  });
+
+  var total    = filtered.length;
+  var wins     = filtered.filter(function(t){return (t.pnl||0)>0;});
+  var losses   = filtered.filter(function(t){return (t.pnl||0)<0;});
+  var netPnl   = filtered.reduce(function(s,t){return s+(t.pnl||0);},0);
+  var grossWin = wins.reduce(function(s,t){return s+(t.pnl||0);},0);
+  var grossLoss= Math.abs(losses.reduce(function(s,t){return s+(t.pnl||0);},0));
+  var pf       = grossLoss>0?(grossWin/grossLoss).toFixed(2):'INF';
+  var wr       = total ? Math.round(wins.length/total*100) : 0;
+  var avgWin   = wins.length   ? Math.round(grossWin/wins.length)     : 0;
+  var avgLoss  = losses.length ? Math.round(grossLoss/losses.length) : 0;
+
+  // Best / worst trade
+  var bestTrade  = filtered.slice().sort(function(a,b){return (b.pnl||0)-(a.pnl||0);})[0];
+  var worstTrade = filtered.slice().sort(function(a,b){return (a.pnl||0)-(b.pnl||0);})[0];
+
+  // Equity curve SVG
+  var sortedF = filtered.slice().sort(function(a,b){return new Date(a.entry_time)-new Date(b.entry_time);});
+  var running = 0;
+  var points  = [0].concat(sortedF.map(function(t){running+=(t.pnl||0);return running;}));
+  var equitySvg = buildEquitySvgFull(points, netPnl);
+
+  // P&L by discipline
+  var discLabels2 = {clean:'Clean',moved_sl:'Moved SL',scaled_in:'Scaled In',impulse:'Impulse',no_confirmation:'No Confirm',overtrading:'Overtrading',fomo:'FOMO'};
+  var discRows = '';
+  var discMap  = {};
+  filtered.forEach(function(t){
+    var k = t.discipline_tag||(t.moved_sl?'moved_sl':t.scaled_in_loss?'scaled_in':'clean');
+    if (!discMap[k]) discMap[k]={count:0,pnl:0,wins:0};
+    discMap[k].count++;
+    discMap[k].pnl += (t.pnl||0);
+    if ((t.pnl||0)>0) discMap[k].wins++;
+  });
+  Object.keys(discMap).forEach(function(k){
+    var d = discMap[k];
+    var dwr = d.count ? Math.round(d.wins/d.count*100) : 0;
+    discRows += '<tr><td>'+(discLabels2[k]||k)+'</td><td>'+d.count+'</td><td>'+dwr+'%</td>'
+      + '<td style="color:'+(d.pnl>=0?'#2a7a45':'#8b1c1c')+'">'+(d.pnl>=0?'+':'')+Math.round(d.pnl)+'</td></tr>';
+  });
+
+  // Trade list rows
+  var tradeRowsPDF = filtered.slice(0,100).map(function(t) {
+    var pnl = t.pnl||0;
+    var dt  = '--';
+    if (t.entry_time) {
+      var _d = new Date(t.entry_time);
+      dt = String(_d.getDate()).padStart(2,'0')+'/'+String(_d.getMonth()+1).padStart(2,'0')+'/'+_d.getFullYear()
+         + ' ' + String(_d.getHours()).padStart(2,'0')+':'+String(_d.getMinutes()).padStart(2,'0');
+    }
+    var tagLabel2 = t.discipline_tag ? (discLabels2[t.discipline_tag]||t.discipline_tag) : 'Clean';
+    return '<tr style="background:'+(pnl<0?'#fff3f3':'#fff')+'">'
+      + '<td>'+dt+'</td>'
+      + '<td><strong>'+(t.ticker||'--')+'</strong></td>'
+      + '<td>'+(t.side||'').toUpperCase()+'</td>'
+      + '<td style="color:'+(pnl>=0?'#2a7a45':'#8b1c1c')+';font-weight:700">'+(pnl>=0?'+':'')+pnl.toFixed(2)+'</td>'
+      + '<td>'+(t.rr_achieved||'--')+'</td>'
+      + '<td>'+tagLabel2+'</td>'
+      + '<td style="max-width:140px;font-size:9px;color:#555">'+(t.notes||'').slice(0,60)+(((t.notes||'').length>60)?'…':'')+'</td>'
+      + '</tr>';
+  }).join('');
+
+  // Inject PDF header into page
+  var existing = document.getElementById('pdf-header');
+  if (existing) existing.remove();
+
+  var hdr = document.createElement('div');
+  hdr.id  = 'pdf-header';
+  hdr.className = 'pdf-only';
+  hdr.style.cssText = 'font-family:Geist Mono,monospace;padding:0;color:#111';
+  hdr.innerHTML = [
+    '<div style="display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #111;padding-bottom:10px;margin-bottom:16px">',
+      '<div>',
+        '<div style="font-size:22px;font-weight:800;letter-spacing:-1px">BlackBoss</div>',
+        '<div style="font-size:11px;color:#555;margin-top:2px">Trading Performance Report</div>',
+      '</div>',
+      '<div style="text-align:right">',
+        '<div style="font-size:12px;font-weight:600">'+period+'</div>',
+        '<div style="font-size:10px;color:#555">Generado: '+now.toLocaleDateString('es-ES',{day:'2-digit',month:'short',year:'numeric'})+'</div>',
+      '</div>',
+    '</div>',
+
+    // KPI row
+    '<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:16px">',
+      [
+        ['Net P&L', (netPnl>=0?'+':'')+' $'+Math.abs(Math.round(netPnl)).toLocaleString(), netPnl>=0?'#2a7a45':'#8b1c1c'],
+        ['Trades',  total, '#111'],
+        ['Win Rate',wr+'%', wr>=50?'#2a7a45':'#8b1c1c'],
+        ['Profit Factor', pf, parseFloat(pf)>=1?'#2a7a45':'#8b1c1c'],
+        ['Avg Win',  '+$'+avgWin,  '#2a7a45'],
+        ['Avg Loss', '-$'+avgLoss, '#8b1c1c']
+      ].map(function(k){
+        return '<div style="background:#f4f4f4;border:1px solid #ddd;border-radius:6px;padding:8px 10px">'
+          + '<div style="font-size:8px;color:#777;text-transform:uppercase;margin-bottom:4px">'+k[0]+'</div>'
+          + '<div style="font-size:15px;font-weight:700;color:'+k[2]+'">'+k[1]+'</div>'
+          + '</div>';
+      }).join(''),
+    '</div>',
+
+    // Equity curve
+    '<div style="background:#f4f4f4;border:1px solid #ddd;border-radius:6px;padding:12px;margin-bottom:16px">',
+      '<div style="font-size:9px;color:#777;text-transform:uppercase;margin-bottom:8px">Equity Curve</div>',
+      '<div style="height:80px">'+equitySvg+'</div>',
+    '</div>',
+
+    // Best / worst
+    bestTrade && worstTrade ? [
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">',
+        '<div style="background:#f0faf4;border:1px solid #c3e6cb;border-left:3px solid #2a7a45;border-radius:6px;padding:10px 12px">',
+          '<div style="font-size:8px;color:#777;text-transform:uppercase;margin-bottom:4px">Mejor trade</div>',
+          '<div style="font-size:15px;font-weight:700;color:#2a7a45">+$'+Math.round(bestTrade.pnl)+'</div>',
+          '<div style="font-size:9px;color:#555">'+(bestTrade.ticker||'')+'  '+((bestTrade.entry_time||'').slice(0,10))+'</div>',
+        '</div>',
+        '<div style="background:#fff3f3;border:1px solid #f5c6cb;border-left:3px solid #8b1c1c;border-radius:6px;padding:10px 12px">',
+          '<div style="font-size:8px;color:#777;text-transform:uppercase;margin-bottom:4px">Peor trade</div>',
+          '<div style="font-size:15px;font-weight:700;color:#8b1c1c">-$'+Math.abs(Math.round(worstTrade.pnl))+'</div>',
+          '<div style="font-size:9px;color:#555">'+(worstTrade.ticker||'')+'  '+((worstTrade.entry_time||'').slice(0,10))+'</div>',
+        '</div>',
+      '</div>'
+    ].join('') : '',
+
+    // Discipline breakdown
+    discRows ? [
+      '<div style="background:#f4f4f4;border:1px solid #ddd;border-radius:6px;padding:12px;margin-bottom:16px">',
+        '<div style="font-size:9px;color:#777;text-transform:uppercase;margin-bottom:8px">P&L por disciplina</div>',
+        '<table style="width:100%;border-collapse:collapse;font-size:10px">',
+          '<thead><tr style="background:#e8e8e8">',
+            '<th style="padding:5px 8px;text-align:left;border:1px solid #ddd">Tipo</th>',
+            '<th style="padding:5px 8px;text-align:left;border:1px solid #ddd">Trades</th>',
+            '<th style="padding:5px 8px;text-align:left;border:1px solid #ddd">WR</th>',
+            '<th style="padding:5px 8px;text-align:left;border:1px solid #ddd">P&L</th>',
+          '</tr></thead>',
+          '<tbody>'+discRows+'</tbody>',
+        '</table>',
+      '</div>'
+    ].join('') : '',
+
+    // Trade list
+    '<div style="background:#f4f4f4;border:1px solid #ddd;border-radius:6px;padding:12px">',
+      '<div style="font-size:9px;color:#777;text-transform:uppercase;margin-bottom:8px">Trades ('+total+')</div>',
+      '<table style="width:100%;border-collapse:collapse;font-size:9px">',
+        '<thead><tr style="background:#e8e8e8">',
+          ['Fecha/Hora','Ticker','Lado','P&L','R:R','Tag','Notas'].map(function(h){
+            return '<th style="padding:4px 6px;text-align:left;border:1px solid #ddd;white-space:nowrap">'+h+'</th>';
+          }).join(''),
+        '</tr></thead>',
+        '<tbody>'+tradeRowsPDF+'</tbody>',
+      '</table>',
+    '</div>',
+
+    // Footer
+    '<div style="margin-top:16px;padding-top:10px;border-top:1px solid #ddd;font-size:8px;color:#aaa;display:flex;justify-content:space-between">',
+      '<span>BlackBoss Trading Journal</span>',
+      '<span>Este reporte es confidencial y solo para uso personal</span>',
+    '</div>'
+  ].join('');
+
+  // Insert before main content
+  var mainContent = document.getElementById('main-content');
+  mainContent.parentNode.insertBefore(hdr, mainContent);
+
+  // Print
+  window.print();
+
+  // Clean up after print dialog closes
+  setTimeout(function() {
+    var el = document.getElementById('pdf-header');
+    if (el) el.remove();
+  }, 2000);
 }
 
 function buildEquitySvgFull(points, netPnl) {
