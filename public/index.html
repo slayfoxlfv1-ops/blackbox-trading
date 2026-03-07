@@ -2821,6 +2821,165 @@ function buildMindView(trades) {
     html += '</div></div>';
   }
 
+  // ── ROW 5: Patrones de autosabotaje ──
+  (function() {
+    var sabotage = [];
+
+    // ── Pattern 1: Exits winners too early ──
+    // Compare planned R:R vs achieved R:R — if consistently leaving >30% on table
+    var withRR = trades.filter(function(t){ return t.rr_plan && t.rr_achieved && (t.pnl||0)>0; });
+    if (withRR.length >= 3) {
+      var rrCapture = withRR.map(function(t){ return parseFloat(t.rr_achieved)/parseFloat(t.rr_plan); });
+      var avgCapture = rrCapture.reduce(function(a,b){return a+b;},0)/rrCapture.length;
+      if (avgCapture < 0.7) {
+        sabotage.push({
+          type: 'early_exit',
+          severity: avgCapture < 0.5 ? 'high' : 'medium',
+          title: 'Sales prematuros',
+          detail: 'Capturas solo el ' + Math.round(avgCapture*100) + '% del R:R planeado en trades ganadores.',
+          fix: 'Usa take profit límite en lugar de cierre manual. Confía en el plan.',
+          sample: withRR.length
+        });
+      }
+    }
+
+    // ── Pattern 2: Increases size on bad days ──
+    var byDay = {};
+    trades.forEach(function(t) {
+      if (!t.entry_time) return;
+      var d = t.entry_time.slice(0,10);
+      if (!byDay[d]) byDay[d] = { trades:[], pnl:0 };
+      byDay[d].trades.push(t);
+      byDay[d].pnl += (t.pnl||0);
+    });
+    var sizeEscalation = 0, sizeEscalationDays = 0;
+    Object.values(byDay).forEach(function(day) {
+      if (day.trades.length < 3) return;
+      sizeEscalationDays++;
+      var midIdx = Math.floor(day.trades.length/2);
+      var firstHalf  = day.trades.slice(0, midIdx);
+      var secondHalf = day.trades.slice(midIdx);
+      var pnlFirstHalf = firstHalf.reduce(function(s,t){return s+(t.pnl||0);},0);
+      var avgSizeFirst  = firstHalf.reduce(function(s,t){return s+(t.quantity||1);},0)/firstHalf.length;
+      var avgSizeSecond = secondHalf.reduce(function(s,t){return s+(t.quantity||1);},0)/secondHalf.length;
+      if (pnlFirstHalf < 0 && avgSizeSecond > avgSizeFirst * 1.2) sizeEscalation++;
+    });
+    if (sizeEscalationDays >= 3 && sizeEscalation / sizeEscalationDays > 0.4) {
+      sabotage.push({
+        type: 'size_escalation',
+        severity: 'high',
+        title: 'Aumentas tamaño al ir perdiendo',
+        detail: 'En ' + Math.round(sizeEscalation/sizeEscalationDays*100) + '% de los días malos, incrementas el tamaño en la segunda mitad de la sesión.',
+        fix: 'Establece un máximo de tamaño fijo por día. Nunca aumentes size para recuperar pérdidas.',
+        sample: sizeEscalationDays
+      });
+    }
+
+    // ── Pattern 3: Overtrades after big wins ──
+    var bigWinThreshold = 200;
+    var overtrade = 0, overtradeTotal = 0;
+    for (var oi = 0; oi < sortedTrades.length-1; oi++) {
+      if ((sortedTrades[oi].pnl||0) > bigWinThreshold) {
+        overtradeTotal++;
+        // Check if next 2 trades are losses
+        var nextLosses = 0;
+        for (var oj = oi+1; oj < Math.min(oi+3, sortedTrades.length); oj++) {
+          if ((sortedTrades[oj].pnl||0) < 0) nextLosses++;
+        }
+        if (nextLosses >= 2) overtrade++;
+      }
+    }
+    if (overtradeTotal >= 3 && overtrade/overtradeTotal > 0.5) {
+      sabotage.push({
+        type: 'post_win_loss',
+        severity: 'medium',
+        title: 'Devuelves ganancias tras big win',
+        detail: 'En el ' + Math.round(overtrade/overtradeTotal*100) + '% de los trades grandes, los siguientes 2 trades son pérdidas.',
+        fix: 'Después de un trade extraordinario, tómate 15 minutos. El mercado seguirá ahí.',
+        sample: overtradeTotal
+      });
+    }
+
+    // ── Pattern 4: Consistent losses at specific time ──
+    var lateDay = trades.filter(function(t){
+      if (!t.entry_time) return false;
+      var h = new Date(t.entry_time).getHours();
+      return h >= 15;
+    });
+    if (lateDay.length >= 5) {
+      var lateWins = lateDay.filter(function(t){return (t.pnl||0)>0;}).length;
+      var lateWR   = Math.round(lateWins/lateDay.length*100);
+      var allWR    = trades.length ? Math.round(trades.filter(function(t){return (t.pnl||0)>0;}).length/trades.length*100) : 0;
+      if (lateWR < allWR - 20) {
+        sabotage.push({
+          type: 'late_session',
+          severity: 'medium',
+          title: 'Operas tarde y pierdes más',
+          detail: 'Tu win rate después de las 15:00 es ' + lateWR + '% vs ' + allWR + '% general. El cansancio afecta tu juicio.',
+          fix: 'Considera cerrar tu sesión antes de las 15:00. Calidad sobre cantidad.',
+          sample: lateDay.length
+        });
+      }
+    }
+
+    // ── Pattern 5: Cuts losses too late (moves SL) ──
+    var movedSL = trades.filter(function(t){ return t.moved_sl || t.discipline_tag==='moved_sl'; });
+    if (movedSL.length >= 3) {
+      var avgMovedSLLoss = movedSL.reduce(function(s,t){return s+(t.pnl||0);},0)/movedSL.length;
+      var avgNormalLoss  = trades.filter(function(t){ return (t.pnl||0)<0 && !t.moved_sl && t.discipline_tag!=='moved_sl'; });
+      var avgNL = avgNormalLoss.length ? avgNormalLoss.reduce(function(s,t){return s+(t.pnl||0);},0)/avgNormalLoss.length : 0;
+      if (avgMovedSLLoss < avgNL * 1.5) {
+        sabotage.push({
+          type: 'moved_sl',
+          severity: 'high',
+          title: 'Mueves el stop loss y pierdes más',
+          detail: 'Tus pérdidas con SL movido tienen avg de $' + Math.round(Math.abs(avgMovedSLLoss)) + ' vs $' + Math.round(Math.abs(avgNL)) + ' en pérdidas normales.',
+          fix: 'Trata el SL como inviolable. Cierra si el precio llega — sin excepciones.',
+          sample: movedSL.length
+        });
+      }
+    }
+
+    if (sabotage.length === 0) {
+      if (trades.length >= 10) {
+        html += '<div class="panel" style="padding:20px">'
+          + '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">Patrones de autosabotaje</div>'
+          + '<div style="text-align:center;padding:20px 0">'
+          + '<div style="font-size:32px;margin-bottom:8px">✓</div>'
+          + '<div style="font-size:13px;color:var(--text);font-weight:600;margin-bottom:4px">Sin patrones detectados</div>'
+          + '<div style="font-size:11px;color:var(--text3)">No se detectan patrones de autosabotaje con los datos actuales.</div>'
+          + '</div></div>';
+      }
+      return;
+    }
+
+    html += '<div class="panel" style="padding:20px">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">'
+      + '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Patrones de autosabotaje</div>'
+      + '<div style="font-size:9px;color:var(--red);background:var(--red-bg);border:1px solid var(--red-bd);padding:3px 8px;border-radius:10px">'
+      + sabotage.length + ' detectado' + (sabotage.length>1?'s':'') + '</div>'
+      + '</div>'
+      + '<div style="display:flex;flex-direction:column;gap:10px">';
+
+    sabotage.forEach(function(p) {
+      var color  = p.severity==='high' ? 'var(--red)' : 'var(--amber)';
+      var bg     = p.severity==='high' ? 'var(--red-bg)' : 'var(--amber-bg)';
+      var bd     = p.severity==='high' ? 'var(--red-bd)' : 'var(--amber-bd)';
+      var icon   = { early_exit:'⏪', size_escalation:'📈', post_win_loss:'🔄', late_session:'🌙', moved_sl:'🚨' };
+      html += '<div style="background:'+bg+';border:1px solid '+bd+';border-left:3px solid '+color+';border-radius:8px;padding:12px 14px">'
+        + '<div style="display:flex;align-items:center;gap:7px;margin-bottom:6px">'
+        + '<span style="font-size:14px">'+(icon[p.type]||'⚠')+'</span>'
+        + '<span style="font-size:11px;font-weight:700;color:'+color+'">'+p.title+'</span>'
+        + '<span style="margin-left:auto;font-size:9px;color:var(--text3)">'+p.sample+' trades</span>'
+        + '</div>'
+        + '<div style="font-size:10px;color:var(--text2);margin-bottom:7px;line-height:1.5">'+p.detail+'</div>'
+        + '<div style="font-size:10px;color:var(--text3);background:var(--surface2);border-radius:6px;padding:7px 10px;line-height:1.5">'
+        + '💡 <strong>Fix:</strong> '+p.fix
+        + '</div></div>';
+    });
+    html += '</div></div>';
+  })();
+
   // ── ROW 5: AI Coach ──
   var acctId2   = currentAccountId || '';
   var coachFreq = getCoachFrequency(acctId2);
