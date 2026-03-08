@@ -749,6 +749,8 @@ async function selectAccount(id) {
   navigateTo(lastView);
   // Show onboarding guide first time ever
   checkAndShowOnboardingGuide();
+  // Show mood check after everything loads
+  setTimeout(function() { checkAndShowMoodCheck(id); }, 1800);
   // Show mood check once per day
   checkAndShowMoodCheck(id);
 }
@@ -1016,8 +1018,11 @@ async function saveTrade() {
   btn.textContent = 'Save Trade';
   screenshotDataUrl = null;
   closeLogModal();
-  // Always reload from DB so currentTrades is fresh after edit
-  await loadAccountData(currentAccountId);
+  // Silent reload — don't change view or show spinner
+  await loadAccountData(currentAccountId, true);
+  // Re-render current view
+  if (currentView === 'tradelog') renderTradeLog();
+  else if (currentView === 'overview') renderOverview();
 }
 
 function openEditTrade(id) {
@@ -1128,9 +1133,9 @@ function calcDiscipline(trades) {
 }
 
 // DATA LOADING
-async function loadAccountData(id) {
+async function loadAccountData(id, silent) {
   var el = document.getElementById('main-content');
-  el.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  if (!silent) el.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
   var acc = accounts.find(function(a){return a.id===id;});
   if (!acc) return;
   var res = await sb.from('trades').select('*').eq('account_id', id).order('entry_time', { ascending: true });
@@ -4066,35 +4071,27 @@ function resetOnboardingGuide() {
 }
 
 function checkAndShowMoodCheck(accountId) {
-  // Don't show mood check if onboarding guide is open
   if (document.getElementById('onboarding-overlay')) return;
-  var today = new Date().toISOString().slice(0, 10);
-  var key   = 'mood_' + accountId + '_' + today;
+  if (document.getElementById('mood-overlay')) return;
+  var today = new Date().toISOString().slice(0,10);
+  // Check bbStore first (most reliable)
   try {
-    var stored = localStorage.getItem(key);
+    var stored = bbStore.get('mood_today_' + accountId);
     if (stored) {
-      // Only skip if it was actually answered (has a level), not just synced empty
-      try {
-        var parsed = JSON.parse(stored);
-        if (parsed && parsed.level) return;
-      } catch(e) { return; }
+      var p = JSON.parse(stored);
+      if (p && p.level && p.date === today) return;
     }
   } catch(e) {}
-  // Also check bbStore
+  // Check localStorage
   try {
-    var bbVal = bbStore.get('mood_today_' + accountId);
-    if (bbVal) {
-      var bbParsed = JSON.parse(bbVal);
-      if (bbParsed && bbParsed.level) return;
+    var ls = localStorage.getItem('mood_' + accountId + '_' + today);
+    if (ls) {
+      var p2 = JSON.parse(ls);
+      if (p2 && p2.level) return;
     }
   } catch(e) {}
-  // Delay so dashboard renders first
-  setTimeout(function() {
-    // Double-check onboarding not open
-    if (document.getElementById('onboarding-overlay')) return;
-    if (document.getElementById('mood-overlay')) return;
-    showMoodCheck(accountId);
-  }, 1200);
+  // Not answered today — show it
+  showMoodCheck(accountId);
 }
 
 function showMoodCheck(accountId) {
