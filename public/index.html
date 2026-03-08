@@ -578,8 +578,6 @@ tr:hover td { background:var(--hover); }
       </div>
     </div>
     <div class="form-group">
-      <label class="form-label">Scenario</label>
-      <input class="form-input" id="t-scenario" type="text" placeholder="PDL sweep, CHoCH, GAP fill...">
     </div>
     <div class="form-group">
       <label class="form-label">Setup Tags <span style="font-size:9px;color:var(--text3);font-weight:400">(selecciona uno o más)</span></label>
@@ -892,7 +890,7 @@ function openLogModal() {
     });
   }
   document.getElementById('t-emotion').value = 'neutral';
-  document.getElementById('t-scenario').value = '';
+
   document.getElementById('t-notes').value = '';
   // Reset screenshot
   screenshotDataUrl = null;
@@ -975,7 +973,7 @@ async function saveTrade() {
     discipline_tag: disc,
     setup_tags: (document.getElementById('t-setup-tags') ? document.getElementById('t-setup-tags').value : '') || null,
     notes:          document.getElementById('t-notes').value || null,
-    scenario:       document.getElementById('t-scenario').value.trim() || null,
+
     screenshot_url: screenshotUrl || existingScreenshot || null,
     entry_time:     entryTimeVal,
     account_type:   (accounts.find(function(a){return a.id===currentAccountId;})||{}).type
@@ -1045,7 +1043,7 @@ function openEditTrade(id) {
     attachTagPillListeners(editTagWrap, editTagInp);
   }
   document.getElementById('t-emotion').value  = t.emotion||'neutral';
-  document.getElementById('t-scenario').value = t.scenario||'';
+
   document.getElementById('t-notes').value    = t.notes||'';
   // Times
   var entryT = document.getElementById('t-entry-time');
@@ -2285,7 +2283,6 @@ function renderTradeLogTable(trades) {
           ? '<span class="note-short" onclick="openNoteModal(\''+t.id+'\')">'+noteTrunc.replace(/'/g,"&#39;")+'</span>'
           + '<span class="note-expand-btn" onclick="openNoteModal(\''+t.id+'\')">&#8599;</span>'
           : '<span style="color:var(--text3);font-size:11px">--</span>')
-      + (t.scenario ? '<span class="note-scenario">'+t.scenario+'</span>' : '')
       + '</div>';
     return '<tr class="'+(pnl<0?'flagged':'')+'">'+
       '<td><span class="ticker">'+(t.ticker||'--')+'</span></td>'+
@@ -2315,7 +2312,7 @@ function renderTradeLogTable(trades) {
     '<button class="btn btn-ghost" style="font-size:11px" onclick="tlFilters={date:\'\',ticker:\'\',result:\'all\'};renderTradeLogTable(currentTrades)">Clear</button>'+
     '</div>'+
     '<div class="table-scroll"><table>'+
-    '<thead><tr><th>Ticker</th><th>Side</th><th>Entry</th><th>Exit</th><th>Qty</th><th>P&L</th><th>R:R</th><th>Discipline</th><th>Chart</th><th>Notes / Scenario</th><th>Time</th><th></th></tr></thead>'+
+    '<thead><tr><th>Ticker</th><th>Side</th><th>Entry</th><th>Exit</th><th>Qty</th><th>P&L</th><th>R:R</th><th>Discipline</th><th>Chart</th><th>Notes</th><th>Time</th><th></th></tr></thead>'+
     '<tbody>'+(rows||'<tr><td colspan="12" style="text-align:center;padding:24px;color:var(--text3);font-size:11px">No trades found</td></tr>')+'</tbody>'+
     '</table></div></div>';
 }
@@ -5235,7 +5232,7 @@ function openNoteModal(tradeId) {
   document.getElementById('note-modal-trade-id').value = tradeId;
   document.getElementById('note-modal-ticker').textContent = (t.ticker||'Trade') + ' - Note';
   document.getElementById('note-modal-text').value = t.notes || '';
-  document.getElementById('note-modal-scenario').value = t.scenario || '';
+
   document.getElementById('note-modal-overlay').classList.add('open');
 }
 
@@ -5246,14 +5243,13 @@ function closeNoteModal() {
 async function saveNoteModal() {
   var id       = document.getElementById('note-modal-trade-id').value;
   var notes    = document.getElementById('note-modal-text').value;
-  var scenario = document.getElementById('note-modal-scenario').value.trim() || null;
   var btn = document.querySelector('#note-modal-overlay .btn-solid');
   if (btn) btn.textContent = '...';
-  var res = await sb.from('trades').update({notes: notes, scenario: scenario}).eq('id', id);
+  var res = await sb.from('trades').update({notes: notes}).eq('id', id);
   if (res.error) { alert('Error: ' + res.error.message); if (btn) btn.textContent = 'Save Note'; return; }
   // Update in memory
   var t = currentTrades.find(function(x){return x.id===id;});
-  if (t) { t.notes = notes; t.scenario = scenario; }
+  if (t) { t.notes = notes; }
   if (btn) btn.textContent = 'Save Note';
   closeNoteModal();
   renderTradeLogTable(currentTrades);
@@ -5409,8 +5405,6 @@ function previewScreenshot(input) {
       <textarea class="form-input" id="note-modal-text" rows="5" style="resize:vertical;line-height:1.6"></textarea>
     </div>
     <div class="form-group">
-      <label class="form-label">Scenario</label>
-      <input class="form-input" id="note-modal-scenario" type="text" placeholder="PDL sweep, CHoCH...">
     </div>
     <input type="hidden" id="note-modal-trade-id">
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
