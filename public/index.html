@@ -4211,14 +4211,18 @@ function showMoodCheck(accountId) {
     try { localStorage.setItem('mood_' + accountId + '_' + today, JSON.stringify(moodData)); } catch(e) {}
     bbStore.set('mood_today_' + accountId, JSON.stringify(moodData));
     if (currentUser && currentAccountId) {
-      sb.from('mood_sessions').upsert({
-        account_id:   currentAccountId,
-        user_id:      currentUser.id,
-        session_date: today,
-        answers:      state,
-        score:        score,
-        level:        result.level
-      }, { onConflict:'account_id,session_date' }).catch(function(){});
+      (async function() {
+        try {
+          await sb.from('mood_sessions').upsert({
+            account_id:   currentAccountId,
+            user_id:      currentUser.id,
+            session_date: today,
+            answers:      state,
+            score:        score,
+            level:        result.level
+          }, { onConflict:'account_id,session_date' });
+        } catch(e) {}
+      })();
     }
 
     // Result screen
