@@ -4129,14 +4129,14 @@ function showMoodCheck(accountId) {
       q.opts.forEach(function(opt, i) {
         var btn = document.createElement('button');
         btn.textContent = opt;
-        btn.dataset.qid = q.id;
-        btn.dataset.val = i;
         var isSelected = answers[q.id] === i;
         btn.style.cssText = 'padding:6px 12px;border-radius:20px;border:1px solid '+(isSelected?colors[i]:'var(--border)')+';background:'+(isSelected?colors[i]+'22':'transparent')+';color:'+(isSelected?colors[i]:'var(--text3)')+';font-size:10px;cursor:pointer;font-family:inherit;transition:all .15s';
-        btn.addEventListener('click', function() {
-          answers[q.id] = i;
-          renderMoodContent();
-        });
+        (function(qid, val) {
+          btn.addEventListener('click', function() {
+            answers[qid] = val;
+            renderMoodContent();
+          });
+        })(q.id, i);
         optsDiv.appendChild(btn);
       });
 
@@ -4157,7 +4157,9 @@ function showMoodCheck(accountId) {
     submitBtn.textContent = 'Ver mi día de trading →';
     submitBtn.style.cssText = 'width:100%;padding:11px;background:'+(allAnswered?'#5a9e9e':'var(--surface2)')+';border:1px solid '+(allAnswered?'#5a9e9e':'var(--border)')+';border-radius:9px;color:'+(allAnswered?'#fff':'var(--text3)')+';font-size:12px;font-weight:700;cursor:'+(allAnswered?'pointer':'default')+';font-family:inherit;margin-top:4px;opacity:'+(allAnswered?'1':'0.5');
     submitBtn.addEventListener('click', function() {
-      if (!allAnswered) return;
+      // Re-check at click time — not from closure
+      var canSubmit = questions.every(function(q) { return answers[q.id] !== undefined; });
+      if (!canSubmit) return;
       doSubmitMood();
     });
     card.appendChild(submitBtn);
