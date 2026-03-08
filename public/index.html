@@ -2305,7 +2305,9 @@ function renderTradeLogTable(trades) {
     var noteText = t.notes || '';
     var noteTrunc = noteText.length > 40 ? noteText.slice(0,40)+'...' : noteText;
     var hasNote = noteText.length > 0;
-    var notesHtml = '<div class="note-cell" data-tid="' + t.id + '" style="cursor:pointer">'      + (_sc ? '<span style="font-size:12px;margin-right:3px">📷</span>' : '')      + (hasNote ? '<span class="note-short">' + noteTrunc.replace(/'/g, "&#39;") + '</span>' : '')      + (!_sc && !hasNote ? '<span style="color:var(--text3);font-size:11px">--</span>' : '')      + '</div>';
+    var emojiMap2 = {'calm':'😌','confident':'💪','anxious':'😰','fear':'😨','greedy':'🤑','bored':'😐','frustrated':'😤','neutral':'😶'};
+    var emoIcon = t.emotion && emojiMap2[t.emotion] ? '<span style="font-size:11px;margin-right:3px" title="'+t.emotion+'">'+emojiMap2[t.emotion]+'</span>' : '';
+    var notesHtml = '<div class="note-cell" data-tid="' + t.id + '" style="cursor:pointer">'      + emoIcon      + (_sc ? '<span style="font-size:12px;margin-right:3px">📷</span>' : '')      + (hasNote ? '<span class="note-short">' + noteTrunc.replace(/'/g, "&#39;") + '</span>' : '')      + (!_sc && !hasNote && !t.emotion ? '<span style="color:var(--text3);font-size:11px">--</span>' : '')      + '</div>';
     return '<tr class="'+(pnl<0?'flagged':'')+'">'+
       '<td><span class="ticker">'+(t.ticker||'--')+'</span></td>'+
       '<td><span class="side-badge '+(t.side||'long')+'">'+(t.side||'').toUpperCase()+'</span></td>'+
@@ -5296,8 +5298,14 @@ function openNoteModal(tradeId) {
   var emojiMap = {'calm':'😌','confident':'💪','anxious':'😰','fear':'😨','greedy':'🤑','bored':'😐','frustrated':'😤','neutral':'😶','great':'😊','good':'🙂','bad':'😕','terrible':'😣'};
   var rawTags = t.setup_tags || '';
   var tagsArr = Array.isArray(rawTags) ? rawTags : (rawTags ? String(rawTags).split(',').filter(Boolean) : []);
+  var allTags = (typeof getSetupTags === 'function') ? getSetupTags(currentAccountId||'') : [];
   var tagHtml = tagsArr.length
-    ? tagsArr.map(function(g){ return '<span style="padding:2px 8px;border-radius:10px;background:var(--surface3);border:1px solid var(--border2);font-size:9px;color:var(--text2)">' + g + '</span>'; }).join(' ')
+    ? tagsArr.map(function(g){
+        var found = allTags.find(function(x){ return x.id === g; });
+        var label = found ? found.label : g;
+        var color = found ? found.color : 'var(--text2)';
+        return '<span style="padding:2px 8px;border-radius:10px;background:'+color+'22;border:1px solid '+color+'55;font-size:9px;color:'+color+'">' + label + '</span>';
+      }).join(' ')
     : '<span style="color:var(--text3);font-size:10px">--</span>';
 
   document.getElementById('note-modal-info').innerHTML =
@@ -5308,7 +5316,7 @@ function openNoteModal(tradeId) {
     + _infoCell('Qty',     t.quantity||'--')
     + _infoCell('Entry $', t.entry_price ? '$'+t.entry_price : '--')
     + _infoCell('Exit $',  t.exit_price  ? '$'+t.exit_price  : '--')
-    + _infoCell('R:R',     t.risk_reward ? t.risk_reward+'R' : '--')
+    + _infoCell('R:R',     (t.rr_planned!=null||t.rr_achieved!=null) ? (t.rr_planned||'?')+':'+(t.rr_achieved||'?') : '--')
     + _infoCell('Discipline', '<span style="color:'+dtagColor+';font-weight:700">'+dtag+'</span>')
     + '</div>'
     + '<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px;align-items:center">'
