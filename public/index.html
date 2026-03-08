@@ -2291,7 +2291,6 @@ function renderTradeLogTable(trades) {
       '<td><span class="pnl '+pnlCls+'">'+pnlDisp+'</span></td>'+
       '<td><span class="rr '+rrCls+'">'+rr+'</span></td>'+
       '<td><span class="tag '+tagCls+'">'+tagLabel+'</span></td>'+
-      '<td>'+screenshot+'</td>'+
       '<td>'+notesHtml+'</td>'+
       '<td><span class="mono-xs">'+time+'</span></td>'+
       '<td><span class="edit-btn" onclick="openEditTrade(\''+t.id+'\')" title="Edit">e</span> <span class="edit-btn del-btn" onclick="confirmDeleteTrade(\''+t.id+'\')" title="Delete">x</span></td>'+
@@ -2310,7 +2309,7 @@ function renderTradeLogTable(trades) {
     '<button class="btn btn-ghost" style="font-size:11px" onclick="tlFilters={date:\'\',ticker:\'\',result:\'all\'};renderTradeLogTable(currentTrades)">Clear</button>'+
     '</div>'+
     '<div class="table-scroll"><table>'+
-    '<thead><tr><th>Ticker</th><th>Side</th><th>Entry</th><th>Exit</th><th>Qty</th><th>P&L</th><th>R:R</th><th>Discipline</th><th>Chart</th><th>Notes</th><th>Time</th><th></th></tr></thead>'+
+    '<thead><tr><th>Ticker</th><th>Side</th><th>Entry</th><th>Exit</th><th>Qty</th><th>P&L</th><th>R:R</th><th>Discipline</th><th>Notes</th><th>Time</th><th></th></tr></thead>'+
     '<tbody>'+(rows||'<tr><td colspan="12" style="text-align:center;padding:24px;color:var(--text3);font-size:11px">No trades found</td></tr>')+'</tbody>'+
     '</table></div></div>';
 }
