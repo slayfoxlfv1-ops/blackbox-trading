@@ -5279,8 +5279,8 @@ function openNoteModal(tradeId) {
   document.getElementById('note-modal-info').innerHTML =
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px">'
     + _infoCell('Entry',   fmt(entryDt))
-    + _infoCell('Exit',    fmt(exitDt))
-    + _infoCell('Duración', dur)
+    + (exitDt ? _infoCell('Exit', fmt(exitDt)) : '')
+    + (dur !== '--' ? _infoCell('Duración', dur) : '')
     + _infoCell('Qty',     t.quantity||'--')
     + _infoCell('Entry $', t.entry_price ? '$'+t.entry_price : '--')
     + _infoCell('Exit $',  t.exit_price  ? '$'+t.exit_price  : '--')
