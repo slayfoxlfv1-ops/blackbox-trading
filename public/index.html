@@ -5358,8 +5358,11 @@ document.addEventListener('keydown', function(e) {
   closeNoteModal();
   // Close lightbox
   closeLightbox();
-  // Close log trade modal
-  var logModal = document.getElementById('modal-overlay');
+  // Close Add Account modal
+  var accModal = document.getElementById('modal-overlay');
+  if (accModal && accModal.classList.contains('open')) closeModal();
+  // Close Log Trade modal
+  var logModal = document.getElementById('log-overlay');
   if (logModal && logModal.classList.contains('open')) closeLogModal();
   // Close delete modal
   var delModal = document.getElementById('del-overlay');
