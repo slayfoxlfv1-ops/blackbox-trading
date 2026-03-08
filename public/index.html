@@ -568,11 +568,14 @@ tr:hover td { background:var(--hover); }
       <div class="form-group">
         <label class="form-label">Emotion</label>
         <select class="form-select" id="t-emotion">
-          <option value="great">Great</option>
-          <option value="good">Good</option>
-          <option value="neutral" selected>Neutral</option>
-          <option value="bad">Bad</option>
-          <option value="terrible">Terrible</option>
+          <option value="neutral" selected>😶 Neutral</option>
+          <option value="calm">😌 Tranquilo</option>
+          <option value="confident">💪 Seguro</option>
+          <option value="anxious">😰 Ansioso</option>
+          <option value="fear">😨 Con miedo</option>
+          <option value="greedy">🤑 Codicioso</option>
+          <option value="bored">😐 Aburrido</option>
+          <option value="frustrated">😤 Frustrado</option>
         </select>
       </div>
     </div>
@@ -1159,9 +1162,19 @@ async function loadAccountData(id, silent) {
 
   // Sync checklist items from Supabase → bbStore (so offline also works)
   var clItemsRes = await sb.from('checklist_items')
-    .select('items').eq('account_id', id).limit(1);
-  if (clItemsRes.data && clItemsRes.data[0] && clItemsRes.data[0].items) {
-    bbStore.set('checklist_' + id, JSON.stringify(clItemsRes.data[0].items));
+    .select('items,setup_tags').eq('account_id', id).limit(1);
+  if (clItemsRes.data && clItemsRes.data[0]) {
+    if (clItemsRes.data[0].items) {
+      bbStore.set('checklist_' + id, JSON.stringify(clItemsRes.data[0].items));
+    }
+    if (clItemsRes.data[0].setup_tags) {
+      try {
+        var dbTags = JSON.parse(clItemsRes.data[0].setup_tags);
+        if (Array.isArray(dbTags) && dbTags.length) {
+          bbStore.set('setup_tags_' + id, JSON.stringify(dbTags));
+        }
+      } catch(e) {}
+    }
   }
 
   // Sync mood from Supabase for today
@@ -2217,6 +2230,17 @@ function getSetupTags(accountId) {
 
 function saveSetupTags(accountId, tags) {
   bbStore.set('setup_tags_' + accountId, JSON.stringify(tags));
+  // Sync to Supabase so extension can read them
+  if (currentUser && accountId) {
+    sb.from('checklist_items').upsert({
+      account_id: accountId,
+      user_id: currentUser.id,
+      setup_tags: JSON.stringify(tags),
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'account_id' }).then(function(r) {
+      if (r.error) console.warn('setup_tags sync error:', r.error.message);
+    });
+  }
 }
 
 // Render setup tag pills (for trade form and trade log)
@@ -5269,7 +5293,7 @@ function openNoteModal(tradeId) {
   var dur = (entryDt && exitDt) ? Math.round((exitDt - entryDt)/60000) + ' min' : '--';
   var dtag = t.discipline_tag || '--';
   var dtagColor = dtag==='A+'?'var(--green)':dtag==='B'?'var(--amber)':(dtag==='C'||dtag==='Revenge')?'var(--red)':'var(--text2)';
-  var emojiMap = {'calm':'😌','confident':'💪','anxious':'😰','fear':'😨','greedy':'🤑','bored':'😐','frustrated':'😤','neutral':'😶'};
+  var emojiMap = {'calm':'😌','confident':'💪','anxious':'😰','fear':'😨','greedy':'🤑','bored':'😐','frustrated':'😤','neutral':'😶','great':'😊','good':'🙂','bad':'😕','terrible':'😣'};
   var rawTags = t.setup_tags || '';
   var tagsArr = Array.isArray(rawTags) ? rawTags : (rawTags ? String(rawTags).split(',').filter(Boolean) : []);
   var tagHtml = tagsArr.length
