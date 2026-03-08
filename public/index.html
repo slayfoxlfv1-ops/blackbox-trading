@@ -4071,10 +4071,30 @@ function checkAndShowMoodCheck(accountId) {
   var today = new Date().toISOString().slice(0, 10);
   var key   = 'mood_' + accountId + '_' + today;
   try {
-    if (localStorage.getItem(key)) return; // Already done today
+    var stored = localStorage.getItem(key);
+    if (stored) {
+      // Only skip if it was actually answered (has a level), not just synced empty
+      try {
+        var parsed = JSON.parse(stored);
+        if (parsed && parsed.level) return;
+      } catch(e) { return; }
+    }
   } catch(e) {}
-  // Small delay so dashboard renders first
-  setTimeout(function() { showMoodCheck(accountId); }, 800);
+  // Also check bbStore
+  try {
+    var bbVal = bbStore.get('mood_today_' + accountId);
+    if (bbVal) {
+      var bbParsed = JSON.parse(bbVal);
+      if (bbParsed && bbParsed.level) return;
+    }
+  } catch(e) {}
+  // Delay so dashboard renders first
+  setTimeout(function() {
+    // Double-check onboarding not open
+    if (document.getElementById('onboarding-overlay')) return;
+    if (document.getElementById('mood-overlay')) return;
+    showMoodCheck(accountId);
+  }, 1200);
 }
 
 function showMoodCheck(accountId) {
