@@ -4088,141 +4088,155 @@ function showMoodCheck(accountId) {
   if (existing) existing.remove();
 
   var questions = [
-    { id:'sleep',    text:'¿Cómo dormiste anoche?',                     opts:['Muy bien','Bien','Regular','Mal'] },
-    { id:'stress',   text:'¿Cómo es tu nivel de estrés ahora mismo?',   opts:['Sin estrés','Poco estrés','Estresado','Muy estresado'] },
-    { id:'focus',    text:'¿Puedes concentrarte bien hoy?',             opts:['Totalmente','Bastante','Con dificultad','No puedo'] },
-    { id:'pressure', text:'¿Sientes presión de hacer dinero hoy?',      opts:['Para nada','Un poco','Bastante','Mucho'] }
+    { id:'sleep',    text:'¿Cómo dormiste anoche?',                   opts:['Muy bien','Bien','Regular','Mal'] },
+    { id:'stress',   text:'¿Cómo es tu nivel de estrés ahora mismo?', opts:['Sin estrés','Poco estrés','Estresado','Muy estresado'] },
+    { id:'focus',    text:'¿Puedes concentrarte bien hoy?',           opts:['Totalmente','Bastante','Con dificultad','No puedo'] },
+    { id:'pressure', text:'¿Sientes presión de hacer dinero hoy?',    opts:['Para nada','Un poco','Bastante','Mucho'] }
   ];
-
+  var COLORS  = ['#5a9e72','#5a9e9e','#9e8050','#9e5a5a'];
   var answers = {};
 
+  // ── Build overlay ──
   var overlay = document.createElement('div');
   overlay.id = 'mood-overlay';
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:99998;display:flex;align-items:center;justify-content:center;font-family:Geist,sans-serif;backdrop-filter:blur(4px)';
-  document.body.appendChild(overlay);
 
-  function renderMoodContent() {
-    var allAnswered = questions.every(function(q) { return answers[q.id] !== undefined; });
-    var colors = ['#5a9e72','#5a9e9e','#9e8050','#9e5a5a'];
+  var card = document.createElement('div');
+  card.style.cssText = 'background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:28px;width:440px;max-width:90vw';
 
-    var card = document.createElement('div');
-    card.style.cssText = 'background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:28px;width:440px;max-width:90vw;animation:fadeIn .2s ease';
+  // Header
+  var hdr = document.createElement('div');
+  hdr.innerHTML = '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><span style="font-size:20px">🌅</span><div style="font-size:15px;font-weight:700;color:var(--text)">Check pre-sesión</div></div><div style="font-size:11px;color:var(--text3);margin-bottom:20px">Responde honestamente antes de operar.</div>';
+  card.appendChild(hdr);
 
-    // Header
-    var header = document.createElement('div');
-    header.innerHTML = '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><span style="font-size:20px">🌅</span><div style="font-size:15px;font-weight:700;color:var(--text)">Check pre-sesión</div></div><div style="font-size:11px;color:var(--text3);margin-bottom:22px">Responde honestamente. BlackBoss decide si es tu día para operar.</div>';
-    card.appendChild(header);
+  // Build questions — buttons update in place, NO re-render
+  var allBtns = {}; // qid -> [btn, btn, ...]
+  questions.forEach(function(q) {
+    var qDiv = document.createElement('div');
+    qDiv.style.marginBottom = '14px';
 
-    // Questions
-    questions.forEach(function(q) {
-      var qDiv = document.createElement('div');
-      qDiv.style.marginBottom = '16px';
+    var lbl = document.createElement('div');
+    lbl.style.cssText = 'font-size:11px;color:var(--text2);margin-bottom:7px;font-weight:500';
+    lbl.textContent = q.text;
+    qDiv.appendChild(lbl);
 
-      var qLabel = document.createElement('div');
-      qLabel.style.cssText = 'font-size:11px;color:var(--text2);margin-bottom:8px;font-weight:500';
-      qLabel.textContent = q.text;
-      qDiv.appendChild(qLabel);
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap';
+    allBtns[q.id] = [];
 
-      var optsDiv = document.createElement('div');
-      optsDiv.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap';
+    q.opts.forEach(function(opt, i) {
+      var btn = document.createElement('button');
+      btn.textContent = opt;
+      btn.setAttribute('type','button');
+      btn.style.cssText = 'padding:6px 12px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text3);font-size:10px;cursor:pointer;font-family:inherit;transition:all .15s';
+      allBtns[q.id].push(btn);
 
-      q.opts.forEach(function(opt, i) {
-        var btn = document.createElement('button');
-        btn.textContent = opt;
-        var isSelected = answers[q.id] === i;
-        btn.style.cssText = 'padding:6px 12px;border-radius:20px;border:1px solid '+(isSelected?colors[i]:'var(--border)')+';background:'+(isSelected?colors[i]+'22':'transparent')+';color:'+(isSelected?colors[i]:'var(--text3)')+';font-size:10px;cursor:pointer;font-family:inherit;transition:all .15s';
-        (function(qid, val) {
-          btn.addEventListener('click', function() {
-            answers[qid] = val;
-            renderMoodContent();
+      (function(qid, val, color) {
+        btn.addEventListener('click', function() {
+          // Deselect all in this group
+          allBtns[qid].forEach(function(b) {
+            b.style.borderColor = 'var(--border)';
+            b.style.background  = 'transparent';
+            b.style.color       = 'var(--text3)';
           });
-        })(q.id, i);
-        optsDiv.appendChild(btn);
-      });
+          // Select this one
+          btn.style.borderColor = color;
+          btn.style.background  = color + '22';
+          btn.style.color       = color;
+          // Record answer
+          answers[qid] = val;
+          // Update submit button appearance
+          updateSubmit();
+        });
+      })(q.id, i, COLORS[i]);
 
-      qDiv.appendChild(optsDiv);
-      card.appendChild(qDiv);
+      row.appendChild(btn);
     });
 
-    // Warning if not all answered
-    if (!allAnswered) {
-      var warn = document.createElement('div');
-      warn.style.cssText = 'font-size:9px;color:var(--amber);text-align:center;margin-bottom:6px';
-      warn.textContent = 'Responde todas las preguntas para continuar';
-      card.appendChild(warn);
+    qDiv.appendChild(row);
+    card.appendChild(qDiv);
+  });
+
+  // Warning label
+  var warnDiv = document.createElement('div');
+  warnDiv.style.cssText = 'font-size:9px;color:var(--amber);text-align:center;margin-bottom:6px;min-height:14px';
+  warnDiv.textContent = 'Responde todas las preguntas para continuar';
+  card.appendChild(warnDiv);
+
+  // Submit button — always in DOM, style updates via updateSubmit()
+  var submitBtn = document.createElement('button');
+  submitBtn.textContent = 'Ver mi día de trading →';
+  submitBtn.setAttribute('type','button');
+  submitBtn.style.cssText = 'width:100%;padding:11px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;color:var(--text3);font-size:12px;font-weight:700;cursor:default;font-family:inherit;margin-top:2px;opacity:0.5';
+  card.appendChild(submitBtn);
+
+  // Skip button
+  var skipBtn = document.createElement('button');
+  skipBtn.textContent = 'Omitir hoy';
+  skipBtn.setAttribute('type','button');
+  skipBtn.style.cssText = 'width:100%;padding:8px;background:none;border:none;color:var(--text3);font-size:10px;cursor:pointer;font-family:inherit;margin-top:6px';
+  skipBtn.addEventListener('click', function() {
+    var today = new Date().toISOString().slice(0,10);
+    try { localStorage.setItem('mood_' + accountId + '_' + today, 'skipped'); } catch(e) {}
+    overlay.remove();
+  });
+  card.appendChild(skipBtn);
+
+  // updateSubmit — called after each answer
+  function updateSubmit() {
+    var done = questions.every(function(q) { return answers[q.id] !== undefined; });
+    if (done) {
+      warnDiv.textContent = '';
+      submitBtn.style.background  = '#5a9e9e';
+      submitBtn.style.borderColor = '#5a9e9e';
+      submitBtn.style.color       = '#fff';
+      submitBtn.style.cursor      = 'pointer';
+      submitBtn.style.opacity     = '1';
+    } else {
+      warnDiv.textContent = 'Responde todas las preguntas para continuar';
     }
-
-    // Submit button
-    var submitBtn = document.createElement('button');
-    submitBtn.textContent = 'Ver mi día de trading →';
-    submitBtn.style.cssText = 'width:100%;padding:11px;background:'+(allAnswered?'#5a9e9e':'var(--surface2)')+';border:1px solid '+(allAnswered?'#5a9e9e':'var(--border)')+';border-radius:9px;color:'+(allAnswered?'#fff':'var(--text3)')+';font-size:12px;font-weight:700;cursor:'+(allAnswered?'pointer':'default')+';font-family:inherit;margin-top:4px;opacity:'+(allAnswered?'1':'0.5');
-    submitBtn.addEventListener('click', function() {
-      // Re-check at click time — not from closure
-      var canSubmit = questions.every(function(q) { return answers[q.id] !== undefined; });
-      if (!canSubmit) return;
-      doSubmitMood();
-    });
-    card.appendChild(submitBtn);
-
-    // Skip button
-    var skipBtn = document.createElement('button');
-    skipBtn.textContent = 'Omitir hoy';
-    skipBtn.style.cssText = 'width:100%;padding:8px;background:none;border:none;color:var(--text3);font-size:10px;cursor:pointer;font-family:inherit;margin-top:6px';
-    skipBtn.addEventListener('click', function() {
-      var today = new Date().toISOString().slice(0,10);
-      try { localStorage.setItem('mood_' + accountId + '_' + today, 'skipped'); } catch(e) {}
-      overlay.remove();
-    });
-    card.appendChild(skipBtn);
-
-    overlay.innerHTML = '';
-    overlay.appendChild(card);
   }
 
-  function doSubmitMood() {
-    var score = Object.values(answers).reduce(function(s,v){return s+v;},0);
-    var pct   = score / (questions.length * 3);
+  // Submit click — always attached, checks answers at click time
+  submitBtn.addEventListener('click', function() {
+    var done = questions.every(function(q) { return answers[q.id] !== undefined; });
+    if (!done) return;
+
+    var score = 0;
+    questions.forEach(function(q) { score += answers[q.id]; });
+    var pct = score / (questions.length * 3);
 
     var result;
     if (pct <= 0.33)      result = { level:'green',  emoji:'🟢', title:'Green Day',  color:'var(--green)', bg:'var(--green-bg)', bd:'var(--green-bd)', msg:'Estás en buenas condiciones. Opera con tu plan normal y confía en tu proceso.' };
-    else if (pct <= 0.66) result = { level:'yellow', emoji:'🟡', title:'Yellow Day', color:'var(--amber)', bg:'var(--amber-bg)', bd:'var(--amber-bd)', msg:'Hay factores que pueden afectar tu juicio. Reduce el tamaño de posición a la mitad y sé más selectivo con los setups.' };
+    else if (pct <= 0.66) result = { level:'yellow', emoji:'🟡', title:'Yellow Day', color:'var(--amber)', bg:'var(--amber-bg)', bd:'var(--amber-bd)', msg:'Hay factores que pueden afectar tu juicio. Reduce el tamaño de posición a la mitad y sé más selectivo.' };
     else                  result = { level:'red',    emoji:'🔴', title:'Red Day',    color:'var(--red)',   bg:'var(--red-bg)',   bd:'var(--red-bd)',   msg:'Las condiciones no son óptimas para operar. Considera no tomar trades hoy o usar tamaño mínimo.' };
 
     var today = new Date().toISOString().slice(0,10);
     var moodData = { date:today, answers:answers, score:score, level:result.level };
     try { localStorage.setItem('mood_' + accountId + '_' + today, JSON.stringify(moodData)); } catch(e) {}
     bbStore.set('mood_today_' + accountId, JSON.stringify(moodData));
-
     if (currentUser && currentAccountId) {
-      sb.from('mood_sessions').upsert({
-        account_id:   currentAccountId,
-        user_id:      currentUser.id,
-        session_date: today,
-        answers:      answers,
-        score:        score,
-        level:        result.level
-      }, { onConflict: 'account_id,session_date' }).catch(function(){});
+      sb.from('mood_sessions').upsert({ account_id:currentAccountId, user_id:currentUser.id, session_date:today, answers:answers, score:score, level:result.level }, { onConflict:'account_id,session_date' }).catch(function(){});
     }
 
-    // Result screen
-    var card = document.createElement('div');
-    card.style.cssText = 'background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:32px;width:440px;max-width:90vw;text-align:center;animation:fadeIn .2s ease';
-    card.innerHTML = '<div style="font-size:48px;margin-bottom:12px">'+result.emoji+'</div>'
-      + '<div style="font-size:22px;font-weight:700;color:'+result.color+';margin-bottom:8px">'+result.title+'</div>'
-      + '<div style="background:'+result.bg+';border:1px solid '+result.bd+';border-radius:10px;padding:14px 18px;margin-bottom:20px;font-size:12px;color:var(--text2);line-height:1.7">'+result.msg+'</div>';
-
+    // Show result — replace card contents
+    card.innerHTML = '<div style="text-align:center;padding:12px 0">'
+      + '<div style="font-size:48px;margin-bottom:12px">' + result.emoji + '</div>'
+      + '<div style="font-size:22px;font-weight:700;color:' + result.color + ';margin-bottom:10px">' + result.title + '</div>'
+      + '<div style="background:' + result.bg + ';border:1px solid ' + result.bd + ';border-radius:10px;padding:14px 18px;margin-bottom:20px;font-size:12px;color:var(--text2);line-height:1.7">' + result.msg + '</div>'
+      + '</div>';
     var closeBtn = document.createElement('button');
     closeBtn.textContent = 'Entendido, empezar';
-    closeBtn.style.cssText = 'padding:11px 32px;background:'+result.color+';border:none;border-radius:9px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit';
+    closeBtn.setAttribute('type','button');
+    closeBtn.style.cssText = 'width:100%;padding:11px 32px;background:' + result.color + ';border:none;border-radius:9px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit';
     closeBtn.addEventListener('click', function() { overlay.remove(); });
     card.appendChild(closeBtn);
+  });
 
-    overlay.innerHTML = '';
-    overlay.appendChild(card);
-  }
-
-  renderMoodContent();
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
 }
+
 
 // ══════════════════════════════════════════════════════════════
 // TILT DETECTOR
