@@ -228,9 +228,9 @@ tr:hover td { background:var(--hover); }
 .note-scenario { font-family:'Geist Mono',monospace; font-size:9px; color:var(--text3); display:block; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:150px; }
 
 /* NOTE MODAL */
-.note-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:400; display:none; align-items:center; justify-content:center; }
+.note-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:400; display:none; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
 .note-modal-overlay.open { display:flex; }
-.note-modal { background:var(--surface); border:1px solid var(--border2); border-radius:12px; padding:24px; width:460px; max-height:80vh; overflow-y:auto; }
+.note-modal { background:var(--surface); border:1px solid var(--border2); border-radius:14px; padding:0; width:980px; max-width:96vw; max-height:92vh; overflow:hidden; display:flex; flex-direction:column; }
 .note-modal-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
 .note-modal-title { font-size:13px; font-weight:600; }
 .note-modal-close { cursor:pointer; color:var(--text3); font-size:16px; padding:2px 6px; border-radius:4px; }
@@ -353,7 +353,6 @@ tr:hover td { background:var(--hover); }
     <div class="nav" style="flex:1">
       <div class="nav-item active" data-view="overview"><span class="nav-icon">&#9638;</span> Overview</div>
       <div class="nav-item" data-view="tradelog"><span class="nav-icon">&#8801;</span> Trade Log</div>
-      <div class="nav-item" data-view="replay"><span class="nav-icon">&#9676;</span> Replay</div>
       <div class="nav-item" data-view="calendar"><span class="nav-icon">&#8862;</span> Calendar</div>
       <div class="nav-item" data-view="discipline"><span class="nav-icon">&#10095;</span> Discipline</div>
       <div class="nav-item" data-view="mind"><span class="nav-icon">&#9679;</span> Mind</div>
@@ -1090,7 +1089,7 @@ function navigateTo(view) {
   document.querySelectorAll('.nav-item').forEach(function(i){i.classList.remove('active');});
   var navEl = document.querySelector('.nav-item[data-view="'+view+'"]');
   if (navEl) navEl.classList.add('active');
-  var titles = { overview:'Overview', tradelog:'Trade Log', replay:'Replay', calendar:'Calendar', discipline:'Discipline', mind:'Mind', rules:'Rules', reports:'Reports', settings:'Settings' };
+  var titles = { overview:'Overview', tradelog:'Trade Log', calendar:'Calendar', discipline:'Discipline', mind:'Mind', rules:'Rules', reports:'Reports', settings:'Settings' };
   var acc = accounts.find(function(a){return a.id===currentAccountId;});
   document.getElementById('page-title').textContent = acc ? acc.name : titles[view];
   document.getElementById('page-sub').textContent = (titles[view] || view || '').toUpperCase();
@@ -1101,7 +1100,6 @@ function navigateTo(view) {
   }
   if (view==='overview')   loadAccountData(currentAccountId);
   if (view==='tradelog')   renderTradeLog();
-  if (view==='replay')     renderReplay();
   if (view==='calendar')   renderCalendarView();
   if (view==='discipline') renderDisciplineView();
   if (view==='mind')       renderMindView();
@@ -5230,10 +5228,93 @@ function openNoteModal(tradeId) {
   var t = currentTrades.find(function(x){return x.id===tradeId;});
   if (!t) return;
   document.getElementById('note-modal-trade-id').value = tradeId;
-  document.getElementById('note-modal-ticker').textContent = (t.ticker||'Trade') + ' - Note';
+
+  // Header
+  var pnl = t.pnl || 0;
+  var pnlColor = pnl >= 0 ? 'var(--green)' : 'var(--red)';
+  var pnlStr = (pnl >= 0 ? '+' : '') + '$' + Math.abs(pnl).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+  document.getElementById('note-modal-ticker').innerHTML =
+    '<span style="color:var(--text)">' + (t.ticker||'Trade') + '</span>'
+    + '<span class="side-badge ' + (t.side||'long') + '" style="margin-left:8px">' + (t.side||'').toUpperCase() + '</span>'
+    + '<span style="margin-left:10px;color:' + pnlColor + ';font-size:15px;font-weight:700">' + pnlStr + '</span>';
+
+  // Chart
+  var ticker = t.ticker || '';
+  var tvSym  = (TICKER_MAP[ticker] && TICKER_MAP[ticker].tv) ? ('CME_MINI:' + (TICKER_MAP[ticker].tv)) : ticker;
+  // Special overrides
+  if (ticker==='GC' || ticker==='MGC') tvSym = 'COMEX:' + (TICKER_MAP[ticker]&&TICKER_MAP[ticker].tv||ticker);
+  if (ticker==='CL' || ticker==='MCL') tvSym = 'NYMEX:' + (TICKER_MAP[ticker]&&TICKER_MAP[ticker].tv||ticker);
+  if (ticker==='SI')                   tvSym = 'COMEX:SI1!';
+  if (ticker==='ZB'||ticker==='ZN')    tvSym = 'CBOT:' + (TICKER_MAP[ticker]&&TICKER_MAP[ticker].tv||ticker);
+  if (ticker==='6E')                   tvSym = 'CME:6E1!';
+
+  var fromTs = t.entry_time ? Math.floor(new Date(t.entry_time).getTime()/1000) - 1800 : '';
+  var chartFrame = document.getElementById('note-modal-chart');
+  if (chartFrame) {
+    chartFrame.src = 'https://s.tradingview.com/widgetembed/?frameElementId=note-modal-chart'
+      + '&symbol=' + encodeURIComponent(tvSym)
+      + '&interval=1'
+      + (fromTs ? '&from=' + fromTs : '')
+      + '&hidesidetoolbar=0&hidetoptoolbar=0&theme=dark&style=1&timezone=America%2FChicago&withdateranges=1&showpopupbutton=1&locale=en';
+  }
+
+  // Trade info panel
+  var entryDt = t.entry_time ? new Date(t.entry_time) : null;
+  var exitDt  = t.exit_time  ? new Date(t.exit_time)  : null;
+  var fmt = function(d) { return d ? d.toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:false}) : '--'; };
+  var dur = (entryDt && exitDt) ? Math.round((exitDt-entryDt)/60000) + ' min' : '--';
+
+  var sc = (typeof getTradeScreenshot === 'function' ? getTradeScreenshot(t.id) : null) || t.screenshot_url || null;
+  var scHtml = sc
+    ? '<div style="margin-bottom:12px"><div style="font-size:9px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">Screenshot</div>'
+      + '<img src="'+sc+'" data-sc="'+sc+'" class="nm-sc-img" style="width:100%;border-radius:6px;cursor:zoom-in;border:1px solid var(--border)">'
+      + '</div>'
+    : '';
+
+  var tagHtml = (t.setup_tags && t.setup_tags.length)
+    ? t.setup_tags.map(function(tg){ return '<span style="padding:2px 8px;border-radius:10px;background:var(--surface3);border:1px solid var(--border2);font-size:9px;color:var(--text2)">'+tg+'</span>'; }).join(' ')
+    : '<span style="color:var(--text3);font-size:10px">--</span>';
+
+  var emojiMap = {'calm':'😌','confident':'💪','anxious':'😰','fear':'😨','greedy':'🤑','bored':'😐','frustrated':'😤','neutral':'😶'};
+  var emotionHtml = t.emotion ? (emojiMap[t.emotion]||'') + ' ' + t.emotion : '--';
+
+  var dtag = t.discipline_tag || '--';
+  var dtagColor = dtag==='A+'?'var(--green)':dtag==='B'?'var(--amber)':dtag==='C'||dtag==='Revenge'?'var(--red)':'var(--text2)';
+
+  document.getElementById('note-modal-info').innerHTML =
+    '<div style="display:flex;flex-direction:column;gap:10px">'
+    + _infoRow('Entry',  fmt(entryDt))
+    + _infoRow('Exit',   fmt(exitDt))
+    + _infoRow('Duration', dur)
+    + _infoRow('Entry $', t.entry_price ? '$'+t.entry_price : '--')
+    + _infoRow('Exit $',  t.exit_price  ? '$'+t.exit_price  : '--')
+    + _infoRow('Qty',     t.quantity || '--')
+    + _infoRow('R:R',     t.risk_reward ? t.risk_reward+'R' : '--')
+    + '<div style="margin:4px 0;border-top:1px solid var(--border)"></div>'
+    + '<div><div style="font-size:9px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">Discipline</div>'
+    + '<span style="font-size:11px;font-weight:700;color:'+dtagColor+'">'+dtag+'</span></div>'
+    + '<div><div style="font-size:9px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">Emotion</div>'
+    + '<span style="font-size:11px;color:var(--text2)">'+emotionHtml+'</span></div>'
+    + '<div><div style="font-size:9px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">Setup Tags</div>'
+    + '<div style="display:flex;flex-wrap:wrap;gap:4px">'+tagHtml+'</div></div>'
+    + '<div style="margin:4px 0;border-top:1px solid var(--border)"></div>'
+    + scHtml
+    + '</div>';
+
+  // Notes
   document.getElementById('note-modal-text').value = t.notes || '';
 
   document.getElementById('note-modal-overlay').classList.add('open');
+  // Attach screenshot click after render
+  var scImg = document.querySelector('.nm-sc-img');
+  if (scImg) scImg.addEventListener('click', function(){ openLightbox(this.getAttribute('data-sc')); });
+}
+
+function _infoRow(label, val) {
+  return '<div style="display:flex;justify-content:space-between;align-items:center">'
+    + '<span style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">'+label+'</span>'
+    + '<span style="font-size:11px;color:var(--text2);font-family:Geist Mono,monospace">'+val+'</span>'
+    + '</div>';
 }
 
 function closeNoteModal() {
@@ -5396,20 +5477,32 @@ function previewScreenshot(input) {
 <!-- NOTE MODAL -->
 <div class="note-modal-overlay" id="note-modal-overlay">
   <div class="note-modal">
-    <div class="note-modal-head">
-      <span class="note-modal-title" id="note-modal-ticker">Note</span>
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);flex-shrink:0">
+      <span class="note-modal-title" id="note-modal-ticker" style="font-size:14px;font-weight:700;display:flex;align-items:center;gap:6px"></span>
       <span class="note-modal-close" onclick="closeNoteModal()">&#10005;</span>
     </div>
-    <div class="form-group">
-      <label class="form-label">Notes</label>
-      <textarea class="form-input" id="note-modal-text" rows="5" style="resize:vertical;line-height:1.6"></textarea>
-    </div>
-    <div class="form-group">
-    </div>
-    <input type="hidden" id="note-modal-trade-id">
-    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
-      <button class="btn btn-ghost" onclick="closeNoteModal()">Cancel</button>
-      <button class="btn btn-solid" onclick="saveNoteModal()">Save Note</button>
+    <!-- Body: chart + side panel -->
+    <div style="display:flex;flex:1;overflow:hidden;min-height:0">
+      <!-- Chart -->
+      <div style="flex:1;min-width:0;background:#000">
+        <iframe id="note-modal-chart" src="" style="width:100%;height:100%;min-height:480px;border:none;display:block" allowfullscreen></iframe>
+      </div>
+      <!-- Side panel -->
+      <div style="width:240px;flex-shrink:0;border-left:1px solid var(--border);overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px">
+        <!-- Trade info -->
+        <div id="note-modal-info"></div>
+        <!-- Notes -->
+        <div>
+          <div style="font-size:9px;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Notes</div>
+          <textarea class="form-input" id="note-modal-text" rows="4" style="resize:vertical;line-height:1.6;font-size:11px;width:100%"></textarea>
+        </div>
+        <input type="hidden" id="note-modal-trade-id">
+        <div style="display:flex;flex-direction:column;gap:6px;padding-top:8px;border-top:1px solid var(--border)">
+          <button class="btn btn-solid" onclick="saveNoteModal()" style="width:100%">Save Note</button>
+          <button class="btn btn-ghost" onclick="closeNoteModal()" style="width:100%">Close</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
