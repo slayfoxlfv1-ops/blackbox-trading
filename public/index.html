@@ -1016,8 +1016,8 @@ async function saveTrade() {
   btn.textContent = 'Save Trade';
   screenshotDataUrl = null;
   closeLogModal();
-  if (currentView === 'tradelog') renderTradeLog();
-  else loadAccountData(currentAccountId);
+  // Always reload from DB so currentTrades is fresh after edit
+  await loadAccountData(currentAccountId);
 }
 
 function openEditTrade(id) {
