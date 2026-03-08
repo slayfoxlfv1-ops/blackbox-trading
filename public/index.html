@@ -5263,19 +5263,26 @@ function imgError(img, url) {
 
 // NOTE MODAL
 function openNoteModal(tradeId) {
-  var t = currentTrades.find(function(x){ return String(x.id) === String(tradeId); });
-  if (!t) {
-    // Fallback: fetch from Supabase directly
-    sb.from('trades').select('*').eq('id', tradeId).limit(1).then(function(res) {
-      if (res.data && res.data[0]) {
-        // Update currentTrades and retry
-        currentTrades = currentTrades.filter(function(x){ return x.id !== res.data[0].id; });
-        currentTrades.push(res.data[0]);
-        openNoteModal(tradeId);
-      }
-    });
-    return;
-  }
+  // Always fetch fresh data from Supabase so extension-saved fields appear immediately
+  sb.from('trades').select('*').eq('id', tradeId).limit(1).then(function(res) {
+    if (res.data && res.data[0]) {
+      // Update currentTrades with fresh data
+      currentTrades = currentTrades.filter(function(x){ return String(x.id) !== String(tradeId); });
+      currentTrades.push(res.data[0]);
+      _openNoteModalWithData(res.data[0]);
+    } else {
+      // Fallback to cached
+      var t = currentTrades.find(function(x){ return String(x.id) === String(tradeId); });
+      if (t) _openNoteModalWithData(t);
+    }
+  }).catch(function() {
+    var t = currentTrades.find(function(x){ return String(x.id) === String(tradeId); });
+    if (t) _openNoteModalWithData(t);
+  });
+}
+
+function _openNoteModalWithData(t) {
+  var tradeId = t.id;
 
   document.getElementById('note-modal-trade-id').value = tradeId;
 
