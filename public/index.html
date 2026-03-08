@@ -2281,12 +2281,7 @@ function renderTradeLogTable(trades) {
     var noteText = t.notes || '';
     var noteTrunc = noteText.length > 40 ? noteText.slice(0,40)+'...' : noteText;
     var hasNote = noteText.length > 0;
-    var notesHtml = '<div class="note-cell">'
-      + (hasNote
-          ? '<span class="note-short" onclick="openNoteModal(\''+t.id+'\')">'+noteTrunc.replace(/'/g,"&#39;")+'</span>'
-          + '<span class="note-expand-btn" onclick="openNoteModal(\''+t.id+'\')">&#8599;</span>'
-          : '<span style="color:var(--text3);font-size:11px">--</span>')
-      + '</div>';
+    var notesHtml = '<div class="note-cell" data-tid="' + t.id + '" style="cursor:pointer">'      + (_sc ? '<span style="font-size:12px;margin-right:3px">📷</span>' : '')      + (hasNote ? '<span class="note-short">' + noteTrunc.replace(/'/g, "&#39;") + '</span>' : '')      + (!_sc && !hasNote ? '<span style="color:var(--text3);font-size:11px">--</span>' : '')      + '</div>';
     return '<tr class="'+(pnl<0?'flagged':'')+'">'+
       '<td><span class="ticker">'+(t.ticker||'--')+'</span></td>'+
       '<td><span class="side-badge '+(t.side||'long')+'">'+(t.side||'').toUpperCase()+'</span></td>'+
@@ -2317,6 +2312,12 @@ function renderTradeLogTable(trades) {
     '<thead><tr><th>Ticker</th><th>Side</th><th>Entry</th><th>Exit</th><th>Qty</th><th>P&L</th><th>R:R</th><th>Discipline</th><th>Notes</th><th>Time</th><th></th></tr></thead>'+
     '<tbody>'+(rows||'<tr><td colspan="12" style="text-align:center;padding:24px;color:var(--text3);font-size:11px">No trades found</td></tr>')+'</tbody>'+
     '</table></div></div>';
+  // Click delegation for note cells
+  var tbl = el.querySelector('.table-scroll table');
+  if (tbl) tbl.addEventListener('click', function(e) {
+    var nc = e.target.closest('.note-cell[data-tid]');
+    if (nc) { openNoteModal(nc.getAttribute('data-tid')); }
+  });
 }
 
 // CALENDAR VIEW
@@ -4074,26 +4075,21 @@ function checkAndShowMoodCheck(accountId) {
   if (document.getElementById('onboarding-overlay')) return;
   if (document.getElementById('mood-overlay')) return;
   var today = new Date().toISOString().slice(0,10);
-  // Check bbStore first (most reliable)
-  try {
-    var stored = bbStore.get('mood_today_' + accountId);
-    if (stored) {
-      var p = JSON.parse(stored);
-      if (p && p.level && p.date === today) return;
-    }
-  } catch(e) {}
-  // Check localStorage
-  try {
-    var ls = localStorage.getItem('mood_' + accountId + '_' + today);
-    if (ls) {
-      var p2 = JSON.parse(ls);
-      if (p2 && p2.level) return;
-    }
-  } catch(e) {}
-  // Not answered today — show it
-  showMoodCheck(accountId);
+  sb.from('mood_sessions')
+    .select('level')
+    .eq('account_id', accountId)
+    .eq('session_date', today)
+    .limit(1)
+    .then(function(res) {
+      if (res.data && res.data.length > 0) return; // already answered
+      if (!document.getElementById('mood-overlay') && !document.getElementById('onboarding-overlay')) {
+        showMoodCheck(accountId);
+      }
+    })
+    .catch(function() {
+      showMoodCheck(accountId); // show on error too
+    });
 }
-
 function showMoodCheck(accountId) {
   var existing = document.getElementById('mood-overlay');
   if (existing) existing.remove();
@@ -5241,8 +5237,19 @@ function imgError(img, url) {
 
 // NOTE MODAL
 function openNoteModal(tradeId) {
-  var t = currentTrades.find(function(x){ return x.id === tradeId; });
-  if (!t) return;
+  var t = currentTrades.find(function(x){ return String(x.id) === String(tradeId); });
+  if (!t) {
+    // Fallback: fetch from Supabase directly
+    sb.from('trades').select('*').eq('id', tradeId).limit(1).then(function(res) {
+      if (res.data && res.data[0]) {
+        // Update currentTrades and retry
+        currentTrades = currentTrades.filter(function(x){ return x.id !== res.data[0].id; });
+        currentTrades.push(res.data[0]);
+        openNoteModal(tradeId);
+      }
+    });
+    return;
+  }
 
   document.getElementById('note-modal-trade-id').value = tradeId;
 
@@ -5263,8 +5270,10 @@ function openNoteModal(tradeId) {
   var dtag = t.discipline_tag || '--';
   var dtagColor = dtag==='A+'?'var(--green)':dtag==='B'?'var(--amber)':(dtag==='C'||dtag==='Revenge')?'var(--red)':'var(--text2)';
   var emojiMap = {'calm':'😌','confident':'💪','anxious':'😰','fear':'😨','greedy':'🤑','bored':'😐','frustrated':'😤','neutral':'😶'};
-  var tagHtml = (t.setup_tags&&t.setup_tags.length)
-    ? t.setup_tags.map(function(g){ return '<span style="padding:2px 8px;border-radius:10px;background:var(--surface3);border:1px solid var(--border2);font-size:9px;color:var(--text2)">'+g+'</span>'; }).join(' ')
+  var rawTags = t.setup_tags || '';
+  var tagsArr = Array.isArray(rawTags) ? rawTags : (rawTags ? String(rawTags).split(',').filter(Boolean) : []);
+  var tagHtml = tagsArr.length
+    ? tagsArr.map(function(g){ return '<span style="padding:2px 8px;border-radius:10px;background:var(--surface3);border:1px solid var(--border2);font-size:9px;color:var(--text2)">' + g + '</span>'; }).join(' ')
     : '<span style="color:var(--text3);font-size:10px">--</span>';
 
   document.getElementById('note-modal-info').innerHTML =
