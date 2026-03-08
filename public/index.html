@@ -5248,14 +5248,22 @@ function openNoteModal(tradeId) {
   if (ticker==='ZB'||ticker==='ZN')    tvSym = 'CBOT:' + (TICKER_MAP[ticker]&&TICKER_MAP[ticker].tv||ticker);
   if (ticker==='6E')                   tvSym = 'CME:6E1!';
 
-  var fromTs = t.entry_time ? Math.floor(new Date(t.entry_time).getTime()/1000) - 1800 : '';
-  var chartFrame = document.getElementById('note-modal-chart');
-  if (chartFrame) {
-    chartFrame.src = 'https://s.tradingview.com/widgetembed/?frameElementId=note-modal-chart'
-      + '&symbol=' + encodeURIComponent(tvSym)
-      + '&interval=1'
-      + (fromTs ? '&from=' + fromTs : '')
-      + '&hidesidetoolbar=0&hidetoptoolbar=0&theme=dark&style=1&timezone=America%2FChicago&withdateranges=1&showpopupbutton=1&locale=en';
+  // Build direct TradingView URL with timestamp
+  var fromTs = t.entry_time ? Math.floor(new Date(t.entry_time).getTime()/1000) - 900 : '';
+  var tvUrl = 'https://www.tradingview.com/chart/?symbol=' + encodeURIComponent(tvSym) + '&interval=1'
+    + (fromTs ? '&from=' + fromTs : '');
+
+  var symLabel = document.getElementById('nm-chart-symbol');
+  var dtLabel  = document.getElementById('nm-chart-datetime');
+  var openBtn  = document.getElementById('nm-open-tv');
+
+  if (symLabel) symLabel.textContent = tvSym;
+  if (dtLabel && t.entry_time) {
+    var dt = new Date(t.entry_time);
+    dtLabel.textContent = dt.toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false}) + ' (entry time)';
+  }
+  if (openBtn) {
+    openBtn.onclick = function() { window.open(tvUrl, '_blank'); };
   }
 
   // Trade info panel
@@ -5486,7 +5494,13 @@ function previewScreenshot(input) {
     <div style="display:flex;flex:1;overflow:hidden;min-height:0">
       <!-- Chart -->
       <div style="flex:1;min-width:0;background:#000">
-        <iframe id="note-modal-chart" src="" style="width:100%;height:100%;min-height:480px;border:none;display:block" allowfullscreen></iframe>
+        <div id="note-modal-chart-area" style="width:100%;height:100%;min-height:480px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:var(--bg)">
+          <div style="font-size:32px">📈</div>
+          <div style="font-size:13px;font-weight:700;color:var(--text)" id="nm-chart-symbol">--</div>
+          <div style="font-size:11px;color:var(--text3)" id="nm-chart-datetime">--</div>
+          <button id="nm-open-tv" class="btn btn-solid" style="font-size:12px;padding:10px 24px">Abrir en TradingView ↗</button>
+          <div style="font-size:10px;color:var(--text3);text-align:center;max-width:280px;line-height:1.6">El gráfico abre directamente en la fecha y hora del trade.<br>Presiona <kbd style="background:var(--surface3);border:1px solid var(--border2);border-radius:3px;padding:1px 5px;font-size:9px">Alt+G</kbd> si necesitas ajustar la fecha.</div>
+        </div>
       </div>
       <!-- Side panel -->
       <div style="width:240px;flex-shrink:0;border-left:1px solid var(--border);overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px">
