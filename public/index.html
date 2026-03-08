@@ -5094,7 +5094,7 @@ function renderSettings() {
     '<div style="font-size:11px;color:var(--text3)">Billing management coming soon.</div></div></div>'+
     '<div class="panel" style="margin-bottom:12px"><div class="panel-head"><span class="panel-title">Connect Platforms</span></div>'+
     '<div style="padding:18px">'+
-    ['TradingView','Topstep','Tradeify','Apex Trader','FTMO','Ninjatrader'].map(function(p){return '<div class="stat-row" style="padding:10px 0"><span class="stat-key">'+p+'</span><span style="font-size:9px;color:var(--text3);background:var(--surface2);border:1px solid var(--border);padding:2px 8px;border-radius:4px">Coming with Chrome Extension</span></div>';}).join('')+
+    '<div class="stat-row" style="padding:10px 0">'  +'<span class="stat-key">TopstepX</span>'  +'<span style="font-size:9px;color:var(--green);background:var(--green-bg);border:1px solid var(--green-bd);padding:2px 8px;border-radius:4px;font-weight:600">✓ Activo — Chrome Extension</span>'  +'</div>'  +'<div style="margin-top:8px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;font-size:10px;color:var(--text3);line-height:1.7">'  +'Próximamente: TradingView · Tradeify · Apex Trader · FTMO · NinjaTrader<br>'  +'<span style="font-size:9px">Estamos trabajando para conectar más plataformas. Si usas otra, escríbenos.</span>'  +'</div>'+
     '</div></div>'+
     '<div class="panel" style="margin-bottom:12px"><div class="panel-head"><span class="panel-title">Setup Tags</span><span style="font-size:10px;color:var(--text3)">Personaliza tus tags de setup</span></div>'    + '<div style="padding:18px">'    + '<div id="settings-tags-list" style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px"></div>'    + '<div style="display:flex;gap:7px;align-items:center">'    + '<input id="new-tag-input" class="form-input" type="text" placeholder="Nuevo tag (ej: ICT BOS)" style="flex:1">'    + '<button onclick="addSetupTag()" style="padding:8px 14px;background:#5a9e9e;border:none;border-radius:7px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">+ Agregar</button>'    + '</div>'    + '</div></div>'    + '<div class="panel" style="margin-bottom:12px"><div class="panel-head"><span class="panel-title">Legal</span></div>'+
     '<div style="padding:18px;display:flex;flex-direction:column;gap:8px">'+
@@ -5353,7 +5353,25 @@ async function saveNoteModal() {
 }
 
 document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') { closeNoteModal(); closeLightbox(); }
+  if (e.key !== 'Escape') return;
+  // Close note/trade detail modal
+  closeNoteModal();
+  // Close lightbox
+  closeLightbox();
+  // Close log trade modal
+  var logModal = document.getElementById('modal-overlay');
+  if (logModal && logModal.classList.contains('open')) closeLogModal();
+  // Close delete modal
+  var delModal = document.getElementById('del-overlay');
+  if (delModal && delModal.classList.contains('open')) delModal.classList.remove('open');
+  // Close rules modal
+  var ruleModal = document.getElementById('add-rule-modal');
+  if (ruleModal && ruleModal.style.display !== 'none') {
+    ruleModal.style.display = 'none';
+  }
+  // Close onboarding (allow Esc)
+  var onboarding = document.getElementById('onboarding-overlay');
+  if (onboarding) onboarding.remove();
 });
 
 // LIGHTBOX
