@@ -2948,16 +2948,15 @@ function switchDiscTab(tab) {
 }
 
 function renderRulesTab(el) {
-  // Use temp state if available, else load from saved
-  var acctId = currentAccountId || '';
   if (!_rulesTemp) initRulesTemp();
   var rules  = _rulesTemp;
   var trades = currentTrades || [];
-  var violations = checkRuleViolations(rules, trades);
+  var saved  = getPersonalRules(currentAccountId || '');
+  var violations = checkRuleViolations(saved, trades); // violations always from SAVED rules
   var activeCount = Object.keys(rules).filter(function(k){ return rules[k] && rules[k].active; }).length;
   var today  = new Date().toISOString().slice(0,10);
   var todayTrades = trades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(today); });
-  var dscore = calcRulesDisciplineScore(rules, trades);
+  var dscore = calcRulesDisciplineScore(saved, trades);
   var dcolor = dscore.score>=80?'var(--green)':dscore.score>=50?'var(--amber)':'var(--red)';
   var dlabel = dscore.score>=90?'Disciplina elite':dscore.score>=70?'Trader disciplinado':dscore.score>=50?'En progreso':dscore.score>=30?'Necesita atencion':'Sesion caotica';
 
@@ -2967,7 +2966,7 @@ function renderRulesTab(el) {
   html += '<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;gap:18px">'
     + '<div style="text-align:center;flex-shrink:0">'
     + '<div style="font-size:38px;font-weight:800;color:' + dcolor + ';line-height:1">' + dscore.score + '</div>'
-    + '<div style="font-size:9px;color:var(--text3);margin-top:3px;text-transform:uppercase;letter-spacing:.8px">score hoy</div>'
+    + '<div style="font-size:9px;color:var(--text3);margin-top:3px;text-transform:uppercase;letter-spacing:.8px">score guardado</div>'
     + '</div>'
     + '<div style="flex:1">'
     + '<div style="height:5px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-bottom:8px">'
@@ -2975,41 +2974,44 @@ function renderRulesTab(el) {
     + '<div style="font-size:12px;color:var(--text2);font-weight:600">' + dlabel + '</div>'
     + '<div style="font-size:10px;color:var(--text3);margin-top:2px">'
     + activeCount + ' regla' + (activeCount!==1?'s':'') + ' activa' + (activeCount!==1?'s':'')
-    + (activeCount<3?' · <span style="color:var(--amber)">activa ' + (3-activeCount) + ' mas para score completo</span>':'')
+    + (activeCount<3?' · <span style="color:var(--amber)">activa ' + (3-activeCount) + ' mas</span>':'')
     + ' · ' + violations.length + ' incumplida' + (violations.length!==1?'s':'') + ' hoy'
-    + '</div></div></div>';
+    + '</div></div>'
+    + '<div style="font-size:9px;color:var(--amber);text-align:right;flex-shrink:0">Cambios pendientes<br>de guardar</div>'
+    + '</div>';
 
-  // Violations banner
+  // Violations
   if (violations.length) {
     html += '<div style="background:var(--red-bg);border:1px solid var(--red-bd);border-left:3px solid var(--red);border-radius:9px;padding:12px 16px;margin-bottom:14px">'
       + '<div style="font-size:9px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">Reglas incumplidas hoy</div>'
       + violations.map(function(v){
           return '<div style="font-size:11px;color:var(--text2);padding:3px 0;display:flex;gap:8px">'
-            + '<span style="color:var(--red)">✕</span><span><b>' + v.rule.label + '</b> — ' + v.detail + '</span></div>';
+            + '<span style="color:var(--red)">X</span><span><b>' + v.rule.label + '</b> — ' + v.detail + '</span></div>';
         }).join('') + '</div>';
   }
 
+  // rCard helper — uses data-rule-id attribute, no inline JS with quotes
   function rCard(id, icon, title, desc, cfgHtml, isActive, isViolated) {
     var bc = isViolated ? 'var(--red)' : isActive ? '#5a9e9e' : 'var(--border)';
     var bg = isViolated ? 'var(--red-bg)' : isActive ? 'rgba(90,158,158,0.06)' : 'var(--surface)';
-    var toggleBg  = isActive ? '#5a9e9e' : 'var(--surface2)';
-    var toggleDot = isActive ? 'translateX(16px)' : 'translateX(2px)';
+    var toggleBg  = isActive ? '#5a9e9e' : '#444';
+    var toggleX   = isActive ? '18px' : '2px';
     return '<div style="background:' + bg + ';border:1px solid ' + bc + ';border-radius:10px;padding:14px 16px;margin-bottom:8px">'
       + '<div style="display:flex;align-items:flex-start;gap:12px">'
       + '<div style="font-size:20px;flex-shrink:0;margin-top:2px">' + icon + '</div>'
       + '<div style="flex:1;min-width:0">'
       + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">'
       + '<span style="font-size:13px;font-weight:600;color:var(--text)">' + title + '</span>'
-      + (isViolated ? '<span style="font-size:8px;color:var(--red);font-weight:700;background:var(--red-bg);padding:2px 7px;border-radius:8px;border:1px solid var(--red-bd)">INCUMPLIDA HOY</span>' : '')
+      + (isViolated ? '<span style="font-size:8px;color:var(--red);font-weight:700;background:var(--red-bg);padding:2px 7px;border-radius:8px">INCUMPLIDA</span>' : '')
       + '</div>'
       + '<div style="font-size:10px;color:var(--text3);margin-bottom:12px">' + desc + '</div>'
       + cfgHtml
       + '</div>'
-      + '<div onclick="toggleRuleV2(\'" + id + "\')" style="cursor:pointer;flex-shrink:0;margin-top:2px">'
-      + '<div style="width:36px;height:20px;background:' + toggleBg + ';border-radius:10px;position:relative;transition:background .2s">'
-      + '<div style="width:16px;height:16px;background:#fff;border-radius:50%;position:absolute;top:2px;transition:transform .2s;transform:' + toggleDot + '"></div>'
+      + '<div class="rule-toggle" data-rule-id="' + id + '" style="cursor:pointer;flex-shrink:0;margin-top:2px;user-select:none">'
+      + '<div style="width:38px;height:22px;background:' + toggleBg + ';border-radius:11px;position:relative;transition:background .2s;border:1px solid rgba(255,255,255,0.1)">'
+      + '<div style="width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:1px;left:' + toggleX + ';transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,0.4)"></div>'
       + '</div>'
-      + '<div style="font-size:8px;color:' + (isActive?'#5a9e9e':'var(--text3)') + ';text-align:center;margin-top:3px;font-weight:600">' + (isActive?'ON':'OFF') + '</div>'
+      + '<div style="font-size:8px;color:' + (isActive?'#5a9e9e':'#666') + ';text-align:center;margin-top:3px;font-weight:700">' + (isActive?'ON':'OFF') + '</div>'
       + '</div>'
       + '</div></div>';
   }
@@ -3019,63 +3021,67 @@ function renderRulesTab(el) {
   // Rule 1: Sessions
   var r1 = rules.session || {};
   var sel1 = r1.sessions || [];
-  var sessHtml = '<div style="display:flex;flex-wrap:wrap;gap:6px">'
-    + NY_SESSIONS.map(function(s) {
-        var ls = sessionLocalTime(todayD, s.nyStart);
-        var le = sessionLocalTime(todayD, s.nyEnd);
-        var on = sel1.includes(s.id);
-        return '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:' + (on?'rgba(90,158,158,0.15)':'var(--surface2)') + ';border:1px solid ' + (on?'#5a9e9e':'var(--border)') + ';border-radius:7px;padding:6px 11px;user-select:none">'
-          + '<input type="checkbox" ' + (on?'checked':'') + ' onchange="toggleRuleSession(\'" + s.id + "\')" style="accent-color:#5a9e9e;width:12px;height:12px">'
-          + '<span style="font-size:10px;color:' + (on?'var(--text)':'var(--text3)') + ';font-weight:' + (on?'600':'400') + '">' + s.name + '</span>'
-          + '<span style="font-size:9px;color:var(--text3)">' + ls + '-' + le + '</span>'
-          + '</label>';
-      }).join('') + '</div>'
-    + (sel1.length===0 ? '<div style="font-size:10px;color:var(--amber);margin-top:6px">Selecciona al menos una sesion</div>' : '');
+  var sessHtml = '<div style="display:flex;flex-wrap:wrap;gap:6px">';
+  NY_SESSIONS.forEach(function(s) {
+    var ls = sessionLocalTime(todayD, s.nyStart);
+    var le = sessionLocalTime(todayD, s.nyEnd);
+    var on = sel1.includes(s.id);
+    sessHtml += '<div class="sess-toggle" data-sess-id="' + s.id + '" style="display:flex;align-items:center;gap:6px;cursor:pointer;background:' + (on?'rgba(90,158,158,0.15)':'var(--surface2)') + ';border:1px solid ' + (on?'#5a9e9e':'var(--border)') + ';border-radius:7px;padding:6px 11px;user-select:none">'
+      + '<div style="width:12px;height:12px;border-radius:3px;border:1.5px solid ' + (on?'#5a9e9e':'#555') + ';background:' + (on?'#5a9e9e':'transparent') + ';flex-shrink:0;display:flex;align-items:center;justify-content:center">'
+      + (on?'<div style="width:7px;height:5px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg);margin-top:-2px"></div>':'')
+      + '</div>'
+      + '<span style="font-size:10px;color:' + (on?'var(--text)':'var(--text3)') + ';font-weight:' + (on?'600':'400') + '">' + s.name + '</span>'
+      + '<span style="font-size:9px;color:var(--text3)">' + ls + '-' + le + '</span>'
+      + '</div>';
+  });
+  sessHtml += '</div>';
+  if (!sel1.length) sessHtml += '<div style="font-size:10px;color:var(--amber);margin-top:6px">Selecciona al menos una sesion</div>';
   html += rCard('session','🕐','Horario permitido para operar','Solo puedes tomar trades durante las sesiones seleccionadas', sessHtml, !!r1.active, violations.some(function(v){return v.rule.id==='session';}));
 
   // Rule 2: No days
   var r2 = rules.nodays || {};
   var sel2 = r2.days || [];
-  var ndHtml = '<div style="display:flex;gap:8px">'
-    + [{d:1,lbl:'Lunes'},{d:5,lbl:'Viernes'}].map(function(o) {
-        var on = sel2.includes(o.d);
-        return '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:' + (on?'rgba(158,90,90,0.15)':'var(--surface2)') + ';border:1px solid ' + (on?'var(--red)':'var(--border)') + ';border-radius:7px;padding:7px 14px;user-select:none">'
-          + '<input type="checkbox" ' + (on?'checked':'') + ' onchange="toggleRuleNoday(' + o.d + ')" style="accent-color:#9e5a5a;width:13px;height:13px">'
-          + '<span style="font-size:12px;color:' + (on?'var(--red)':'var(--text3)') + ';font-weight:' + (on?'600':'400') + '">' + o.lbl + '</span>'
-          + '</label>';
-      }).join('') + '</div>';
+  var ndHtml = '<div style="display:flex;gap:8px">';
+  [{d:1,lbl:'Lunes'},{d:5,lbl:'Viernes'}].forEach(function(o) {
+    var on = sel2.includes(o.d);
+    ndHtml += '<div class="noday-toggle" data-dow="' + o.d + '" style="display:flex;align-items:center;gap:6px;cursor:pointer;background:' + (on?'rgba(158,90,90,0.15)':'var(--surface2)') + ';border:1px solid ' + (on?'var(--red)':'var(--border)') + ';border-radius:7px;padding:7px 14px;user-select:none">'
+      + '<div style="width:12px;height:12px;border-radius:3px;border:1.5px solid ' + (on?'var(--red)':'#555') + ';background:' + (on?'var(--red)':'transparent') + ';flex-shrink:0"></div>'
+      + '<span style="font-size:12px;color:' + (on?'var(--red)':'var(--text3)') + ';font-weight:' + (on?'600':'400') + '">' + o.lbl + '</span>'
+      + '</div>';
+  });
+  ndHtml += '</div>';
   html += rCard('nodays','📅','No operar lunes / viernes','Marca los dias en los que tienes prohibido operar', ndHtml, !!r2.active, violations.some(function(v){return v.rule.id==='nodays';}));
 
-  // Rule 3: Max trades
+  // Rule 3
   var r3 = rules.maxtrades || {};
   var mt3 = '<div style="display:flex;align-items:center;gap:10px">'
     + '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:4px 8px;display:flex;align-items:center;gap:6px">'
     + '<span style="font-size:10px;color:var(--text3)">Max</span>'
-    + '<input id="rule-input-maxtrades" type="number" min="1" max="20" value="' + (r3.value||3) + '" onchange="updateRuleValue(\'maxtrades\',this.value)" style="width:48px;background:transparent;border:none;color:var(--text);font-size:14px;font-weight:700;font-family:inherit;text-align:center;outline:none">'
+    + '<input id="rule-input-maxtrades" type="number" min="1" max="20" value="' + (r3.value||3) + '" style="width:48px;background:transparent;border:none;color:var(--text);font-size:14px;font-weight:700;font-family:inherit;text-align:center;outline:none">'
     + '<span style="font-size:10px;color:var(--text3)">trades</span></div>'
     + '<div style="font-size:11px;color:var(--text3)">Hoy: <span style="color:' + (todayTrades.length>=(parseInt(r3.value)||3)?'var(--red)':'var(--text)') + ';font-weight:600">' + todayTrades.length + '</span></div>'
     + '</div>';
-  html += rCard('maxtrades','🔢','Maximo de trades por dia','Para de operar cuando alcanzes este numero de trades en la sesion', mt3, !!r3.active, violations.some(function(v){return v.rule.id==='maxtrades';}));
+  html += rCard('maxtrades','🔢','Maximo de trades por dia','Para de operar cuando alcanzes este numero de trades', mt3, !!r3.active, violations.some(function(v){return v.rule.id==='maxtrades';}));
 
-  // Rule 4: Max consecutive losses
+  // Rule 4
   var r4 = rules.maxlosses || {};
   var st4=0, ms4=0;
   todayTrades.slice().sort(function(a,b){return new Date(a.entry_time)-new Date(b.entry_time);}).forEach(function(t){if((t.pnl||0)<0){st4++;ms4=Math.max(ms4,st4);}else{st4=0;}});
   var ml4 = '<div style="display:flex;align-items:center;gap:10px">'
     + '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:4px 8px;display:flex;align-items:center;gap:6px">'
     + '<span style="font-size:10px;color:var(--text3)">Max</span>'
-    + '<input id="rule-input-maxlosses" type="number" min="1" max="10" value="' + (r4.value||2) + '" onchange="updateRuleValue(\'maxlosses\',this.value)" style="width:48px;background:transparent;border:none;color:var(--text);font-size:14px;font-weight:700;font-family:inherit;text-align:center;outline:none">'
+    + '<input id="rule-input-maxlosses" type="number" min="1" max="10" value="' + (r4.value||2) + '" style="width:48px;background:transparent;border:none;color:var(--text);font-size:14px;font-weight:700;font-family:inherit;text-align:center;outline:none">'
     + '<span style="font-size:10px;color:var(--text3)">perdidas seguidas</span></div>'
     + '<div style="font-size:11px;color:var(--text3)">Racha hoy: <span style="color:' + (ms4>=(parseInt(r4.value)||2)?'var(--red)':'var(--text)') + ';font-weight:600">' + ms4 + '</span></div>'
     + '</div>';
   html += rCard('maxlosses','🛑','Maximo perdidas consecutivas','Detente cuando encadenes este numero de perdidas seguidas', ml4, !!r4.active, violations.some(function(v){return v.rule.id==='maxlosses';}));
 
-  // Rule 5: Max position size
+  // Rule 5
   var r5 = rules.maxsize || {};
   var ms5 = '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">'
     + '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:4px 8px;display:flex;align-items:center;gap:6px">'
-    + '<input id="rule-input-maxsize" type="number" min="1" max="100" value="' + (r5.value||1) + '" onchange="updateRuleValue(\'maxsize\',this.value)" style="width:48px;background:transparent;border:none;color:var(--text);font-size:14px;font-weight:700;font-family:inherit;text-align:center;outline:none">'
-    + '<select id="rule-select-sizetype" onchange="updateRuleSizeType(this.value)" style="background:transparent;border:none;color:var(--text3);font-size:11px;font-family:inherit;outline:none;cursor:pointer">'
+    + '<input id="rule-input-maxsize" type="number" min="1" max="100" value="' + (r5.value||1) + '" style="width:48px;background:transparent;border:none;color:var(--text);font-size:14px;font-weight:700;font-family:inherit;text-align:center;outline:none">'
+    + '<select id="rule-select-sizetype" style="background:var(--surface2);border:none;color:var(--text3);font-size:11px;font-family:inherit;outline:none;cursor:pointer">'
     + '<option value="micro"' + (r5.sizeType==='micro'||!r5.sizeType?' selected':'') + '>micros</option>'
     + '<option value="mini"'  + (r5.sizeType==='mini'?' selected':'') + '>minis</option>'
     + '</select></div>'
@@ -3083,7 +3089,7 @@ function renderRulesTab(el) {
     + '</div>';
   html += rCard('maxsize','📊','Tamano maximo de posicion','Limite de contratos por trade. Convierte entre micro y mini automaticamente', ms5, !!r5.active, violations.some(function(v){return v.rule.id==='maxsize';}));
 
-  // Rule 6: Checklist
+  // Rule 6
   var r6 = rules.checklist || {};
   var tCL = (currentChecklistSessions||[]).find(function(s){return s.session_date===today;});
   var cl6 = '<div style="display:flex;align-items:center;gap:8px">'
@@ -3092,7 +3098,7 @@ function renderRulesTab(el) {
     + (tCL ? 'Checklist completado hoy — ' + tCL.score_pct + '%' : 'Sin checklist hoy') + '</span></div>';
   html += rCard('checklist','📋','No operar sin completar el checklist','El checklist debe estar respondido antes del primer trade del dia', cl6, !!r6.active, violations.some(function(v){return v.rule.id==='checklist';}));
 
-  // Rule 7: No Red Day
+  // Rule 7
   var r7 = rules.redday || {};
   var tMd = (currentMoodSessions||[]).find(function(s){return s.date===today;});
   var rdClr = tMd?(tMd.level==='green'?'var(--green)':tMd.level==='yellow'?'var(--amber)':'var(--red)'):'var(--text3)';
@@ -3102,33 +3108,87 @@ function renderRulesTab(el) {
     + '<span style="font-size:11px;color:' + rdClr + ';font-weight:600">' + rdTxt + '</span></div>';
   html += rCard('redday','🧠','No operar en Red Day','Si el mood check fue rojo, no tomas trades ese dia', rd7, !!r7.active, violations.some(function(v){return v.rule.id==='redday';}));
 
-  // Rule 8: Min time gap
+  // Rule 8
   var r8 = rules.mintimegap || {};
   var tg8 = '<div style="display:flex;align-items:center;gap:10px">'
     + '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:4px 8px;display:flex;align-items:center;gap:6px">'
-    + '<input id="rule-input-mintimegap" type="number" min="1" max="120" value="' + (r8.value||10) + '" onchange="updateRuleValue(\'mintimegap\',this.value)" style="width:48px;background:transparent;border:none;color:var(--text);font-size:14px;font-weight:700;font-family:inherit;text-align:center;outline:none">'
+    + '<input id="rule-input-mintimegap" type="number" min="1" max="120" value="' + (r8.value||10) + '" style="width:48px;background:transparent;border:none;color:var(--text);font-size:14px;font-weight:700;font-family:inherit;text-align:center;outline:none">'
     + '<span style="font-size:10px;color:var(--text3)">minutos entre trades</span></div>'
     + '</div>';
   html += rCard('mintimegap','⏱','Minimo de minutos entre trades','Evita el overtrading y entradas impulsivas despues de cada trade', tg8, !!r8.active, violations.some(function(v){return v.rule.id==='mintimegap';}));
 
-  // Rule 9: Max daily loss
+  // Rule 9
   var r9 = rules.maxdailyloss || {};
   var pnl9 = todayTrades.reduce(function(s,t){return s+(t.pnl||0);},0);
-  var mdl9 = '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
+  var mdl9 = '<div style="display:flex;align-items:center;gap:10px">'
     + '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:4px 8px;display:flex;align-items:center;gap:4px">'
     + '<span style="font-size:11px;color:var(--text3)">$</span>'
-    + '<input id="rule-input-maxdailyloss" type="number" min="0" value="' + (r9.value||200) + '" onchange="updateRuleValue(\'maxdailyloss\',this.value)" style="width:70px;background:transparent;border:none;color:var(--text);font-size:14px;font-weight:700;font-family:inherit;outline:none">'
+    + '<input id="rule-input-maxdailyloss" type="number" min="0" value="' + (r9.value||200) + '" style="width:70px;background:transparent;border:none;color:var(--text);font-size:14px;font-weight:700;font-family:inherit;outline:none">'
     + '</div>'
     + '<div style="font-size:11px;color:var(--text3)">P&L hoy: <span style="color:' + (pnl9>=0?'var(--green)':'var(--red)') + ';font-weight:700">' + (pnl9>=0?'+':'') + '$' + Math.abs(pnl9).toFixed(0) + '</span></div>'
     + '</div>';
   html += rCard('maxdailyloss','💸','Perdida maxima personal del dia','Tu limite personal de perdida diaria, independiente del limite de la firma', mdl9, !!r9.active, violations.some(function(v){return v.rule.id==='maxdailyloss';}));
 
   // Save button
-  html += '<div style="display:flex;justify-content:flex-end;margin:4px 0 16px 0">'
-    + '<button onclick="saveRulesConfig()" id="save-rules-btn" style="padding:10px 28px;font-size:13px;font-weight:700;background:#5a9e9e;border:none;border-radius:8px;color:#fff;cursor:pointer;font-family:inherit">Guardar reglas</button></div>';
+  html += '<div style="display:flex;justify-content:flex-end;margin:8px 0 16px 0">'
+    + '<button id="save-rules-btn" onclick="saveRulesConfig()" style="padding:11px 32px;font-size:13px;font-weight:700;background:#5a9e9e;border:none;border-radius:8px;color:#fff;cursor:pointer;font-family:inherit;letter-spacing:.3px">Guardar reglas</button></div>';
 
   html += '</div>';
   el.innerHTML = html;
+
+  // ── Attach event listeners (no inline JS) ──
+
+  // Toggle rule active/inactive
+  el.querySelectorAll('.rule-toggle').forEach(function(div) {
+    div.addEventListener('click', function() {
+      var id = div.getAttribute('data-rule-id');
+      var r = _rulesTemp || {};
+      if (!r[id]) r[id] = { active: false };
+      r[id].active = !r[id].active;
+      _rulesTemp = r;
+      var tabEl = document.getElementById('disc-tab-content');
+      if (tabEl) renderRulesTab(tabEl);
+    });
+  });
+
+  // Session toggles
+  el.querySelectorAll('.sess-toggle').forEach(function(div) {
+    div.addEventListener('click', function() {
+      var sessId = div.getAttribute('data-sess-id');
+      var r = _rulesTemp || {};
+      if (!r.session) r.session = { active: true, sessions: [] };
+      var idx = r.session.sessions.indexOf(sessId);
+      if (idx === -1) r.session.sessions.push(sessId); else r.session.sessions.splice(idx, 1);
+      _rulesTemp = r;
+      var tabEl = document.getElementById('disc-tab-content');
+      if (tabEl) renderRulesTab(tabEl);
+    });
+  });
+
+  // No-day toggles
+  el.querySelectorAll('.noday-toggle').forEach(function(div) {
+    div.addEventListener('click', function() {
+      var dow = parseInt(div.getAttribute('data-dow'));
+      var r = _rulesTemp || {};
+      if (!r.nodays) r.nodays = { active: true, days: [] };
+      var idx = r.nodays.days.indexOf(dow);
+      if (idx === -1) r.nodays.days.push(dow); else r.nodays.days.splice(idx, 1);
+      _rulesTemp = r;
+      var tabEl = document.getElementById('disc-tab-content');
+      if (tabEl) renderRulesTab(tabEl);
+    });
+  });
+
+  // Size type select
+  var stSel = el.querySelector('#rule-select-sizetype');
+  if (stSel) {
+    stSel.addEventListener('change', function() {
+      var r = _rulesTemp || {};
+      if (!r.maxsize) r.maxsize = {};
+      r.maxsize.sizeType = stSel.value;
+      _rulesTemp = r;
+    });
+  }
 }
 
 // CHECKLIST TAB
