@@ -1092,6 +1092,8 @@ document.querySelectorAll('.nav-item[data-view]').forEach(function(item) {
 });
 
 function navigateTo(view) {
+  // Clear rules temp state when leaving discipline
+  if (currentView === 'discipline' && view !== 'discipline') _rulesTemp = null;
   currentView = view;
   try { localStorage.setItem('bb_last_view', view); } catch(e) {}
   document.querySelectorAll('.nav-item').forEach(function(i){i.classList.remove('active');});
@@ -2361,42 +2363,41 @@ function renderRulesView() {
   el.innerHTML = html;
 }
 
+// ── Rules: temp state (only persisted on Guardar) ──
+var _rulesTemp = null;
+
+function getRulesTempOrSaved() {
+  if (!_rulesTemp) {
+    _rulesTemp = JSON.parse(JSON.stringify(getPersonalRules(currentAccountId || '')));
+  }
+  return _rulesTemp;
+}
+
+function initRulesTemp() {
+  // Always start fresh from saved state when entering rules tab
+  _rulesTemp = JSON.parse(JSON.stringify(getPersonalRules(currentAccountId || '')));
+}
+
 function saveRulesConfig() {
-  var acctId = currentAccountId || '';
-  var rules  = getPersonalRules(acctId);
+  // Read all DOM inputs into _rulesTemp, then persist
+  var r = _rulesTemp || {};
 
-  // ── Read every input/select from the DOM and update rules object ──
-
-  // Rule 1: session — sessions array already updated by toggleRuleSession
-  // active state already updated by toggleRuleV2
-  // Just make sure active is set if sessions selected
-  var sel1 = rules.session && rules.session.sessions ? rules.session.sessions : [];
-
-  // Rule 2: nodays — days array already updated by toggleRuleNoday
-
-  // Rule 3: maxtrades
-  var mt = document.getElementById('rule-input-maxtrades');
-  if (mt) { if (!rules.maxtrades) rules.maxtrades = {}; rules.maxtrades.value = mt.value; }
-
-  // Rule 4: maxlosses
-  var ml = document.getElementById('rule-input-maxlosses');
-  if (ml) { if (!rules.maxlosses) rules.maxlosses = {}; rules.maxlosses.value = ml.value; }
-
-  // Rule 5: maxsize
-  var ms = document.getElementById('rule-input-maxsize');
+  var mt  = document.getElementById('rule-input-maxtrades');
+  var ml  = document.getElementById('rule-input-maxlosses');
+  var ms  = document.getElementById('rule-input-maxsize');
   var mst = document.getElementById('rule-select-sizetype');
-  if (ms)  { if (!rules.maxsize) rules.maxsize = {};  rules.maxsize.value = ms.value; }
-  if (mst) { if (!rules.maxsize) rules.maxsize = {};  rules.maxsize.sizeType = mst.value; }
+  var tg  = document.getElementById('rule-input-mintimegap');
+  var dl  = document.getElementById('rule-input-maxdailyloss');
 
-  // Rule 8: mintimegap
-  var tg = document.getElementById('rule-input-mintimegap');
-  if (tg) { if (!rules.mintimegap) rules.mintimegap = {}; rules.mintimegap.value = tg.value; }
+  if (mt)  { if (!r.maxtrades)   r.maxtrades   = {}; r.maxtrades.value    = mt.value; }
+  if (ml)  { if (!r.maxlosses)   r.maxlosses   = {}; r.maxlosses.value    = ml.value; }
+  if (ms)  { if (!r.maxsize)     r.maxsize     = {}; r.maxsize.value      = ms.value; }
+  if (mst) { if (!r.maxsize)     r.maxsize     = {}; r.maxsize.sizeType   = mst.value; }
+  if (tg)  { if (!r.mintimegap)  r.mintimegap  = {}; r.mintimegap.value   = tg.value; }
+  if (dl)  { if (!r.maxdailyloss)r.maxdailyloss= {}; r.maxdailyloss.value = dl.value; }
 
-  // Rule 9: maxdailyloss
-  var dl = document.getElementById('rule-input-maxdailyloss');
-  if (dl) { if (!rules.maxdailyloss) rules.maxdailyloss = {}; rules.maxdailyloss.value = dl.value; }
-
-  savePersonalRules(acctId, rules);
+  savePersonalRules(currentAccountId || '', r);
+  _rulesTemp = null; // clear temp so next open reads saved
 
   var btn = document.getElementById('save-rules-btn');
   if (btn) {
@@ -2404,53 +2405,53 @@ function saveRulesConfig() {
     btn.style.background = 'var(--green)';
     btn.disabled = true;
     setTimeout(function() {
-      btn.textContent = 'Guardar reglas';
-      btn.style.background = '#5a9e9e';
-      btn.disabled = false;
+      if (btn) { btn.textContent = 'Guardar reglas'; btn.style.background = '#5a9e9e'; btn.disabled = false; }
     }, 2000);
   }
 }
 
-// Rule toggle/update helpers
+// Toggles and changes only update _rulesTemp, never persist directly
 function toggleRuleV2(id) {
-  var acctId = currentAccountId || '';
-  var rules  = getPersonalRules(acctId);
-  if (!rules[id]) rules[id] = { active: false };
-  rules[id].active = !rules[id].active;
-  savePersonalRules(acctId, rules);
-  renderRulesView();
+  var r = getRulesTempOrSaved();
+  if (!r[id]) r[id] = { active: false };
+  r[id].active = !r[id].active;
+  _rulesTemp = r;
+  rerenderRulesTabInPlace();
 }
 function toggleRuleSession(sessId) {
-  var acctId = currentAccountId || '';
-  var rules  = getPersonalRules(acctId);
-  if (!rules.session) rules.session = { active: true, sessions: [] };
-  var idx = rules.session.sessions.indexOf(sessId);
-  if (idx === -1) rules.session.sessions.push(sessId); else rules.session.sessions.splice(idx, 1);
-  savePersonalRules(acctId, rules);
-  renderRulesView();
+  var r = getRulesTempOrSaved();
+  if (!r.session) r.session = { active: true, sessions: [] };
+  var idx = r.session.sessions.indexOf(sessId);
+  if (idx === -1) r.session.sessions.push(sessId); else r.session.sessions.splice(idx, 1);
+  _rulesTemp = r;
+  rerenderRulesTabInPlace();
 }
 function toggleRuleNoday(dow) {
-  var acctId = currentAccountId || '';
-  var rules  = getPersonalRules(acctId);
-  if (!rules.nodays) rules.nodays = { active: true, days: [] };
-  var idx = rules.nodays.days.indexOf(dow);
-  if (idx === -1) rules.nodays.days.push(dow); else rules.nodays.days.splice(idx, 1);
-  savePersonalRules(acctId, rules);
-  renderRulesView();
+  var r = getRulesTempOrSaved();
+  if (!r.nodays) r.nodays = { active: true, days: [] };
+  var idx = r.nodays.days.indexOf(dow);
+  if (idx === -1) r.nodays.days.push(dow); else r.nodays.days.splice(idx, 1);
+  _rulesTemp = r;
+  rerenderRulesTabInPlace();
 }
 function updateRuleValue(id, val) {
-  var acctId = currentAccountId || '';
-  var rules  = getPersonalRules(acctId);
-  if (!rules[id]) rules[id] = { active: true };
-  rules[id].value = val;
-  savePersonalRules(acctId, rules);
+  var r = getRulesTempOrSaved();
+  if (!r[id]) r[id] = { active: true };
+  r[id].value = val;
+  _rulesTemp = r;
+  // Don't re-render — let user keep typing
 }
 function updateRuleSizeType(val) {
-  var acctId = currentAccountId || '';
-  var rules  = getPersonalRules(acctId);
-  if (!rules.maxsize) rules.maxsize = { active: true };
-  rules.maxsize.sizeType = val;
-  savePersonalRules(acctId, rules);
+  var r = getRulesTempOrSaved();
+  if (!r.maxsize) r.maxsize = { active: true };
+  r.maxsize.sizeType = val;
+  _rulesTemp = r;
+  rerenderRulesTabInPlace();
+}
+
+function rerenderRulesTabInPlace() {
+  var el = document.getElementById('disc-tab-content');
+  if (el) renderRulesTab(el);
 }
 async function generateRulesCoach() {
   var acctId  = currentAccountId || '';
@@ -2941,15 +2942,16 @@ function switchDiscTab(tab) {
   });
   var el=document.getElementById('disc-tab-content');
   if (!el) return;
-  if (tab==='rules')     renderRulesTab(el);
+  if (tab==='rules')     { initRulesTemp(); renderRulesTab(el); }
   if (tab==='checklist') renderChecklistTab(el);
   if (tab==='operativa') renderOperativaTab(el);
 }
 
 function renderRulesTab(el) {
-  // Render rules content directly into the tab container
+  // Use temp state if available, else load from saved
   var acctId = currentAccountId || '';
-  var rules  = getPersonalRules(acctId);
+  if (!_rulesTemp) initRulesTemp();
+  var rules  = _rulesTemp;
   var trades = currentTrades || [];
   var violations = checkRuleViolations(rules, trades);
   var activeCount = Object.keys(rules).filter(function(k){ return rules[k] && rules[k].active; }).length;
