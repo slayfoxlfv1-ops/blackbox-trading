@@ -2245,6 +2245,140 @@ function calcDailyDisciplineScore(dateStr) {
 
 
 
+// ── Emotion points (0–100 scale, mapped to 0–40 for Mind score) ──
+var EMOTION_PTS = {
+  calm:        95,
+  neutral:     85,
+  confident:   65,
+  bored:       60,
+  anxious:     45,
+  frustrated:  30,
+  fear:        25,
+  greedy:      15
+};
+
+function emotionToMindPts(emotionScore) {
+  // Map 0-100 scale to 0-40
+  return Math.round(emotionScore / 100 * 40);
+}
+
+// ── Unified daily Mind Score (0–100) ──
+// Mood(40) + Emotion avg(40) + Behavior(20)
+function calcDailyMindScore(dateStr) {
+  var today      = dateStr || new Date().toISOString().slice(0,10);
+  var allTrades  = currentTrades || [];
+  var dayTrades  = allTrades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(today); });
+  var moodSess   = (currentMoodSessions || []).find(function(s){ return s.date === today; });
+
+  // ── Sub 1: Mood check (40pts) ──
+  var moodPts;
+  var moodLevel = moodSess ? moodSess.level : null;
+  if      (moodLevel === 'green')  moodPts = 40;
+  else if (moodLevel === 'yellow') moodPts = 25;
+  else if (moodLevel === 'red')    moodPts = 10;
+  else                             moodPts = 20; // no check = neutral
+
+  // ── Sub 2: Emotion average (40pts) ──
+  var emotionPts;
+  var tradesWithEmotion = dayTrades.filter(function(t){ return t.emotion; });
+  if (!tradesWithEmotion.length) {
+    emotionPts = null; // no emotion data
+  } else {
+    var totalEmoPts = tradesWithEmotion.reduce(function(sum, t) {
+      var emo = (t.emotion || '').toLowerCase();
+      var pts = EMOTION_PTS[emo];
+      return sum + (pts !== undefined ? pts : 50); // unknown = neutral 50
+    }, 0);
+    var avgEmoPts = totalEmoPts / tradesWithEmotion.length;
+    emotionPts = emotionToMindPts(avgEmoPts); // 0–40
+  }
+
+  // ── Sub 3: Behavior (20pts base, deductions) ──
+  var behaviorPts = 20;
+  var behaviorDetails = [];
+
+  if (dayTrades.length > 0) {
+    var sorted = dayTrades.slice().sort(function(a,b){
+      return new Date(a.entry_time) - new Date(b.entry_time);
+    });
+
+    // Revenge trading: trade entered < 5min after a loss exit
+    var revengeCount = 0;
+    for (var i = 1; i < sorted.length; i++) {
+      var prev = sorted[i-1], cur = sorted[i];
+      if ((prev.pnl||0) < 0) {
+        var prevExit = prev.exit_time || prev.entry_time;
+        var gap = (new Date(cur.entry_time) - new Date(prevExit)) / 60000;
+        if (gap >= 0 && gap < 5) revengeCount++;
+      }
+    }
+    if (revengeCount > 0) {
+      var revDed = revengeCount * 8;
+      behaviorPts -= revDed;
+      behaviorDetails.push({ label: revengeCount + ' revenge trade' + (revengeCount>1?'s':''), pts: -revDed, color: 'var(--red)' });
+    }
+
+    // Tilt: 3+ losses in less than 1 hour
+    var tiltDetected = false;
+    for (var j = 0; j <= sorted.length - 3; j++) {
+      var window3 = sorted.slice(j, j+3);
+      var allLosses = window3.every(function(t){ return (t.pnl||0) < 0; });
+      if (allLosses) {
+        var span = (new Date(window3[2].entry_time) - new Date(window3[0].entry_time)) / 60000;
+        if (span < 60) { tiltDetected = true; break; }
+      }
+    }
+    if (tiltDetected) {
+      behaviorPts -= 10;
+      behaviorDetails.push({ label: 'Tilt detectado (3+ pérdidas en <1h)', pts: -10, color: 'var(--red)' });
+    }
+
+    // Active loss streak > 2
+    var activeLossStreak = 0;
+    for (var k = sorted.length - 1; k >= 0; k--) {
+      if ((sorted[k].pnl||0) < 0) activeLossStreak++;
+      else break;
+    }
+    if (activeLossStreak > 2) {
+      behaviorPts -= 5;
+      behaviorDetails.push({ label: 'Racha activa de ' + activeLossStreak + ' pérdidas', pts: -5, color: 'var(--amber)' });
+    }
+  }
+
+  behaviorPts = Math.max(0, behaviorPts);
+
+  // ── Total ──
+  var total;
+  if (emotionPts === null) {
+    // No emotion data: scale mood + behavior over 60
+    total = Math.round((moodPts + behaviorPts) / 60 * 100);
+  } else {
+    total = moodPts + emotionPts + behaviorPts;
+  }
+  total = Math.max(0, Math.min(100, total));
+
+  var label = total >= 90 ? 'Mentalidad élite 🏆'
+            : total >= 70 ? 'Mente sólida 🧘'
+            : total >= 50 ? 'Estable ⚠️'
+            : total >= 30 ? 'En riesgo 🔶'
+            : 'Estado crítico 🔴';
+
+  return {
+    total:          total,
+    label:          label,
+    moodPts:        moodPts,
+    moodLevel:      moodLevel,
+    emotionPts:     emotionPts,
+    behaviorPts:    behaviorPts,
+    behaviorDetails:behaviorDetails,
+    moodMax:        40,
+    emotionMax:     40,
+    behaviorMax:    20,
+    hasTrades:      dayTrades.length > 0,
+    tradeCount:     dayTrades.length
+  };
+}
+
 function renderRulesView() {
   var el     = document.getElementById('main-content');
   var acctId = currentAccountId || '';
@@ -3838,9 +3972,10 @@ function buildMindView(trades) {
   });
 
   // Mind score (0-100)
-  var cleanPct  = Math.round((discCounts.clean / totalTagged) * 100);
-  var revengePct = trades.length ? Math.round((revengeTrades.length / trades.length) * 100) : 0;
-  var mindScore  = Math.max(0, Math.min(100, cleanPct - revengePct - (currentLossStreak*5)));
+  // Mind score — new unified scoring
+  var mindData   = calcDailyMindScore(new Date().toISOString().slice(0,10));
+  var mindScore  = mindData.total;
+  var cleanPct   = Math.round((discCounts.clean / totalTagged) * 100);
 
   function scoreColor(s) { return s>=70?'var(--green)':s>=40?'var(--amber)':'var(--red)'; }
   function pnlColor(p)   { return p>=0?'var(--green)':'var(--red)'; }
@@ -3861,14 +3996,23 @@ function buildMindView(trades) {
   // ── ROW 1: Mind Score + Discipline Ring + Revenge ──
   html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">';
 
-  // Mind Score card
-  html += '<div class="panel" style="padding:20px;text-align:center">'
+  // Mind Score card — 3 pillars
+  html += '<div class="panel" style="padding:20px">'
     + '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">Mind Score</div>'
+    + '<div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">'
     + '<div style="font-size:52px;font-weight:800;color:'+scoreColor(mindScore)+';line-height:1">'+mindScore+'</div>'
-    + '<div style="font-size:11px;color:var(--text3);margin-top:4px">/100</div>'
-    + '<div style="margin-top:12px;font-size:11px;color:var(--text2)">'
-    + (mindScore>=70?'🧘 Mentalidad sólida':mindScore>=40?'⚡ Hay margen de mejora':'🔥 Atención: patrones de riesgo')
-    + '</div></div>';
+    + '<div><div style="font-size:12px;color:var(--text2);font-weight:600">'+mindData.label+'</div>'
+    + '<div style="font-size:10px;color:var(--text3);margin-top:3px">'+(mindData.hasTrades?mindData.tradeCount+' trade'+(mindData.tradeCount!==1?'s':'')+' hoy':'Sin trades hoy')+'</div>'
+    + '</div></div>'
+    + '<div style="display:flex;flex-direction:column;gap:8px">'
+    + '<div><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:9px;color:var(--text3)">Mood check</span><span style="font-size:9px;color:var(--text2);font-weight:600">'+mindData.moodPts+' / 40</span></div>'
+    + '<div style="height:4px;background:var(--surface2);border-radius:2px;overflow:hidden"><div style="height:100%;width:'+Math.round(mindData.moodPts/40*100)+'%;background:'+(mindData.moodPts>=35?'var(--green)':mindData.moodPts>=20?'var(--amber)':'var(--red)')+';border-radius:2px"></div></div></div>'
+    + '<div><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:9px;color:var(--text3)">Emocion trades</span><span style="font-size:9px;color:var(--text2);font-weight:600">'+(mindData.emotionPts!==null?mindData.emotionPts+' / 40':'— / 40')+'</span></div>'
+    + '<div style="height:4px;background:var(--surface2);border-radius:2px;overflow:hidden"><div style="height:100%;width:'+(mindData.emotionPts!==null?Math.round(mindData.emotionPts/40*100):0)+'%;background:'+(mindData.emotionPts===null?'var(--border)':mindData.emotionPts>=32?'var(--green)':mindData.emotionPts>=20?'var(--amber)':'var(--red)')+';border-radius:2px"></div></div></div>'
+    + '<div><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:9px;color:var(--text3)">Comportamiento</span><span style="font-size:9px;color:var(--text2);font-weight:600">'+mindData.behaviorPts+' / 20</span></div>'
+    + '<div style="height:4px;background:var(--surface2);border-radius:2px;overflow:hidden"><div style="height:100%;width:'+Math.round(mindData.behaviorPts/20*100)+'%;background:'+(mindData.behaviorPts>=18?'var(--green)':mindData.behaviorPts>=12?'var(--amber)':'var(--red)')+';border-radius:2px"></div></div>'
+    + (mindData.behaviorDetails.length?'<div style="margin-top:5px">'+mindData.behaviorDetails.map(function(d){return '<div style="font-size:9px;color:'+d.color+'">'+d.label+' ('+d.pts+'pts)</div>';}).join('')+'</div>':'')
+    + '</div></div></div>';
 
   // Discipline breakdown
   var discColors = { clean:'#5ec26a', moved_sl:'#f0b429', scaled_loss:'#e05c5c', impulse:'#e05c5c', no_confirmation:'#f0b429', overtrading:'#e05c5c', fomo:'#e05c5c' };
