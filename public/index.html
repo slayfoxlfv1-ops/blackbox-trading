@@ -2342,6 +2342,11 @@ function renderRulesView() {
     + '</div>';
   html += rCard('maxdailyloss','💸','Perdida maxima personal del dia','Tu limite personal de perdida diaria, independiente del limite de la firma', mdl9, !!r9.active, violations.some(function(v){return v.rule.id==='maxdailyloss';}));
 
+  // ── Save button ──
+  html += '<div style="display:flex;justify-content:flex-end;margin:4px 0 16px 0">'
+    + '<button onclick="saveRulesConfig()" id="save-rules-btn" class="btn btn-solid" style="padding:10px 28px;font-size:13px;font-weight:700;background:#5a9e9e;border:none;border-radius:8px;color:#fff;cursor:pointer;font-family:inherit">'
+    + 'Guardar reglas</button></div>';
+
   // ── Coach panel ──
   html += '<div class="panel" style="padding:18px;margin-top:8px">'
     + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
@@ -2354,6 +2359,22 @@ function renderRulesView() {
 
   html += '</div>';
   el.innerHTML = html;
+}
+
+function saveRulesConfig() {
+  // Rules are already saved incrementally on each toggle/change.
+  // This button just gives the user visual confirmation.
+  var btn = document.getElementById('save-rules-btn');
+  if (btn) {
+    btn.textContent = '✓ Guardado';
+    btn.style.background = 'var(--green)';
+    btn.disabled = true;
+    setTimeout(function() {
+      btn.textContent = 'Guardar reglas';
+      btn.style.background = '#5a9e9e';
+      btn.disabled = false;
+    }, 2000);
+  }
 }
 
 // Rule toggle/update helpers
