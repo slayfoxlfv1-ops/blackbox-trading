@@ -2270,7 +2270,7 @@ function renderRulesView() {
   var mt3 = '<div style="display:flex;align-items:center;gap:10px">'
     + '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:4px 8px;display:flex;align-items:center;gap:6px">'
     + '<span style="font-size:10px;color:var(--text3)">Max</span>'
-    + '<input type="number" min="1" max="20" value="' + (r3.value||3) + '" onchange="updateRuleValue(\'maxtrades\',this.value)" style="width:48px;background:transparent;border:none;color:var(--text);font-size:14px;font-weight:700;font-family:inherit;text-align:center;outline:none">'
+    + '<input type="number" min="1" max="20" value="' + (r3.value||3) + '" id="rule-input-maxtrades" onchange="updateRuleValue(\'maxtrades\',this.value)" style="width:48px;background:transparent;border:none;color:var(--text);font-size:14px;font-weight:700;font-family:inherit;text-align:center;outline:none">'
     + '<span style="font-size:10px;color:var(--text3)">trades</span></div>'
     + '<div style="font-size:11px;color:var(--text3)">Hoy tomaste: <span style="color:' + (todayTrades.length>=(parseInt(r3.value)||3)?'var(--red)':'var(--text)') + ';font-weight:600">' + todayTrades.length + '</span></div>'
     + '</div>';
@@ -2283,7 +2283,7 @@ function renderRulesView() {
   var ml4 = '<div style="display:flex;align-items:center;gap:10px">'
     + '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:4px 8px;display:flex;align-items:center;gap:6px">'
     + '<span style="font-size:10px;color:var(--text3)">Max</span>'
-    + '<input type="number" min="1" max="10" value="' + (r4.value||2) + '" onchange="updateRuleValue(\'maxlosses\',this.value)" style="width:48px;background:transparent;border:none;color:var(--text);font-size:14px;font-weight:700;font-family:inherit;text-align:center;outline:none">'
+    + '<input type="number" min="1" max="10" value="' + (r4.value||2) + '" id="rule-input-maxlosses" onchange="updateRuleValue(\'maxlosses\',this.value)" style="width:48px;background:transparent;border:none;color:var(--text);font-size:14px;font-weight:700;font-family:inherit;text-align:center;outline:none">'
     + '<span style="font-size:10px;color:var(--text3)">perdidas seguidas</span></div>'
     + '<div style="font-size:11px;color:var(--text3)">Racha max hoy: <span style="color:' + (ms4>=(parseInt(r4.value)||2)?'var(--red)':'var(--text)') + ';font-weight:600">' + ms4 + '</span></div>'
     + '</div>';
@@ -2293,8 +2293,8 @@ function renderRulesView() {
   var r5 = rules.maxsize || {};
   var ms5 = '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">'
     + '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:4px 8px;display:flex;align-items:center;gap:6px">'
-    + '<input type="number" min="1" max="100" value="' + (r5.value||1) + '" onchange="updateRuleValue(\'maxsize\',this.value)" style="width:48px;background:transparent;border:none;color:var(--text);font-size:14px;font-weight:700;font-family:inherit;text-align:center;outline:none">'
-    + '<select onchange="updateRuleSizeType(this.value)" style="background:transparent;border:none;color:var(--text3);font-size:11px;font-family:inherit;outline:none;cursor:pointer">'
+    + '<input type="number" min="1" max="100" value="' + (r5.value||1) + '" id="rule-input-maxsize" onchange="updateRuleValue(\'maxsize\',this.value)" style="width:48px;background:transparent;border:none;color:var(--text);font-size:14px;font-weight:700;font-family:inherit;text-align:center;outline:none">'
+    + '<select id="rule-select-sizetype" onchange="updateRuleSizeType(this.value)" style="background:transparent;border:none;color:var(--text3);font-size:11px;font-family:inherit;outline:none;cursor:pointer">'
     + '<option value="micro"' + (r5.sizeType==='micro'||!r5.sizeType?' selected':'') + '>micros</option>'
     + '<option value="mini"'  + (r5.sizeType==='mini'?' selected':'') + '>minis</option>'
     + '</select></div>'
@@ -2325,7 +2325,7 @@ function renderRulesView() {
   var r8 = rules.mintimegap || {};
   var tg8 = '<div style="display:flex;align-items:center;gap:10px">'
     + '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:4px 8px;display:flex;align-items:center;gap:6px">'
-    + '<input type="number" min="1" max="120" value="' + (r8.value||10) + '" onchange="updateRuleValue(\'mintimegap\',this.value)" style="width:48px;background:transparent;border:none;color:var(--text);font-size:14px;font-weight:700;font-family:inherit;text-align:center;outline:none">'
+    + '<input type="number" min="1" max="120" value="' + (r8.value||10) + '" id="rule-input-mintimegap" onchange="updateRuleValue(\'mintimegap\',this.value)" style="width:48px;background:transparent;border:none;color:var(--text);font-size:14px;font-weight:700;font-family:inherit;text-align:center;outline:none">'
     + '<span style="font-size:10px;color:var(--text3)">minutos entre trades</span></div>'
     + '</div>';
   html += rCard('mintimegap','⏱','Minimo de minutos entre trades','Evita el overtrading y entradas impulsivas despues de cada trade', tg8, !!r8.active, violations.some(function(v){return v.rule.id==='mintimegap';}));
@@ -2336,7 +2336,7 @@ function renderRulesView() {
   var mdl9 = '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
     + '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:4px 8px;display:flex;align-items:center;gap:4px">'
     + '<span style="font-size:11px;color:var(--text3)">$</span>'
-    + '<input type="number" min="0" value="' + (r9.value||200) + '" onchange="updateRuleValue(\'maxdailyloss\',this.value)" style="width:70px;background:transparent;border:none;color:var(--text);font-size:14px;font-weight:700;font-family:inherit;outline:none">'
+    + '<input type="number" min="0" value="' + (r9.value||200) + '" id="rule-input-maxdailyloss" onchange="updateRuleValue(\'maxdailyloss\',this.value)" style="width:70px;background:transparent;border:none;color:var(--text);font-size:14px;font-weight:700;font-family:inherit;outline:none">'
     + '</div>'
     + '<div style="font-size:11px;color:var(--text3)">P&L hoy: <span style="color:' + (pnl9>=0?'var(--green)':'var(--red)') + ';font-weight:700">' + (pnl9>=0?'+':'') + '$' + Math.abs(pnl9).toFixed(0) + '</span></div>'
     + '</div>';
@@ -2362,8 +2362,42 @@ function renderRulesView() {
 }
 
 function saveRulesConfig() {
-  // Rules are already saved incrementally on each toggle/change.
-  // This button just gives the user visual confirmation.
+  var acctId = currentAccountId || '';
+  var rules  = getPersonalRules(acctId);
+
+  // ── Read every input/select from the DOM and update rules object ──
+
+  // Rule 1: session — sessions array already updated by toggleRuleSession
+  // active state already updated by toggleRuleV2
+  // Just make sure active is set if sessions selected
+  var sel1 = rules.session && rules.session.sessions ? rules.session.sessions : [];
+
+  // Rule 2: nodays — days array already updated by toggleRuleNoday
+
+  // Rule 3: maxtrades
+  var mt = document.getElementById('rule-input-maxtrades');
+  if (mt) { if (!rules.maxtrades) rules.maxtrades = {}; rules.maxtrades.value = mt.value; }
+
+  // Rule 4: maxlosses
+  var ml = document.getElementById('rule-input-maxlosses');
+  if (ml) { if (!rules.maxlosses) rules.maxlosses = {}; rules.maxlosses.value = ml.value; }
+
+  // Rule 5: maxsize
+  var ms = document.getElementById('rule-input-maxsize');
+  var mst = document.getElementById('rule-select-sizetype');
+  if (ms)  { if (!rules.maxsize) rules.maxsize = {};  rules.maxsize.value = ms.value; }
+  if (mst) { if (!rules.maxsize) rules.maxsize = {};  rules.maxsize.sizeType = mst.value; }
+
+  // Rule 8: mintimegap
+  var tg = document.getElementById('rule-input-mintimegap');
+  if (tg) { if (!rules.mintimegap) rules.mintimegap = {}; rules.mintimegap.value = tg.value; }
+
+  // Rule 9: maxdailyloss
+  var dl = document.getElementById('rule-input-maxdailyloss');
+  if (dl) { if (!rules.maxdailyloss) rules.maxdailyloss = {}; rules.maxdailyloss.value = dl.value; }
+
+  savePersonalRules(acctId, rules);
+
   var btn = document.getElementById('save-rules-btn');
   if (btn) {
     btn.textContent = '✓ Guardado';
