@@ -2167,64 +2167,75 @@ function renderRulesView() {
   var activeCount = Object.keys(rules).filter(function(k){ return rules[k] && rules[k].active; }).length;
   var today  = new Date().toISOString().slice(0,10);
   var todayTrades = trades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(today); });
+  var dscore = calcRulesDisciplineScore(rules, trades);
+  var dcolor = dscore.score>=80?'var(--green)':dscore.score>=50?'var(--amber)':'var(--red)';
+  var dlabel = dscore.score>=90?'Disciplina elite':dscore.score>=70?'Trader disciplinado':dscore.score>=50?'En progreso':dscore.score>=30?'Necesita atencion':'Sesion caotica';
 
   var html = '<div style="padding:20px 24px;max-width:760px">';
 
-  // Header
-  html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
-    + '<div><div style="font-size:18px;font-weight:700;color:var(--text);letter-spacing:-.3px">Mis Reglas de Sesion</div>'
-    + '<div style="font-size:11px;color:var(--text3);margin-top:2px">Activa minimo 3 reglas para un score de disciplina completo</div></div>'
-    + '<span style="font-size:10px;color:' + (activeCount>=3?'var(--green)':'var(--amber)') + ';font-weight:600">'
-    + activeCount + ' activa' + (activeCount!==1?'s':'') + (activeCount<3?' — activa '+(3-activeCount)+' mas':'') + '</span>'
+  // ── Header ──
+  html += '<div style="margin-bottom:16px">'
+    + '<div style="font-size:18px;font-weight:700;color:var(--text);letter-spacing:-.3px">Mis Reglas de Sesion</div>'
+    + '<div style="font-size:11px;color:var(--text3);margin-top:3px">Activa el toggle de cada regla para incluirla en tu score de disciplina</div>'
     + '</div>';
 
-  // Score bar
-  var dscore = calcRulesDisciplineScore(rules, trades);
-  var dcolor = dscore.score>=80?'var(--green)':dscore.score>=50?'var(--amber)':'var(--red)';
-  html += '<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:16px">'
-    + '<div style="text-align:center;flex-shrink:0"><div style="font-size:32px;font-weight:800;color:' + dcolor + ';line-height:1">' + dscore.score + '</div>'
-    + '<div style="font-size:9px;color:var(--text3);margin-top:2px">SCORE HOY</div></div>'
-    + '<div style="flex:1"><div style="height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-bottom:6px">'
-    + '<div style="height:100%;width:' + dscore.score + '%;background:' + dcolor + ';border-radius:3px;transition:width .6s ease"></div></div>'
-    + '<div style="font-size:10px;color:var(--text2)">'
-    + (dscore.score>=90?'Disciplina elite':dscore.score>=70?'Trader disciplinado':dscore.score>=50?'En progreso':dscore.score>=30?'Necesita atencion':'Sesion caotica')
-    + ' · ' + violations.length + ' regla' + (violations.length!==1?'s':'') + ' incumplida' + (violations.length!==1?'s':'') + ' hoy'
+  // ── Score panel ──
+  html += '<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;gap:18px">'
+    + '<div style="text-align:center;flex-shrink:0">'
+    + '<div style="font-size:38px;font-weight:800;color:' + dcolor + ';line-height:1;font-family:inherit">' + dscore.score + '</div>'
+    + '<div style="font-size:9px;color:var(--text3);margin-top:3px;text-transform:uppercase;letter-spacing:.8px">score hoy</div>'
+    + '</div>'
+    + '<div style="flex:1">'
+    + '<div style="height:5px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-bottom:8px">'
+    + '<div style="height:100%;width:' + dscore.score + '%;background:' + dcolor + ';border-radius:3px"></div></div>'
+    + '<div style="font-size:12px;color:var(--text2);font-weight:600">' + dlabel + '</div>'
+    + '<div style="font-size:10px;color:var(--text3);margin-top:2px">'
+    + activeCount + ' regla' + (activeCount!==1?'s':'') + ' activa' + (activeCount!==1?'s':'')
+    + (activeCount<3?' · <span style="color:var(--amber)">activa ' + (3-activeCount) + ' mas para score completo</span>':'')
+    + ' · ' + violations.length + ' incumplida' + (violations.length!==1?'s':'') + ' hoy'
     + '</div></div></div>';
 
-  // Violations banner
+  // ── Violations banner ──
   if (violations.length) {
     html += '<div style="background:var(--red-bg);border:1px solid var(--red-bd);border-left:3px solid var(--red);border-radius:9px;padding:12px 16px;margin-bottom:14px">'
-      + '<div style="font-size:9px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Incumplidas hoy</div>'
+      + '<div style="font-size:9px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">Reglas incumplidas hoy</div>'
       + violations.map(function(v){
-          return '<div style="font-size:11px;color:var(--text2);padding:4px 0;display:flex;gap:8px;align-items:flex-start">'
-            + '<span style="color:var(--red);flex-shrink:0">X</span>'
-            + '<span><b>' + v.rule.label + '</b> — ' + v.detail + '</span></div>';
+          return '<div style="font-size:11px;color:var(--text2);padding:3px 0;display:flex;gap:8px">'
+            + '<span style="color:var(--red)">✕</span><span><b>' + v.rule.label + '</b> — ' + v.detail + '</span></div>';
         }).join('') + '</div>';
   }
 
-  // Rule card helper
+  // ── Rule card helper ──
+  // Config always visible. Toggle on right activates rule.
   function rCard(id, icon, title, desc, cfgHtml, isActive, isViolated) {
     var bc = isViolated ? 'var(--red)' : isActive ? '#5a9e9e' : 'var(--border)';
-    var bg = isViolated ? 'var(--red-bg)' : 'var(--surface)';
-    return '<div style="background:' + bg + ';border:1px solid ' + bc + ';border-radius:10px;padding:13px 16px;margin-bottom:8px">'
+    var bg = isViolated ? 'var(--red-bg)' : isActive ? 'rgba(90,158,158,0.06)' : 'var(--surface)';
+    var toggleBg  = isActive ? '#5a9e9e' : 'var(--surface2)';
+    var toggleDot = isActive ? 'translateX(16px)' : 'translateX(2px)';
+    return '<div style="background:' + bg + ';border:1px solid ' + bc + ';border-radius:10px;padding:14px 16px;margin-bottom:8px">'
       + '<div style="display:flex;align-items:flex-start;gap:12px">'
-      + '<div style="font-size:18px;flex-shrink:0;margin-top:1px">' + icon + '</div>'
+      + '<div style="font-size:20px;flex-shrink:0;margin-top:2px">' + icon + '</div>'
       + '<div style="flex:1;min-width:0">'
       + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">'
-      + '<span style="font-size:12px;font-weight:600;color:var(--text)">' + title + '</span>'
-      + (isViolated ? '<span style="font-size:8px;color:var(--red);font-weight:700;background:var(--red-bg);padding:1px 6px;border-radius:8px;border:1px solid var(--red-bd)">INCUMPLIDA</span>' : '')
-      + (isActive && !isViolated ? '<span style="font-size:8px;color:var(--green);font-weight:600">ACTIVA</span>' : '')
+      + '<span style="font-size:13px;font-weight:600;color:var(--text)">' + title + '</span>'
+      + (isViolated ? '<span style="font-size:8px;color:var(--red);font-weight:700;background:var(--red-bg);padding:2px 7px;border-radius:8px;border:1px solid var(--red-bd)">INCUMPLIDA HOY</span>' : '')
       + '</div>'
-      + '<div style="font-size:10px;color:var(--text3);margin-bottom:' + (isActive?'10px':'2px') + '">' + desc + '</div>'
-      + (isActive ? cfgHtml : '') + '</div>'
-      + '<label style="display:flex;align-items:center;gap:5px;cursor:pointer;flex-shrink:0;margin-top:2px">'
-      + '<input type="checkbox" ' + (isActive?'checked':'') + ' onchange="toggleRuleV2(\"' + id + '\")" style="accent-color:#5a9e9e;width:15px;height:15px"></label>'
+      + '<div style="font-size:10px;color:var(--text3);margin-bottom:12px">' + desc + '</div>'
+      + cfgHtml
+      + '</div>'
+      // Toggle switch
+      + '<div onclick="toggleRuleV2(\'' + id + '\')" style="cursor:pointer;flex-shrink:0;margin-top:2px">'
+      + '<div style="width:36px;height:20px;background:' + toggleBg + ';border-radius:10px;position:relative;transition:background .2s">'
+      + '<div style="width:16px;height:16px;background:#fff;border-radius:50%;position:absolute;top:2px;transition:transform .2s;transform:' + toggleDot + '"></div>'
+      + '</div>'
+      + '<div style="font-size:8px;color:' + (isActive?'#5a9e9e':'var(--text3)') + ';text-align:center;margin-top:3px;font-weight:600">' + (isActive?'ON':'OFF') + '</div>'
+      + '</div>'
       + '</div></div>';
   }
 
   var todayD = new Date().toISOString().slice(0,10);
 
-  // Rule 1: Sessions
+  // ── Rule 1: Sessions ──
   var r1 = rules.session || {};
   var sel1 = r1.sessions || [];
   var sessHtml = '<div style="display:flex;flex-wrap:wrap;gap:6px">'
@@ -2232,95 +2243,113 @@ function renderRulesView() {
         var ls = sessionLocalTime(todayD, s.nyStart);
         var le = sessionLocalTime(todayD, s.nyEnd);
         var on = sel1.includes(s.id);
-        return '<label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:' + (on?'#1e2a2a':'var(--surface2)') + ';border:1px solid ' + (on?'#5a9e9e':'var(--border)') + ';border-radius:7px;padding:5px 10px">'
+        return '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:' + (on?'rgba(90,158,158,0.15)':'var(--surface2)') + ';border:1px solid ' + (on?'#5a9e9e':'var(--border)') + ';border-radius:7px;padding:6px 11px;user-select:none">'
           + '<input type="checkbox" ' + (on?'checked':'') + ' onchange="toggleRuleSession(\'' + s.id + '\')" style="accent-color:#5a9e9e;width:12px;height:12px">'
-          + '<span style="font-size:10px;color:' + (on?'var(--text)':'var(--text3)') + '">' + s.name
-          + ' <span style="color:var(--text3);font-size:9px">' + ls + '-' + le + '</span></span></label>';
-      }).join('') + '</div>';
-  html += rCard('session','🕐','Horario permitido para operar','Elige las sesiones en las que tienes permitido tomar trades', sessHtml, !!r1.active, violations.some(function(v){return v.rule.id==='session';}));
+          + '<span style="font-size:10px;color:' + (on?'var(--text)':'var(--text3)') + ';font-weight:' + (on?'600':'400') + '">' + s.name + '</span>'
+          + '<span style="font-size:9px;color:var(--text3)">' + ls + '-' + le + '</span>'
+          + '</label>';
+      }).join('') + '</div>'
+    + (sel1.length===0 ? '<div style="font-size:10px;color:var(--amber);margin-top:6px">Selecciona al menos una sesion</div>' : '');
+  html += rCard('session','🕐','Horario permitido para operar','Solo puedes tomar trades durante las sesiones seleccionadas', sessHtml, !!r1.active, violations.some(function(v){return v.rule.id==='session';}));
 
-  // Rule 2: No days
+  // ── Rule 2: No days ──
   var r2 = rules.nodays || {};
   var sel2 = r2.days || [];
   var ndHtml = '<div style="display:flex;gap:8px">'
     + [{d:1,lbl:'Lunes'},{d:5,lbl:'Viernes'}].map(function(o) {
         var on = sel2.includes(o.d);
-        return '<label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:' + (on?'#2a1010':'var(--surface2)') + ';border:1px solid ' + (on?'var(--red)':'var(--border)') + ';border-radius:7px;padding:6px 12px">'
-          + '<input type="checkbox" ' + (on?'checked':'') + ' onchange="toggleRuleNoday(' + o.d + ')" style="accent-color:#9e5a5a;width:12px;height:12px">'
-          + '<span style="font-size:11px;color:' + (on?'var(--red)':'var(--text3)') + ';font-weight:' + (on?'600':'400') + '">' + o.lbl + '</span></label>';
+        return '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:' + (on?'rgba(158,90,90,0.15)':'var(--surface2)') + ';border:1px solid ' + (on?'var(--red)':'var(--border)') + ';border-radius:7px;padding:7px 14px;user-select:none">'
+          + '<input type="checkbox" ' + (on?'checked':'') + ' onchange="toggleRuleNoday(' + o.d + ')" style="accent-color:#9e5a5a;width:13px;height:13px">'
+          + '<span style="font-size:12px;color:' + (on?'var(--red)':'var(--text3)') + ';font-weight:' + (on?'600':'400') + '">' + o.lbl + '</span>'
+          + '</label>';
       }).join('') + '</div>';
-  html += rCard('nodays','📅','No operar lunes / viernes','Dias de la semana en los que no esta permitido operar', ndHtml, !!r2.active, violations.some(function(v){return v.rule.id==='nodays';}));
+  html += rCard('nodays','📅','No operar lunes / viernes','Marca los dias en los que tienes prohibido operar', ndHtml, !!r2.active, violations.some(function(v){return v.rule.id==='nodays';}));
 
-  // Rule 3: Max trades
+  // ── Rule 3: Max trades/day ──
   var r3 = rules.maxtrades || {};
-  var mt3 = '<div style="display:flex;align-items:center;gap:8px">'
-    + '<span style="font-size:10px;color:var(--text3)">Maximo:</span>'
-    + '<input type="number" min="1" max="20" value="' + (r3.value||3) + '" onchange="updateRuleValue(\'maxtrades\',this.value)" style="width:60px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-size:12px;font-family:inherit;text-align:center">'
-    + '<span style="font-size:10px;color:var(--text3)">trades/dia · Hoy: ' + todayTrades.length + '</span></div>';
-  html += rCard('maxtrades','🔢','Maximo de trades por dia','Para cuando ya tomaste suficientes trades en la sesion', mt3, !!r3.active, violations.some(function(v){return v.rule.id==='maxtrades';}));
+  var mt3 = '<div style="display:flex;align-items:center;gap:10px">'
+    + '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:4px 8px;display:flex;align-items:center;gap:6px">'
+    + '<span style="font-size:10px;color:var(--text3)">Max</span>'
+    + '<input type="number" min="1" max="20" value="' + (r3.value||3) + '" onchange="updateRuleValue(\'maxtrades\',this.value)" style="width:48px;background:transparent;border:none;color:var(--text);font-size:14px;font-weight:700;font-family:inherit;text-align:center;outline:none">'
+    + '<span style="font-size:10px;color:var(--text3)">trades</span></div>'
+    + '<div style="font-size:11px;color:var(--text3)">Hoy tomaste: <span style="color:' + (todayTrades.length>=(parseInt(r3.value)||3)?'var(--red)':'var(--text)') + ';font-weight:600">' + todayTrades.length + '</span></div>'
+    + '</div>';
+  html += rCard('maxtrades','🔢','Maximo de trades por dia','Para de operar cuando alcanzes este numero de trades en la sesion', mt3, !!r3.active, violations.some(function(v){return v.rule.id==='maxtrades';}));
 
-  // Rule 4: Max consecutive losses
+  // ── Rule 4: Max consecutive losses ──
   var r4 = rules.maxlosses || {};
   var st4=0, ms4=0;
   todayTrades.slice().sort(function(a,b){return new Date(a.entry_time)-new Date(b.entry_time);}).forEach(function(t){if((t.pnl||0)<0){st4++;ms4=Math.max(ms4,st4);}else{st4=0;}});
-  var ml4 = '<div style="display:flex;align-items:center;gap:8px">'
-    + '<span style="font-size:10px;color:var(--text3)">Parar tras:</span>'
-    + '<input type="number" min="1" max="10" value="' + (r4.value||2) + '" onchange="updateRuleValue(\'maxlosses\',this.value)" style="width:60px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-size:12px;font-family:inherit;text-align:center">'
-    + '<span style="font-size:10px;color:var(--text3)">perdidas seguidas · Hoy racha max: ' + ms4 + '</span></div>';
-  html += rCard('maxlosses','🛑','Maximo perdidas consecutivas','Detente antes de que el tilt te haga perder mas', ml4, !!r4.active, violations.some(function(v){return v.rule.id==='maxlosses';}));
+  var ml4 = '<div style="display:flex;align-items:center;gap:10px">'
+    + '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:4px 8px;display:flex;align-items:center;gap:6px">'
+    + '<span style="font-size:10px;color:var(--text3)">Max</span>'
+    + '<input type="number" min="1" max="10" value="' + (r4.value||2) + '" onchange="updateRuleValue(\'maxlosses\',this.value)" style="width:48px;background:transparent;border:none;color:var(--text);font-size:14px;font-weight:700;font-family:inherit;text-align:center;outline:none">'
+    + '<span style="font-size:10px;color:var(--text3)">perdidas seguidas</span></div>'
+    + '<div style="font-size:11px;color:var(--text3)">Racha max hoy: <span style="color:' + (ms4>=(parseInt(r4.value)||2)?'var(--red)':'var(--text)') + ';font-weight:600">' + ms4 + '</span></div>'
+    + '</div>';
+  html += rCard('maxlosses','🛑','Maximo perdidas consecutivas','Detente cuando encadenes este numero de perdidas seguidas', ml4, !!r4.active, violations.some(function(v){return v.rule.id==='maxlosses';}));
 
-  // Rule 5: Max position size
+  // ── Rule 5: Max position size ──
   var r5 = rules.maxsize || {};
   var ms5 = '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">'
-    + '<input type="number" min="1" max="100" value="' + (r5.value||1) + '" onchange="updateRuleValue(\'maxsize\',this.value)" style="width:60px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-size:12px;font-family:inherit;text-align:center">'
-    + '<select onchange="updateRuleSizeType(this.value)" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-size:11px;font-family:inherit">'
-    + '<option value="micro"' + (r5.sizeType==='micro'||!r5.sizeType?' selected':'') + '>contratos micro</option>'
-    + '<option value="mini"'  + (r5.sizeType==='mini'?' selected':'') + '>contratos mini</option>'
-    + '</select>'
-    + '<span style="font-size:9px;color:var(--text3)">Detecta instrumento automaticamente (ES/MES, NQ/MNQ, etc.)</span></div>';
-  html += rCard('maxsize','📊','Tamano maximo de posicion','Limite de contratos por trade, convertido automaticamente entre micro y mini', ms5, !!r5.active, violations.some(function(v){return v.rule.id==='maxsize';}));
+    + '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:4px 8px;display:flex;align-items:center;gap:6px">'
+    + '<input type="number" min="1" max="100" value="' + (r5.value||1) + '" onchange="updateRuleValue(\'maxsize\',this.value)" style="width:48px;background:transparent;border:none;color:var(--text);font-size:14px;font-weight:700;font-family:inherit;text-align:center;outline:none">'
+    + '<select onchange="updateRuleSizeType(this.value)" style="background:transparent;border:none;color:var(--text3);font-size:11px;font-family:inherit;outline:none;cursor:pointer">'
+    + '<option value="micro"' + (r5.sizeType==='micro'||!r5.sizeType?' selected':'') + '>micros</option>'
+    + '<option value="mini"'  + (r5.sizeType==='mini'?' selected':'') + '>minis</option>'
+    + '</select></div>'
+    + '<span style="font-size:10px;color:var(--text3)">ES/MES · NQ/MNQ · YM/MYM · GC/MGC · CL/MCL</span>'
+    + '</div>';
+  html += rCard('maxsize','📊','Tamano maximo de posicion','Limite de contratos por trade. El sistema convierte entre micro y mini automaticamente', ms5, !!r5.active, violations.some(function(v){return v.rule.id==='maxsize';}));
 
-  // Rule 6: Checklist
+  // ── Rule 6: Checklist ──
   var r6 = rules.checklist || {};
   var tCL = (currentChecklistSessions||[]).find(function(s){return s.session_date===today;});
-  var cl6 = '<div style="font-size:10px;color:' + (tCL?'var(--green)':'var(--red)') + ';font-weight:600">' + (tCL?'Checklist ' + tCL.score_pct + '% completado hoy':'Sin checklist hoy') + '</div>';
+  var cl6 = '<div style="display:flex;align-items:center;gap:8px">'
+    + '<div style="width:8px;height:8px;border-radius:50%;background:' + (tCL?'var(--green)':'var(--red)') + '"></div>'
+    + '<span style="font-size:11px;color:' + (tCL?'var(--green)':'var(--red)') + ';font-weight:600">'
+    + (tCL ? 'Checklist completado hoy — ' + tCL.score_pct + '%' : 'Sin checklist hoy') + '</span></div>';
   html += rCard('checklist','📋','No operar sin completar el checklist','El checklist debe estar respondido antes del primer trade del dia', cl6, !!r6.active, violations.some(function(v){return v.rule.id==='checklist';}));
 
-  // Rule 7: No Red Day
+  // ── Rule 7: No Red Day ──
   var r7 = rules.redday || {};
   var tMd = (currentMoodSessions||[]).find(function(s){return s.date===today;});
   var rdClr = tMd?(tMd.level==='green'?'var(--green)':tMd.level==='yellow'?'var(--amber)':'var(--red)'):'var(--text3)';
-  var rdTxt = tMd?(tMd.level==='green'?'Green Day hoy':tMd.level==='yellow'?'Yellow Day hoy':'Red Day hoy — no deberias operar'):'Sin mood check hoy';
-  var rd7 = '<div style="font-size:10px;color:' + rdClr + ';font-weight:600">' + rdTxt + '</div>';
+  var rdTxt = tMd?(tMd.level==='green'?'Green Day — puedes operar':tMd.level==='yellow'?'Yellow Day — opera con cuidado':'Red Day — NO deberias operar'):'Sin mood check hoy';
+  var rd7 = '<div style="display:flex;align-items:center;gap:8px">'
+    + '<div style="width:8px;height:8px;border-radius:50%;background:' + rdClr + '"></div>'
+    + '<span style="font-size:11px;color:' + rdClr + ';font-weight:600">' + rdTxt + '</span></div>';
   html += rCard('redday','🧠','No operar en Red Day','Si el mood check fue rojo, no tomas trades ese dia', rd7, !!r7.active, violations.some(function(v){return v.rule.id==='redday';}));
 
-  // Rule 8: Min time gap
+  // ── Rule 8: Min time gap ──
   var r8 = rules.mintimegap || {};
-  var tg8 = '<div style="display:flex;align-items:center;gap:8px">'
-    + '<span style="font-size:10px;color:var(--text3)">Esperar minimo:</span>'
-    + '<input type="number" min="1" max="60" value="' + (r8.value||10) + '" onchange="updateRuleValue(\'mintimegap\',this.value)" style="width:60px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-size:12px;font-family:inherit;text-align:center">'
-    + '<span style="font-size:10px;color:var(--text3)">minutos entre trades</span></div>';
-  html += rCard('mintimegap','⏱','Minimo de minutos entre trades','Evita el overtrading y entradas impulsivas post-trade', tg8, !!r8.active, violations.some(function(v){return v.rule.id==='mintimegap';}));
+  var tg8 = '<div style="display:flex;align-items:center;gap:10px">'
+    + '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:4px 8px;display:flex;align-items:center;gap:6px">'
+    + '<input type="number" min="1" max="120" value="' + (r8.value||10) + '" onchange="updateRuleValue(\'mintimegap\',this.value)" style="width:48px;background:transparent;border:none;color:var(--text);font-size:14px;font-weight:700;font-family:inherit;text-align:center;outline:none">'
+    + '<span style="font-size:10px;color:var(--text3)">minutos entre trades</span></div>'
+    + '</div>';
+  html += rCard('mintimegap','⏱','Minimo de minutos entre trades','Evita el overtrading y entradas impulsivas despues de cada trade', tg8, !!r8.active, violations.some(function(v){return v.rule.id==='mintimegap';}));
 
-  // Rule 9: Max daily loss
+  // ── Rule 9: Max daily loss ──
   var r9 = rules.maxdailyloss || {};
   var pnl9 = todayTrades.reduce(function(s,t){return s+(t.pnl||0);},0);
-  var mdl9 = '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'
-    + '<span style="font-size:10px;color:var(--text3)">Perder max:</span>'
-    + '<div style="display:flex;align-items:center;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:3px 8px">'
+  var mdl9 = '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
+    + '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:4px 8px;display:flex;align-items:center;gap:4px">'
     + '<span style="font-size:11px;color:var(--text3)">$</span>'
-    + '<input type="number" min="0" value="' + (r9.value||200) + '" onchange="updateRuleValue(\'maxdailyloss\',this.value)" style="width:70px;background:transparent;border:none;color:var(--text);font-size:12px;font-family:inherit;outline:none">'
+    + '<input type="number" min="0" value="' + (r9.value||200) + '" onchange="updateRuleValue(\'maxdailyloss\',this.value)" style="width:70px;background:transparent;border:none;color:var(--text);font-size:14px;font-weight:700;font-family:inherit;outline:none">'
     + '</div>'
-    + '<span style="font-size:10px;color:' + (pnl9>=0?'var(--green)':'var(--red)') + ';font-weight:600">P&L hoy: ' + (pnl9>=0?'+':'') + '$' + Math.abs(pnl9).toFixed(0) + '</span></div>';
-  html += rCard('maxdailyloss','💸','Perdida maxima personal del dia','Tu propio limite de perdida diaria, independiente del limite de la firma', mdl9, !!r9.active, violations.some(function(v){return v.rule.id==='maxdailyloss';}));
+    + '<div style="font-size:11px;color:var(--text3)">P&L hoy: <span style="color:' + (pnl9>=0?'var(--green)':'var(--red)') + ';font-weight:700">' + (pnl9>=0?'+':'') + '$' + Math.abs(pnl9).toFixed(0) + '</span></div>'
+    + '</div>';
+  html += rCard('maxdailyloss','💸','Perdida maxima personal del dia','Tu limite personal de perdida diaria, independiente del limite de la firma', mdl9, !!r9.active, violations.some(function(v){return v.rule.id==='maxdailyloss';}));
 
-  // Coach panel
-  html += '<div class="panel" style="padding:18px;margin-top:4px">'
+  // ── Coach panel ──
+  html += '<div class="panel" style="padding:18px;margin-top:8px">'
     + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
-    + '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Analisis del Coach IA</div>'
-    + '<button onclick="generateRulesCoach()" class="btn btn-solid" style="font-size:10px;padding:6px 12px">Analizar</button>'
+    + '<div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Analisis de cumplimiento</div>'
+    + '<div style="font-size:10px;color:var(--text3);margin-top:2px">El Coach IA revisa tus reglas y patrones de incumplimiento</div></div>'
+    + '<button onclick="generateRulesCoach()" class="btn btn-solid" style="font-size:10px;padding:7px 14px">Analizar</button>'
     + '</div>'
-    + '<div id="rules-coach-output"><div style="font-size:11px;color:var(--text3);text-align:center;padding:16px 0">El Coach IA analizara tu cumplimiento de reglas y patrones de incumplimiento.</div></div>'
+    + '<div id="rules-coach-output"><div style="font-size:11px;color:var(--text3);text-align:center;padding:12px 0">Haz clic en Analizar para recibir feedback personalizado sobre tu disciplina.</div></div>'
     + '</div>';
 
   html += '</div>';
@@ -2368,9 +2397,6 @@ function updateRuleSizeType(val) {
   rules.maxsize.sizeType = val;
   savePersonalRules(acctId, rules);
 }
-
-// Rule helpers moved to toggleRuleV2, toggleRuleSession, toggleRuleNoday, updateRuleValue
-
 async function generateRulesCoach() {
   var acctId  = currentAccountId || '';
   var rules   = getPersonalRules(acctId);
