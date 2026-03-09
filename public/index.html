@@ -5323,7 +5323,13 @@ function _openNoteModalWithData(t) {
     + _infoCell('Qty',     t.quantity||'--')
     + _infoCell('Entry $', t.entry_price ? '$'+t.entry_price : '--')
     + _infoCell('Exit $',  t.exit_price  ? '$'+t.exit_price  : '--')
-    + _infoCell('R:R',     (t.rr_planned!=null||t.rr_achieved!=null) ? (t.rr_planned||'?')+':'+(t.rr_achieved||'?') : '--')
+    + (function(){
+        var rp = t.rr_planned  != null ? parseFloat(t.rr_planned)  : null;
+        var ra = t.rr_achieved != null ? parseFloat(t.rr_achieved) : null;
+        var rrVal = (rp!=null && ra!=null) ? rp+':'+ra : (rp!=null ? rp+':?' : (ra!=null ? '?:'+ra : '--'));
+        var rrClr = (rp!=null&&ra!=null) ? (ra>=rp?'var(--green)':'var(--red)') : 'var(--text2)';
+        return _infoCell('R:R', '<span style="color:'+rrClr+';font-weight:700">'+rrVal+'</span>');
+      })()
     + _infoCell('Discipline', '<span style="color:'+dtagColor+';font-weight:700">'+dtag+'</span>')
     + '</div>'
     + '<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px;align-items:center">'
