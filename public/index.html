@@ -2160,6 +2160,91 @@ function calcRulesDisciplineScore(rulesObj, trades) {
   return { score: score, violations: violations, activeCount: n };
 }
 
+// ── Discipline tag points ──
+var DISCIPLINE_TAG_PTS = {
+  clean:           30,
+  moved_sl:        10,
+  scaled_in:       10,
+  no_confirmation:  5,
+  impulse:          5,
+  fomo:             5,
+  overtrading:      5
+};
+
+// ── Unified daily Discipline Score (0–100) ──
+// 3 sub-components: Rules (35) + Checklist (35) + Tag avg (30)
+function calcDailyDisciplineScore(dateStr) {
+  var today = dateStr || new Date().toISOString().slice(0,10);
+  var allTrades  = currentTrades || [];
+  var dayTrades  = allTrades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(today); });
+  var rulesObj   = getPersonalRules(currentAccountId || '');
+  var clSession  = (currentChecklistSessions || []).find(function(s){ return s.session_date === today; });
+
+  // ── Sub 1: Rules (35 pts) ──
+  var rulesResult = calcRulesDisciplineScore(rulesObj, dayTrades);
+  // rulesResult.score is 0-100, map to 0-35
+  var rulesPts = Math.round(rulesResult.score / 100 * 35);
+
+  // ── Sub 2: Checklist (35 pts) ──
+  var checklistPts;
+  if (!clSession) {
+    checklistPts = 0; // no checklist = 0
+  } else {
+    var pct = clSession.score_pct || 0;
+    if (pct >= 100)     checklistPts = 35;
+    else if (pct >= 80) checklistPts = 28;
+    else if (pct >= 60) checklistPts = 20;
+    else if (pct >= 40) checklistPts = 12;
+    else if (pct >= 1)  checklistPts = 5;
+    else                checklistPts = 0;
+  }
+
+  // ── Sub 3: Discipline tag avg (30 pts) ──
+  var tagPts;
+  if (!dayTrades.length) {
+    tagPts = null; // no trades today — not scored
+  } else {
+    var totalTagPts = dayTrades.reduce(function(sum, t) {
+      var tag = t.discipline_tag || 'clean';
+      return sum + (DISCIPLINE_TAG_PTS[tag] !== undefined ? DISCIPLINE_TAG_PTS[tag] : 30);
+    }, 0);
+    var avgTagPts = totalTagPts / dayTrades.length; // avg pts per trade (0–30 scale)
+    tagPts = Math.round(avgTagPts); // already on 0-30 scale
+  }
+
+  // ── Total ──
+  var total;
+  if (tagPts === null) {
+    // No trades: score from rules + checklist only, scaled to 100
+    total = Math.round((rulesPts + checklistPts) / 70 * 100);
+  } else {
+    total = rulesPts + checklistPts + tagPts;
+  }
+  total = Math.max(0, Math.min(100, total));
+
+  var label = total >= 90 ? 'Elite 🏆'
+            : total >= 70 ? 'Disciplinado ✅'
+            : total >= 50 ? 'En progreso ⚠️'
+            : total >= 30 ? 'Atención 🔶'
+            : 'Caótico 🔴';
+
+  return {
+    total:        total,
+    label:        label,
+    rulesPts:     rulesPts,
+    checklistPts: checklistPts,
+    tagPts:       tagPts,
+    rulesMax:     35,
+    checklistMax: 35,
+    tagMax:       30,
+    violations:   rulesResult.violations,
+    hasTrades:    dayTrades.length > 0,
+    tradeCount:   dayTrades.length
+  };
+}
+
+
+
 function renderRulesView() {
   var el     = document.getElementById('main-content');
   var acctId = currentAccountId || '';
@@ -2961,22 +3046,55 @@ function renderRulesTab(el) {
 
   var html = '<div style="padding:20px 24px;max-width:760px">';
 
-  // Score panel
-  html += '<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;gap:18px">'
+  // Score panel — full 3-pillar daily discipline score
+  var daily = calcDailyDisciplineScore(today);
+  var dcolor2 = daily.total>=70?'var(--green)':daily.total>=50?'var(--amber)':'var(--red)';
+
+  html += '<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin-bottom:16px">'
+    // Top: score + label
+    + '<div style="display:flex;align-items:center;gap:18px;margin-bottom:14px">'
     + '<div style="text-align:center;flex-shrink:0">'
-    + '<div style="font-size:38px;font-weight:800;color:' + dcolor + ';line-height:1">' + dscore.score + '</div>'
-    + '<div style="font-size:9px;color:var(--text3);margin-top:3px;text-transform:uppercase;letter-spacing:.8px">score guardado</div>'
+    + '<div style="font-size:40px;font-weight:800;color:' + dcolor2 + ';line-height:1">' + daily.total + '</div>'
+    + '<div style="font-size:9px;color:var(--text3);margin-top:3px;text-transform:uppercase;letter-spacing:.8px">disciplina hoy</div>'
     + '</div>'
     + '<div style="flex:1">'
     + '<div style="height:5px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-bottom:8px">'
-    + '<div style="height:100%;width:' + dscore.score + '%;background:' + dcolor + ';border-radius:3px"></div></div>'
-    + '<div style="font-size:12px;color:var(--text2);font-weight:600">' + dlabel + '</div>'
+    + '<div style="height:100%;width:' + daily.total + '%;background:' + dcolor2 + ';border-radius:3px;transition:width .5s"></div></div>'
+    + '<div style="font-size:13px;color:var(--text);font-weight:700">' + daily.label + '</div>'
     + '<div style="font-size:10px;color:var(--text3);margin-top:2px">'
-    + activeCount + ' regla' + (activeCount!==1?'s':'') + ' activa' + (activeCount!==1?'s':'')
-    + (activeCount<3?' · <span style="color:var(--amber)">activa ' + (3-activeCount) + ' mas</span>':'')
-    + ' · ' + violations.length + ' incumplida' + (violations.length!==1?'s':'') + ' hoy'
-    + '</div></div>'
-    + '<div style="font-size:9px;color:var(--amber);text-align:right;flex-shrink:0">Cambios pendientes<br>de guardar</div>'
+    + (daily.hasTrades ? daily.tradeCount + ' trade' + (daily.tradeCount!==1?'s':'') + ' hoy' : 'Sin trades hoy')
+    + ' · ' + violations.length + ' regla' + (violations.length!==1?'s':'') + ' incumplida' + (violations.length!==1?'s':'')
+    + '</div></div></div>'
+    // 3 sub-scores
+    + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">'
+    // Rules
+    + '<div style="background:var(--surface2);border-radius:8px;padding:10px 12px">'
+    + '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">Rules</div>'
+    + '<div style="display:flex;align-items:baseline;gap:3px">'
+    + '<span style="font-size:20px;font-weight:800;color:var(--text)">' + daily.rulesPts + '</span>'
+    + '<span style="font-size:10px;color:var(--text3)">/ 35</span></div>'
+    + '<div style="height:3px;background:var(--border);border-radius:2px;margin-top:6px;overflow:hidden">'
+    + '<div style="height:100%;width:' + Math.round(daily.rulesPts/35*100) + '%;background:' + (daily.rulesPts>=28?'var(--green)':daily.rulesPts>=18?'var(--amber)':'var(--red)') + ';border-radius:2px"></div></div>'
+    + '</div>'
+    // Checklist
+    + '<div style="background:var(--surface2);border-radius:8px;padding:10px 12px">'
+    + '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">Checklist</div>'
+    + '<div style="display:flex;align-items:baseline;gap:3px">'
+    + '<span style="font-size:20px;font-weight:800;color:var(--text)">' + daily.checklistPts + '</span>'
+    + '<span style="font-size:10px;color:var(--text3)">/ 35</span></div>'
+    + '<div style="height:3px;background:var(--border);border-radius:2px;margin-top:6px;overflow:hidden">'
+    + '<div style="height:100%;width:' + Math.round(daily.checklistPts/35*100) + '%;background:' + (daily.checklistPts>=28?'var(--green)':daily.checklistPts>=18?'var(--amber)':'var(--red)') + ';border-radius:2px"></div></div>'
+    + '</div>'
+    // Tag
+    + '<div style="background:var(--surface2);border-radius:8px;padding:10px 12px">'
+    + '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">Operativa</div>'
+    + '<div style="display:flex;align-items:baseline;gap:3px">'
+    + '<span style="font-size:20px;font-weight:800;color:var(--text)">' + (daily.tagPts !== null ? daily.tagPts : '—') + '</span>'
+    + '<span style="font-size:10px;color:var(--text3)">' + (daily.tagPts !== null ? '/ 30' : '') + '</span></div>'
+    + '<div style="height:3px;background:var(--border);border-radius:2px;margin-top:6px;overflow:hidden">'
+    + '<div style="height:100%;width:' + (daily.tagPts !== null ? Math.round(daily.tagPts/30*100) : 0) + '%;background:' + (daily.tagPts===null?'var(--border)':daily.tagPts>=24?'var(--green)':daily.tagPts>=15?'var(--amber)':'var(--red)') + ';border-radius:2px"></div></div>'
+    + '</div>'
+    + '</div>'
     + '</div>';
 
   // Violations
