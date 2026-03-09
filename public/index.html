@@ -1894,247 +1894,482 @@ function buildEquitySvg(trades) {
 // User defines custom rules → Coach detects violations
 // ══════════════════════════════════════════════════════════════
 
+// ══════════════════════════════════════════════════════
+// RULES SYSTEM v2 — 9 fixed auto-detectable rules
+// ══════════════════════════════════════════════════════
+
+// Instrument pairs: mini ↔ micro with contract ratios
+var INSTRUMENT_PAIRS = {
+  'ES':  { micro:'MES', ratio:10, name:'E-mini S&P 500' },
+  'MES': { mini:'ES',  ratio:10, name:'Micro E-mini S&P 500' },
+  'NQ':  { micro:'MNQ', ratio:10, name:'E-mini Nasdaq 100' },
+  'MNQ': { mini:'NQ',  ratio:10, name:'Micro E-mini Nasdaq' },
+  'YM':  { micro:'MYM', ratio:10, name:'E-mini Dow' },
+  'MYM': { mini:'YM',  ratio:10, name:'Micro E-mini Dow' },
+  'RTY': { micro:'M2K', ratio:10, name:'E-mini Russell 2000' },
+  'M2K': { mini:'RTY', ratio:10, name:'Micro Russell 2000' },
+  'GC':  { micro:'MGC', ratio:10, name:'Gold' },
+  'MGC': { mini:'GC',  ratio:10, name:'Micro Gold' },
+  'CL':  { micro:'MCL', ratio:10, name:'Crude Oil' },
+  'MCL': { mini:'CL',  ratio:10, name:'Micro Crude Oil' },
+  'SI':  { micro:'SIL', ratio:5,  name:'Silver' },
+  'SIL': { mini:'SI',  ratio:5,  name:'Micro Silver' },
+  'ZB':  { micro:null, ratio:1,  name:'30Y T-Bond' },
+  'ZN':  { micro:null, ratio:1,  name:'10Y T-Note' },
+  'NG':  { micro:null, ratio:1,  name:'Natural Gas' },
+  '6E':  { micro:'M6E', ratio:10, name:'Euro FX' },
+  'M6E': { mini:'6E',  ratio:10, name:'Micro Euro FX' },
+  '6B':  { micro:null, ratio:1,  name:'British Pound' },
+  'ZC':  { micro:null, ratio:1,  name:'Corn' }
+};
+
+// NY trading sessions — defined in NY time, shown in user local time
+var NY_SESSIONS = [
+  { id:'london',    name:'London Open',       nyStart:'03:00', nyEnd:'05:00' },
+  { id:'premarket', name:'Pre-Market',         nyStart:'04:00', nyEnd:'09:30' },
+  { id:'overlap',   name:'London/NY Overlap',  nyStart:'08:00', nyEnd:'11:00' },
+  { id:'nyopen',    name:'NY Open',            nyStart:'09:30', nyEnd:'11:00' },
+  { id:'nymidday',  name:'NY Midday',          nyStart:'11:00', nyEnd:'14:00' },
+  { id:'nyafternoon',name:'NY Afternoon',      nyStart:'14:00', nyEnd:'16:00' }
+];
+
+// Convert NY time HH:MM to UTC offset (handles DST automatically)
+function nyTimeToUTC(dateStr, nyHHMM) {
+  // dateStr = 'YYYY-MM-DD', nyHHMM = 'HH:MM'
+  // NY is UTC-5 (EST) or UTC-4 (EDT during DST)
+  // We check DST by comparing Jan offset vs current offset
+  var parts = nyHHMM.split(':');
+  var h = parseInt(parts[0]), m = parseInt(parts[1]);
+  // Create a date in NY timezone to check DST
+  var testDate = new Date(dateStr + 'T12:00:00-05:00');
+  var janDate  = new Date(testDate.getFullYear() + '-01-15T12:00:00-05:00');
+  var isDST    = testDate.getTimezoneOffset() < janDate.getTimezoneOffset();
+  // Actually use the Intl API for reliable DST detection
+  var nyOffset = getNYOffset(dateStr);
+  // Convert NY time to UTC
+  var totalMinutes = h * 60 + m - nyOffset * 60;
+  return totalMinutes; // minutes from midnight UTC
+}
+
+function getNYOffset(dateStr) {
+  // Returns NY UTC offset in hours (e.g. -4 for EDT, -5 for EST)
+  try {
+    var d = new Date(dateStr + 'T12:00:00Z');
+    var nyStr = d.toLocaleString('en-US', { timeZone: 'America/New_York', hour:'2-digit', minute:'2-digit', hour12:false });
+    var utcH  = d.getUTCHours();
+    var nyH   = parseInt(nyStr.split(':')[0]);
+    if (nyH === 24) nyH = 0;
+    var diff  = nyH - utcH;
+    if (diff > 12)  diff -= 24;
+    if (diff < -12) diff += 24;
+    return diff; // e.g. -4 or -5
+  } catch(e) { return -5; }
+}
+
+function tradeMinutesUTC(trade) {
+  if (!trade.entry_time) return null;
+  var d = new Date(trade.entry_time);
+  return d.getUTCHours() * 60 + d.getUTCMinutes();
+}
+
+function tradeDateStr(trade) {
+  if (!trade.entry_time) return null;
+  return new Date(trade.entry_time).toISOString().slice(0, 10);
+}
+
+// Format NY session time in user's local timezone for display
+function sessionLocalTime(dateStr, nyHHMM) {
+  try {
+    var nyOffset = getNYOffset(dateStr || new Date().toISOString().slice(0,10));
+    var parts = nyHHMM.split(':');
+    var utcH = parseInt(parts[0]) - nyOffset;
+    var m    = parseInt(parts[1]);
+    // Convert UTC to local
+    var utcDate = new Date();
+    utcDate.setUTCHours(utcH, m, 0, 0);
+    return utcDate.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', hour12:false });
+  } catch(e) { return nyHHMM; }
+}
+
 function getPersonalRules(accountId) {
-  try { return JSON.parse(bbStore.get('rules_' + accountId) || '[]'); } catch(e) { return []; }
+  try { return JSON.parse(bbStore.get('rules_v2_' + accountId) || '{}'); } catch(e) { return {}; }
 }
 function savePersonalRules(accountId, rules) {
-  bbStore.set('rules_' + accountId, JSON.stringify(rules));
+  bbStore.set('rules_v2_' + accountId, JSON.stringify(rules));
 }
 
-// Check rule violations against today's trades
-function checkRuleViolations(rules, trades) {
+// ── Check all active rules against today's trades ──
+function checkRuleViolations(rulesObj, trades) {
   var now      = new Date();
-  var todayStr = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+  var todayStr = now.toISOString().slice(0, 10);
   var todayTrades = trades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(todayStr); });
   var violations  = [];
+  var r = rulesObj || {};
 
-  rules.forEach(function(rule) {
-    if (!rule.active) return;
-    var type = rule.type;
-    var val  = rule.value;
+  // ── Rule 1: Session hours ──
+  if (r.session && r.session.active && r.session.sessions && r.session.sessions.length) {
+    var nyOffset   = getNYOffset(todayStr);
+    var badTrades  = todayTrades.filter(function(t) {
+      var tMins = tradeMinutesUTC(t);
+      if (tMins === null) return false;
+      // Check if trade falls within ANY selected session
+      var inAny = r.session.sessions.some(function(sid) {
+        var sess = NY_SESSIONS.find(function(s){ return s.id === sid; });
+        if (!sess) return false;
+        var startP = sess.nyStart.split(':'); var endP = sess.nyEnd.split(':');
+        var startUTC = (parseInt(startP[0]) - nyOffset) * 60 + parseInt(startP[1]);
+        var endUTC   = (parseInt(endP[0])   - nyOffset) * 60 + parseInt(endP[1]);
+        return tMins >= startUTC && tMins <= endUTC;
+      });
+      return !inAny;
+    });
+    if (badTrades.length) {
+      var sessNames = r.session.sessions.map(function(sid){
+        var s = NY_SESSIONS.find(function(x){ return x.id===sid; });
+        return s ? s.name : sid;
+      }).join(', ');
+      violations.push({ rule:{id:'session', label:'Horario permitido'}, detail: badTrades.length + ' trade(s) fuera de: ' + sessNames });
+    }
+  }
 
-    if (type === 'max_trades_day') {
-      var limit = parseInt(val) || 1;
-      if (todayTrades.length > limit) {
-        violations.push({ rule: rule, detail: 'Tomaste ' + todayTrades.length + ' trades hoy (límite: ' + limit + ')' });
+  // ── Rule 2: No Monday / No Friday ──
+  if (r.nodays && r.nodays.active && r.nodays.days && r.nodays.days.length) {
+    var dayNames = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+    var badDayTrades = todayTrades.filter(function(t) {
+      var d = new Date(t.entry_time);
+      var dow = d.getDay(); // 0=Sun,1=Mon,...,5=Fri
+      return r.nodays.days.includes(dow);
+    });
+    if (badDayTrades.length) {
+      var dayLabels = r.nodays.days.map(function(d){ return dayNames[d]; }).join(' y ');
+      violations.push({ rule:{id:'nodays', label:'No operar ' + dayLabels}, detail: badDayTrades.length + ' trade(s) en día restringido' });
+    }
+  }
+
+  // ── Rule 3: Max trades per day ──
+  if (r.maxtrades && r.maxtrades.active) {
+    var limit = parseInt(r.maxtrades.value) || 3;
+    if (todayTrades.length > limit) {
+      violations.push({ rule:{id:'maxtrades', label:'Máximo ' + limit + ' trades/día'}, detail: 'Tomaste ' + todayTrades.length + ' trades (límite: ' + limit + ')' });
+    }
+  }
+
+  // ── Rule 4: Max consecutive losses ──
+  if (r.maxlosses && r.maxlosses.active) {
+    var lossLimit = parseInt(r.maxlosses.value) || 2;
+    var streak = 0;
+    var sorted4 = todayTrades.slice().sort(function(a,b){ return new Date(a.entry_time)-new Date(b.entry_time); });
+    var maxStreak = 0;
+    sorted4.forEach(function(t){ if ((t.pnl||0)<0){ streak++; maxStreak=Math.max(maxStreak,streak); } else { streak=0; } });
+    if (maxStreak >= lossLimit) {
+      violations.push({ rule:{id:'maxlosses', label:'Máx ' + lossLimit + ' pérdidas seguidas'}, detail: 'Alcanzaste ' + maxStreak + ' pérdidas consecutivas' });
+    }
+  }
+
+  // ── Rule 5: Max position size ──
+  if (r.maxsize && r.maxsize.active) {
+    var maxContracts = parseInt(r.maxsize.value) || 1;
+    var sizeType     = r.maxsize.sizeType || 'micro'; // 'mini' or 'micro'
+    var badSizeTrades = todayTrades.filter(function(t) {
+      var qty    = parseInt(t.quantity) || 1;
+      var ticker = (t.ticker || '').toUpperCase();
+      var pair   = INSTRUMENT_PAIRS[ticker];
+      if (!pair) return qty > maxContracts;
+      // Normalize to the configured unit
+      var isMicro = ticker === (pair.mini ? ticker : null) || (pair.mini && !INSTRUMENT_PAIRS[ticker].micro);
+      var tickerIsMicro = !!pair.mini; // has a 'mini' field means this IS the micro
+      var tickerIsMini  = !!pair.micro; // has a 'micro' field means this IS the mini
+      if (sizeType === 'micro') {
+        // Convert trade qty to micros
+        var qtyInMicros = tickerIsMini ? qty * pair.ratio : qty;
+        var maxInMicros = maxContracts;
+        return qtyInMicros > maxInMicros;
+      } else {
+        // Convert trade qty to minis
+        var qtyInMinis = tickerIsMicro ? qty / pair.ratio : qty;
+        var maxInMinis = maxContracts;
+        return qtyInMinis > maxInMinis;
       }
+    });
+    if (badSizeTrades.length) {
+      violations.push({ rule:{id:'maxsize', label:'Tamaño máx ' + maxContracts + ' ' + sizeType + (maxContracts>1?'s':'')}, detail: badSizeTrades.length + ' trade(s) superaron el tamaño máximo' });
     }
-    else if (type === 'no_trade_after_loss') {
-      // No trading after X consecutive losses
-      var streak = 0;
-      todayTrades.slice().reverse().forEach(function(t){ if ((t.pnl||0)<0) streak++; else streak=0; });
-      var lossLimit = parseInt(val) || 2;
-      if (streak >= lossLimit) {
-        violations.push({ rule: rule, detail: 'Llevas ' + streak + ' pérdidas consecutivas hoy (límite: ' + lossLimit + ')' });
-      }
+  }
+
+  // ── Rule 6: No trade without checklist ──
+  if (r.checklist && r.checklist.active) {
+    var todayCL = (currentChecklistSessions||[]).find(function(s){ return s.session_date === todayStr; });
+    if (todayTrades.length > 0 && (!todayCL || todayCL.score_pct < 1)) {
+      violations.push({ rule:{id:'checklist', label:'Completar checklist antes de operar'}, detail: 'Operaste sin completar el checklist hoy' });
     }
-    else if (type === 'session') {
-      // Only trade during specific session hours
-      // val = "09:30-11:00" format
-      var parts = (val||'').split('-');
-      if (parts.length === 2) {
-        var badTrades = todayTrades.filter(function(t) {
-          if (!t.entry_time) return false;
-          var d = new Date(t.entry_time);
-          var hhmm = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
-          return hhmm < parts[0] || hhmm > parts[1];
-        });
-        if (badTrades.length > 0) {
-          violations.push({ rule: rule, detail: badTrades.length + ' trade(s) fuera de la sesión ' + val });
-        }
-      }
+  }
+
+  // ── Rule 7: No trade on Red Day ──
+  if (r.redday && r.redday.active) {
+    var todayMoodSess = (currentMoodSessions||[]).find(function(s){ return s.date === todayStr; });
+    if (todayTrades.length > 0 && todayMoodSess && todayMoodSess.level === 'red') {
+      violations.push({ rule:{id:'redday', label:'No operar en Red Day'}, detail: 'Operaste siendo un Red Day (mood check rojo)' });
     }
-    else if (type === 'custom') {
-      // Custom text rule — just show as reminder, no auto-detect
+  }
+
+  // ── Rule 8: Min minutes between trades ──
+  if (r.mintimegap && r.mintimegap.active) {
+    var minGap = parseInt(r.mintimegap.value) || 10;
+    var sorted8 = todayTrades.slice().sort(function(a,b){ return new Date(a.entry_time)-new Date(b.entry_time); });
+    var gapViolations = 0;
+    for (var i = 1; i < sorted8.length; i++) {
+      var prev = new Date(sorted8[i-1].exit_time || sorted8[i-1].entry_time);
+      var curr = new Date(sorted8[i].entry_time);
+      var gapMins = (curr - prev) / 60000;
+      if (gapMins >= 0 && gapMins < minGap) gapViolations++;
     }
-  });
+    if (gapViolations > 0) {
+      violations.push({ rule:{id:'mintimegap', label:'Min ' + minGap + ' min entre trades'}, detail: gapViolations + ' trade(s) tomados demasiado rápido' });
+    }
+  }
+
+  // ── Rule 9: Max daily loss (personal) ──
+  if (r.maxdailyloss && r.maxdailyloss.active) {
+    var maxLoss   = parseFloat(r.maxdailyloss.value) || 100;
+    var todayPnl  = todayTrades.reduce(function(s,t){ return s + (t.pnl||0); }, 0);
+    if (todayPnl < -Math.abs(maxLoss)) {
+      violations.push({ rule:{id:'maxdailyloss', label:'Pérdida máx $' + maxLoss + '/día'}, detail: 'Perdiste $' + Math.abs(todayPnl).toFixed(0) + ' (límite: $' + maxLoss + ')' });
+    }
+  }
 
   return violations;
 }
 
+// ── Discipline score from rules (0–100) ──
+function calcRulesDisciplineScore(rulesObj, trades) {
+  var r = rulesObj || {};
+  var activeRules = Object.keys(r).filter(function(k){ return r[k] && r[k].active; });
+  if (!activeRules.length) return { score: 50, violations: [], activeCount: 0 }; // neutral if no rules
+  var violations = checkRuleViolations(rulesObj, trades);
+  var violatedIds = violations.map(function(v){ return v.rule.id; });
+  var score;
+  var n = activeRules.length;
+  var v = violatedIds.length;
+  if (v === 0)          score = 100;
+  else if (v === 1 && n >= 3) score = 70;
+  else if (v === 1 && n < 3)  score = 60;
+  else if (v === 2)     score = 40;
+  else                  score = Math.max(0, 10 - (v-3)*5);
+  return { score: score, violations: violations, activeCount: n };
+}
+
 function renderRulesView() {
-  var el      = document.getElementById('main-content');
-  var acctId  = currentAccountId || '';
-  var rules   = getPersonalRules(acctId);
-  var trades  = currentTrades || [];
+  var el     = document.getElementById('main-content');
+  var acctId = currentAccountId || '';
+  var rules  = getPersonalRules(acctId);
+  var trades = currentTrades || [];
   var violations = checkRuleViolations(rules, trades);
+  var activeCount = Object.keys(rules).filter(function(k){ return rules[k] && rules[k].active; }).length;
+  var today  = new Date().toISOString().slice(0,10);
+  var todayTrades = trades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(today); });
 
-  var ruleTypes = [
-    { val:'max_trades_day',      lbl:'Máximo trades por día',        ph:'ej: 2',          hint:'Número máximo de trades permitidos por sesión' },
-    { val:'no_trade_after_loss', lbl:'Stop tras N pérdidas seguidas', ph:'ej: 2',          hint:'Para de operar tras X pérdidas consecutivas' },
-    { val:'session',             lbl:'Solo operar en horario',        ph:'ej: 09:30-11:00',hint:'Formato HH:MM-HH:MM en hora del mercado' },
-    { val:'custom',              lbl:'Regla personalizada',           ph:'ej: No operar el lunes', hint:'Describe tu regla en texto libre' }
-  ];
-
-  var html = '<div style="padding:24px;max-width:740px">';
+  var html = '<div style="padding:20px 24px;max-width:760px">';
 
   // Header
-  html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">'
-    + '<div>'
-    + '<div style="font-size:18px;font-weight:700;color:var(--text);letter-spacing:-.3px">Mis Reglas</div>'
-    + '<div style="font-size:12px;color:var(--text3);margin-top:3px">Define las reglas que te has comprometido a seguir como trader</div>'
-    + '</div>'
-    + '<button onclick="openAddRuleModal()" class="btn btn-solid" style="white-space:nowrap">+ Agregar regla</button>'
+  html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
+    + '<div><div style="font-size:18px;font-weight:700;color:var(--text);letter-spacing:-.3px">Mis Reglas de Sesion</div>'
+    + '<div style="font-size:11px;color:var(--text3);margin-top:2px">Activa minimo 3 reglas para un score de disciplina completo</div></div>'
+    + '<span style="font-size:10px;color:' + (activeCount>=3?'var(--green)':'var(--amber)') + ';font-weight:600">'
+    + activeCount + ' activa' + (activeCount!==1?'s':'') + (activeCount<3?' — activa '+(3-activeCount)+' mas':'') + '</span>'
     + '</div>';
 
-  // Recommendation banner if no rules
-  if (!rules.length) {
-    html += '<div style="background:#1e2a2a;border:1px solid #2a3e3e;border-left:3px solid #5a9e9e;border-radius:9px;padding:16px 18px;margin-bottom:20px;display:flex;gap:12px;align-items:flex-start">'
-      + '<span style="font-size:18px">◈</span>'
-      + '<div>'
-      + '<div style="font-size:12px;font-weight:600;color:#5a9e9e;margin-bottom:4px">BlackBoss recomienda definir tus reglas</div>'
-      + '<div style="font-size:11px;color:var(--text3);line-height:1.6">Los traders con reglas claras cometen un 40% menos errores de disciplina. Define tu número máximo de trades, horario de sesión y condiciones de stop. El Coach IA usará estas reglas para evaluar tu cumplimiento.</div>'
-      + '</div>'
-      + '</div>';
-  }
+  // Score bar
+  var dscore = calcRulesDisciplineScore(rules, trades);
+  var dcolor = dscore.score>=80?'var(--green)':dscore.score>=50?'var(--amber)':'var(--red)';
+  html += '<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:16px">'
+    + '<div style="text-align:center;flex-shrink:0"><div style="font-size:32px;font-weight:800;color:' + dcolor + ';line-height:1">' + dscore.score + '</div>'
+    + '<div style="font-size:9px;color:var(--text3);margin-top:2px">SCORE HOY</div></div>'
+    + '<div style="flex:1"><div style="height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-bottom:6px">'
+    + '<div style="height:100%;width:' + dscore.score + '%;background:' + dcolor + ';border-radius:3px;transition:width .6s ease"></div></div>'
+    + '<div style="font-size:10px;color:var(--text2)">'
+    + (dscore.score>=90?'Disciplina elite':dscore.score>=70?'Trader disciplinado':dscore.score>=50?'En progreso':dscore.score>=30?'Necesita atencion':'Sesion caotica')
+    + ' · ' + violations.length + ' regla' + (violations.length!==1?'s':'') + ' incumplida' + (violations.length!==1?'s':'') + ' hoy'
+    + '</div></div></div>';
 
   // Violations banner
   if (violations.length) {
-    html += '<div style="background:var(--red-bg);border:1px solid var(--red-bd);border-left:3px solid var(--red);border-radius:9px;padding:14px 16px;margin-bottom:16px">'
-      + '<div style="font-size:10px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">⚠ Reglas incumplidas hoy</div>'
-      + violations.map(function(v) {
-          return '<div style="font-size:11px;color:var(--text2);padding:5px 0;border-bottom:1px solid var(--red-bd);display:flex;gap:8px;align-items:center">'
-            + '<span style="color:var(--red);flex-shrink:0">✕</span>'
-            + '<span><strong>' + v.rule.label + '</strong> — ' + v.detail + '</span>'
-            + '</div>';
-        }).join('')
-      + '</div>';
+    html += '<div style="background:var(--red-bg);border:1px solid var(--red-bd);border-left:3px solid var(--red);border-radius:9px;padding:12px 16px;margin-bottom:14px">'
+      + '<div style="font-size:9px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Incumplidas hoy</div>'
+      + violations.map(function(v){
+          return '<div style="font-size:11px;color:var(--text2);padding:4px 0;display:flex;gap:8px;align-items:flex-start">'
+            + '<span style="color:var(--red);flex-shrink:0">X</span>'
+            + '<span><b>' + v.rule.label + '</b> — ' + v.detail + '</span></div>';
+        }).join('') + '</div>';
   }
 
-  // Rules list
-  if (rules.length) {
-    html += '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">';
-    rules.forEach(function(rule, idx) {
-      var violated = violations.find(function(v){ return v.rule.id === rule.id; });
-      var borderColor = violated ? 'var(--red)' : (rule.active ? '#5a9e9e' : 'var(--border)');
-      var bgColor     = violated ? 'var(--red-bg)' : 'var(--surface)';
-      var typeLabel   = ruleTypes.find(function(t){ return t.val === rule.type; });
-      var typeLbl     = typeLabel ? typeLabel.lbl : rule.type;
-
-      html += '<div style="background:' + bgColor + ';border:1px solid ' + borderColor + ';border-radius:9px;padding:13px 16px;display:flex;align-items:center;gap:12px">'
-        + '<div style="flex:1;min-width:0">'
-        + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">'
-        + '<span style="font-size:9px;padding:2px 7px;border-radius:10px;background:' + (rule.active ? '#1e2a2a' : 'var(--surface2)') + ';color:' + (rule.active ? '#5a9e9e' : 'var(--text3)') + ';border:1px solid ' + (rule.active ? '#2a3e3e' : 'var(--border)') + '">' + typeLbl + '</span>'
-        + (violated ? '<span style="font-size:9px;color:var(--red);font-weight:600">● INCUMPLIDA HOY</span>' : '')
-        + '</div>'
-        + '<div style="font-size:13px;color:var(--text);font-weight:500">' + (rule.label || rule.value || '') + '</div>'
-        + (rule.value && rule.type !== 'custom' ? '<div style="font-size:10px;color:var(--text3);margin-top:2px">Valor: ' + rule.value + '</div>' : '')
-        + '</div>'
-        + '<div style="display:flex;align-items:center;gap:8px;flex-shrink:0">'
-        + '<label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:10px;color:var(--text3)">'
-        + '<input type="checkbox" ' + (rule.active ? 'checked' : '') + ' onchange="toggleRule(' + idx + ')" style="accent-color:#5a9e9e;width:13px;height:13px"> Activa</label>'
-        + '<button onclick="deleteRule(' + idx + ')" style="background:none;border:1px solid var(--border);border-radius:5px;color:var(--text3);font-size:10px;padding:3px 8px;cursor:pointer">✕</button>'
-        + '</div>'
-        + '</div>';
-    });
-    html += '</div>';
+  // Rule card helper
+  function rCard(id, icon, title, desc, cfgHtml, isActive, isViolated) {
+    var bc = isViolated ? 'var(--red)' : isActive ? '#5a9e9e' : 'var(--border)';
+    var bg = isViolated ? 'var(--red-bg)' : 'var(--surface)';
+    return '<div style="background:' + bg + ';border:1px solid ' + bc + ';border-radius:10px;padding:13px 16px;margin-bottom:8px">'
+      + '<div style="display:flex;align-items:flex-start;gap:12px">'
+      + '<div style="font-size:18px;flex-shrink:0;margin-top:1px">' + icon + '</div>'
+      + '<div style="flex:1;min-width:0">'
+      + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">'
+      + '<span style="font-size:12px;font-weight:600;color:var(--text)">' + title + '</span>'
+      + (isViolated ? '<span style="font-size:8px;color:var(--red);font-weight:700;background:var(--red-bg);padding:1px 6px;border-radius:8px;border:1px solid var(--red-bd)">INCUMPLIDA</span>' : '')
+      + (isActive && !isViolated ? '<span style="font-size:8px;color:var(--green);font-weight:600">ACTIVA</span>' : '')
+      + '</div>'
+      + '<div style="font-size:10px;color:var(--text3);margin-bottom:' + (isActive?'10px':'2px') + '">' + desc + '</div>'
+      + (isActive ? cfgHtml : '') + '</div>'
+      + '<label style="display:flex;align-items:center;gap:5px;cursor:pointer;flex-shrink:0;margin-top:2px">'
+      + '<input type="checkbox" ' + (isActive?'checked':'') + ' onchange="toggleRuleV2(\"' + id + '\")" style="accent-color:#5a9e9e;width:15px;height:15px"></label>'
+      + '</div></div>';
   }
 
-  // Coach analysis of rules
-  html += '<div class="panel" style="padding:18px">'
-    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
-    + '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Análisis de cumplimiento</div>'
-    + '<button onclick="generateRulesCoach()" class="btn btn-solid" style="font-size:10px;padding:6px 12px">⚡ Analizar cumplimiento</button>'
+  var todayD = new Date().toISOString().slice(0,10);
+
+  // Rule 1: Sessions
+  var r1 = rules.session || {};
+  var sel1 = r1.sessions || [];
+  var sessHtml = '<div style="display:flex;flex-wrap:wrap;gap:6px">'
+    + NY_SESSIONS.map(function(s) {
+        var ls = sessionLocalTime(todayD, s.nyStart);
+        var le = sessionLocalTime(todayD, s.nyEnd);
+        var on = sel1.includes(s.id);
+        return '<label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:' + (on?'#1e2a2a':'var(--surface2)') + ';border:1px solid ' + (on?'#5a9e9e':'var(--border)') + ';border-radius:7px;padding:5px 10px">'
+          + '<input type="checkbox" ' + (on?'checked':'') + ' onchange="toggleRuleSession(\'' + s.id + '\')" style="accent-color:#5a9e9e;width:12px;height:12px">'
+          + '<span style="font-size:10px;color:' + (on?'var(--text)':'var(--text3)') + '">' + s.name
+          + ' <span style="color:var(--text3);font-size:9px">' + ls + '-' + le + '</span></span></label>';
+      }).join('') + '</div>';
+  html += rCard('session','🕐','Horario permitido para operar','Elige las sesiones en las que tienes permitido tomar trades', sessHtml, !!r1.active, violations.some(function(v){return v.rule.id==='session';}));
+
+  // Rule 2: No days
+  var r2 = rules.nodays || {};
+  var sel2 = r2.days || [];
+  var ndHtml = '<div style="display:flex;gap:8px">'
+    + [{d:1,lbl:'Lunes'},{d:5,lbl:'Viernes'}].map(function(o) {
+        var on = sel2.includes(o.d);
+        return '<label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:' + (on?'#2a1010':'var(--surface2)') + ';border:1px solid ' + (on?'var(--red)':'var(--border)') + ';border-radius:7px;padding:6px 12px">'
+          + '<input type="checkbox" ' + (on?'checked':'') + ' onchange="toggleRuleNoday(' + o.d + ')" style="accent-color:#9e5a5a;width:12px;height:12px">'
+          + '<span style="font-size:11px;color:' + (on?'var(--red)':'var(--text3)') + ';font-weight:' + (on?'600':'400') + '">' + o.lbl + '</span></label>';
+      }).join('') + '</div>';
+  html += rCard('nodays','📅','No operar lunes / viernes','Dias de la semana en los que no esta permitido operar', ndHtml, !!r2.active, violations.some(function(v){return v.rule.id==='nodays';}));
+
+  // Rule 3: Max trades
+  var r3 = rules.maxtrades || {};
+  var mt3 = '<div style="display:flex;align-items:center;gap:8px">'
+    + '<span style="font-size:10px;color:var(--text3)">Maximo:</span>'
+    + '<input type="number" min="1" max="20" value="' + (r3.value||3) + '" onchange="updateRuleValue(\'maxtrades\',this.value)" style="width:60px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-size:12px;font-family:inherit;text-align:center">'
+    + '<span style="font-size:10px;color:var(--text3)">trades/dia · Hoy: ' + todayTrades.length + '</span></div>';
+  html += rCard('maxtrades','🔢','Maximo de trades por dia','Para cuando ya tomaste suficientes trades en la sesion', mt3, !!r3.active, violations.some(function(v){return v.rule.id==='maxtrades';}));
+
+  // Rule 4: Max consecutive losses
+  var r4 = rules.maxlosses || {};
+  var st4=0, ms4=0;
+  todayTrades.slice().sort(function(a,b){return new Date(a.entry_time)-new Date(b.entry_time);}).forEach(function(t){if((t.pnl||0)<0){st4++;ms4=Math.max(ms4,st4);}else{st4=0;}});
+  var ml4 = '<div style="display:flex;align-items:center;gap:8px">'
+    + '<span style="font-size:10px;color:var(--text3)">Parar tras:</span>'
+    + '<input type="number" min="1" max="10" value="' + (r4.value||2) + '" onchange="updateRuleValue(\'maxlosses\',this.value)" style="width:60px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-size:12px;font-family:inherit;text-align:center">'
+    + '<span style="font-size:10px;color:var(--text3)">perdidas seguidas · Hoy racha max: ' + ms4 + '</span></div>';
+  html += rCard('maxlosses','🛑','Maximo perdidas consecutivas','Detente antes de que el tilt te haga perder mas', ml4, !!r4.active, violations.some(function(v){return v.rule.id==='maxlosses';}));
+
+  // Rule 5: Max position size
+  var r5 = rules.maxsize || {};
+  var ms5 = '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">'
+    + '<input type="number" min="1" max="100" value="' + (r5.value||1) + '" onchange="updateRuleValue(\'maxsize\',this.value)" style="width:60px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-size:12px;font-family:inherit;text-align:center">'
+    + '<select onchange="updateRuleSizeType(this.value)" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-size:11px;font-family:inherit">'
+    + '<option value="micro"' + (r5.sizeType==='micro'||!r5.sizeType?' selected':'') + '>contratos micro</option>'
+    + '<option value="mini"'  + (r5.sizeType==='mini'?' selected':'') + '>contratos mini</option>'
+    + '</select>'
+    + '<span style="font-size:9px;color:var(--text3)">Detecta instrumento automaticamente (ES/MES, NQ/MNQ, etc.)</span></div>';
+  html += rCard('maxsize','📊','Tamano maximo de posicion','Limite de contratos por trade, convertido automaticamente entre micro y mini', ms5, !!r5.active, violations.some(function(v){return v.rule.id==='maxsize';}));
+
+  // Rule 6: Checklist
+  var r6 = rules.checklist || {};
+  var tCL = (currentChecklistSessions||[]).find(function(s){return s.session_date===today;});
+  var cl6 = '<div style="font-size:10px;color:' + (tCL?'var(--green)':'var(--red)') + ';font-weight:600">' + (tCL?'Checklist ' + tCL.score_pct + '% completado hoy':'Sin checklist hoy') + '</div>';
+  html += rCard('checklist','📋','No operar sin completar el checklist','El checklist debe estar respondido antes del primer trade del dia', cl6, !!r6.active, violations.some(function(v){return v.rule.id==='checklist';}));
+
+  // Rule 7: No Red Day
+  var r7 = rules.redday || {};
+  var tMd = (currentMoodSessions||[]).find(function(s){return s.date===today;});
+  var rdClr = tMd?(tMd.level==='green'?'var(--green)':tMd.level==='yellow'?'var(--amber)':'var(--red)'):'var(--text3)';
+  var rdTxt = tMd?(tMd.level==='green'?'Green Day hoy':tMd.level==='yellow'?'Yellow Day hoy':'Red Day hoy — no deberias operar'):'Sin mood check hoy';
+  var rd7 = '<div style="font-size:10px;color:' + rdClr + ';font-weight:600">' + rdTxt + '</div>';
+  html += rCard('redday','🧠','No operar en Red Day','Si el mood check fue rojo, no tomas trades ese dia', rd7, !!r7.active, violations.some(function(v){return v.rule.id==='redday';}));
+
+  // Rule 8: Min time gap
+  var r8 = rules.mintimegap || {};
+  var tg8 = '<div style="display:flex;align-items:center;gap:8px">'
+    + '<span style="font-size:10px;color:var(--text3)">Esperar minimo:</span>'
+    + '<input type="number" min="1" max="60" value="' + (r8.value||10) + '" onchange="updateRuleValue(\'mintimegap\',this.value)" style="width:60px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-size:12px;font-family:inherit;text-align:center">'
+    + '<span style="font-size:10px;color:var(--text3)">minutos entre trades</span></div>';
+  html += rCard('mintimegap','⏱','Minimo de minutos entre trades','Evita el overtrading y entradas impulsivas post-trade', tg8, !!r8.active, violations.some(function(v){return v.rule.id==='mintimegap';}));
+
+  // Rule 9: Max daily loss
+  var r9 = rules.maxdailyloss || {};
+  var pnl9 = todayTrades.reduce(function(s,t){return s+(t.pnl||0);},0);
+  var mdl9 = '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'
+    + '<span style="font-size:10px;color:var(--text3)">Perder max:</span>'
+    + '<div style="display:flex;align-items:center;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:3px 8px">'
+    + '<span style="font-size:11px;color:var(--text3)">$</span>'
+    + '<input type="number" min="0" value="' + (r9.value||200) + '" onchange="updateRuleValue(\'maxdailyloss\',this.value)" style="width:70px;background:transparent;border:none;color:var(--text);font-size:12px;font-family:inherit;outline:none">'
     + '</div>'
-    + '<div id="rules-coach-output"><div style="font-size:11px;color:var(--text3);text-align:center;padding:16px 0">El Coach IA analizará qué reglas cumples y cuáles rompes con más frecuencia.</div></div>'
+    + '<span style="font-size:10px;color:' + (pnl9>=0?'var(--green)':'var(--red)') + ';font-weight:600">P&L hoy: ' + (pnl9>=0?'+':'') + '$' + Math.abs(pnl9).toFixed(0) + '</span></div>';
+  html += rCard('maxdailyloss','💸','Perdida maxima personal del dia','Tu propio limite de perdida diaria, independiente del limite de la firma', mdl9, !!r9.active, violations.some(function(v){return v.rule.id==='maxdailyloss';}));
+
+  // Coach panel
+  html += '<div class="panel" style="padding:18px;margin-top:4px">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
+    + '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Analisis del Coach IA</div>'
+    + '<button onclick="generateRulesCoach()" class="btn btn-solid" style="font-size:10px;padding:6px 12px">Analizar</button>'
+    + '</div>'
+    + '<div id="rules-coach-output"><div style="font-size:11px;color:var(--text3);text-align:center;padding:16px 0">El Coach IA analizara tu cumplimiento de reglas y patrones de incumplimiento.</div></div>'
     + '</div>';
 
   html += '</div>';
-
-  // Add Rule Modal (hidden)
-  html += '<div id="add-rule-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center">'
-    + '<div style="background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:24px;width:420px;max-width:90vw">'
-    + '<div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:16px">Nueva regla</div>'
-
-    + '<div style="margin-bottom:12px">'
-    + '<label style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:5px">Tipo de regla</label>'
-    + '<select id="rule-type-sel" onchange="updateRuleForm()" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:12px;font-family:inherit">'
-    + ruleTypes.map(function(t){ return '<option value="' + t.val + '">' + t.lbl + '</option>'; }).join('')
-    + '</select>'
-    + '</div>'
-
-    + '<div style="margin-bottom:12px">'
-    + '<label style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:5px">Descripción <span style="color:var(--text3)">(para ti)</span></label>'
-    + '<input id="rule-label-inp" type="text" placeholder="ej: Solo opero NY session" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:12px;font-family:inherit">'
-    + '</div>'
-
-    + '<div id="rule-value-wrap" style="margin-bottom:16px">'
-    + '<label style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:5px" id="rule-value-lbl">Valor</label>'
-    + '<input id="rule-value-inp" type="text" placeholder="ej: 2" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:12px;font-family:inherit">'
-    + '<div id="rule-hint" style="font-size:10px;color:var(--text3);margin-top:5px"></div>'
-    + '</div>'
-
-    + '<div style="display:flex;gap:8px">'
-    + '<button onclick="closeAddRuleModal()" style="flex:1;padding:9px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text3);cursor:pointer;font-size:11px;font-family:inherit">Cancelar</button>'
-    + '<button onclick="saveNewRule()" style="flex:2;padding:9px;background:#5a9e9e;border:none;border-radius:8px;color:#fff;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit">Guardar regla</button>'
-    + '</div>'
-    + '</div>'
-    + '</div>';
-
   el.innerHTML = html;
-
-  // Hide modal by default after render
-  var modal = document.getElementById('add-rule-modal');
-  if (modal) modal.style.display = 'none';
-  updateRuleForm();
 }
 
-// ── Rule UI helpers ──
-function openAddRuleModal() {
-  var modal = document.getElementById('add-rule-modal');
-  if (modal) modal.style.display = 'flex';
-}
-function closeAddRuleModal() {
-  var modal = document.getElementById('add-rule-modal');
-  if (modal) modal.style.display = 'none';
-}
-
-function updateRuleForm() {
-  var type = document.getElementById('rule-type-sel');
-  var hint = document.getElementById('rule-hint');
-  var wrap = document.getElementById('rule-value-wrap');
-  var lbl  = document.getElementById('rule-value-lbl');
-  if (!type) return;
-  var hints = {
-    max_trades_day:      { show:true,  lbl:'Número máximo',    hint:'Cuántos trades máximo por sesión (ej: 2)' },
-    no_trade_after_loss: { show:true,  lbl:'Pérdidas seguidas',hint:'Para tras X pérdidas consecutivas (ej: 2)' },
-    session:             { show:true,  lbl:'Horario (HH:MM-HH:MM)', hint:'Rango horario permitido, ej: 09:30-11:00' },
-    custom:              { show:false, lbl:'',                  hint:'' }
-  };
-  var h = hints[type.value] || { show:false };
-  if (wrap) wrap.style.display = h.show ? 'block' : 'none';
-  if (lbl && h.lbl) lbl.textContent = h.lbl;
-  if (hint) hint.textContent = h.hint || '';
-}
-
-function saveNewRule() {
+// Rule toggle/update helpers
+function toggleRuleV2(id) {
   var acctId = currentAccountId || '';
   var rules  = getPersonalRules(acctId);
-  var type   = (document.getElementById('rule-type-sel')   || {}).value || 'custom';
-  var label  = (document.getElementById('rule-label-inp')  || {}).value || '';
-  var value  = (document.getElementById('rule-value-inp')  || {}).value || '';
-  if (!label.trim()) { alert('Escribe una descripción para la regla'); return; }
-  rules.push({ id: Date.now(), type: type, label: label.trim(), value: value.trim(), active: true });
-  savePersonalRules(acctId, rules);
-  closeAddRuleModal();
-  renderRulesView();
-}
-
-function toggleRule(idx) {
-  var acctId = currentAccountId || '';
-  var rules  = getPersonalRules(acctId);
-  if (rules[idx]) rules[idx].active = !rules[idx].active;
+  if (!rules[id]) rules[id] = { active: false };
+  rules[id].active = !rules[id].active;
   savePersonalRules(acctId, rules);
   renderRulesView();
 }
-
-function deleteRule(idx) {
+function toggleRuleSession(sessId) {
   var acctId = currentAccountId || '';
   var rules  = getPersonalRules(acctId);
-  rules.splice(idx, 1);
+  if (!rules.session) rules.session = { active: true, sessions: [] };
+  var idx = rules.session.sessions.indexOf(sessId);
+  if (idx === -1) rules.session.sessions.push(sessId); else rules.session.sessions.splice(idx, 1);
   savePersonalRules(acctId, rules);
   renderRulesView();
 }
+function toggleRuleNoday(dow) {
+  var acctId = currentAccountId || '';
+  var rules  = getPersonalRules(acctId);
+  if (!rules.nodays) rules.nodays = { active: true, days: [] };
+  var idx = rules.nodays.days.indexOf(dow);
+  if (idx === -1) rules.nodays.days.push(dow); else rules.nodays.days.splice(idx, 1);
+  savePersonalRules(acctId, rules);
+  renderRulesView();
+}
+function updateRuleValue(id, val) {
+  var acctId = currentAccountId || '';
+  var rules  = getPersonalRules(acctId);
+  if (!rules[id]) rules[id] = { active: true };
+  rules[id].value = val;
+  savePersonalRules(acctId, rules);
+}
+function updateRuleSizeType(val) {
+  var acctId = currentAccountId || '';
+  var rules  = getPersonalRules(acctId);
+  if (!rules.maxsize) rules.maxsize = { active: true };
+  rules.maxsize.sizeType = val;
+  savePersonalRules(acctId, rules);
+}
+
+// Rule helpers moved to toggleRuleV2, toggleRuleSession, toggleRuleNoday, updateRuleValue
 
 async function generateRulesCoach() {
   var acctId  = currentAccountId || '';
