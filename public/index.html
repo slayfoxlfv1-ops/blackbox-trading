@@ -2379,25 +2379,24 @@ function initRulesTemp() {
 }
 
 function saveRulesConfig() {
-  // Read all DOM inputs into _rulesTemp, then persist
+  // Read DOM inputs one last time before saving
   var r = _rulesTemp || {};
-
-  var mt  = document.getElementById('rule-input-maxtrades');
-  var ml  = document.getElementById('rule-input-maxlosses');
-  var ms  = document.getElementById('rule-input-maxsize');
-  var mst = document.getElementById('rule-select-sizetype');
-  var tg  = document.getElementById('rule-input-mintimegap');
-  var dl  = document.getElementById('rule-input-maxdailyloss');
-
-  if (mt)  { if (!r.maxtrades)   r.maxtrades   = {}; r.maxtrades.value    = mt.value; }
-  if (ml)  { if (!r.maxlosses)   r.maxlosses   = {}; r.maxlosses.value    = ml.value; }
-  if (ms)  { if (!r.maxsize)     r.maxsize     = {}; r.maxsize.value      = ms.value; }
-  if (mst) { if (!r.maxsize)     r.maxsize     = {}; r.maxsize.sizeType   = mst.value; }
-  if (tg)  { if (!r.mintimegap)  r.mintimegap  = {}; r.mintimegap.value   = tg.value; }
-  if (dl)  { if (!r.maxdailyloss)r.maxdailyloss= {}; r.maxdailyloss.value = dl.value; }
+  var inputMap = {
+    'rule-input-maxtrades':   'maxtrades',
+    'rule-input-maxlosses':   'maxlosses',
+    'rule-input-maxsize':     'maxsize',
+    'rule-input-mintimegap':  'mintimegap',
+    'rule-input-maxdailyloss':'maxdailyloss'
+  };
+  Object.keys(inputMap).forEach(function(inputId) {
+    var inp = document.getElementById(inputId);
+    if (inp) { var key = inputMap[inputId]; if (!r[key]) r[key] = {}; r[key].value = inp.value; }
+  });
+  var stSel = document.getElementById('rule-select-sizetype');
+  if (stSel) { if (!r.maxsize) r.maxsize = {}; r.maxsize.sizeType = stSel.value; }
 
   savePersonalRules(currentAccountId || '', r);
-  _rulesTemp = null; // clear temp so next open reads saved
+  _rulesTemp = null; // clear — next open reads saved state
 
   var btn = document.getElementById('save-rules-btn');
   if (btn) {
@@ -3138,57 +3137,98 @@ function renderRulesTab(el) {
 
   // ── Attach event listeners (no inline JS) ──
 
-  // Toggle rule active/inactive
+  // Helper: snapshot all numeric inputs into _rulesTemp before re-rendering
+  function snapshotInputs() {
+    var r = _rulesTemp || {};
+    var fields = [
+      { id:'rule-input-maxtrades',   key:'maxtrades' },
+      { id:'rule-input-maxlosses',   key:'maxlosses' },
+      { id:'rule-input-maxsize',     key:'maxsize' },
+      { id:'rule-input-mintimegap',  key:'mintimegap' },
+      { id:'rule-input-maxdailyloss',key:'maxdailyloss' }
+    ];
+    fields.forEach(function(f) {
+      var inp = document.getElementById(f.id);
+      if (inp) { if (!r[f.key]) r[f.key] = {}; r[f.key].value = inp.value; }
+    });
+    var stSel2 = document.getElementById('rule-select-sizetype');
+    if (stSel2) { if (!r.maxsize) r.maxsize = {}; r.maxsize.sizeType = stSel2.value; }
+    _rulesTemp = r;
+  }
+
+  function rerender() {
+    snapshotInputs();
+    var tabEl = document.getElementById('disc-tab-content');
+    if (tabEl) renderRulesTab(tabEl);
+  }
+
+  // Toggle rule ON/OFF
   el.querySelectorAll('.rule-toggle').forEach(function(div) {
     div.addEventListener('click', function() {
       var id = div.getAttribute('data-rule-id');
-      var r = _rulesTemp || {};
-      if (!r[id]) r[id] = { active: false };
-      r[id].active = !r[id].active;
-      _rulesTemp = r;
-      var tabEl = document.getElementById('disc-tab-content');
-      if (tabEl) renderRulesTab(tabEl);
+      snapshotInputs();
+      if (!_rulesTemp[id]) _rulesTemp[id] = { active: false };
+      _rulesTemp[id].active = !_rulesTemp[id].active;
+      rerender();
     });
   });
 
-  // Session toggles
+  // Session checkboxes
   el.querySelectorAll('.sess-toggle').forEach(function(div) {
-    div.addEventListener('click', function() {
+    div.addEventListener('click', function(e) {
+      e.stopPropagation();
       var sessId = div.getAttribute('data-sess-id');
-      var r = _rulesTemp || {};
-      if (!r.session) r.session = { active: true, sessions: [] };
-      var idx = r.session.sessions.indexOf(sessId);
-      if (idx === -1) r.session.sessions.push(sessId); else r.session.sessions.splice(idx, 1);
-      _rulesTemp = r;
-      var tabEl = document.getElementById('disc-tab-content');
-      if (tabEl) renderRulesTab(tabEl);
+      snapshotInputs();
+      if (!_rulesTemp.session) _rulesTemp.session = { active: true, sessions: [] };
+      if (!_rulesTemp.session.sessions) _rulesTemp.session.sessions = [];
+      var idx = _rulesTemp.session.sessions.indexOf(sessId);
+      if (idx === -1) _rulesTemp.session.sessions.push(sessId);
+      else _rulesTemp.session.sessions.splice(idx, 1);
+      rerender();
     });
   });
 
-  // No-day toggles
+  // No-day checkboxes
   el.querySelectorAll('.noday-toggle').forEach(function(div) {
-    div.addEventListener('click', function() {
+    div.addEventListener('click', function(e) {
+      e.stopPropagation();
       var dow = parseInt(div.getAttribute('data-dow'));
-      var r = _rulesTemp || {};
-      if (!r.nodays) r.nodays = { active: true, days: [] };
-      var idx = r.nodays.days.indexOf(dow);
-      if (idx === -1) r.nodays.days.push(dow); else r.nodays.days.splice(idx, 1);
-      _rulesTemp = r;
-      var tabEl = document.getElementById('disc-tab-content');
-      if (tabEl) renderRulesTab(tabEl);
+      snapshotInputs();
+      if (!_rulesTemp.nodays) _rulesTemp.nodays = { active: true, days: [] };
+      if (!_rulesTemp.nodays.days) _rulesTemp.nodays.days = [];
+      var idx = _rulesTemp.nodays.days.indexOf(dow);
+      if (idx === -1) _rulesTemp.nodays.days.push(dow);
+      else _rulesTemp.nodays.days.splice(idx, 1);
+      rerender();
     });
   });
 
-  // Size type select
+  // Size type select — snapshot only, no rerender
   var stSel = el.querySelector('#rule-select-sizetype');
   if (stSel) {
     stSel.addEventListener('change', function() {
-      var r = _rulesTemp || {};
-      if (!r.maxsize) r.maxsize = {};
-      r.maxsize.sizeType = stSel.value;
-      _rulesTemp = r;
+      if (!_rulesTemp.maxsize) _rulesTemp.maxsize = {};
+      _rulesTemp.maxsize.sizeType = stSel.value;
     });
   }
+
+  // Numeric inputs — update _rulesTemp on change/input but don't rerender
+  var inputMap = {
+    'rule-input-maxtrades':   'maxtrades',
+    'rule-input-maxlosses':   'maxlosses',
+    'rule-input-maxsize':     'maxsize',
+    'rule-input-mintimegap':  'mintimegap',
+    'rule-input-maxdailyloss':'maxdailyloss'
+  };
+  Object.keys(inputMap).forEach(function(inputId) {
+    var inp = el.querySelector('#' + inputId);
+    if (!inp) return;
+    inp.addEventListener('input', function() {
+      var key = inputMap[inputId];
+      if (!_rulesTemp[key]) _rulesTemp[key] = {};
+      _rulesTemp[key].value = inp.value;
+    });
+  });
 }
 
 // CHECKLIST TAB
