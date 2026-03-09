@@ -1424,148 +1424,384 @@ async function loadAccountData(id, silent) {
   var moodClr2    = todayMood?(todayMood.level==='green'?'var(--green)':todayMood.level==='yellow'?'var(--amber)':'var(--red)'):'var(--text3)';
   var moodLabel2  = todayMood?(todayMood.level==='green'?'🟢 Green Day':todayMood.level==='yellow'?'🟡 Yellow Day':'🔴 Red Day'):'—';
 
-  el.innerHTML = '<div class="fade-in">' +
-  coachAlertHtml +
+  // ── Precompute everything needed ──
+  var today     = new Date().toISOString().slice(0,10);
+  var ms        = calcMentalScore(today);
+  var mindData  = calcDailyMindScore(today);
+  var execData  = calcDailyExecutionScore(today);
+  var discData  = calcDailyDisciplineScore(today);
 
-  '<div style="display:grid;grid-template-columns:180px 1fr 1fr;gap:12px;margin-bottom:12px;align-items:stretch">' +
-
-  '<div class="panel" style="padding:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center">' +
-  buildDisciplineRing(disc.score) +
-  '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-top:10px">Discipline Score</div>' +
-  '<div style="font-size:11px;color:'+(disc.score>=60?'var(--green)':disc.score>=40?'var(--amber)':'var(--red)')+';margin-top:4px;font-weight:600">'+disc.lbl+'</div>' +
-  '<div style="display:flex;gap:4px;margin-top:8px;flex-wrap:wrap;justify-content:center">' +
-  [['Clean',disc.counts.clean],['SL moved',disc.counts.moved_sl],['Impulse',disc.counts.impulse+disc.counts.fomo+disc.counts.overtrading]].map(function(r){ return '<span style="font-size:8px;padding:2px 6px;border-radius:9px;background:var(--surface2);color:var(--text3);border:1px solid var(--border)">'+r[0]+' <b style="color:var(--text2)">'+r[1]+'</b></span>'; }).join('') +
-  '</div></div>' +
-
-  '<div class="panel" style="padding:18px;cursor:pointer" onclick="navigateTo(\'mind\')">' +
-  '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Trading Readiness Today</div>' +
-  '<div style="display:flex;align-items:baseline;gap:5px;margin-bottom:10px"><div style="font-size:46px;font-weight:700;color:'+rdColor+';line-height:1;letter-spacing:-2px">'+readiness.score+'</div><div style="font-size:13px;color:var(--text3)">/100</div></div>' +
-  '<div style="height:5px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-bottom:10px"><div style="height:100%;width:'+readiness.score+'%;background:'+rdColor+';border-radius:3px"></div></div>' +
-  '<div style="font-size:10px;color:var(--text2);line-height:1.6;margin-bottom:10px">'+readiness.recommendation+'</div>' +
-  '<div style="display:flex;gap:5px;flex-wrap:wrap">'+readiness.factors.map(function(f){ return '<span style="font-size:8px;padding:2px 8px;border-radius:10px;background:'+f.bg+';color:'+f.color+';border:1px solid '+f.border+'">'+f.label+'</span>'; }).join('')+'</div></div>' +
-
-  '<div class="panel" style="padding:18px">' +
-  '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">Performance</div>' +
-  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">' +
-  '<div><div style="font-size:28px;font-weight:700;color:'+(netPnl>=0?'var(--green)':'var(--red)')+';line-height:1;letter-spacing:-1px">'+pnlSign+'$'+Math.abs(Math.round(netPnl)).toLocaleString()+'</div><div style="font-size:9px;color:var(--text3);margin-top:3px">Net P&L</div></div>' +
-  '<div><div style="font-size:28px;font-weight:700;color:var(--text);line-height:1">'+wr+'%</div><div style="font-size:9px;color:var(--text3);margin-top:3px">Win Rate</div></div>' +
-  '<div><div style="font-size:18px;font-weight:700;color:var(--text)">'+total+'</div><div style="font-size:9px;color:var(--text3);margin-top:2px">Trades</div></div>' +
-  '<div><div style="font-size:18px;font-weight:700;color:'+(pf==='--'||pf==='INF'?'var(--text)':parseFloat(pf)>=1.5?'var(--green)':'var(--red)')+'">'+pf+'</div><div style="font-size:9px;color:var(--text3);margin-top:2px">Profit Factor</div></div>' +
-  '</div>' +
-  (todayMood?'<div style="padding:6px 10px;border-radius:7px;background:'+moodBg2+';border:1px solid '+moodBd2+';font-size:9px;color:'+moodClr2+'">'+moodLabel2+'</div>':'') +
-  (tilt2?'<div style="padding:6px 10px;border-radius:7px;background:var(--red-bg);border:1px solid var(--red-bd);font-size:9px;color:var(--red);margin-top:6px;cursor:pointer" onclick="showTiltAlert(detectTilt(currentTrades))">⚡ '+(tilt2.level==='danger'?'TILT detectado':'Riesgo de tilt')+' — ver detalle</div>':'') +
-  '</div></div>' +
-
-  // Mental Score + Execution cards (new row)
-  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">' +
-
-  // Mental Score card
-  (function() {
-    var ms = calcMentalScore();
-    var dColor = ms.discScore>=75?'var(--green)':ms.discScore>=50?'var(--amber)':'var(--red)';
-    var mColor = ms.mindScore>=75?'var(--green)':ms.mindScore>=50?'var(--amber)':'var(--red)';
-    var eColor = ms.execScore!==null?(ms.execScore>=75?'var(--green)':ms.execScore>=50?'var(--amber)':'var(--red)'):'var(--text3)';
-    return '<div class="panel" style="padding:18px;cursor:pointer" onclick="navigateTo(\'discipline\')">'
-      + '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">Mental Score Hoy</div>'
-      + '<div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">'
-      + '<div style="font-size:48px;font-weight:800;color:'+ms.color+';line-height:1">'+ms.total+'</div>'
-      + '<div><div style="font-size:12px;color:var(--text2);font-weight:600">'+ms.label+'</div>'
-      + '<div style="height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;margin-top:6px;width:120px">'
-      + '<div style="height:100%;width:'+ms.total+'%;background:'+ms.color+';border-radius:2px"></div></div></div></div>'
-      + '<div style="display:flex;flex-direction:column;gap:6px">'
-      + '<div style="display:flex;justify-content:space-between;align-items:center">'
-      + '<span style="font-size:10px;color:var(--text3)">Disciplina <span style="font-size:8px">(40%)</span></span>'
-      + '<span style="font-size:11px;font-weight:700;color:'+dColor+'">'+ms.discScore+'</span></div>'
-      + '<div style="display:flex;justify-content:space-between;align-items:center">'
-      + '<span style="font-size:10px;color:var(--text3)">Mind <span style="font-size:8px">(35%)</span></span>'
-      + '<span style="font-size:11px;font-weight:700;color:'+mColor+'">'+ms.mindScore+'</span></div>'
-      + '<div style="display:flex;justify-content:space-between;align-items:center">'
-      + '<span style="font-size:10px;color:var(--text3)">Ejecucion <span style="font-size:8px">(25%)</span></span>'
-      + '<span style="font-size:11px;font-weight:700;color:'+eColor+'">'+(ms.execScore!==null?ms.execScore:'—')+'</span></div>'
-      + '</div></div>';
-  })() +
-
-  // Execution card
-  (function() {
-    var ex = calcDailyExecutionScore();
-    if (!ex.hasTrades) {
-      return '<div class="panel" style="padding:18px">'
-        + '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">Ejecucion Hoy</div>'
-        + '<div style="font-size:11px;color:var(--text3);padding:20px 0;text-align:center">Sin trades hoy</div>'
-        + '</div>';
+  // Previous trading day (up to 4 days back)
+  var prevDay = null;
+  for (var pd = 1; pd <= 4; pd++) {
+    var d2 = new Date(); d2.setDate(d2.getDate() - pd);
+    var d2s = d2.toISOString().slice(0,10);
+    if (trades.some(function(t){ return t.entry_time && t.entry_time.startsWith(d2s); })) {
+      prevDay = d2s; break;
     }
-    var eColor = ex.total>=75?'var(--green)':ex.total>=50?'var(--amber)':'var(--red)';
-    return '<div class="panel" style="padding:18px">'
-      + '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">Ejecucion Hoy</div>'
-      + '<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">'
-      + '<div style="font-size:48px;font-weight:800;color:'+eColor+';line-height:1">'+ex.total+'</div>'
-      + '<div><div style="font-size:11px;color:var(--text2);font-weight:600">'+ex.label+'</div>'
-      + '<div style="font-size:9px;color:var(--text3);margin-top:2px">'+ex.tradeCount+' trade'+(ex.tradeCount!==1?'s':'')+' hoy</div></div></div>'
-      + '<div style="display:flex;flex-direction:column;gap:7px">'
-      + '<div><div style="display:flex;justify-content:space-between;margin-bottom:3px">'
-      + '<span style="font-size:9px;color:var(--text3)">R:R logrado</span>'
-      + '<span style="font-size:9px;font-weight:600;color:var(--text2)">'+ex.rrPts+' / 40</span></div>'
-      + '<div style="height:3px;background:var(--surface2);border-radius:2px;overflow:hidden">'
-      + '<div style="height:100%;width:'+Math.round(ex.rrPts/40*100)+'%;background:'+(ex.rrPts>=30?'var(--green)':ex.rrPts>=15?'var(--amber)':'var(--red)')+';border-radius:2px"></div></div></div>'
-      + '<div><div style="display:flex;justify-content:space-between;margin-bottom:3px">'
-      + '<span style="font-size:9px;color:var(--text3)">Tipo de entrada</span>'
-      + '<span style="font-size:9px;font-weight:600;color:var(--text2)">'+ex.entryPts+' / 35</span></div>'
-      + '<div style="height:3px;background:var(--surface2);border-radius:2px;overflow:hidden">'
-      + '<div style="height:100%;width:'+Math.round(ex.entryPts/35*100)+'%;background:'+(ex.entryPts>=28?'var(--green)':ex.entryPts>=15?'var(--amber)':'var(--red)')+';border-radius:2px"></div></div></div>'
-      + '<div><div style="display:flex;justify-content:space-between;margin-bottom:3px">'
-      + '<span style="font-size:9px;color:var(--text3)">Resultado</span>'
-      + '<span style="font-size:9px;font-weight:600;color:var(--text2)">'+ex.resultPts+' / 25</span></div>'
-      + '<div style="height:3px;background:var(--surface2);border-radius:2px;overflow:hidden">'
-      + '<div style="height:100%;width:'+Math.round(ex.resultPts/25*100)+'%;background:'+(ex.resultPts>=20?'var(--green)':ex.resultPts>=12?'var(--amber)':'var(--red)')+';border-radius:2px"></div></div></div>'
-      + '</div></div>';
-  })() +
+  }
 
+  var todayTrades = trades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(today); });
+  var prevTrades  = prevDay ? trades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(prevDay); }) : [];
+
+  // P&L helpers
+  function dayPnl(ts)  { return ts.reduce(function(s,t){ return s+(t.pnl||0); }, 0); }
+  function dayWR(ts)   { if (!ts.length) return null; return Math.round(ts.filter(function(t){ return (t.pnl||0)>0; }).length/ts.length*100); }
+
+  var todayPnl   = dayPnl(todayTrades);
+  var prevPnl    = dayPnl(prevTrades);
+  var todayWR    = dayWR(todayTrades);
+  var prevWR     = dayWR(prevTrades);
+
+  // Week trades (Mon–today)
+  var weekStart = new Date(); weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
+  var weekStartStr = weekStart.toISOString().slice(0,10);
+  var weekTrades = trades.filter(function(t){ return t.entry_time && t.entry_time.slice(0,10) >= weekStartStr; });
+  var weekPnl    = dayPnl(weekTrades);
+
+  // Best/worst day this week
+  var weekDayMap = {};
+  weekTrades.forEach(function(t){
+    var d = t.entry_time.slice(0,10);
+    weekDayMap[d] = (weekDayMap[d]||0) + (t.pnl||0);
+  });
+  var weekDayVals = Object.values(weekDayMap);
+  var bestDayW  = weekDayVals.length ? Math.max.apply(null,weekDayVals) : null;
+  var worstDayW = weekDayVals.length ? Math.min.apply(null,weekDayVals) : null;
+
+  // Avg win / avg loss (all time)
+  var wins  = trades.filter(function(t){ return (t.pnl||0)>0; });
+  var losses= trades.filter(function(t){ return (t.pnl||0)<0; });
+  var avgWin = wins.length  ? Math.round(wins.reduce(function(s,t){return s+(t.pnl||0);},0)/wins.length)   : 0;
+  var avgLoss= losses.length? Math.round(Math.abs(losses.reduce(function(s,t){return s+(t.pnl||0);},0)/losses.length)) : 0;
+
+  // Mistakes (today + prev day)
+  function getMistakes(ts) {
+    var m = [];
+    ts.forEach(function(t){
+      var tag = t.discipline_tag||'clean';
+      if (tag !== 'clean') m.push({ tag:tag, pnl:t.pnl||0, ticker:t.ticker||'', time:(t.entry_time||'').slice(11,16) });
+    });
+    // Revenge
+    var sorted2 = ts.slice().sort(function(a,b){ return new Date(a.entry_time)-new Date(b.entry_time); });
+    for (var ri=1;ri<sorted2.length;ri++){
+      var rp=sorted2[ri-1],rc=sorted2[ri];
+      if ((rp.pnl||0)<0){
+        var rg=(new Date(rc.entry_time)-new Date(rp.exit_time||rp.entry_time))/60000;
+        if (rg>=0&&rg<5) m.push({tag:'revenge',pnl:rc.pnl||0,ticker:rc.ticker||'',time:(rc.entry_time||'').slice(11,16)});
+      }
+    }
+    return m;
+  }
+
+  // Positives (today + prev day)
+  function getPositives(ts) {
+    var p = [];
+    var cleanTs = ts.filter(function(t){ return (t.discipline_tag||'clean')==='clean'; });
+    if (cleanTs.length) p.push({ icon:'✅', label: cleanTs.length + ' trade'+(cleanTs.length>1?'s':'')+' clean' });
+    var winTs = ts.filter(function(t){ return (t.pnl||0)>0; });
+    if (winTs.length === ts.length && ts.length > 0) p.push({ icon:'🏆', label:'Dia 100% ganador' });
+    else if (winTs.length >= 2) p.push({ icon:'📈', label: winTs.length + ' trades ganadores' });
+    var wr2 = dayWR(ts);
+    if (wr2 !== null && wr2 >= 70 && ts.length >= 3) p.push({ icon:'🎯', label:'Win rate '+wr2+'% hoy' });
+    // Check no violations
+    var rulesObj = getPersonalRules(currentAccountId||'');
+    var viols = checkRuleViolations(rulesObj, ts);
+    if (viols.length===0 && Object.keys(rulesObj).some(function(k){return rulesObj[k]&&rulesObj[k].active;}))
+      p.push({ icon:'🛡', label:'0 reglas incumplidas' });
+    return p;
+  }
+
+  var todayMistakes  = getMistakes(todayTrades);
+  var prevMistakes   = getMistakes(prevTrades);
+  var todayPositives = getPositives(todayTrades);
+  var prevPositives  = getPositives(prevTrades);
+
+  // Color day recos
+  var moodLevel3 = todayMood ? todayMood.level : null;
+  var colorDayRecos = {
+    green: [
+      '✅ Estado mental óptimo — puedes operar con confianza.',
+      '🎯 Respeta tu plan y tus reglas, el día pinta bien.',
+      '⚡ No sobreoperes por exceso de confianza.'
+    ],
+    yellow: [
+      '⚠️ Día amarillo — opera con precaución y tamaño reducido.',
+      '📋 Revisa el checklist antes de cada trade.',
+      '🛑 Si llegas a 2 pérdidas seguidas, para el día.'
+    ],
+    red: [
+      '🔴 Red Day — considera no operar hoy.',
+      '📵 Si operas, reduce el tamaño al mínimo posible.',
+      '🧘 Trabaja primero tu estado mental antes de entrar al mercado.'
+    ],
+    null: [
+      '📋 No has hecho el mood check de hoy.',
+      '🧠 Completa el check antes de operar — 2 minutos que pueden salvarte el día.',
+      '⚡ Sin mood check activo, tu gestión emocional es ciega.'
+    ]
+  };
+  var recos = colorDayRecos[moodLevel3] || colorDayRecos[null];
+  var dayColor   = moodLevel3==='green'?'var(--green)':moodLevel3==='yellow'?'var(--amber)':moodLevel3==='red'?'var(--red)':'var(--text3)';
+  var dayBg      = moodLevel3==='green'?'rgba(90,158,114,0.08)':moodLevel3==='yellow'?'rgba(158,128,80,0.08)':moodLevel3==='red'?'rgba(158,90,90,0.08)':'var(--surface)';
+  var dayBorder  = moodLevel3==='green'?'rgba(90,158,114,0.3)':moodLevel3==='yellow'?'rgba(158,128,80,0.3)':moodLevel3==='red'?'rgba(158,90,90,0.3)':'var(--border)';
+  var dayEmoji   = moodLevel3==='green'?'🟢':moodLevel3==='yellow'?'🟡':moodLevel3==='red'?'🔴':'⚪';
+  var dayLabel   = moodLevel3==='green'?'GREEN DAY':moodLevel3==='yellow'?'YELLOW DAY':moodLevel3==='red'?'RED DAY':'SIN MOOD CHECK';
+
+  // Checklist status
+  var clToday    = (currentChecklistSessions||[]).find(function(s){ return s.session_date===today; });
+  var rulesObj2  = getPersonalRules(currentAccountId||'');
+  var hasRules   = Object.keys(rulesObj2).some(function(k){ return rulesObj2[k]&&rulesObj2[k].active; });
+
+  // Equity curve (week)
+  function miniEquity(ts) {
+    var sorted3 = ts.slice().sort(function(a,b){ return new Date(a.entry_time)-new Date(b.entry_time); });
+    var cum = 0; var pts = [0];
+    sorted3.forEach(function(t){ cum += (t.pnl||0); pts.push(cum); });
+    if (pts.length < 2) return '<div style="font-size:10px;color:var(--text3);text-align:center;padding:20px 0">Sin datos</div>';
+    var mn = Math.min.apply(null,pts), mx = Math.max.apply(null,pts);
+    var range = mx - mn || 1;
+    var W=240, H=60;
+    var xs = pts.map(function(_,i){ return Math.round(i/(pts.length-1)*W); });
+    var ys = pts.map(function(v){ return Math.round(H - (v-mn)/range*H); });
+    var path = xs.map(function(x,i){ return (i===0?'M':'L')+x+' '+ys[i]; }).join(' ');
+    var fill = path + ' L'+W+' '+H+' L0 '+H+' Z';
+    var clr  = cum>=0?'var(--green)':'var(--red)';
+    return '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:60px">'
+      +'<defs><linearGradient id="eg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+clr+'" stop-opacity=".25"/><stop offset="100%" stop-color="'+clr+'" stop-opacity="0"/></linearGradient></defs>'
+      +'<path d="'+fill+'" fill="url(#eg2)"/>'
+      +'<path d="'+path+'" fill="none" stroke="'+clr+'" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>'
+      +'</svg>';
+  }
+
+  function fmt(n, sign) {
+    var s = (sign&&n>0?'+':'') + (n<0?'-':'') + '$' + Math.abs(Math.round(n)).toLocaleString();
+    return s;
+  }
+
+  var tagLabels2 = {clean:'Clean',moved_sl:'Moved SL',scaled_in:'Scaled in',no_confirmation:'No confirm',overtrading:'Overtrade',impulse:'Impulse',fomo:'FOMO',revenge:'Revenge'};
+
+  // Disc breakdown (all trades)
+  var discCounts2 = {clean:0,moved_sl:0,scaled_in:0,impulse:0,no_confirmation:0,overtrading:0,fomo:0};
+  trades.forEach(function(t){ var tg=t.discipline_tag||'clean'; if(discCounts2[tg]!==undefined) discCounts2[tg]++; });
+  var totalTagged2 = trades.length || 1;
+
+  el.innerHTML = '<div class="fade-in" style="padding:16px;display:flex;flex-direction:column;gap:12px">' +
+
+  // ── ROW 0: Mental Score banner ──
+  '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px 24px;display:flex;align-items:center;gap:24px">' +
+  '<div style="flex-shrink:0;text-align:center">' +
+  '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Mental Score</div>' +
+  '<div style="font-size:56px;font-weight:800;color:'+ms.color+';line-height:1;letter-spacing:-2px">'+ms.total+'</div>' +
+  '<div style="font-size:10px;color:var(--text3);margin-top:2px">/100</div>' +
   '</div>' +
-
-  '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px">' +
-
-  '<div class="panel" style="padding:18px">' +
-  '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px"><span style="color:var(--red)">⚠</span> Biggest Mistakes</div>' +
-  (bigMistakes.length?bigMistakes.map(function(m,i){ return '<div style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid '+(i<bigMistakes.length-1?'var(--border)':'transparent')+'"><span style="font-size:11px;font-weight:700;color:var(--text3);min-width:16px">'+(i+1)+'.</span><div style="flex:1"><div style="font-size:10px;color:var(--text);font-weight:500">'+m.label+'</div><div style="font-size:9px;color:var(--text3);margin-top:2px">'+m.detail+'</div></div></div>'; }).join(''):'<div style="font-size:10px;color:var(--green);padding:8px 0">✓ Sin errores significativos</div>') +
-  '</div>' +
-
-  '<div class="panel" style="padding:18px">' +
-  '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px"><span style="color:var(--green)">↗</span> Discipline Progress</div>' +
-  (discProg.length>=2?discProg.map(function(m,i){ var prev=i>0?discProg[i-1].score:null; var delta=prev!==null?m.score-prev:null; var dStr=delta!==null?(delta>=0?'<span style="color:var(--green);font-size:9px;min-width:24px">+'+delta+'</span>':'<span style="color:var(--red);font-size:9px;min-width:24px">'+delta+'</span>'):'<span style="min-width:24px"></span>'; return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid '+(i<discProg.length-1?'var(--border)':'transparent')+'"><div style="font-size:9px;color:var(--text3);min-width:52px">'+m.month+'</div><div style="flex:1;height:4px;background:var(--surface2);border-radius:2px;overflow:hidden"><div style="height:100%;width:'+m.score+'%;background:'+(m.score>=60?'var(--green)':m.score>=40?'var(--amber)':'var(--red)')+';border-radius:2px"></div></div><div style="font-size:10px;font-weight:700;color:'+(m.score>=60?'var(--green)':m.score>=40?'var(--amber)':'var(--red)')+';min-width:24px;text-align:right">'+m.score+'</div>'+dStr+'</div>'; }).join(''):'<div style="font-size:10px;color:var(--text3);padding:8px 0">Opera más para ver tu progreso mensual</div>') +
-  '</div>' +
-
-  '<div class="panel" style="padding:18px">' +
-  '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px"><span style="color:var(--amber)">★</span> Achievements</div>' +
-  (badges.earned.length?badges.earned.slice(0,4).map(function(b){ return '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-size:16px">'+b.emoji+'</span><div><div style="font-size:10px;color:var(--text);font-weight:500">'+b.name+'</div><div style="font-size:8px;color:var(--text3)">'+b.desc+'</div></div></div>'; }).join('') + (badges.next?'<div style="margin-top:8px;padding:8px;background:var(--surface2);border-radius:7px;border:1px dashed var(--border2)"><div style="font-size:8px;color:var(--text3);margin-bottom:2px">PRÓXIMO</div><div style="font-size:9px;color:var(--text2)">'+badges.next.emoji+' '+badges.next.name+' — '+badges.next.progress+'</div></div>':''):'<div style="font-size:10px;color:var(--text3);padding:8px 0">Opera más trades para desbloquear logros</div>') +
+  '<div style="flex:1;min-width:0">' +
+  '<div style="height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-bottom:10px">' +
+  '<div style="height:100%;width:'+ms.total+'%;background:'+ms.color+';border-radius:3px;transition:width .6s"></div></div>' +
+  '<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px">'+ms.label+'</div>' +
+  '<div style="display:flex;gap:16px;flex-wrap:wrap">' +
+  '<span style="font-size:11px;color:var(--text3)">Disciplina <b style="color:'+(ms.discScore>=75?'var(--green)':ms.discScore>=50?'var(--amber)':'var(--red)')+'">'+ms.discScore+'</b></span>' +
+  '<span style="font-size:11px;color:var(--text3)">Mind <b style="color:'+(ms.mindScore>=75?'var(--green)':ms.mindScore>=50?'var(--amber)':'var(--red)')+'">'+ms.mindScore+'</b></span>' +
+  '<span style="font-size:11px;color:var(--text3)">Ejecución <b style="color:'+(ms.execScore!==null?(ms.execScore>=75?'var(--green)':ms.execScore>=50?'var(--amber)':'var(--red)'):'var(--text3)')+'">'+( ms.execScore!==null?ms.execScore:'—')+'</b></span>' +
+  '</div></div>' +
+  '<div style="display:flex;gap:10px;flex-shrink:0">' +
+  '<div style="text-align:center;padding:10px 14px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">' +
+  '<div style="font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px">Checklist</div>' +
+  '<div style="font-size:11px;font-weight:700;color:'+(clToday?'var(--green)':'var(--red)')+'">'+( clToday?'✓ Hecho':'✗ Pendiente')+'</div></div>' +
+  '<div style="text-align:center;padding:10px 14px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">' +
+  '<div style="font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px">Reglas</div>' +
+  '<div style="font-size:11px;font-weight:700;color:'+(hasRules?'var(--green)':'var(--amber)')+'">'+( hasRules?'✓ Activas':'Sin reglas')+'</div></div>' +
   '</div></div>' +
 
-  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">' +
-  '<div class="panel"><div class="panel-head"><span class="panel-title">Equity Curve</span><span class="panel-cap" style="color:'+(netPnl>=0?'var(--green)':'var(--red)')+'">'+pnlSign+'$'+Math.abs(Math.round(netPnl)).toLocaleString()+'</span></div><div style="padding:14px 18px;height:100px">'+equitySvg+'</div></div>' +
-  '<div class="panel"><div class="panel-head"><span class="panel-title">Account Rules</span></div>'+rulesHtml+'</div>' +
+  // ── ROW 1: Mind · Disciplina · Ejecución ──
+  '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">' +
+
+  // Mind
+  '<div class="panel" style="padding:16px;cursor:pointer" onclick=\'navigateTo(\'mind\')\'>' +
+  '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Mind</div>' +
+  '<div style="display:flex;align-items:baseline;gap:4px;margin-bottom:8px">' +
+  '<span style="font-size:36px;font-weight:800;color:'+(mindData.total>=75?'var(--green)':mindData.total>=50?'var(--amber)':'var(--red)')+'">'+mindData.total+'</span>' +
+  '<span style="font-size:10px;color:var(--text3)">/100</span></div>' +
+  '<div style="font-size:10px;color:var(--text2);font-weight:600;margin-bottom:8px">'+mindData.label+'</div>' +
+  '<div style="display:flex;flex-direction:column;gap:4px">' +
+  '<div style="display:flex;justify-content:space-between"><span style="font-size:9px;color:var(--text3)">Mood</span><span style="font-size:9px;color:var(--text2)">'+mindData.moodPts+'/40</span></div>' +
+  '<div style="display:flex;justify-content:space-between"><span style="font-size:9px;color:var(--text3)">Emoción</span><span style="font-size:9px;color:var(--text2)">'+(mindData.emotionPts!==null?mindData.emotionPts+'/40':'—')+'</span></div>' +
+  '<div style="display:flex;justify-content:space-between"><span style="font-size:9px;color:var(--text3)">Comportamiento</span><span style="font-size:9px;color:var(--text2)">'+mindData.behaviorPts+'/20</span></div>' +
+  '</div></div>' +
+
+  // Disciplina
+  '<div class="panel" style="padding:16px;cursor:pointer" onclick=\'navigateTo(\'discipline\')\'>' +
+  '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Disciplina</div>' +
+  '<div style="display:flex;align-items:baseline;gap:4px;margin-bottom:8px">' +
+  '<span style="font-size:36px;font-weight:800;color:'+(discData.total>=75?'var(--green)':discData.total>=50?'var(--amber)':'var(--red)')+'">'+discData.total+'</span>' +
+  '<span style="font-size:10px;color:var(--text3)">/100</span></div>' +
+  '<div style="font-size:10px;color:var(--text2);font-weight:600;margin-bottom:8px">'+discData.label+'</div>' +
+  '<div style="display:flex;flex-direction:column;gap:4px">' +
+  '<div style="display:flex;justify-content:space-between"><span style="font-size:9px;color:var(--text3)">Rules</span><span style="font-size:9px;color:var(--text2)">'+discData.rulesPts+'/35</span></div>' +
+  '<div style="display:flex;justify-content:space-between"><span style="font-size:9px;color:var(--text3)">Checklist</span><span style="font-size:9px;color:var(--text2)">'+discData.checklistPts+'/35</span></div>' +
+  '<div style="display:flex;justify-content:space-between"><span style="font-size:9px;color:var(--text3)">Operativa</span><span style="font-size:9px;color:var(--text2)">'+(discData.tagPts!==null?discData.tagPts+'/30':'—')+'</span></div>' +
+  '</div></div>' +
+
+  // Ejecución
+  '<div class="panel" style="padding:16px">' +
+  '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Ejecución</div>' +
+  (execData.hasTrades ?
+    '<div style="display:flex;align-items:baseline;gap:4px;margin-bottom:8px">' +
+    '<span style="font-size:36px;font-weight:800;color:'+(execData.total>=75?'var(--green)':execData.total>=50?'var(--amber)':'var(--red)')+'">'+execData.total+'</span>' +
+    '<span style="font-size:10px;color:var(--text3)">/100</span></div>' +
+    '<div style="font-size:10px;color:var(--text2);font-weight:600;margin-bottom:8px">'+execData.label+'</div>' +
+    '<div style="display:flex;flex-direction:column;gap:4px">' +
+    '<div style="display:flex;justify-content:space-between"><span style="font-size:9px;color:var(--text3)">R:R</span><span style="font-size:9px;color:var(--text2)">'+execData.rrPts+'/40</span></div>' +
+    '<div style="display:flex;justify-content:space-between"><span style="font-size:9px;color:var(--text3)">Entrada</span><span style="font-size:9px;color:var(--text2)">'+execData.entryPts+'/35</span></div>' +
+    '<div style="display:flex;justify-content:space-between"><span style="font-size:9px;color:var(--text3)">Resultado</span><span style="font-size:9px;color:var(--text2)">'+execData.resultPts+'/25</span></div>' +
+    '</div>'
+    :
+    '<div style="font-size:11px;color:var(--text3);padding:24px 0;text-align:center">Sin trades hoy</div>'
+  ) +
   '</div>' +
 
-  '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px">' +
+  '</div>' +
+
+  // ── ROW 2: Color Day banner ──
+  '<div style="background:'+dayBg+';border:1px solid '+dayBorder+';border-left:4px solid '+dayColor+';border-radius:10px;padding:16px 20px;display:flex;align-items:flex-start;gap:20px">' +
+  '<div style="flex-shrink:0">' +
+  '<div style="font-size:28px;line-height:1">'+dayEmoji+'</div>' +
+  '<div style="font-size:9px;color:'+dayColor+';font-weight:800;text-transform:uppercase;letter-spacing:.8px;margin-top:4px;white-space:nowrap">'+dayLabel+'</div>' +
+  '</div>' +
+  '<div style="flex:1;display:flex;flex-direction:column;gap:5px">' +
+  recos.map(function(r){
+    return '<div style="font-size:11px;color:var(--text2);line-height:1.5">'+r+'</div>';
+  }).join('') +
+  '</div>' +
+  '<div style="flex-shrink:0;display:flex;flex-direction:column;gap:6px;text-align:right">' +
+  '<div style="font-size:9px;color:var(--text3)">Checklist <span style="color:'+(clToday?'var(--green)':'var(--red)')+'">'+( clToday?'✓':'✗')+'</span></div>' +
+  '<div style="font-size:9px;color:var(--text3)">Mood check <span style="color:'+(moodLevel3?'var(--green)':'var(--red)')+'">'+( moodLevel3?'✓':'✗')+'</span></div>' +
+  '<div style="font-size:9px;color:var(--text3)">Reglas <span style="color:'+(hasRules?'var(--green)':'var(--amber)')+'">'+( hasRules?'✓':'Sin config')+'</span></div>' +
+  '</div></div>' +
+
+  // ── ROW 3: Mistakes · Positivos · Performance ──
+  '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">' +
+
+  // Mistakes
+  '<div class="panel" style="padding:16px">' +
+  '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px"><span style="color:var(--red)">⚠</span> Mistakes</div>' +
+  (function(){
+    var html2 = '';
+    function mistakeRow(m, label) {
+      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)">' +
+        '<div><div style="font-size:9px;color:var(--text3)">'+label+'</div>' +
+        '<div style="font-size:10px;color:var(--text);font-weight:500">'+(tagLabels2[m.tag]||m.tag)+(m.ticker?' · '+m.ticker:'')+'</div></div>' +
+        '<span style="font-size:10px;font-weight:700;color:'+(m.pnl>=0?'var(--green)':'var(--red)')+'">'+fmt(m.pnl,true)+'</span></div>';
+    }
+    todayMistakes.slice(0,3).forEach(function(m){ html2 += mistakeRow(m,'Hoy'); });
+    prevMistakes.slice(0,2).forEach(function(m){ html2 += mistakeRow(m,'Ayer'); });
+    if (!html2) html2 = '<div style="font-size:10px;color:var(--green);padding:8px 0">✓ Sin errores registrados</div>';
+    return html2;
+  })() +
+  '</div>' +
+
+  // Positivos
+  '<div class="panel" style="padding:16px">' +
+  '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px"><span style="color:var(--green)">↗</span> Positivos</div>' +
+  (function(){
+    var html3 = '';
+    function posRow(p, label) {
+      return '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)">' +
+        '<span style="font-size:14px">'+p.icon+'</span>' +
+        '<div><div style="font-size:9px;color:var(--text3)">'+label+'</div>' +
+        '<div style="font-size:10px;color:var(--text);font-weight:500">'+p.label+'</div></div></div>';
+    }
+    todayPositives.slice(0,3).forEach(function(p){ html3 += posRow(p,'Hoy'); });
+    prevPositives.slice(0,2).forEach(function(p){ html3 += posRow(p,'Ayer'); });
+    if (!html3) html3 = '<div style="font-size:10px;color:var(--text3);padding:8px 0">Opera para ver tus puntos positivos</div>';
+    return html3;
+  })() +
+  '</div>' +
+
+  // Performance hoy vs ayer
+  '<div class="panel" style="padding:16px">' +
+  '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Performance</div>' +
+  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">' +
+  // Hoy
+  '<div style="background:var(--surface2);border-radius:7px;padding:10px">' +
+  '<div style="font-size:8px;color:var(--text3);text-transform:uppercase;margin-bottom:6px">Hoy</div>' +
+  '<div style="font-size:20px;font-weight:800;color:'+(todayPnl>=0?'var(--green)':'var(--red)')+'">'+fmt(todayPnl,true)+'</div>' +
+  '<div style="font-size:9px;color:var(--text3);margin-top:3px">'+(todayWR!==null?'WR '+todayWR+'%':'—')+' · '+todayTrades.length+' trades</div></div>' +
+  // Ayer
+  '<div style="background:var(--surface2);border-radius:7px;padding:10px">' +
+  '<div style="font-size:8px;color:var(--text3);text-transform:uppercase;margin-bottom:6px">'+(prevDay?'Ayer':'Sin datos')+'</div>' +
+  '<div style="font-size:20px;font-weight:800;color:'+(prevPnl>=0?'var(--green)':'var(--red)')+'">'+( prevDay?fmt(prevPnl,true):'—')+'</div>' +
+  '<div style="font-size:9px;color:var(--text3);margin-top:3px">'+(prevDay&&prevWR!==null?'WR '+prevWR+'%':'—')+' · '+prevTrades.length+' trades</div></div>' +
+  '</div>' +
+  // Net PnL all
+  '<div style="padding:8px 0;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">' +
+  '<span style="font-size:9px;color:var(--text3)">Net P&L total</span>' +
+  '<span style="font-size:13px;font-weight:800;color:'+(netPnl>=0?'var(--green)':'var(--red)')+'">'+fmt(netPnl,true)+'</span></div>' +
+  '<div style="display:flex;justify-content:space-between;align-items:center">' +
+  '<span style="font-size:9px;color:var(--text3)">Win rate global</span>' +
+  '<span style="font-size:12px;font-weight:700;color:var(--text)">'+wr+'%</span></div>' +
+  '</div>' +
+
+  '</div>' +
+
+  // ── ROW 4: Equity curve · Achievements ──
+  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' +
+
+  '<div class="panel" style="padding:16px">' +
+  '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Equity Curve — Semana</div>' +
+  miniEquity(weekTrades) +
+  '<div style="display:flex;justify-content:space-between;margin-top:6px">' +
+  '<span style="font-size:9px;color:var(--text3)">P&L semana</span>' +
+  '<span style="font-size:11px;font-weight:700;color:'+(weekPnl>=0?'var(--green)':'var(--red)')+'">'+fmt(weekPnl,true)+'</span></div>' +
+  '</div>' +
+
+  '<div class="panel" style="padding:16px">' +
+  '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px"><span style="color:var(--amber)">★</span> Achievements</div>' +
+  (badges.earned.length?badges.earned.slice(0,4).map(function(b){
+    return '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)">' +
+      '<span style="font-size:16px">'+b.emoji+'</span>' +
+      '<div><div style="font-size:10px;color:var(--text);font-weight:500">'+b.name+'</div>' +
+      '<div style="font-size:8px;color:var(--text3)">'+b.desc+'</div></div></div>';
+  }).join(''):'<div style="font-size:10px;color:var(--text3);padding:8px 0">Opera más trades para desbloquear logros</div>') +
+  (badges.next?'<div style="margin-top:8px;padding:7px;background:var(--surface2);border-radius:7px;border:1px dashed var(--border2)">' +
+    '<div style="font-size:8px;color:var(--text3);margin-bottom:2px">PRÓXIMO</div>' +
+    '<div style="font-size:9px;color:var(--text2)">'+badges.next.emoji+' '+badges.next.name+' — '+badges.next.progress+'</div></div>':'') +
+  '</div>' +
+
+  '</div>' +
+
+  // ── ROW 5: métricas ──
+  '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px">' +
   '<div class="metric"><div class="m-label">Avg. Win</div><div class="m-val pos">$'+avgWin+'</div></div>' +
-  '<div class="metric"><div class="m-label">Avg. Loss</div><div class="m-val neg">$'+avgLoss+'</div></div>' +
-  '<div class="metric"><div class="m-label">Best Day</div><div class="m-val pos">'+(bestDay!==null?'+$'+Math.round(bestDay).toLocaleString():'--')+'</div></div>' +
-  '<div class="metric"><div class="m-label">Worst Day</div><div class="m-val neg">'+(worstDay!==null?'-$'+Math.abs(Math.round(worstDay)).toLocaleString():'--')+'</div></div>' +
+  '<div class="metric"><div class="m-label">Avg. Loss</div><div class="m-val neg">-$'+avgLoss+'</div></div>' +
+  '<div class="metric"><div class="m-label">P&L Semana</div><div class="m-val '+(weekPnl>=0?'pos':'neg')+'">'+fmt(weekPnl,true)+'</div></div>' +
+  '<div class="metric"><div class="m-label">P&L Hoy</div><div class="m-val '+(todayPnl>=0?'pos':'neg')+'">'+fmt(todayPnl,true)+'</div></div>' +
   '</div>' +
 
-  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">' +
+  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
+  '<div class="metric"><div class="m-label">Mejor día semana</div><div class="m-val pos">'+(bestDayW!==null?fmt(bestDayW,true):'--')+'</div></div>' +
+  '<div class="metric"><div class="m-label">Peor día semana</div><div class="m-val neg">'+(worstDayW!==null?fmt(worstDayW,false):'--')+'</div></div>' +
+  '</div>' +
+
+  // ── ROW 6: P&L Calendar · Discipline Breakdown ──
+  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' +
+
   '<div class="panel"><div class="panel-head"><span class="panel-title">P&L Calendar</span></div>' +
-  '<div class="cal-hdr">'+['M','T','W','T','F','S','S'].map(function(d){return '<div class="cal-hdr-day">'+d+'</div>';}).join('')+'</div>' +
+  '<div class="cal-hdr">'+['M','T','W','T','F','S','S'].map(function(d){ return '<div class="cal-hdr-day">'+d+'</div>'; }).join('')+'</div>' +
   '<div class="cal-grid">'+calHtml+'</div></div>' +
+
   '<div class="panel"><div class="panel-head"><span class="panel-title">Discipline Breakdown</span></div>' +
   '<div style="padding:14px 18px"><div class="disc-bar"><div class="disc-fill" style="width:'+disc.score+'%;background:'+(disc.score>=60?'var(--green)':disc.score>=40?'var(--amber)':'var(--red)')+'"></div></div></div>' +
   '<div class="disc-rows">' +
-  [['ok','Clean trades',disc.counts.clean],['warn','Moved SL',disc.counts.moved_sl],['bad','Scaled into loss',disc.counts.scaled_in],['bad','Impulse',disc.counts.impulse],['bad','No confirmation',disc.counts.no_confirmation],['warn','Overtrading',disc.counts.overtrading],['bad','FOMO',disc.counts.fomo]].map(function(row){ return '<div class="disc-row"><div class="d-dot '+row[0]+'"></div><div class="d-desc">'+row[1]+'</div><div class="d-val">'+row[2]+'</div></div>'; }).join('') +
-  '</div></div></div>' +
+  [['ok','Clean',discCounts2.clean],['warn','Moved SL',discCounts2.moved_sl],['bad','Scaled in',discCounts2.scaled_in],['bad','Impulse',discCounts2.impulse],['bad','No confirm',discCounts2.no_confirmation],['warn','Overtrade',discCounts2.overtrading],['bad','FOMO',discCounts2.fomo]].map(function(row){
+    return '<div class="disc-row"><div class="d-dot '+row[0]+'"></div><div class="d-desc">'+row[1]+'</div><div class="d-val">'+row[2]+'</div></div>';
+  }).join('') +
+  '</div></div>' +
 
-  '<div class="panel" style="margin-bottom:12px"><div class="panel-head"><span class="panel-title">Recent Trades</span><span class="panel-cap">Last 20</span></div>' +
-  '<div class="table-scroll"><table><thead><tr><th>Ticker</th><th>Side</th><th>P&L</th><th>R:R</th><th>Discipline</th><th>Time</th></tr></thead>' +
-  '<tbody>'+(tradeRows||'<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text3);font-size:11px">No trades yet</td></tr>')+'</tbody></table></div></div>' +
+  '</div>' +
 
-  '</div>';
+  '</div>'; // end fade-in
+
   // Update sidebar PNL
   var pnlEl = document.getElementById('pnl-'+id);
   if (pnlEl) {
