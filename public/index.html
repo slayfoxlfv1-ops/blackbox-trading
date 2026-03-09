@@ -3004,6 +3004,7 @@ function renderRulesTab(el) {
       + (isViolated ? '<span style="font-size:8px;color:var(--red);font-weight:700;background:var(--red-bg);padding:2px 7px;border-radius:8px">INCUMPLIDA</span>' : '')
       + '</div>'
       + '<div style="font-size:10px;color:var(--text3);margin-bottom:12px">' + desc + '</div>'
+      + '<div style="' + (!isActive ? 'opacity:0.4;pointer-events:none;user-select:none;' : '') + '">'
       + cfgHtml
       + '</div>'
       + '<div class="rule-toggle" data-rule-id="' + id + '" style="cursor:pointer;flex-shrink:0;margin-top:2px;user-select:none">'
@@ -3173,13 +3174,13 @@ function renderRulesTab(el) {
     });
   });
 
-  // Session checkboxes
+  // Session checkboxes — only if session rule is active
   el.querySelectorAll('.sess-toggle').forEach(function(div) {
     div.addEventListener('click', function(e) {
       e.stopPropagation();
+      if (!_rulesTemp.session || !_rulesTemp.session.active) return; // blocked if OFF
       var sessId = div.getAttribute('data-sess-id');
       snapshotInputs();
-      if (!_rulesTemp.session) _rulesTemp.session = { active: true, sessions: [] };
       if (!_rulesTemp.session.sessions) _rulesTemp.session.sessions = [];
       var idx = _rulesTemp.session.sessions.indexOf(sessId);
       if (idx === -1) _rulesTemp.session.sessions.push(sessId);
@@ -3188,13 +3189,13 @@ function renderRulesTab(el) {
     });
   });
 
-  // No-day checkboxes
+  // No-day checkboxes — only if nodays rule is active
   el.querySelectorAll('.noday-toggle').forEach(function(div) {
     div.addEventListener('click', function(e) {
       e.stopPropagation();
+      if (!_rulesTemp.nodays || !_rulesTemp.nodays.active) return; // blocked if OFF
       var dow = parseInt(div.getAttribute('data-dow'));
       snapshotInputs();
-      if (!_rulesTemp.nodays) _rulesTemp.nodays = { active: true, days: [] };
       if (!_rulesTemp.nodays.days) _rulesTemp.nodays.days = [];
       var idx = _rulesTemp.nodays.days.indexOf(dow);
       if (idx === -1) _rulesTemp.nodays.days.push(dow);
@@ -3203,16 +3204,16 @@ function renderRulesTab(el) {
     });
   });
 
-  // Size type select — snapshot only, no rerender
+  // Size type select — only if maxsize rule is active
   var stSel = el.querySelector('#rule-select-sizetype');
   if (stSel) {
     stSel.addEventListener('change', function() {
-      if (!_rulesTemp.maxsize) _rulesTemp.maxsize = {};
+      if (!_rulesTemp.maxsize || !_rulesTemp.maxsize.active) return;
       _rulesTemp.maxsize.sizeType = stSel.value;
     });
   }
 
-  // Numeric inputs — update _rulesTemp on change/input but don't rerender
+  // Numeric inputs — only update if rule is active
   var inputMap = {
     'rule-input-maxtrades':   'maxtrades',
     'rule-input-maxlosses':   'maxlosses',
@@ -3223,12 +3224,25 @@ function renderRulesTab(el) {
   Object.keys(inputMap).forEach(function(inputId) {
     var inp = el.querySelector('#' + inputId);
     if (!inp) return;
+    var key = inputMap[inputId];
+    // Visual: disable and dim if rule is OFF
+    var ruleActive = _rulesTemp[key] && _rulesTemp[key].active;
+    if (!ruleActive) {
+      inp.disabled = true;
+      inp.style.opacity = '0.35';
+      inp.style.cursor = 'not-allowed';
+    }
     inp.addEventListener('input', function() {
-      var key = inputMap[inputId];
-      if (!_rulesTemp[key]) _rulesTemp[key] = {};
+      if (!_rulesTemp[key] || !_rulesTemp[key].active) return;
       _rulesTemp[key].value = inp.value;
     });
   });
+  // Also disable sizetype select if maxsize is OFF
+  if (stSel && (!_rulesTemp.maxsize || !_rulesTemp.maxsize.active)) {
+    stSel.disabled = true;
+    stSel.style.opacity = '0.35';
+    stSel.style.cursor = 'not-allowed';
+  }
 }
 
 // CHECKLIST TAB
