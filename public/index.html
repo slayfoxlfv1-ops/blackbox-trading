@@ -1456,6 +1456,72 @@ async function loadAccountData(id, silent) {
   (tilt2?'<div style="padding:6px 10px;border-radius:7px;background:var(--red-bg);border:1px solid var(--red-bd);font-size:9px;color:var(--red);margin-top:6px;cursor:pointer" onclick="showTiltAlert(detectTilt(currentTrades))">⚡ '+(tilt2.level==='danger'?'TILT detectado':'Riesgo de tilt')+' — ver detalle</div>':'') +
   '</div></div>' +
 
+  // Mental Score + Execution cards (new row)
+  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">' +
+
+  // Mental Score card
+  (function() {
+    var ms = calcMentalScore();
+    var dColor = ms.discScore>=75?'var(--green)':ms.discScore>=50?'var(--amber)':'var(--red)';
+    var mColor = ms.mindScore>=75?'var(--green)':ms.mindScore>=50?'var(--amber)':'var(--red)';
+    var eColor = ms.execScore!==null?(ms.execScore>=75?'var(--green)':ms.execScore>=50?'var(--amber)':'var(--red)'):'var(--text3)';
+    return '<div class="panel" style="padding:18px;cursor:pointer" onclick="navigateTo(\'discipline\')">'
+      + '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">Mental Score Hoy</div>'
+      + '<div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">'
+      + '<div style="font-size:48px;font-weight:800;color:'+ms.color+';line-height:1">'+ms.total+'</div>'
+      + '<div><div style="font-size:12px;color:var(--text2);font-weight:600">'+ms.label+'</div>'
+      + '<div style="height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;margin-top:6px;width:120px">'
+      + '<div style="height:100%;width:'+ms.total+'%;background:'+ms.color+';border-radius:2px"></div></div></div></div>'
+      + '<div style="display:flex;flex-direction:column;gap:6px">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center">'
+      + '<span style="font-size:10px;color:var(--text3)">Disciplina <span style="font-size:8px">(40%)</span></span>'
+      + '<span style="font-size:11px;font-weight:700;color:'+dColor+'">'+ms.discScore+'</span></div>'
+      + '<div style="display:flex;justify-content:space-between;align-items:center">'
+      + '<span style="font-size:10px;color:var(--text3)">Mind <span style="font-size:8px">(35%)</span></span>'
+      + '<span style="font-size:11px;font-weight:700;color:'+mColor+'">'+ms.mindScore+'</span></div>'
+      + '<div style="display:flex;justify-content:space-between;align-items:center">'
+      + '<span style="font-size:10px;color:var(--text3)">Ejecucion <span style="font-size:8px">(25%)</span></span>'
+      + '<span style="font-size:11px;font-weight:700;color:'+eColor+'">'+(ms.execScore!==null?ms.execScore:'—')+'</span></div>'
+      + '</div></div>';
+  })() +
+
+  // Execution card
+  (function() {
+    var ex = calcDailyExecutionScore();
+    if (!ex.hasTrades) {
+      return '<div class="panel" style="padding:18px">'
+        + '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">Ejecucion Hoy</div>'
+        + '<div style="font-size:11px;color:var(--text3);padding:20px 0;text-align:center">Sin trades hoy</div>'
+        + '</div>';
+    }
+    var eColor = ex.total>=75?'var(--green)':ex.total>=50?'var(--amber)':'var(--red)';
+    return '<div class="panel" style="padding:18px">'
+      + '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">Ejecucion Hoy</div>'
+      + '<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">'
+      + '<div style="font-size:48px;font-weight:800;color:'+eColor+';line-height:1">'+ex.total+'</div>'
+      + '<div><div style="font-size:11px;color:var(--text2);font-weight:600">'+ex.label+'</div>'
+      + '<div style="font-size:9px;color:var(--text3);margin-top:2px">'+ex.tradeCount+' trade'+(ex.tradeCount!==1?'s':'')+' hoy</div></div></div>'
+      + '<div style="display:flex;flex-direction:column;gap:7px">'
+      + '<div><div style="display:flex;justify-content:space-between;margin-bottom:3px">'
+      + '<span style="font-size:9px;color:var(--text3)">R:R logrado</span>'
+      + '<span style="font-size:9px;font-weight:600;color:var(--text2)">'+ex.rrPts+' / 40</span></div>'
+      + '<div style="height:3px;background:var(--surface2);border-radius:2px;overflow:hidden">'
+      + '<div style="height:100%;width:'+Math.round(ex.rrPts/40*100)+'%;background:'+(ex.rrPts>=30?'var(--green)':ex.rrPts>=15?'var(--amber)':'var(--red)')+';border-radius:2px"></div></div></div>'
+      + '<div><div style="display:flex;justify-content:space-between;margin-bottom:3px">'
+      + '<span style="font-size:9px;color:var(--text3)">Tipo de entrada</span>'
+      + '<span style="font-size:9px;font-weight:600;color:var(--text2)">'+ex.entryPts+' / 35</span></div>'
+      + '<div style="height:3px;background:var(--surface2);border-radius:2px;overflow:hidden">'
+      + '<div style="height:100%;width:'+Math.round(ex.entryPts/35*100)+'%;background:'+(ex.entryPts>=28?'var(--green)':ex.entryPts>=15?'var(--amber)':'var(--red)')+';border-radius:2px"></div></div></div>'
+      + '<div><div style="display:flex;justify-content:space-between;margin-bottom:3px">'
+      + '<span style="font-size:9px;color:var(--text3)">Resultado</span>'
+      + '<span style="font-size:9px;font-weight:600;color:var(--text2)">'+ex.resultPts+' / 25</span></div>'
+      + '<div style="height:3px;background:var(--surface2);border-radius:2px;overflow:hidden">'
+      + '<div style="height:100%;width:'+Math.round(ex.resultPts/25*100)+'%;background:'+(ex.resultPts>=20?'var(--green)':ex.resultPts>=12?'var(--amber)':'var(--red)')+';border-radius:2px"></div></div></div>'
+      + '</div></div>';
+  })() +
+
+  '</div>' +
+
   '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px">' +
 
   '<div class="panel" style="padding:18px">' +
@@ -2376,6 +2442,140 @@ function calcDailyMindScore(dateStr) {
     behaviorMax:    20,
     hasTrades:      dayTrades.length > 0,
     tradeCount:     dayTrades.length
+  };
+}
+
+// ── Execution scoring ──
+var ENTRY_TYPE_PTS = {
+  clean:           35,
+  no_confirmation: 35,
+  moved_sl:        35,
+  scaled_in:       35,
+  overtrading:     20,
+  impulse:         10,
+  fomo:             5
+};
+
+function calcTradeExecution(trade) {
+  // R:R score (40pts)
+  var rrPts = 0;
+  var rr_planned  = parseFloat(trade.rr_planned)  || 0;
+  var rr_achieved = parseFloat(trade.rr_achieved) || 0;
+  if (rr_planned > 0 && rr_achieved !== 0) {
+    var rrPct = rr_achieved / rr_planned;
+    if      (rrPct >= 1.00) rrPts = 40;
+    else if (rrPct >= 0.75) rrPts = 30;
+    else if (rrPct >= 0.50) rrPts = 20;
+    else if (rrPct >= 0.25) rrPts = 10;
+    else                    rrPts = 0;
+  } else {
+    rrPts = 0; // no R:R registered
+  }
+
+  // Entry type (35pts)
+  var tag = (trade.discipline_tag || 'clean').toLowerCase();
+  var entryPts = ENTRY_TYPE_PTS[tag] !== undefined ? ENTRY_TYPE_PTS[tag] : 35;
+
+  // Result (25pts)
+  var pnl = trade.pnl || 0;
+  var resultPts;
+  var isWinner    = pnl > 0;
+  var isBreakeven = Math.abs(pnl) <= 5;
+  var hasViolation = tag !== 'clean' && tag !== 'moved_sl' && tag !== 'scaled_in' && tag !== 'no_confirmation';
+  // moved_sl/scaled_in/no_confirmation = discipline error but not "emotional" violation for result scoring
+  var isEmotionalViolation = (tag === 'impulse' || tag === 'fomo' || tag === 'overtrading');
+
+  if (isWinner)         resultPts = 25;
+  else if (isBreakeven) resultPts = 15;
+  else if (!isEmotionalViolation) resultPts = 10; // loser within plan
+  else                  resultPts = 0;  // loser with emotional violation
+
+  return {
+    rrPts:     rrPts,
+    entryPts:  entryPts,
+    resultPts: resultPts,
+    total:     rrPts + entryPts + resultPts
+  };
+}
+
+// ── Unified daily Execution Score (0–100) ──
+function calcDailyExecutionScore(dateStr) {
+  var today     = dateStr || new Date().toISOString().slice(0,10);
+  var allTrades = currentTrades || [];
+  var dayTrades = allTrades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(today); });
+
+  if (!dayTrades.length) {
+    return { total: null, label: 'Sin trades', rrPts: null, entryPts: null, resultPts: null, hasTrades: false, tradeCount: 0 };
+  }
+
+  var execResults = dayTrades.map(calcTradeExecution);
+
+  var avgRR     = Math.round(execResults.reduce(function(s,e){ return s+e.rrPts; },0)    / execResults.length);
+  var avgEntry  = Math.round(execResults.reduce(function(s,e){ return s+e.entryPts; },0) / execResults.length);
+  var avgResult = Math.round(execResults.reduce(function(s,e){ return s+e.resultPts; },0)/ execResults.length);
+  var total     = Math.min(100, avgRR + avgEntry + avgResult);
+
+  var label = total >= 90 ? 'Ejecucion perfecta 🎯'
+            : total >= 70 ? 'Buena ejecucion ✅'
+            : total >= 50 ? 'Ejecucion regular ⚠️'
+            : total >= 30 ? 'Necesita mejora 🔶'
+            : 'Ejecucion deficiente 🔴';
+
+  return {
+    total:      total,
+    label:      label,
+    rrPts:      avgRR,
+    entryPts:   avgEntry,
+    resultPts:  avgResult,
+    rrMax:      40,
+    entryMax:   35,
+    resultMax:  25,
+    hasTrades:  true,
+    tradeCount: dayTrades.length
+  };
+}
+
+// ── Mental Score (0–100) = Disciplina(40%) + Mind(35%) + Ejecucion(25%) ──
+function calcMentalScore(dateStr) {
+  var today = dateStr || new Date().toISOString().slice(0,10);
+  var disc  = calcDailyDisciplineScore(today);
+  var mind  = calcDailyMindScore(today);
+  var exec  = calcDailyExecutionScore(today);
+
+  var discScore = disc.total;
+  var mindScore = mind.total;
+  var execScore = exec.total !== null ? exec.total : null;
+
+  var total;
+  if (execScore === null) {
+    // No trades — weight only discipline + mind over 75%
+    total = Math.round(discScore * 0.40 + mindScore * 0.35);
+    total = Math.round(total / 0.75); // scale to 100
+  } else {
+    total = Math.round(discScore * 0.40 + mindScore * 0.35 + execScore * 0.25);
+  }
+  total = Math.max(0, Math.min(100, total));
+
+  var label = total >= 90 ? 'Trader élite 🏆'
+            : total >= 75 ? 'Rendimiento sólido ✅'
+            : total >= 60 ? 'En desarrollo ⚠️'
+            : total >= 40 ? 'Necesita atención 🔶'
+            : 'Estado crítico 🔴';
+
+  var color = total >= 75 ? 'var(--green)'
+            : total >= 50 ? 'var(--amber)'
+            : 'var(--red)';
+
+  return {
+    total:      total,
+    label:      label,
+    color:      color,
+    discScore:  discScore,
+    mindScore:  mindScore,
+    execScore:  execScore,
+    discLabel:  disc.label,
+    mindLabel:  mind.label,
+    execLabel:  exec.label || 'Sin trades'
   };
 }
 
