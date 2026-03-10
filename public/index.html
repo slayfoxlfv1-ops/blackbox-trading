@@ -7089,6 +7089,25 @@ function initExtSettings() {
   });
 }
 function toggleExtSetting(key) {
+  // If trying to disable preventiveLock while a lock is active — block it
+  if (key === 'preventiveLock') {
+    // Read lockExpiresAt from Supabase ext_settings (saved by extension when lock activates)
+    sb.from('accounts').select('ext_settings').eq('id', currentAccountId).single().then(function(r) {
+      var es = (r.data && r.data.ext_settings) || {};
+      var lockExpiry = es.lockExpiresAt || 0;
+      if (lockExpiry && Date.now() < lockExpiry) {
+        var remaining = Math.ceil((lockExpiry - Date.now()) / 60000);
+        showLockBlockedModal(remaining);
+      } else {
+        _doToggleExtSetting(key);
+      }
+    });
+    return;
+  }
+  _doToggleExtSetting(key);
+}
+
+function _doToggleExtSetting(key) {
   var s = getExtSettings();
   var defaults = { preventiveLock: true, realtimeAlerts: true, sessionAlert: true };
   var cfg = Object.assign({}, defaults, s);
@@ -7096,7 +7115,28 @@ function toggleExtSetting(key) {
   saveExtSettings(cfg);
   initExtSettings();
   // Extension picks up changes via Supabase poll (every 30s)
-  // chrome.runtime.sendMessage doesn't work from external pages
+}
+
+function showLockBlockedModal(minutesLeft) {
+  var existing = document.getElementById('bb-lock-blocked-modal');
+  if (existing) existing.remove();
+  var overlay = document.createElement('div');
+  overlay.id = 'bb-lock-blocked-modal';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:99999;display:flex;align-items:center;justify-content:center;font-family:Geist,sans-serif';
+  overlay.innerHTML =
+    '<div style="background:var(--surface);border:1px solid #3f2d2d;border-top:3px solid var(--red);border-radius:14px;padding:28px;max-width:380px;width:90%;text-align:center">'
+    + '<div style="font-size:36px;margin-bottom:12px">🛑</div>'
+    + '<div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:8px">Bloqueo en curso</div>'
+    + '<div style="font-size:11px;color:var(--text2);line-height:1.7;margin-bottom:18px">'
+    + 'Hay un bloqueo activo en TopstepX.<br>'
+    + 'Quedan aproximadamente <strong style="color:var(--red)">' + minutesLeft + ' min</strong> de pausa obligatoria.<br><br>'
+    + 'No puedes desactivar el bloqueo mientras está en curso.<br>Espera a que termine.'
+    + '</div>'
+    + '<button onclick="document.getElementById(\'bb-lock-blocked-modal\').remove()" '
+    + 'style="padding:10px 24px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">Entendido</button>'
+    + '</div>';
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
 }
 
 function dismissOverviewAlert(alertKey) {
