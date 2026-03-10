@@ -7095,12 +7095,8 @@ function toggleExtSetting(key) {
   cfg[key] = !cfg[key];
   saveExtSettings(cfg);
   initExtSettings();
-  // Push to extension immediately so it takes effect without reload
-  try {
-    if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
-      chrome.runtime.sendMessage({ type: 'SYNC_EXT_SETTINGS', settings: cfg });
-    }
-  } catch(e) {}
+  // Extension picks up changes via Supabase poll (every 30s)
+  // chrome.runtime.sendMessage doesn't work from external pages
 }
 
 function dismissOverviewAlert(alertKey) {
