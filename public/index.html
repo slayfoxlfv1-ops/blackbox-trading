@@ -358,7 +358,7 @@ tr:hover td { background:var(--hover); }
       <div class="nav-item" data-view="discipline"><span class="nav-icon">&#10095;</span> Discipline</div>
       <div class="nav-item" data-view="mind"><span class="nav-icon">&#9679;</span> Mind</div>
       <div class="nav-item" data-view="coach"><span class="nav-icon">&#9670;</span> Coach</div>
-      <div class="nav-item" data-view="reports"><span class="nav-icon">&#8595;</span> Reports</div>
+      <div class="nav-item" data-view="reports"><span class="nav-icon">🧠</span> Psico Score</div>
       <div class="nav-item" data-view="settings"><span class="nav-icon">&#9711;</span> Settings</div>
     </div>
     <div class="sidebar-footer">
@@ -1100,7 +1100,7 @@ function navigateTo(view) {
   document.querySelectorAll('.nav-item').forEach(function(i){i.classList.remove('active');});
   var navEl = document.querySelector('.nav-item[data-view="'+view+'"]');
   if (navEl) navEl.classList.add('active');
-  var titles = { overview:'Overview', tradelog:'Trade Log', calendar:'Calendar', discipline:'Discipline', mind:'Mind', rules:'Rules', reports:'Reports', settings:'Settings' };
+  var titles = { overview:'Overview', tradelog:'Trade Log', calendar:'Calendar', discipline:'Discipline', mind:'Mind', rules:'Rules', reports:'Psico Score', settings:'Settings' };
   var acc = accounts.find(function(a){return a.id===currentAccountId;});
   document.getElementById('page-title').textContent = acc ? acc.name : titles[view];
   document.getElementById('page-sub').textContent = (titles[view] || view || '').toUpperCase();
@@ -5633,57 +5633,71 @@ function showOnboardingGuide() {
       icon: '👋',
       title: 'Bienvenido a BlackBoss',
       subtitle: 'Tu Trading Psychology Engine',
-      content: 'BlackBoss te ayuda a entender <strong>por qué pierdes dinero</strong> — no solo cuánto. Analiza tus patrones psicológicos, mide tu disciplina y detecta tus errores repetitivos.<br><br>Esta guía toma 2 minutos y explica todo lo que necesitas saber.',
+      content: 'BlackBoss no es un journal normal. Su objetivo es ayudarte a entender <strong>por qué tomas malas decisiones</strong> — no solo registrar cuánto ganaste o perdiste.<br><br>Mide tu psicología, detecta patrones de error, calcula tu estado mental diario y te da feedback real sobre tu disciplina como trader.<br><br>Esta guía toma unos minutos y cubre todo lo que necesitas saber.',
       tip: null
     },
     {
       icon: '🏦',
-      title: 'Primero: crea una cuenta',
-      subtitle: 'Paso 1 de 6',
-      content: 'Una <strong>cuenta</strong> en BlackBoss representa tu cuenta de trading real (ej: "Funded Account #1", "Paper Trading"). Puedes tener varias cuentas y cambiar entre ellas desde el menú lateral izquierdo.<br><br>Para crear tu primera cuenta, haz clic en <strong>"+ Add account"</strong> en la barra lateral.',
-      tip: '💡 Recomendamos crear una cuenta por cada cuenta de fondeo que tengas activa.'
+      title: 'Paso 1 — Crea tu cuenta de trading',
+      subtitle: 'Una cuenta = una cuenta de trading real',
+      content: 'Una <strong>cuenta</strong> en BlackBoss representa tu cuenta de trading real (ej: "Funded Account #1", "Paper Trading"). Puedes tener varias y cambiar entre ellas desde el menú lateral.<br><br>Haz clic en <strong>"+ Add account"</strong> en la barra lateral para empezar. Cada cuenta tiene sus propios trades, reglas, checklist y configuración.',
+      tip: '💡 Si tienes varias cuentas de fondeo activas, crea una por cada una — así los datos no se mezclan.'
     },
     {
       icon: '🔌',
-      title: 'Opción A: Con extensión de Chrome',
+      title: 'Paso 2A — Extensión de Chrome (recomendado)',
       subtitle: 'Captura automática desde TopstepX',
-      content: 'Si operas en <strong>TopstepX</strong>, instala la extensión de Chrome de BlackBoss. Una vez instalada y conectada con tu cuenta:<br><br>• Los trades se capturan <strong>automáticamente</strong> al cerrarse<br>• Al abrir la extensión verás el check pre-trade y el mood check del día<br>• Los datos llegan al dashboard en tiempo real',
-      tip: '💡 La extensión está disponible para descargar en el menú de configuración.'
+      content: 'Si operas en <strong>TopstepX</strong>, instala la extensión BlackBoss para Chrome. Una vez conectada:<br><br>• Los trades se detectan y guardan <strong>automáticamente</strong> al cerrarse<br>• Al detectar un trade aparece un popup para registrar tu emoción, disciplina y notas<br>• Si rompes una regla, la extensión te <strong>bloquea la pantalla 15 minutos</strong> para que te resetees<br>• Muestra el P&L de la sesión en pantalla en tiempo real',
+      tip: '💡 Descarga la extensión desde Settings → Extensión. Después instálala en Chrome como extensión descomprimida.'
     },
     {
       icon: '✍️',
-      title: 'Opción B: Sin extensión',
-      subtitle: 'Registro manual de trades',
-      content: 'Si no usas TopstepX o prefieres registrar manualmente, usa el botón <strong>"+ Log Trade"</strong> en la barra superior después de cada operación.<br><br>Campos disponibles: ticker, lado, P&L, R:R, emoción, disciplina, setup tags, notas y screenshot.',
-      tip: '💡 Puedes usar ambas opciones a la vez — la extensión captura automáticamente y tú enriqueces los datos manualmente.'
+      title: 'Paso 2B — Registro manual',
+      subtitle: 'Si no usas TopstepX o prefieres hacerlo tú',
+      content: 'Usa el botón <strong>"+ Log Trade"</strong> en la barra superior después de cada operación. Puedes registrar:<br><br>• Ticker, lado (long/short), P&L<br>• R:R planeado vs conseguido<br>• Tu emoción durante el trade<br>• Tag de disciplina (clean, impulse, FOMO, etc.)<br>• Setup tags personalizados, notas y screenshot',
+      tip: '💡 También puedes combinar ambas opciones — la extensión captura lo objetivo y tú añades el contexto.'
     },
     {
       icon: '📋',
-      title: 'Tu checklist pre-trade',
-      subtitle: 'Define tus reglas antes de operar',
-      content: 'Ve a <strong>Discipline → Checklist</strong> y crea tu lista personal de verificación. Ejemplos:<br><br>• "Esperé confirmación de vela"<br>• "SL definido antes de entrar"<br>• "R:R mínimo 1.5"<br>• "No es dentro de la primera media hora"<br><br>Cada día, antes de operar, marca los items en la extensión o en el dashboard.',
-      tip: '💡 BlackBoss analiza si tus trades donde no cumpliste el checklist tienen peor rendimiento.'
+      title: 'Paso 3 — Tu checklist y tus reglas',
+      subtitle: 'Sin esto, el análisis no es completo',
+      content: 'En <strong>Discipline → Checklist</strong> creas tu lista de verificación pre-trade. Ejemplos: "SL definido antes de entrar", "R:R mínimo 1.5", "No operar en la primera media hora".<br><br>En <strong>Rules</strong> defines tus límites: horario permitido, máximo de trades por día, pérdidas consecutivas permitidas, etc.<br><br>BlackBoss usa estas reglas para calcular tu disciplina diaria y avisarte cuando las rompes.',
+      tip: '💡 El sistema detecta automáticamente si operas fuera de tus horarios, si superas el límite de pérdidas o si saltaste el checklist.'
     },
     {
       icon: '🧠',
-      title: 'El check pre-sesión diario',
-      subtitle: 'Tu estado mental importa',
-      content: 'Cada mañana BlackBoss te pregunta 4 cosas: sueño, estrés, concentración y presión de dinero. Con el tiempo, el sistema detecta si operas peor cuando dormiste mal o cuando sientes presión.<br><br>Puedes responderlo desde el dashboard o desde la extensión — se sincroniza automáticamente.',
-      tip: '💡 Con 2 semanas de datos verás qué factores afectan más tu P&L en la vista Mind.'
+      title: 'Paso 4 — Check mental diario',
+      subtitle: 'Tu estado interno afecta tus resultados',
+      content: 'Cada mañana antes de operar, BlackBoss te hace un check de 4 preguntas: calidad del sueño, nivel de estrés, concentración y presión económica.<br><br>Con el tiempo el sistema detecta si tus peores días de trading coinciden con poco sueño o alta presión. Esto aparece en la vista <strong>Mind</strong>.<br><br>Puedes responderlo desde el dashboard o desde la extensión.',
+      tip: '💡 Con 2 semanas de datos ya ves correlaciones claras entre tu estado mental y tu P&L.'
     },
     {
       icon: '📊',
-      title: 'Las 9 vistas del dashboard',
-      subtitle: 'Cada una tiene un propósito',
-      content: '<strong>Overview</strong> — P&L, disciplina, readiness y logros del periodo<br><strong>Trade Log</strong> — todos tus trades con filtros y edición<br><strong>Replay</strong> — revisar trades en TradingView<br><strong>Calendar</strong> — vista mensual por día<br><strong>Discipline</strong> — checklist, operativa y Coach IA<br><strong>Mind</strong> — psicología profunda: mood, patrones, streaks<br><strong>Rules</strong> — tus reglas de trading personalizadas<br><strong>Reports</strong> — exportar datos por periodo<br><strong>Settings</strong> — cuentas, tags, configuración',
+      title: 'Las vistas del dashboard',
+      subtitle: 'Cada una tiene un propósito concreto',
+      content: '<strong>Overview</strong> — resumen del día: P&L, Mental Score, alertas activas y logros<br><strong>Trade Log</strong> — todos tus trades con filtros, edición y búsqueda<br><strong>Calendar</strong> — vista mensual, un día = un color según resultado<br><strong>Discipline</strong> — checklist diario, operativa y Coach IA semanal<br><strong>Mind</strong> — psicología profunda: mood, patrones emocionales, streaks<br><strong>Rules</strong> — configura tus reglas personalizadas de trading<br><strong>Psico Score</strong> — tu Mental Score semanal/mensual y perfil psicológico<br><strong>Settings</strong> — cuentas, tags, extensión y configuración',
       tip: null
     },
     {
+      icon: '🔢',
+      title: '¿Cómo se calculan las cosas?',
+      subtitle: 'Sin fórmulas complicadas, te lo explicamos claro',
+      content: '<strong>Mental Score (0–100)</strong> — combina tres cosas: qué tan disciplinado fuiste (40%), cómo estaba tu estado mental (35%) y qué tan bien ejecutaste tus trades (25%). Un día sin trades solo cuenta disciplina y mente.<br><br><strong>Disciplina Score</strong> — mide si completaste el checklist, si respetaste tus reglas, y si tus tags fueron "clean" en vez de impulso o FOMO.<br><br><strong>Mind Score</strong> — viene de tus respuestas al check mental diario. Sueño, estrés, concentración y presión económica.<br><br><strong>Execution Score</strong> — analiza tu R:R real vs planeado, win rate y consistencia entre trades.',
+      tip: '💡 Un Mental Score de 75+ significa que estás operando de forma profesional ese día, independientemente del P&L.'
+    },
+    {
+      icon: '🏆',
+      title: 'Rachas y logros',
+      subtitle: 'Tu progreso a largo plazo',
+      content: 'En <strong>Psico Score</strong> verás dos tipos de reconocimientos:<br><br><strong>Rachas</strong> — días consecutivos haciendo algo bien: completar el checklist, respetar reglas, no caer en tilt. Se rompen si fallas un día.<br><br><strong>Hitos</strong> — logros permanentes que se desbloquean una sola vez: primer trade clean, 10 trades sin impulso, semana perfecta, etc.<br><br>No son decoración — reflejan tu consistencia real como trader.',
+      tip: '💡 Los hitos más difíciles (Semana Perfecta, Mes de Élite) requieren consistencia en checklist, reglas y estado mental simultáneamente.'
+    },
+    {
       icon: '🚀',
-      title: '¡Listo para empezar!',
-      subtitle: 'Con 20 trades ya ves tu perfil psicológico',
-      content: 'Cuantos más trades registres, más preciso es el análisis. Con <strong>20+ trades</strong> verás:<br><br>• Tus horas más y menos rentables<br>• Qué emociones correlacionan con pérdidas<br>• Tu patrón de autosabotaje más común<br>• El impacto real de cada item del checklist',
-      tip: '💡 Puedes volver a esta guía en cualquier momento desde Settings → "Ver guía de uso".'
+      title: '¡Todo listo!',
+      subtitle: 'Con 15 trades ya ves tu perfil psicológico completo',
+      content: 'Cuantos más trades registres, más preciso es el análisis. Con <strong>15+ trades</strong> el Coach IA puede generar tu perfil psicológico completo: patrón dominante, saboteador principal, tus mejores horas y un plan de trabajo concreto.<br><br>Con <strong>30+ días</strong> verás tendencias claras sobre qué condiciones internas hacen que operes mejor o peor.',
+      tip: '💡 Puedes volver a esta guía cuando quieras desde Settings → "Ver guía de uso paso a paso".'
     }
   ];
 
@@ -6451,86 +6465,12 @@ function renderReports() {
 }
 
 function buildReports(allTrades) {
-  var el=document.getElementById('main-content');
-  var now=new Date();
-  var weekStart=new Date(); weekStart.setDate(weekStart.getDate()-weekStart.getDay()+(weekStart.getDay()===0?-6:1)); weekStart.setHours(0,0,0,0);
-  var weekEnd=new Date(weekStart); weekEnd.setDate(weekStart.getDate()+6); weekEnd.setHours(23,59,59,999);
-  var trades=allTrades.filter(function(t) {
-    if (!t.entry_time) return false;
-    var d=new Date(t.entry_time);
-    if (repFilters.period==='week' && (d<weekStart||d>weekEnd)) return false;
-    if (repFilters.period==='month' && (d.getMonth()!==now.getMonth()||d.getFullYear()!==now.getFullYear())) return false;
-    if (repFilters.period==='year' && d.getFullYear()!==now.getFullYear()) return false;
-    if (repFilters.period==='range') {
-      if (repFilters.dateFrom && d<new Date(repFilters.dateFrom)) return false;
-      if (repFilters.dateTo && d>new Date(repFilters.dateTo+'T23:59:59')) return false;
-    }
-    if (repFilters.result==='win' && (t.pnl||0)<=0) return false;
-    if (repFilters.result==='loss' && (t.pnl||0)>=0) return false;
-    if (repFilters.ticker && !(t.ticker||'').toLowerCase().includes(repFilters.ticker.toLowerCase())) return false;
-    return true;
-  });
-  var showRange=repFilters.period==='range';
-  var filterBar='<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center">'+
-    '<select class="form-select" style="width:130px;padding:6px 10px" onchange="repFilters.period=this.value;buildReports(currentTrades||[])">'+
-    '<option value="week"'+(repFilters.period==='week'?' selected':'')+'>This week</option>'+
-    '<option value="month"'+(repFilters.period==='month'?' selected':'')+'>This month</option>'+
-    '<option value="year"'+(repFilters.period==='year'?' selected':'')+'>This year</option>'+
-    '<option value="all"'+(repFilters.period==='all'?' selected':'')+'>All time</option>'+
-    '<option value="range"'+(repFilters.period==='range'?' selected':'')+'>Date range</option>'+
-    '</select>'+
-    (showRange?'<input class="form-input" style="width:130px;padding:6px 10px" type="date" value="'+repFilters.dateFrom+'" onchange="repFilters.dateFrom=this.value;buildReports(currentTrades||[])"><span style="color:var(--text3)">to</span><input class="form-input" style="width:130px;padding:6px 10px" type="date" value="'+repFilters.dateTo+'" onchange="repFilters.dateTo=this.value;buildReports(currentTrades||[])">':'')+
-    '<select class="form-select" style="width:130px;padding:6px 10px" onchange="repFilters.result=this.value;buildReports(currentTrades||[])">'+
-    '<option value="all"'+(repFilters.result==='all'?' selected':'')+'>All trades</option>'+
-    '<option value="win"'+(repFilters.result==='win'?' selected':'')+'>Winners</option>'+
-    '<option value="loss"'+(repFilters.result==='loss'?' selected':'')+'>Losers</option>'+
-    '</select>'+
-    '<input class="form-input" style="width:110px;padding:6px 10px" type="text" placeholder="Ticker..." value="'+repFilters.ticker+'" oninput="repFilters.ticker=this.value;buildReports(currentTrades||[])">'+
-    '<button class="btn btn-ghost" style="font-size:11px" onclick="repFilters={period:\'month\',result:\'all\',ticker:\'\',dateFrom:\'\',dateTo:\'\'};buildReports(currentTrades||[])">Clear</button>'+
-    '<button class="btn btn-solid" style="font-size:11px;margin-left:auto;background:#5a9e9e;border-color:#5a9e9e" onclick="exportReportPDF()">⬇ Export PDF</button>'+
-    '</div>';
-  if (!trades.length) {
-    el.innerHTML=filterBar+'<div class="empty-state"><div class="empty-icon">v</div><div class="empty-title">No trades for this period</div></div>';
+  var el = document.getElementById('main-content');
+  if (!allTrades.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">🧠</div><div class="empty-title">Sin trades aún</div><div class="empty-sub">Opera y registra trades para ver tu Psico Score</div></div>';
     return;
   }
-  var total=trades.length;
-  var wins=trades.filter(function(t){return (t.pnl||0)>0;});
-  var losses=trades.filter(function(t){return (t.pnl||0)<0;});
-  var netPnl=trades.reduce(function(s,t){return s+(t.pnl||0);},0);
-  var grossWin=wins.reduce(function(s,t){return s+(t.pnl||0);},0);
-  var grossLoss=Math.abs(losses.reduce(function(s,t){return s+(t.pnl||0);},0));
-  var pf=grossLoss>0?(grossWin/grossLoss).toFixed(2):'INF';
-  var wr=Math.round(wins.length/total*100);
-  var avgWin=wins.length?Math.round(grossWin/wins.length):0;
-  var avgLoss=losses.length?Math.round(grossLoss/losses.length):0;
-  var sorted=trades.slice().sort(function(a,b){return new Date(a.entry_time)-new Date(b.entry_time);});
-  var running=0;
-  var points=[0].concat(sorted.map(function(t){running+=(t.pnl||0);return running;}));
-  var equitySvg=buildEquitySvgFull(points, netPnl);
-  var tradeRows=trades.slice(0,50).map(function(t) {
-    var pnl=t.pnl||0;
-    var dt='--';
-    if (t.entry_time) {
-      var _dt3=new Date(t.entry_time);
-      dt=String(_dt3.getDate()).padStart(2,'0')+'/'+String(_dt3.getMonth()+1).padStart(2,'0')+'/'+_dt3.getFullYear();
-    }
-    return '<tr class="'+(pnl<0?'flagged':'')+'"><td><span class="mono-xs">'+dt+'</span></td><td><span class="ticker">'+(t.ticker||'--')+'</span></td><td><span class="side-badge '+(t.side||'long')+'">'+(t.side||'').toUpperCase()+'</span></td><td><span class="pnl '+(pnl>=0?'pos':'neg')+'">'+(pnl>=0?'+':'-')+'$'+Math.abs(pnl).toLocaleString()+'</span></td></tr>';
-  }).join('');
-  el.innerHTML=filterBar+
-    '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:12px">'+
-    '<div class="metric"><div class="m-label">Net P&L</div><div class="m-val '+(netPnl>=0?'pos':'neg')+'">'+(netPnl>=0?'+':'-')+'$'+Math.abs(Math.round(netPnl)).toLocaleString()+'</div></div>'+
-    '<div class="metric"><div class="m-label">Trades</div><div class="m-val neutral">'+total+'</div><div class="m-note">'+wins.length+'W '+losses.length+'L</div></div>'+
-    '<div class="metric"><div class="m-label">Win Rate</div><div class="m-val neutral">'+wr+'%</div></div>'+
-    '<div class="metric"><div class="m-label">Profit Factor</div><div class="m-val neutral">'+pf+'</div></div>'+
-    '<div class="metric"><div class="m-label">Avg Win / Loss</div><div class="m-val pos" style="font-size:14px">$'+avgWin+' / $'+avgLoss+'</div></div>'+
-    '</div>'+
-    '<div class="panel" style="margin-bottom:12px"><div class="panel-head"><span class="panel-title">Equity Curve</span><span class="panel-cap" style="color:'+(netPnl>=0?'var(--green)':'var(--red)')+'">'+(netPnl>=0?'+':'-')+'$'+Math.abs(Math.round(netPnl)).toLocaleString()+'</span></div>'+
-    '<div style="padding:14px 18px;height:100px">'+equitySvg+'</div></div>'+
-    '<div class="panel" style="margin-bottom:12px"><div class="panel-head"><span class="panel-title">Trade List</span><span class="panel-cap">'+total+' trades'+(total>50?' (showing 50)':'')+'</span></div>'+
-    '<div class="table-scroll"><table><thead><tr><th>Date</th><th>Ticker</th><th>Side</th><th>P&L</th></tr></thead><tbody>'+tradeRows+'</tbody></table></div></div>'+
-    renderMentalScorePanel(allTrades, repFilters.period)+
-    renderPsychProfilePanel(allTrades)+
-    renderAchievementsHtml();
+  el.innerHTML = renderMentalScorePanel(allTrades) + renderPsychProfilePanel(allTrades) + renderAchievementsHtml();
 }
 
 function renderMentalScorePanel(allTrades, period) {
@@ -7099,10 +7039,10 @@ function renderSettings() {
     '</div></div>'+
     '<div class="panel" style="margin-bottom:12px"><div class="panel-head"><span class="panel-title">Legal</span></div>'+
     '<div style="padding:18px;display:flex;flex-direction:column;gap:8px">'+
-    '<a href="#" style="font-size:12px;color:var(--blue)">Terms of Service</a>'+
-    '<a href="#" style="font-size:12px;color:var(--blue)">Privacy Policy</a>'+
-    '<a href="#" style="font-size:12px;color:var(--blue)">Risk Disclaimer</a>'+
-    '<div style="font-size:9px;color:var(--text3);margin-top:4px">BlackBoss Journal v0.5 - 2026</div>'+
+    '<button onclick="openLegalModal(\'tos\')" style="background:none;border:none;text-align:left;font-size:12px;color:#5a9e9e;cursor:pointer;font-family:inherit;padding:2px 0">📄 Términos de Servicio</button>'+
+    '<button onclick="openLegalModal(\'privacy\')" style="background:none;border:none;text-align:left;font-size:12px;color:#5a9e9e;cursor:pointer;font-family:inherit;padding:2px 0">🔒 Política de Privacidad</button>'+
+    '<button onclick="openLegalModal(\'risk\')" style="background:none;border:none;text-align:left;font-size:12px;color:#5a9e9e;cursor:pointer;font-family:inherit;padding:2px 0">⚠️ Aviso de Riesgo</button>'+
+    '<div style="font-size:9px;color:var(--text3);margin-top:4px">BlackBoss Journal v0.5 · 2026</div>'+
     '</div></div>'+
     '<div class="panel" style="margin-bottom:12px"><div class="panel-head"><span class="panel-title">Ayuda</span></div>'+
     '<div style="padding:18px;display:flex;flex-direction:column;gap:10px">'+
@@ -7602,6 +7542,147 @@ function previewScreenshot(input) {
 
 // ── UPDATE COACH to include duration data ──
 
+
+// ════════════════════════════════════════════════════════
+// LEGAL MODALS
+// ════════════════════════════════════════════════════════
+var LEGAL_CONTENT = {
+  tos: {
+    title: 'Términos de Servicio',
+    icon: '📄',
+    sections: [
+      {
+        heading: 'Sobre BlackBoss',
+        body: 'BlackBoss es una herramienta de journaling y análisis psicológico para traders. Su función es registrar operaciones, medir disciplina y analizar patrones de comportamiento. No es un servicio de asesoría financiera, ni de señales de trading, ni de gestión de inversiones.'
+      },
+      {
+        heading: 'Sin relación con plataformas de trading',
+        body: 'BlackBoss no tiene ninguna relación comercial, societaria ni de afiliación con TopstepX, Apex, Tradovate, NinjaTrader ni con ninguna otra plataforma o empresa de fondeo. La integración con TopstepX es técnica y unilateral — únicamente lee datos de pantalla para facilitar el registro de trades.'
+      },
+      {
+        heading: 'Uso adecuado',
+        body: 'El usuario se compromete a usar BlackBoss únicamente para el registro y análisis de sus propias operaciones. Queda prohibido el uso del servicio para actividades ilegales, la reventa del acceso, o cualquier uso que interfiera con el funcionamiento normal de la plataforma.'
+      },
+      {
+        heading: 'Disponibilidad del servicio',
+        body: 'BlackBoss se ofrece "tal como está". No garantizamos disponibilidad ininterrumpida ni ausencia de errores. Podemos modificar, suspender o discontinuar funciones en cualquier momento, avisando con la mayor anticipación posible.'
+      },
+      {
+        heading: 'Propiedad intelectual',
+        body: 'Todo el código, diseño, textos y metodología de BlackBoss son propiedad de BlackBoss. El usuario obtiene una licencia de uso personal e intransferible. No está permitido copiar, modificar ni redistribuir ninguna parte de la plataforma.'
+      }
+    ]
+  },
+  privacy: {
+    title: 'Política de Privacidad',
+    icon: '🔒',
+    sections: [
+      {
+        heading: 'Qué datos recopilamos',
+        body: 'Recopilamos únicamente los datos que tú introduces: trades (P&L, ticker, emoción, notas), respuestas del check mental diario, checklist completado, y configuración de cuenta. También guardamos tu email para autenticación.'
+      },
+      {
+        heading: 'Cómo usamos tus datos',
+        body: 'Tus datos se usan exclusivamente para generar el análisis y las métricas que ves en tu dashboard. El Coach IA procesa tus datos de trading para darte feedback personalizado — este procesamiento ocurre en tiempo real y no se almacena por separado.'
+      },
+      {
+        heading: 'Tus datos son tuyos',
+        body: 'No vendemos, cedemos, alquilamos ni compartimos tus datos personales ni tus datos de trading con ningún tercero, bajo ningún concepto. Tus datos de trading son confidenciales y solo tú tienes acceso a ellos.'
+      },
+      {
+        heading: 'Almacenamiento y seguridad',
+        body: 'Los datos se almacenan en Supabase, una plataforma de base de datos segura con cifrado en tránsito (HTTPS/TLS) y en reposo. Usamos autenticación con token seguro para acceder a tu información.'
+      },
+      {
+        heading: 'Eliminación de datos',
+        body: 'Puedes solicitar la eliminación completa de tu cuenta y todos tus datos en cualquier momento contactándonos. Una vez eliminados, los datos no son recuperables.'
+      },
+      {
+        heading: 'Cookies y almacenamiento local',
+        body: 'Usamos localStorage del navegador para guardar preferencias de sesión y configuración de la extensión. No usamos cookies de seguimiento ni píxeles de terceros.'
+      }
+    ]
+  },
+  risk: {
+    title: 'Aviso de Riesgo',
+    icon: '⚠️',
+    sections: [
+      {
+        heading: 'BlackBoss no es asesoría financiera',
+        body: 'Nada de lo que aparece en BlackBoss — incluyendo el Coach IA, el Mental Score, los análisis de disciplina o cualquier otra funcionalidad — constituye asesoría financiera, recomendación de inversión ni señal de trading. BlackBoss es una herramienta de autoconocimiento y journaling.'
+      },
+      {
+        heading: 'El trading implica riesgo de pérdida',
+        body: 'El trading de futuros, divisas y cualquier instrumento financiero conlleva un riesgo significativo de pérdida de capital. La mayoría de los traders pierden dinero. Mejorar la psicología y la disciplina puede ayudar, pero no garantiza resultados positivos.'
+      },
+      {
+        heading: 'Sin garantía de resultados',
+        body: 'BlackBoss no garantiza que el uso de la plataforma mejore tus resultados de trading ni que evite pérdidas. Los análisis y métricas son informativos y basados en los datos que tú introduces — su precisión depende de la calidad de ese registro.'
+      },
+      {
+        heading: 'Sin responsabilidad por pérdidas',
+        body: 'BlackBoss y sus creadores no se hacen responsables de ninguna pérdida económica, directa o indirecta, derivada del uso de la plataforma, de sus análisis, de las recomendaciones del Coach IA, ni del comportamiento de la extensión de Chrome durante sesiones de trading.'
+      },
+      {
+        heading: 'Sin relación con plataformas externas',
+        body: 'BlackBoss no tiene ninguna responsabilidad sobre las decisiones de negocio de TopstepX, Apex u otras plataformas de fondeo. Cualquier cambio en esas plataformas que afecte la captura automática de trades es ajeno a BlackBoss.'
+      }
+    ]
+  }
+};
+
+function openLegalModal(type) {
+  var data = LEGAL_CONTENT[type];
+  if (!data) return;
+
+  var existing = document.getElementById('bb-legal-modal');
+  if (existing) existing.remove();
+
+  var overlay = document.createElement('div');
+  overlay.id = 'bb-legal-modal';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:99998;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);font-family:Geist,sans-serif';
+
+  var sectionsHtml = data.sections.map(function(s) {
+    return '<div style="margin-bottom:18px">'
+      + '<div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:5px">' + s.heading + '</div>'
+      + '<div style="font-size:11px;color:var(--text2);line-height:1.8">' + s.body + '</div>'
+      + '</div>';
+  }).join('<div style="height:1px;background:var(--border);margin-bottom:18px"></div>');
+
+  overlay.innerHTML =
+    '<div style="background:var(--surface);border:1px solid var(--border2);border-radius:16px;width:540px;max-width:94vw;max-height:86vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.9)">'
+    // Header
+    + '<div style="padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">'
+    + '<div style="display:flex;align-items:center;gap:10px">'
+    + '<span style="font-size:20px">' + data.icon + '</span>'
+    + '<div>'
+    + '<div style="font-size:14px;font-weight:700;color:var(--text)">' + data.title + '</div>'
+    + '<div style="font-size:9px;color:var(--text3);margin-top:1px">BlackBoss · 2026</div>'
+    + '</div>'
+    + '</div>'
+    + '<button id="bb-legal-close" style="background:var(--surface2);border:1px solid var(--border);border-radius:7px;width:28px;height:28px;cursor:pointer;color:var(--text3);font-size:16px;display:flex;align-items:center;justify-content:center;line-height:1">×</button>'
+    + '</div>'
+    // Tabs
+    + '<div style="padding:12px 24px 0;display:flex;gap:6px;border-bottom:1px solid var(--border);flex-shrink:0">'
+    + ['tos','privacy','risk'].map(function(t) {
+        var labels = { tos:'Términos', privacy:'Privacidad', risk:'Riesgo' };
+        var active = t === type;
+        return '<button onclick="openLegalModal(\'' + t + '\')" style="padding:7px 13px;border:none;border-radius:7px 7px 0 0;background:' + (active ? 'var(--surface2)' : 'transparent') + ';color:' + (active ? 'var(--text)' : 'var(--text3)') + ';font-size:10px;font-weight:' + (active ? '700' : '400') + ';cursor:pointer;font-family:inherit;border-bottom:2px solid ' + (active ? '#5a9e9e' : 'transparent') + '">' + labels[t] + '</button>';
+      }).join('')
+    + '</div>'
+    // Body
+    + '<div style="padding:22px 24px;overflow-y:auto;flex:1">' + sectionsHtml + '</div>'
+    // Footer
+    + '<div style="padding:14px 24px;border-top:1px solid var(--border);flex-shrink:0;display:flex;justify-content:space-between;align-items:center">'
+    + '<div style="font-size:9px;color:var(--text3)">Última actualización: enero 2026</div>'
+    + '<button onclick="document.getElementById(\'bb-legal-modal\').remove()" style="padding:8px 18px;background:#5a9e9e;border:none;border-radius:7px;color:#fff;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit">Entendido</button>'
+    + '</div>'
+    + '</div>';
+
+  document.body.appendChild(overlay);
+  overlay.querySelector('#bb-legal-close').addEventListener('click', function() { overlay.remove(); });
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+}
 </script>
 <!-- NOTE MODAL -->
 <div class="note-modal-overlay" id="note-modal-overlay">
