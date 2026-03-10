@@ -2516,6 +2516,10 @@ function getPersonalRules(accountId) {
 }
 function savePersonalRules(accountId, rules) {
   bbStore.set('rules_v2_' + accountId, JSON.stringify(rules));
+  // Sync to Supabase so the Chrome extension can read session times
+  if (accountId && sb) {
+    sb.from('accounts').update({ rules_v2: rules }).eq('id', accountId).then(function(){});
+  }
 }
 
 // ── Check all active rules against today's trades ──
@@ -6791,7 +6795,32 @@ function renderSettings() {
     '<div style="padding:18px">'+
     '<div class="stat-row" style="padding:10px 0">'  +'<span class="stat-key">TopstepX</span>'  +'<span style="font-size:9px;color:var(--green);background:var(--green-bg);border:1px solid var(--green-bd);padding:2px 8px;border-radius:4px;font-weight:600">✓ Activo — Chrome Extension</span>'  +'</div>'  +'<div style="margin-top:8px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;font-size:10px;color:var(--text3);line-height:1.7">'  +'Próximamente: TradingView · Tradeify · Apex Trader · FTMO · NinjaTrader<br>'  +'<span style="font-size:9px">Estamos trabajando para conectar más plataformas. Si usas otra, escríbenos.</span>'  +'</div>'+
     '</div></div>'+
-    '<div class="panel" style="margin-bottom:12px"><div class="panel-head"><span class="panel-title">Setup Tags</span><span style="font-size:10px;color:var(--text3)">Personaliza tus tags de setup</span></div>'    + '<div style="padding:18px">'    + '<div id="settings-tags-list" style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px"></div>'    + '<div style="display:flex;gap:7px;align-items:center">'    + '<input id="new-tag-input" class="form-input" type="text" placeholder="Nuevo tag (ej: ICT BOS)" style="flex:1">'    + '<button onclick="addSetupTag()" style="padding:8px 14px;background:#5a9e9e;border:none;border-radius:7px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">+ Agregar</button>'    + '</div>'    + '</div></div>'    + '<div class="panel" style="margin-bottom:12px"><div class="panel-head"><span class="panel-title">Legal</span></div>'+
+    '<div class="panel" style="margin-bottom:12px"><div class="panel-head"><span class="panel-title">Setup Tags</span><span style="font-size:10px;color:var(--text3)">Personaliza tus tags de setup</span></div>'    + '<div style="padding:18px">'    + '<div id="settings-tags-list" style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px"></div>'    + '<div style="display:flex;gap:7px;align-items:center">'    + '<input id="new-tag-input" class="form-input" type="text" placeholder="Nuevo tag (ej: ICT BOS)" style="flex:1">'    + '<button onclick="addSetupTag()" style="padding:8px 14px;background:#5a9e9e;border:none;border-radius:7px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">+ Agregar</button>'    + '</div>'    + '</div></div>'    + '<div class="panel" style="margin-bottom:12px"><div class="panel-head"><span class="panel-title">🔌 Extensión — Comportamiento</span></div>'+
+    '<div style="padding:18px;display:flex;flex-direction:column;gap:16px">'+
+    '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px">'+
+    '<div><div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px">Bloqueo preventivo (15 min)</div>'+
+    '<div style="font-size:10px;color:var(--text3);line-height:1.5">Cuando cometas una violación grave la extensión bloquea TopstepX 15 minutos.</div></div>'+
+    '<div id="lock-toggle" onclick="toggleExtSetting(\'preventiveLock\')" style="cursor:pointer;flex-shrink:0">'+
+    '<div id="lock-toggle-track" style="width:38px;height:22px;border-radius:11px;position:relative;transition:background .2s">'+
+    '<div id="lock-toggle-thumb" style="width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.4)"></div></div>'+
+    '<div id="lock-toggle-lbl" style="font-size:8px;font-weight:700;text-align:center;margin-top:3px"></div></div></div>'+
+    '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px">'+
+    '<div><div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px">Alertas en tiempo real</div>'+
+    '<div style="font-size:10px;color:var(--text3);line-height:1.5">Notificaciones para violaciones menores, 80% DLL, 2 pérdidas seguidas.</div></div>'+
+    '<div id="alerts-toggle" onclick="toggleExtSetting(\'realtimeAlerts\')" style="cursor:pointer;flex-shrink:0">'+
+    '<div id="alerts-toggle-track" style="width:38px;height:22px;border-radius:11px;position:relative;transition:background .2s">'+
+    '<div id="alerts-toggle-thumb" style="width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.4)"></div></div>'+
+    '<div id="alerts-toggle-lbl" style="font-size:8px;font-weight:700;text-align:center;margin-top:3px"></div></div></div>'+
+    '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px">'+
+    '<div><div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px">Alerta fuera de sesión</div>'+
+    '<div style="font-size:10px;color:var(--text3);line-height:1.5">Avisa cuando abras TopstepX fuera del horario configurado en Reglas.</div></div>'+
+    '<div id="session-alert-toggle" onclick="toggleExtSetting(\'sessionAlert\')" style="cursor:pointer;flex-shrink:0">'+
+    '<div id="session-alert-toggle-track" style="width:38px;height:22px;border-radius:11px;position:relative;transition:background .2s">'+
+    '<div id="session-alert-toggle-thumb" style="width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.4)"></div></div>'+
+    '<div id="session-alert-toggle-lbl" style="font-size:8px;font-weight:700;text-align:center;margin-top:3px"></div></div></div>'+
+    '<div style="font-size:9px;color:var(--text3);padding:8px;background:var(--surface2);border-radius:7px">⚙️ Cambios sincronizados automáticamente con la extensión.</div>'+
+    '</div></div>'+
+    '<div class="panel" style="margin-bottom:12px"><div class="panel-head"><span class="panel-title">Legal</span></div>'+
     '<div style="padding:18px;display:flex;flex-direction:column;gap:8px">'+
     '<a href="#" style="font-size:12px;color:var(--blue)">Terms of Service</a>'+
     '<a href="#" style="font-size:12px;color:var(--blue)">Privacy Policy</a>'+
@@ -6810,7 +6839,45 @@ function renderSettings() {
     '<button class="btn btn-solid" onclick="alert(\'Support form coming soon!\')">Send Message</button>'+
     '</div></div>'+
     '</div>';
-  setTimeout(initSettingsTags, 50);
+  setTimeout(function(){ initSettingsTags(); initExtSettings(); }, 50);
+}
+
+function getExtSettings() {
+  try { return JSON.parse(localStorage.getItem('bb_ext_settings_'+(currentAccountId||'')) || '{}'); } catch(e) { return {}; }
+}
+function saveExtSettings(s) {
+  try { localStorage.setItem('bb_ext_settings_'+(currentAccountId||''), JSON.stringify(s)); } catch(e) {}
+  // Also push to Supabase so extension can read it
+  if (currentAccountId && sb) {
+    sb.from('accounts').update({ ext_settings: s }).eq('id', currentAccountId).then(function(){});
+  }
+}
+function initExtSettings() {
+  var s = getExtSettings();
+  var defaults = { preventiveLock: true, realtimeAlerts: true, sessionAlert: true };
+  var cfg = Object.assign({}, defaults, s);
+  ['preventiveLock','realtimeAlerts','sessionAlert'].forEach(function(key) {
+    var ids = {
+      preventiveLock:  { track:'lock-toggle-track',         thumb:'lock-toggle-thumb',         lbl:'lock-toggle-lbl' },
+      realtimeAlerts:  { track:'alerts-toggle-track',       thumb:'alerts-toggle-thumb',       lbl:'alerts-toggle-lbl' },
+      sessionAlert:    { track:'session-alert-toggle-track',thumb:'session-alert-toggle-thumb',lbl:'session-alert-toggle-lbl' }
+    }[key];
+    var on = !!cfg[key];
+    var track = document.getElementById(ids.track);
+    var thumb = document.getElementById(ids.thumb);
+    var lbl   = document.getElementById(ids.lbl);
+    if (track) track.style.background = on ? '#5a9e9e' : '#333';
+    if (thumb) thumb.style.left = on ? '18px' : '2px';
+    if (lbl)   { lbl.textContent = on ? 'ON' : 'OFF'; lbl.style.color = on ? '#5a9e9e' : '#555'; }
+  });
+}
+function toggleExtSetting(key) {
+  var s = getExtSettings();
+  var defaults = { preventiveLock: true, realtimeAlerts: true, sessionAlert: true };
+  var cfg = Object.assign({}, defaults, s);
+  cfg[key] = !cfg[key];
+  saveExtSettings(cfg);
+  initExtSettings();
 }
 
 async function saveProfile() {
