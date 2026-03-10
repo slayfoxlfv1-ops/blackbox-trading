@@ -126,7 +126,7 @@ tr:hover td { background:var(--hover); }
 .cal-hdr  { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; padding:10px 14px 0; }
 .cal-hdr-day { font-family:'Geist Mono',monospace; font-size:8px; color:var(--text3); text-align:center; letter-spacing:.5px; }
 .cal-cell { aspect-ratio:1; border-radius:5px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; transition:all .1s; border:1px solid transparent; position:relative; }
-/* tooltip positioning via JS */
+.cal-cell:hover .cal-tooltip { display:block !important; }
 .cal-cell:hover { filter:brightness(1.15); transform:scale(1.04); z-index:2; }
 .cal-cell.win  { background:var(--green-bg); border-color:var(--green-bd); }
 .cal-cell.loss { background:var(--red-bg);   border-color:var(--red-bd); }
@@ -3322,14 +3322,18 @@ function renderTradeLogTable(trades) {
 function showCalTooltip(e, cell) {
   var tip = cell.querySelector('.cal-tooltip');
   if (!tip) return;
-  tip.style.display = 'block';
+  // Position first (while still hidden via CSS), then override display
   var r = cell.getBoundingClientRect();
-  var tw = 200, th = tip.offsetHeight || 120;
+  var tw = 200;
   var vw = window.innerWidth, vh = window.innerHeight;
-  // Horizontal: center on cell, clamp to viewport
   var left = r.left + r.width/2 - tw/2;
   left = Math.max(8, Math.min(left, vw - tw - 8));
-  // Vertical: prefer above, flip below if not enough space
+  // Temp show to measure height
+  tip.style.visibility = 'hidden';
+  tip.style.display = 'block';
+  var th = tip.offsetHeight || 120;
+  tip.style.display = '';
+  tip.style.visibility = '';
   var top = r.top - th - 8;
   if (top < 8) top = r.bottom + 8;
   tip.style.left = left + 'px';
