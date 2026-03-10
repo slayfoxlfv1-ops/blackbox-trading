@@ -318,20 +318,22 @@ tr:hover td { background:var(--hover); }
       <button class="auth-tab active" onclick="setTab('login')">Sign In</button>
       <button class="auth-tab" onclick="setTab('register')">Sign Up</button>
     </div>
+    <form id="auth-form" autocomplete="on" onsubmit="authSubmit();return false;" style="display:contents">
     <div id="auth-register-name" class="form-group" style="display:none">
       <label class="form-label">Full Name</label>
-      <input class="form-input" id="auth-name" type="text" placeholder="Your name">
+      <input class="form-input" id="auth-name" type="text" placeholder="Your name" autocomplete="name" name="name">
     </div>
     <div class="form-group">
       <label class="form-label">Email</label>
-      <input class="form-input" id="auth-email" type="email" placeholder="you@email.com">
+      <input class="form-input" id="auth-email" type="email" placeholder="you@email.com" autocomplete="email" name="email">
     </div>
     <div class="form-group">
       <label class="form-label">Password</label>
-      <input class="form-input" id="auth-pass" type="password" placeholder="password">
+      <input class="form-input" id="auth-pass" type="password" placeholder="password" autocomplete="current-password" name="password">
     </div>
     <div class="auth-error" id="auth-error"></div>
-    <button class="btn-primary" onclick="authSubmit()" id="auth-btn">Sign In</button>
+    <button class="btn-primary" type="submit" id="auth-btn">Sign In</button>
+    </form>
   </div>
 </div>
 
@@ -1980,6 +1982,90 @@ function calcDisciplineProgress(trades) {
 }
 
 // ── Badges / Achievements ──
+
+// ── Mental Score for a period (weekly/monthly) ──
+function calcPeriodMentalScore(tradesInPeriod) {
+  if (!tradesInPeriod.length) return null;
+  // Get unique trading days in period
+  var days = {};
+  tradesInPeriod.forEach(function(t) {
+    if (t.entry_time) days[t.entry_time.slice(0,10)] = true;
+  });
+  var dayList = Object.keys(days).sort();
+  if (!dayList.length) return null;
+
+  var scores = dayList.map(function(d) { return calcMentalScore(d); }).filter(function(s){ return s.total !== null; });
+  if (!scores.length) return null;
+
+  var avg = Math.round(scores.reduce(function(s,x){ return s + x.total; }, 0) / scores.length);
+  var best  = scores.reduce(function(a,b){ return a.total > b.total ? a : b; });
+  var worst = scores.reduce(function(a,b){ return a.total < b.total ? a : b; });
+  var bestDay  = dayList[scores.indexOf(best)];
+  var worstDay = dayList[scores.indexOf(worst)];
+  var trend = scores.length >= 3
+    ? (scores.slice(-3).reduce(function(s,x){return s+x.total;},0)/3) - (scores.slice(0,3).reduce(function(s,x){return s+x.total;},0)/3)
+    : 0;
+
+  var label = avg >= 90 ? 'Trader élite 🏆' : avg >= 75 ? 'Rendimiento sólido ✅' : avg >= 60 ? 'En desarrollo ⚠️' : avg >= 40 ? 'Necesita atención 🔶' : 'Estado crítico 🔴';
+  var color = avg >= 75 ? 'var(--green)' : avg >= 50 ? 'var(--amber)' : 'var(--red)';
+
+  return { avg: avg, label: label, color: color, days: dayList.length, scores: scores, best: best.total, worst: worst.total, bestDay: bestDay, worstDay: worstDay, trend: Math.round(trend) };
+}
+
+// ── Psychological profile from trades ──
+function buildPsychProfile(trades) {
+  if (trades.length < 5) return null;
+  var tags = {}, emotions = {}, hourPnl = {}, hourCount = {};
+  trades.forEach(function(t) {
+    if (t.discipline_tag && t.discipline_tag !== 'clean') tags[t.discipline_tag] = (tags[t.discipline_tag]||0)+1;
+    if (t.emotion) emotions[t.emotion] = (emotions[t.emotion]||0)+1;
+    if (t.entry_time) {
+      var h = new Date(t.entry_time).getHours();
+      hourPnl[h]   = (hourPnl[h]||0)  + (t.pnl||0);
+      hourCount[h] = (hourCount[h]||0) + 1;
+    }
+  });
+  var topTag    = Object.keys(tags).sort(function(a,b){ return tags[b]-tags[a]; })[0];
+  var topEmo    = Object.keys(emotions).sort(function(a,b){ return emotions[b]-emotions[a]; })[0];
+  var bestHour  = Object.keys(hourPnl).sort(function(a,b){ return hourPnl[b]-hourPnl[a]; })[0];
+  var worstHour = Object.keys(hourPnl).sort(function(a,b){ return hourPnl[a]-hourPnl[b]; })[0];
+  var wins   = trades.filter(function(t){ return (t.pnl||0)>0; });
+  var losses = trades.filter(function(t){ return (t.pnl||0)<0; });
+  var wr     = Math.round(wins.length / trades.length * 100);
+  var avgWin  = wins.length   ? Math.round(wins.reduce(function(s,t){return s+(t.pnl||0);},0)/wins.length)     : 0;
+  var avgLoss = losses.length ? Math.round(Math.abs(losses.reduce(function(s,t){return s+(t.pnl||0);},0))/losses.length) : 0;
+  var rr = avgLoss > 0 ? (avgWin / avgLoss).toFixed(2) : '—';
+
+  // Revenge detection
+  var sortedT = trades.slice().sort(function(a,b){ return new Date(a.entry_time)-new Date(b.entry_time); });
+  var revengeCount = 0;
+  for (var i=1; i<sortedT.length; i++) {
+    var prev=sortedT[i-1], cur=sortedT[i];
+    if ((prev.pnl||0)<0 && cur.entry_time && prev.exit_time) {
+      var gap = (new Date(cur.entry_time)-new Date(prev.exit_time))/60000;
+      if (gap < 5) revengeCount++;
+    }
+  }
+
+  // Emotion consistency: ratio of trades with emotion logged
+  var withEmo = trades.filter(function(t){ return t.emotion; }).length;
+  var emoConsistency = Math.round(withEmo/trades.length*100);
+
+  return {
+    tradeCount: trades.length,
+    wr: wr, avgWin: avgWin, avgLoss: avgLoss, rr: rr,
+    topTag: topTag, topTagCount: topTag ? tags[topTag] : 0,
+    topEmo: topEmo, topEmoCount: topEmo ? emotions[topEmo] : 0,
+    bestHour: bestHour ? parseInt(bestHour) : null,
+    worstHour: worstHour ? parseInt(worstHour) : null,
+    bestHourPnl: bestHour ? Math.round(hourPnl[bestHour]) : 0,
+    worstHourPnl: worstHour ? Math.round(hourPnl[worstHour]) : 0,
+    revengeCount: revengeCount,
+    emoConsistency: emoConsistency,
+    tagBreakdown: tags
+  };
+}
+
 function getCoachConsultCount() {
   try { return parseInt(localStorage.getItem('bb_coach_consults_'+(currentAccountId||'')) || '0'); } catch(e) { return 0; }
 }
@@ -6442,7 +6528,188 @@ function buildReports(allTrades) {
     '<div style="padding:14px 18px;height:100px">'+equitySvg+'</div></div>'+
     '<div class="panel" style="margin-bottom:12px"><div class="panel-head"><span class="panel-title">Trade List</span><span class="panel-cap">'+total+' trades'+(total>50?' (showing 50)':'')+'</span></div>'+
     '<div class="table-scroll"><table><thead><tr><th>Date</th><th>Ticker</th><th>Side</th><th>P&L</th></tr></thead><tbody>'+tradeRows+'</tbody></table></div></div>'+
+    renderMentalScorePanel(allTrades, repFilters.period)+
+    renderPsychProfilePanel(allTrades)+
     renderAchievementsHtml();
+}
+
+function renderMentalScorePanel(allTrades, period) {
+  var now = new Date();
+  // Get trades for the period
+  var weekStart = new Date(); weekStart.setDate(weekStart.getDate()-weekStart.getDay()+(weekStart.getDay()===0?-6:1)); weekStart.setHours(0,0,0,0);
+  var monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  var weekTrades  = allTrades.filter(function(t){ if(!t.entry_time) return false; var d=new Date(t.entry_time); return d>=weekStart; });
+  var monthTrades = allTrades.filter(function(t){ if(!t.entry_time) return false; var d=new Date(t.entry_time); return d>=monthStart; });
+
+  var weekly  = calcPeriodMentalScore(weekTrades);
+  var monthly = calcPeriodMentalScore(monthTrades);
+
+  if (!weekly && !monthly) return '';
+
+  function scoreCard(label, data, trades) {
+    if (!data) return '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:16px;text-align:center"><div style="font-size:10px;color:var(--text3)">'+label+'</div><div style="font-size:11px;color:var(--text3);margin-top:8px">Sin datos suficientes</div></div>';
+    var trendArrow = data.trend > 3 ? '↑' : data.trend < -3 ? '↓' : '→';
+    var trendColor = data.trend > 3 ? 'var(--green)' : data.trend < -3 ? 'var(--red)' : 'var(--text3)';
+
+    // Mini sparkline of daily scores
+    var spark = '';
+    if (data.scores.length > 1) {
+      var W=120, H=28, mn=Math.min.apply(null,data.scores.map(function(s){return s.total;})), mx=Math.max.apply(null,data.scores.map(function(s){return s.total;}));
+      var range = mx - mn || 1;
+      var pts = data.scores.map(function(s,i){
+        var x = Math.round(i/(data.scores.length-1)*W);
+        var y = Math.round(H - (s.total-mn)/range*H);
+        return x+','+y;
+      }).join(' ');
+      var lineColor = data.avg >= 75 ? '#5a9e72' : data.avg >= 50 ? '#9e8050' : '#9e5a5a';
+      spark = '<svg width="'+W+'" height="'+H+'" style="margin:8px auto;display:block"><polyline points="'+pts+'" fill="none" stroke="'+lineColor+'" stroke-width="1.5" stroke-linejoin="round"/></svg>';
+    }
+
+    return '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:16px">'
+      +'<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">'+label+'</div>'
+      +'<div style="display:flex;align-items:flex-end;gap:8px;margin-bottom:4px">'
+      +'<div style="font-size:38px;font-weight:800;color:'+data.color+';line-height:1;letter-spacing:-2px">'+data.avg+'</div>'
+      +'<div style="font-size:11px;color:'+trendColor+';font-weight:700;margin-bottom:6px">'+trendArrow+' '+(Math.abs(data.trend)||'—')+'</div>'
+      +'</div>'
+      +'<div style="font-size:9px;color:var(--text3);margin-bottom:6px">'+data.label+'</div>'
+      +spark
+      +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px">'
+      +'<div style="text-align:center"><div style="font-size:16px;font-weight:700;color:var(--green)">'+data.best+'</div><div style="font-size:8px;color:var(--text3)">Mejor día</div></div>'
+      +'<div style="text-align:center"><div style="font-size:16px;font-weight:700;color:var(--red)">'+data.worst+'</div><div style="font-size:8px;color:var(--text3)">Peor día</div></div>'
+      +'<div style="text-align:center"><div style="font-size:16px;font-weight:700;color:var(--text)">'+data.days+'</div><div style="font-size:8px;color:var(--text3)">Días activos</div></div>'
+      +'</div>'
+      +'</div>';
+  }
+
+  return '<div class="panel" style="margin-bottom:12px">'
+    +'<div class="panel-head"><span class="panel-title">🧠 Mental Score</span><span class="panel-cap" style="font-size:9px;color:var(--text3)">Promedio de tus días activos</span></div>'
+    +'<div style="padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+    +scoreCard('Esta semana', weekly, weekTrades)
+    +scoreCard('Este mes', monthly, monthTrades)
+    +'</div></div>';
+}
+
+function renderPsychProfilePanel(trades) {
+  var profile = buildPsychProfile(trades);
+  if (!trades.length) return '';
+
+  var tagLabels = { moved_sl:'Moved SL', scaled_in:'Scaled into loss', no_confirmation:'No confirmation', overtrading:'Overtrading', impulse:'Impulse', fomo:'FOMO' };
+  var emoLabels = { neutral:'Neutral 😶', calm:'Tranquilo 😌', confident:'Seguro 💪', anxious:'Ansioso 😰', fear:'Con miedo 😨', greedy:'Codicioso 🤑', bored:'Aburrido 😐', frustrated:'Frustrado 😤' };
+
+  if (!profile) {
+    return '<div class="panel" style="margin-bottom:12px"><div class="panel-head"><span class="panel-title">🔬 Perfil Psicológico</span></div>'
+      +'<div style="padding:16px;text-align:center;color:var(--text3);font-size:11px">Necesitas al menos 5 trades para generar tu perfil.</div></div>';
+  }
+
+  // Profile strength bars
+  function bar(pct, color) {
+    return '<div style="height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;margin-top:4px">'
+      +'<div style="height:100%;width:'+Math.min(100,pct)+'%;background:'+color+';border-radius:2px"></div></div>';
+  }
+
+  // Discipline breakdown
+  var discTotal = Object.keys(profile.tagBreakdown).reduce(function(s,k){ return s+profile.tagBreakdown[k]; }, 0);
+  var cleanCount = trades.filter(function(t){ return !t.discipline_tag || t.discipline_tag==='clean'; }).length;
+  var cleanPct = Math.round(cleanCount/trades.length*100);
+
+  var tagBars = '<div style="font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Errores de disciplina</div>';
+  if (Object.keys(profile.tagBreakdown).length === 0) {
+    tagBars += '<div style="font-size:10px;color:var(--green)">✓ Sin errores registrados</div>';
+  } else {
+    Object.keys(profile.tagBreakdown).sort(function(a,b){ return profile.tagBreakdown[b]-profile.tagBreakdown[a]; }).forEach(function(tag) {
+      var count = profile.tagBreakdown[tag];
+      var pct   = Math.round(count/trades.length*100);
+      tagBars += '<div style="margin-bottom:7px"><div style="display:flex;justify-content:space-between"><span style="font-size:10px;color:var(--text2)">'+(tagLabels[tag]||tag)+'</span><span style="font-size:9px;color:var(--red)">'+count+'x ('+pct+'%)</span></div>'+bar(pct,'var(--red)')+'</div>';
+    });
+  }
+
+  // Psycho insights
+  var insights = [];
+  if (profile.revengeCount > 0)     insights.push({ icon:'⚡', color:'var(--red)',   text: profile.revengeCount+' revenge trades detectados — patrón de recuperación emocional' });
+  if (profile.emoConsistency < 50)  insights.push({ icon:'📋', color:'var(--amber)', text: 'Solo el '+profile.emoConsistency+'% de tus trades tienen emoción registrada — mejora el journaling' });
+  if (profile.emoConsistency >= 80) insights.push({ icon:'✅', color:'var(--green)',  text: profile.emoConsistency+'% de consistencia en journaling — excelente disciplina de registro' });
+  if (profile.rr !== '—' && parseFloat(profile.rr) < 1) insights.push({ icon:'📉', color:'var(--amber)', text: 'R:R promedio '+profile.rr+' — estás ganando menos de lo que arriesgas en cada trade' });
+  if (profile.bestHour !== null && profile.worstHour !== null && profile.bestHour !== profile.worstHour) {
+    insights.push({ icon:'🕐', color:'var(--green)', text: 'Tu mejor hora es las '+profile.bestHour+'h (+$'+profile.bestHourPnl+'). Tu peor hora: '+profile.worstHour+'h ($'+profile.worstHourPnl+')' });
+  }
+
+  var insightHtml = insights.length
+    ? insights.map(function(i){ return '<div style="display:flex;gap:8px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-size:13px;flex-shrink:0">'+i.icon+'</span><span style="font-size:10px;color:var(--text2);line-height:1.5">'+i.text+'</span></div>'; }).join('')
+    : '<div style="font-size:10px;color:var(--text3)">Acumula más trades para generar insights personalizados.</div>';
+
+  // Psych coach button
+  var psychCoachBtn = trades.length >= 15
+    ? '<button class="btn btn-solid" style="margin-top:12px;background:#5a9e9e;border-color:#5a9e9e;font-size:10px" onclick="generatePsychProfile()">🤖 Generar perfil psicológico con IA</button>'
+    : '<div style="font-size:9px;color:var(--text3);margin-top:10px;padding:8px;background:var(--surface2);border-radius:6px">Necesitas '+Math.max(0,15-trades.length)+' trades más para el análisis de IA</div>';
+
+  var psychAnalysisHtml = '';
+  if (window._psychProfileAnalysis) {
+    psychAnalysisHtml = '<div style="margin-top:12px;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px">'
+      +'<div style="font-size:9px;color:#5a9e9e;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">🤖 Análisis Coach IA</div>'
+      +'<div style="font-size:11px;color:var(--text2);line-height:1.7;white-space:pre-wrap">'+window._psychProfileAnalysis+'</div>'
+      +'<button class="btn btn-ghost" style="margin-top:8px;font-size:9px" onclick="window._psychProfileAnalysis=null;buildReports(currentTrades||[])">Limpiar</button>'
+      +'</div>';
+  }
+
+  return '<div class="panel" style="margin-bottom:12px">'
+    +'<div class="panel-head"><span class="panel-title">🔬 Perfil Psicológico</span><span class="panel-cap">'+trades.length+' trades analizados</span></div>'
+    +'<div style="padding:16px">'
+    // Row 1: key metrics
+    +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">'
+    +'<div style="text-align:center;background:var(--surface2);border-radius:8px;padding:12px"><div style="font-size:22px;font-weight:800;color:var(--text)">'+profile.wr+'%</div><div style="font-size:8px;color:var(--text3);margin-top:2px">Win Rate</div></div>'
+    +'<div style="text-align:center;background:var(--surface2);border-radius:8px;padding:12px"><div style="font-size:22px;font-weight:800;color:var(--text)">'+profile.rr+'</div><div style="font-size:8px;color:var(--text3);margin-top:2px">R:R promedio</div></div>'
+    +'<div style="text-align:center;background:var(--surface2);border-radius:8px;padding:12px"><div style="font-size:22px;font-weight:800;color:'+(cleanPct>=80?'var(--green)':cleanPct>=60?'var(--amber)':'var(--red)')+'">'+cleanPct+'%</div><div style="font-size:8px;color:var(--text3);margin-top:2px">Trades clean</div></div>'
+    +'<div style="text-align:center;background:var(--surface2);border-radius:8px;padding:12px"><div style="font-size:22px;font-weight:800;color:'+(profile.emoConsistency>=80?'var(--green)':profile.emoConsistency>=50?'var(--amber)':'var(--red)')+'">'+profile.emoConsistency+'%</div><div style="font-size:8px;color:var(--text3);margin-top:2px">Journaling</div></div>'
+    +'</div>'
+    // Row 2: discipline + insights
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+    +'<div>'+tagBars+'</div>'
+    +'<div><div style="font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Insights</div>'+insightHtml+'</div>'
+    +'</div>'
+    +psychCoachBtn
+    +psychAnalysisHtml
+    +'</div></div>';
+}
+
+async function generatePsychProfile() {
+  incCoachConsultCount();
+  var btn = event.target;
+  btn.disabled = true; btn.textContent = '🤖 Analizando...';
+
+  var trades = currentTrades || [];
+  var profile = buildPsychProfile(trades);
+  if (!profile) { btn.disabled=false; btn.textContent='🤖 Generar perfil psicológico con IA'; return; }
+
+  var tagLabels = { moved_sl:'Moved SL', no_confirmation:'Sin confirmación', overtrading:'Overtrading', impulse:'Impulso', fomo:'FOMO', scaled_in:'Scaled into loss' };
+  var tagSummary = Object.keys(profile.tagBreakdown).map(function(k){ return (tagLabels[k]||k)+': '+profile.tagBreakdown[k]+'x'; }).join(', ') || 'ninguno';
+
+  var prompt = 'Eres un psicólogo de trading. Analiza el perfil psicológico de este trader en español, con empatía y precisión.\n\n'
+    +'DATOS OBJETIVOS ('+profile.tradeCount+' trades):\n'
+    +'- Win rate: '+profile.wr+'%\n'
+    +'- R:R promedio: '+profile.rr+'\n'
+    +'- Trades clean: '+Math.round(trades.filter(function(t){return !t.discipline_tag||t.discipline_tag==="clean";}).length/trades.length*100)+'%\n'
+    +'- Errores de disciplina: '+tagSummary+'\n'
+    +'- Revenge trades: '+profile.revengeCount+'\n'
+    +'- Emoción más frecuente: '+(profile.topEmo||'no registrada')+'\n'
+    +'- Journaling consistency: '+profile.emoConsistency+'%\n'
+    +'- Mejor hora: '+(profile.bestHour!==null?profile.bestHour+'h (+$'+profile.bestHourPnl+')':'desconocida')+'\n'
+    +'- Peor hora: '+(profile.worstHour!==null?profile.worstHour+'h ($'+profile.worstHourPnl+')':'desconocida')+'\n\n'
+    +'Estructura del análisis:\n'
+    +'1) Patrón psicológico dominante (qué tipo de trader es a nivel emocional)\n'
+    +'2) Principal saboteador (el error más costoso en términos psicológicos)\n'
+    +'3) Fortaleza identificada\n'
+    +'4) Hora/momento óptimo de operación y por qué\n'
+    +'5) Plan de trabajo psicológico: 3 hábitos concretos para las próximas 2 semanas\n'
+    +'Max 400 palabras. Directo, honesto, sin suavizar los problemas.';
+
+  try {
+    var text = await callCoach(prompt, 1200);
+    window._psychProfileAnalysis = text || 'No se pudo generar el análisis.';
+  } catch(e) {
+    window._psychProfileAnalysis = 'Error conectando con el Coach IA.';
+  }
+  buildReports(currentTrades||[]);
 }
 
 function renderAchievementsHtml() {
