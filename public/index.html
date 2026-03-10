@@ -1970,50 +1970,265 @@ function calcDisciplineProgress(trades) {
 }
 
 // ── Badges / Achievements ──
-function calcBadges(trades, clSessions) {
-  var earned = [];
-  var all = [
-    { id:'first_trade',   emoji:'🚀', name:'First Trade',     desc:'Registraste tu primer trade', check:function(t){ return t.length>=1; }},
-    { id:'calm_10',       emoji:'🧘', name:'Calm Trader',     desc:'10 trades con emoción tranquilo/seguro', check:function(t){ return t.filter(function(x){return x.emotion==='Tranquilo'||x.emotion==='Seguro';}).length>=10; }},
-    { id:'clean_20',      emoji:'✨', name:'Clean Week',      desc:'20 trades consecutivos sin errores', check:function(t){ var c=0,max=0; t.forEach(function(x){if((x.discipline_tag||'clean')==='clean'){c++;max=Math.max(max,c);}else c=0;}); return max>=20; }},
-    { id:'no_revenge_5',  emoji:'🧱', name:'Revenge Guard',   desc:'5 días sin revenge trading', check:function(t,cl){ return calcDisciplineProgress(t).filter(function(m){return m.score>=80;}).length>=1; }},
-    { id:'checklist_7',   emoji:'📋', name:'Plan Follower',   desc:'7 días con checklist ≥80%', check:function(t,cl){ return (cl||[]).filter(function(s){return s.score_pct>=80;}).length>=7; }},
-    { id:'profit_100',    emoji:'💰', name:'First $100',      desc:'Alcanzaste $100 de P&L acumulado', check:function(t){ return t.reduce(function(s,x){return s+(x.pnl||0);},0)>=100; }},
-    { id:'wr_60',         emoji:'🎯', name:'Sharp Shooter',   desc:'Win rate ≥60% con ≥20 trades', check:function(t){ if(t.length<20)return false; var w=t.filter(function(x){return(x.pnl||0)>0;}).length; return w/t.length>=0.6; }},
-    { id:'trades_50',     emoji:'⚡', name:'50 Trades',       desc:'50 trades registrados', check:function(t){ return t.length>=50; }},
-    { id:'trades_100',    emoji:'💎', name:'100 Trades',      desc:'100 trades — eres serio', check:function(t){ return t.length>=100; }},
-    { id:'no_sl_10',      emoji:'🛡',  name:'SL Protector',   desc:'10 trades seguidos sin mover SL', check:function(t){ var c=0,max=0; t.forEach(function(x){if(!x.moved_sl&&x.discipline_tag!=='moved_sl'){c++;max=Math.max(max,c);}else c=0;}); return max>=10; }},
-  ];
+function getCoachConsultCount() {
+  try { return parseInt(localStorage.getItem('bb_coach_consults_'+(currentAccountId||'')) || '0'); } catch(e) { return 0; }
+}
+function incCoachConsultCount() {
+  try {
+    var k = 'bb_coach_consults_'+(currentAccountId||'');
+    localStorage.setItem(k, (getCoachConsultCount()+1).toString());
+  } catch(e) {}
+}
 
-  var nextBadge = null;
-  all.forEach(function(badge) {
-    if (badge.check(trades||[], clSessions||[])) {
-      earned.push(badge);
-    } else if (!nextBadge) {
-      nextBadge = badge;
+function calcAllAchievements(trades, clSessions, moodSessions) {
+  var today      = new Date().toISOString().slice(0,10);
+  var sortedT    = (trades||[]).slice().sort(function(a,b){ return new Date(a.entry_time||0)-new Date(b.entry_time||0); });
+  var cl         = clSessions || [];
+  var moods      = moodSessions || [];
+  var rulesObj   = getPersonalRules(currentAccountId||'');
+  var consultCount = getCoachConsultCount();
+
+  // Helper: unique trading days sorted
+  function tradingDays(ts) {
+    var seen={}, days=[];
+    ts.forEach(function(t){ if(t.entry_time){ var d=t.entry_time.slice(0,10); if(!seen[d]){seen[d]=true;days.push(d);} }});
+    return days.sort();
+  }
+  var tDays = tradingDays(sortedT);
+
+  // Helper: consecutive streak of days passing a test
+  function currentStreak(days, passFn) {
+    var streak = 0;
+    for (var i = days.length-1; i >= 0; i--) {
+      if (passFn(days[i])) streak++; else break;
     }
-  });
-
-  // Progress hint for next badge
-  var nextInfo = null;
-  if (nextBadge) {
-    var progHints = {
-      first_trade:  trades.length+'/1 trades',
-      calm_10:      trades.filter(function(t){return t.emotion==='Tranquilo'||t.emotion==='Seguro';}).length+'/10 trades calm',
-      clean_20:     (function(){ var c=0,max=0; (trades||[]).forEach(function(x){if((x.discipline_tag||'clean')==='clean'){c++;max=Math.max(max,c);}else c=0;}); return max+'/20 consecutivos'; })(),
-      checklist_7:  (clSessions||[]).filter(function(s){return s.score_pct>=80;}).length+'/7 días',
-      profit_100:   '$'+Math.round(trades.reduce(function(s,t){return s+(t.pnl||0);},0))+'/$100',
-      wr_60:        trades.length+'/20 trades',
-      trades_50:    trades.length+'/50 trades',
-      trades_100:   trades.length+'/100 trades',
-      no_sl_10:     '10 seguidos sin mover SL',
-      no_revenge_5: '5 días disciplinados',
-    };
-    nextInfo = { emoji:nextBadge.emoji, name:nextBadge.name, progress:progHints[nextBadge.id]||'' };
+    return streak;
   }
 
-  return { earned:earned, next:nextInfo };
+  // Helper: max consecutive trades passing test
+  function maxConsecTrades(ts, passFn) {
+    var cur=0, max=0;
+    ts.forEach(function(t){ if(passFn(t)){cur++;max=Math.max(max,cur);}else cur=0; });
+    return max;
+  }
+  function curConsecTrades(ts, passFn) {
+    var streak=0;
+    for(var i=ts.length-1;i>=0;i--){ if(passFn(ts[i]))streak++; else break; }
+    return streak;
+  }
+
+  // Day helpers
+  function dayTrades(d) { return sortedT.filter(function(t){ return t.entry_time&&t.entry_time.slice(0,10)===d; }); }
+  function clDay(d)     { return cl.find(function(s){ return s.session_date===d; }); }
+  function moodDay(d)   { return moods.find(function(s){ return s.date===d; }); }
+
+  function hasViolations(d) {
+    var viols = checkRuleViolations(rulesObj, dayTrades(d));
+    return viols.length > 0;
+  }
+  function hasActiveRules() {
+    return Object.keys(rulesObj).some(function(k){ return rulesObj[k]&&rulesObj[k].active; });
+  }
+  function hasTilt(d) {
+    var dt = dayTrades(d);
+    if (!dt.length) return false;
+    var tiltData = detectTilt(dt);
+    return tiltData && (tiltData.level === 'warning' || tiltData.level === 'danger');
+  }
+  function isClean(t) { return (t.discipline_tag||'clean')==='clean'; }
+  function isEmotional(t) { var tag=t.discipline_tag||'clean'; return tag==='impulse'||tag==='fomo'||tag==='revenge'; }
+  function isCalibrated(t) { return !!t.emotion && ((t.pnl||0)>0 || (t.discipline_tag||'clean')!=='moved_sl'); }
+
+  // ── RACHAS ──
+  var streaks = [
+    {
+      id:'streak_checklist', emoji:'📋', name:'Racha Checklist',
+      desc:'Días consecutivos completando el checklist',
+      levels:[3,7,14,30],
+      current: currentStreak(tDays, function(d){ var s=clDay(d); return s&&s.score_pct>=80; }),
+      type:'streak'
+    },
+    {
+      id:'streak_mood', emoji:'🧠', name:'Racha Mood Check',
+      desc:'Días consecutivos con mood check hecho',
+      levels:[3,7,14],
+      current: currentStreak(tDays, function(d){ return !!moodDay(d); }),
+      type:'streak'
+    },
+    {
+      id:'streak_rules', emoji:'🛡', name:'Racha Reglas',
+      desc:'Días consecutivos sin violar ninguna regla activa',
+      levels:[3,7,14],
+      current: hasActiveRules() ? currentStreak(tDays, function(d){ return dayTrades(d).length>0 && !hasViolations(d); }) : 0,
+      type:'streak'
+    },
+    {
+      id:'streak_tilt', emoji:'⚡', name:'Sin Tilt',
+      desc:'Días consecutivos sin alerta de tilt',
+      levels:[5,10,20],
+      current: currentStreak(tDays, function(d){ return !hasTilt(d); }),
+      type:'streak'
+    },
+    {
+      id:'streak_calibrado', emoji:'🎯', name:'Calibrado',
+      desc:'Días con emoción registrada y resultado positivo o pérdida controlada',
+      levels:[3,7],
+      current: currentStreak(tDays, function(d){
+        var dt=dayTrades(d);
+        return dt.length>0 && dt.every(function(t){ return isCalibrated(t); });
+      }),
+      type:'streak'
+    },
+    {
+      id:'streak_journaling', emoji:'✍️', name:'Journaling Express',
+      desc:'Días consecutivos con trades registrados via extensión (TopstepX)',
+      levels:[3,7,14],
+      current: 0, // extension-only, always 0 without extension data
+      extensionOnly: true,
+      type:'streak'
+    }
+  ];
+
+  // ── HITOS ──
+  var cleanConsec = curConsecTrades(sortedT, isClean);
+  var noEmoConsec = curConsecTrades(sortedT, function(t){ return !isEmotional(t); });
+  var rrConsec    = curConsecTrades(sortedT, function(t){
+    var rp=parseFloat(t.rr_planned)||0, ra=parseFloat(t.rr_achieved)||0;
+    return rp>0 && ra>0 && (ra/rp)>=0.9;
+  });
+  var screenshotCount = sortedT.filter(function(t){ return t.screenshot_url; }).length;
+  var cleanLossExists = sortedT.some(function(t){ return isClean(t)&&(t.pnl||0)<0; });
+  var totalClean      = sortedT.filter(isClean).length;
+  var clAccum         = cl.filter(function(s){ return s.score_pct>=80; }).length;
+  var mentalDays      = tDays.filter(function(d){ return calcDailyMindScore(d).total>=70; }).length;
+  var monthDays       = tDays.filter(function(d){
+    var m=new Date().toISOString().slice(0,7);
+    return d.startsWith(m) && calcDailyMindScore(d).total>=70;
+  }).length;
+
+  // Perfect week: find any Mon-Fri week with checklist+rules+mood all 5 days
+  function hasPerfectWeek() {
+    for (var wi=0; wi<tDays.length; wi++) {
+      var d = new Date(tDays[wi]);
+      if (d.getDay()===1) { // Monday
+        var ok=true;
+        for(var dd=0;dd<5;dd++){
+          var nd=new Date(d); nd.setDate(nd.getDate()+dd);
+          var nds=nd.toISOString().slice(0,10);
+          var cl2=clDay(nds); var md=moodDay(nds);
+          var viols= hasActiveRules() ? checkRuleViolations(rulesObj,dayTrades(nds)).length : 0;
+          if(!cl2||!md||viols>0){ok=false;break;}
+        }
+        if(ok) return true;
+      }
+    }
+    return false;
+  }
+
+  // Freno de mano: day with tilt detected + 0 trades after first tilt-triggering trade
+  function hasFrenoDeMano() {
+    return tDays.some(function(d){
+      var dt=dayTrades(d).sort(function(a,b){return new Date(a.entry_time)-new Date(b.entry_time);});
+      if(!dt.length) return false;
+      for(var ti=2;ti<dt.length;ti++){
+        var tiltSoFar=detectTilt(dt.slice(0,ti));
+        if(tiltSoFar&&(tiltSoFar.level==='warning'||tiltSoFar.level==='danger')){
+          return dt.slice(ti).length===0; // no trades after tilt
+        }
+      }
+      return false;
+    });
+  }
+
+  var milestones = [
+    {
+      id:'first_clean',   emoji:'✅', name:'Primer trade clean',
+      desc:'Tu primer trade sin errores de disciplina',
+      total:1, current:Math.min(totalClean,1), unlocked:totalClean>=1
+    },
+    {
+      id:'clean_10',      emoji:'⚡', name:'Anti-emocional',
+      desc:'10 trades consecutivos sin impulse/fomo/revenge',
+      total:10, current:Math.min(noEmoConsec,10), unlocked:noEmoConsec>=10
+    },
+    {
+      id:'checklist_21',  emoji:'📋', name:'Hábito formado',
+      desc:'21 días acumulados con checklist completado al 80%+',
+      total:21, current:Math.min(clAccum,21), unlocked:clAccum>=21
+    },
+    {
+      id:'mental_10',     emoji:'🧘', name:'Mente de acero',
+      desc:'10 días acumulados con Mental Score > 70',
+      total:10, current:Math.min(mentalDays,10), unlocked:mentalDays>=10
+    },
+    {
+      id:'perfect_week',  emoji:'🏆', name:'Semana perfecta',
+      desc:'Una semana con checklist + reglas + mood check los 5 días',
+      total:1, current:hasPerfectWeek()?1:0, unlocked:hasPerfectWeek()
+    },
+    {
+      id:'month_elite',   emoji:'💎', name:'Mes de élite',
+      desc:'20 días en un mes con Mental Score > 70',
+      total:20, current:Math.min(monthDays,20), unlocked:monthDays>=20
+    },
+    {
+      id:'30_days',       emoji:'🌱', name:'En camino',
+      desc:'30 días usando la plataforma',
+      total:30, current:Math.min(tDays.length,30), unlocked:tDays.length>=30
+    },
+    {
+      id:'freno_mano',    emoji:'🛑', name:'Freno de mano',
+      desc:'Día con tilt detectado y no tomaste más trades — control total',
+      total:1, current:hasFrenoDeMano()?1:0, unlocked:hasFrenoDeMano()
+    },
+    {
+      id:'fotografo',     emoji:'📸', name:'Fotógrafo del mercado',
+      desc:'50 trades con screenshot guardado',
+      total:50, current:Math.min(screenshotCount,50), unlocked:screenshotCount>=50
+    },
+    {
+      id:'perdida_pro',   emoji:'📉', name:'Pérdida profesional',
+      desc:'Tu primer trade clean que terminó en pérdida — el ego no manda',
+      total:1, current:cleanLossExists?1:0, unlocked:cleanLossExists
+    },
+    {
+      id:'alumno_coach',  emoji:'🤖', name:'Alumno del Coach',
+      desc:'5 consultas manuales al Coach IA',
+      total:5, current:Math.min(consultCount,5), unlocked:consultCount>=5
+    },
+    {
+      id:'ejecucion_sim', emoji:'⚖️', name:'Ejecución simétrica',
+      desc:'10 trades consecutivos con R:R logrado ≥ 90% del planeado',
+      total:10, current:Math.min(rrConsec,10), unlocked:rrConsec>=10
+    }
+  ];
+
+  // For Overview: earned milestones + active streaks
+  var earned = milestones.filter(function(m){ return m.unlocked; })
+    .map(function(m){ return {emoji:m.emoji,name:m.name,desc:m.desc}; });
+
+  // Add unlocked streak levels
+  streaks.forEach(function(s){
+    s.levels.forEach(function(lvl){
+      if(s.current>=lvl) earned.push({emoji:s.emoji,name:s.name+' x'+lvl,desc:s.desc});
+    });
+  });
+
+  // Next badge for overview
+  var next = null;
+  milestones.forEach(function(m){
+    if(!m.unlocked&&!next) next={emoji:m.emoji,name:m.name,progress:m.current+'/'+m.total};
+  });
+
+  return { earned:earned, next:next, milestones:milestones, streaks:streaks };
 }
+
+// Legacy wrapper for old calcBadges calls
+function calcBadges(trades, clSessions) {
+  var result = calcAllAchievements(trades, clSessions, currentMoodSessions||[]);
+  return { earned: result.earned, next: result.next };
+}
+
 
 // ── Onboarding Screen ──
 function buildOnboardingScreen(acc) {
@@ -4251,6 +4466,7 @@ function renderCoachTab(el) {
 }
 
 async function generateCoachAnalysis() {
+  incCoachConsultCount();
   coachLoading = true;
   var tabEl = document.getElementById("disc-tab-content");
   if (tabEl) renderCoachTab(tabEl);
@@ -6210,8 +6426,101 @@ function buildReports(allTrades) {
     '</div>'+
     '<div class="panel" style="margin-bottom:12px"><div class="panel-head"><span class="panel-title">Equity Curve</span><span class="panel-cap" style="color:'+(netPnl>=0?'var(--green)':'var(--red)')+'">'+(netPnl>=0?'+':'-')+'$'+Math.abs(Math.round(netPnl)).toLocaleString()+'</span></div>'+
     '<div style="padding:14px 18px;height:100px">'+equitySvg+'</div></div>'+
-    '<div class="panel"><div class="panel-head"><span class="panel-title">Trade List</span><span class="panel-cap">'+total+' trades'+(total>50?' (showing 50)':'')+'</span></div>'+
-    '<div class="table-scroll"><table><thead><tr><th>Date</th><th>Ticker</th><th>Side</th><th>P&L</th></tr></thead><tbody>'+tradeRows+'</tbody></table></div></div>';
+    '<div class="panel" style="margin-bottom:12px"><div class="panel-head"><span class="panel-title">Trade List</span><span class="panel-cap">'+total+' trades'+(total>50?' (showing 50)':'')+'</span></div>'+
+    '<div class="table-scroll"><table><thead><tr><th>Date</th><th>Ticker</th><th>Side</th><th>P&L</th></tr></thead><tbody>'+tradeRows+'</tbody></table></div></div>'+
+    renderAchievementsHtml();
+}
+
+function renderAchievementsHtml() {
+  var data = calcAllAchievements(currentTrades||[], currentChecklistSessions||[], currentMoodSessions||[]);
+  var milestones = data.milestones;
+  var streaks    = data.streaks;
+
+  function progressBar(current, total, color) {
+    var pct = Math.min(100, Math.round(current/total*100));
+    return '<div style="height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;margin-top:6px">'
+      +'<div style="height:100%;width:'+pct+'%;background:'+color+';border-radius:2px;transition:width .4s"></div></div>'
+      +'<div style="font-size:8px;color:var(--text3);margin-top:3px">'+current+' / '+total+'</div>';
+  }
+
+  function streakLevelColor(cur, lvl) {
+    return cur >= lvl ? 'var(--green)' : 'var(--amber)';
+  }
+
+  var html = '<div class="panel" style="margin-top:12px">'
+    + '<div class="panel-head"><span class="panel-title">🏆 Logros & Rachas</span></div>'
+    + '<div style="padding:16px">';
+
+  // ── RACHAS ──
+  html += '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:8px">Rachas activas</div>';
+  html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px">';
+
+  streaks.forEach(function(s) {
+    var maxLevel = s.levels[s.levels.length-1];
+    var unlockedLevels = s.levels.filter(function(l){ return s.current>=l; });
+    var nextLevel = s.levels.find(function(l){ return s.current<l; }) || maxLevel;
+    var isMaxed = s.current >= maxLevel;
+    var color = isMaxed ? 'var(--green)' : s.current>0 ? 'var(--amber)' : 'var(--border)';
+
+    html += '<div style="background:var(--surface2);border:1px solid '+(isMaxed?'var(--green)':'var(--border)')+';border-radius:9px;padding:12px">';
+    if (s.extensionOnly) {
+      html += '<div style="font-size:8px;color:var(--amber);margin-bottom:4px">EXTENSIÓN</div>';
+    }
+    html += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">'
+      + '<span style="font-size:18px">'+s.emoji+'</span>'
+      + '<span style="font-size:10px;font-weight:700;color:var(--text)">'+s.name+'</span></div>'
+      + '<div style="font-size:9px;color:var(--text3);margin-bottom:8px">'+s.desc+'</div>'
+      // Level badges
+      + '<div style="display:flex;gap:4px;margin-bottom:8px">';
+    s.levels.forEach(function(lvl) {
+      var done = s.current >= lvl;
+      html += '<span style="font-size:8px;padding:2px 7px;border-radius:10px;background:'+(done?'rgba(90,158,114,0.2)':'var(--surface)')+';color:'+(done?'var(--green)':'var(--text3)')+';border:1px solid '+(done?'var(--green)':'var(--border)')+'">'+lvl+'d</span>';
+    });
+    html += '</div>';
+    // Progress to next level
+    if (!isMaxed) {
+      html += '<div style="height:3px;background:var(--border);border-radius:2px;overflow:hidden">'
+        +'<div style="height:100%;width:'+Math.min(100,Math.round(s.current/nextLevel*100))+'%;background:var(--amber);border-radius:2px"></div></div>'
+        +'<div style="font-size:8px;color:var(--text3);margin-top:3px">'+s.current+' / '+nextLevel+' días para siguiente nivel</div>';
+    } else {
+      html += '<div style="font-size:8px;color:var(--green);font-weight:700">✓ Nivel máximo alcanzado</div>';
+    }
+    html += '<div style="font-size:10px;font-weight:800;color:'+color+';margin-top:6px">Racha actual: '+s.current+' días</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+
+  // ── HITOS ──
+  html += '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:8px">Hitos</div>';
+  html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">';
+
+  milestones.forEach(function(m) {
+    var pct  = Math.min(100, Math.round(m.current/m.total*100));
+    var color = m.unlocked ? 'var(--green)' : pct>0 ? 'var(--amber)' : 'var(--text3)';
+    var bg    = m.unlocked ? 'rgba(90,158,114,0.08)' : 'var(--surface2)';
+    var border= m.unlocked ? 'var(--green)' : 'var(--border)';
+
+    html += '<div style="background:'+bg+';border:1px solid '+border+';border-radius:9px;padding:12px;position:relative">';
+    if (m.unlocked) html += '<div style="position:absolute;top:8px;right:8px;font-size:9px;color:var(--green);font-weight:700">✓</div>';
+    html += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">'
+      + '<span style="font-size:20px">'+m.emoji+'</span>'
+      + '<span style="font-size:10px;font-weight:700;color:'+(m.unlocked?'var(--text)':'var(--text2)')+'">'+m.name+'</span></div>'
+      + '<div style="font-size:9px;color:var(--text3);margin-bottom:8px;line-height:1.4">'+m.desc+'</div>';
+
+    if (m.unlocked) {
+      html += '<div style="font-size:9px;color:var(--green);font-weight:600">Desbloqueado ✓</div>';
+    } else if (m.current > 0) {
+      html += '<div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden">'
+        +'<div style="height:100%;width:'+pct+'%;background:var(--amber);border-radius:2px;transition:width .4s"></div></div>'
+        +'<div style="font-size:8px;color:var(--text3);margin-top:3px">'+m.current+' / '+m.total+' ('+pct+'%)</div>';
+    } else {
+      html += '<div style="font-size:8px;color:var(--text3)">Bloqueado — 0 / '+m.total+'</div>';
+    }
+    html += '</div>';
+  });
+
+  html += '</div></div></div>';
+  return html;
 }
 
 function exportReportPDF() {
