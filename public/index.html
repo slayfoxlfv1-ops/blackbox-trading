@@ -126,7 +126,6 @@ tr:hover td { background:var(--hover); }
 .cal-hdr  { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; padding:10px 14px 0; }
 .cal-hdr-day { font-family:'Geist Mono',monospace; font-size:8px; color:var(--text3); text-align:center; letter-spacing:.5px; }
 .cal-cell { aspect-ratio:1; border-radius:5px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; transition:all .1s; border:1px solid transparent; position:relative; overflow:visible; }
-.cal-cell:hover .cal-tooltip { display:block; }
 .cal-cell:hover { filter:brightness(1.15); transform:scale(1.04); z-index:2; }
 .cal-cell.win  { background:var(--green-bg); border-color:var(--green-bd); }
 .cal-cell.loss { background:var(--red-bg);   border-color:var(--red-bd); }
@@ -136,7 +135,6 @@ tr:hover td { background:var(--hover); }
 .cal-p { font-family:'Geist Mono',monospace; font-size:8px; font-weight:500; line-height:1; margin-top:2px; }
 .cal-cell.win .cal-p { color:var(--green); } .cal-cell.loss .cal-p { color:var(--red); } .cal-cell.flat .cal-p { color:var(--text3); }
 .cal-cnt { font-family:'Geist Mono',monospace; font-size:7px; color:var(--text3); }
-.cal-tooltip { display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--surface3); border:1px solid var(--border2); border-radius:8px; padding:10px; width:200px; z-index:9999; box-shadow:0 8px 24px rgba(0,0,0,.6); pointer-events:none; }
 .cal-tip-row { display:flex; align-items:center; gap:5px; margin-bottom:4px; font-family:'Geist Mono',monospace; font-size:9px; }
 .cal-tip-time { color:var(--text3); min-width:32px; }
 .cal-tip-tk { color:var(--text2); font-weight:500; flex:1; }
@@ -309,6 +307,7 @@ tr:hover td { background:var(--hover); }
 </style>
 </head>
 <body>
+<div id="cal-tip-global" style="display:none;position:fixed;background:var(--surface3);border:1px solid var(--border2);border-radius:8px;padding:10px;width:200px;z-index:99999;box-shadow:0 8px 24px rgba(0,0,0,.7);pointer-events:none;font-family:'Geist Mono',monospace;font-size:9px;"></div>
 
 <!-- AUTH -->
 <div id="auth-screen" class="auth-screen">
@@ -2153,7 +2152,7 @@ function buildCalendar(daily, trades) {
         var rr=(t.rr_planned!=null&&t.rr_achieved!=null)?t.rr_planned+':'+t.rr_achieved:'';
         return '<div class="cal-tip-row"><span class="cal-tip-time">'+tm+'</span><span class="cal-tip-tk">'+(t.ticker||'')+'</span><span class="cal-tip-pnl '+((t.pnl||0)>=0?'pos':'neg')+'">'+tp+'</span>'+(rr?'<span class="cal-tip-rr">'+rr+'</span>':'')+'</div>';
       }).join('');
-      tooltip='<div class="cal-tooltip">'+tipRows+'<div class="cal-tip-disc"><div class="cal-tip-disc-bar" style="width:'+ds.score+'%"></div></div><div class="cal-tip-disc-lbl">Discipline '+ds.score+'%</div></div>';
+      tooltip = tipRows+'<div class="cal-tip-disc"><div class="cal-tip-disc-bar" style="width:'+ds.score+'%"></div></div><div class="cal-tip-disc-lbl">Discipline '+ds.score+'%</div>';
     }
     var discBarHtml='';
     if (dayTs.length) {
@@ -2162,8 +2161,9 @@ function buildCalendar(daily, trades) {
       discBarHtml='<div style="position:absolute;bottom:2px;left:3px;right:3px;height:2px;background:rgba(255,255,255,0.08);border-radius:1px;overflow:hidden"><div style="height:100%;width:'+ds2.score+'%;background:'+dcol2+'"></div></div>';
     }
     var inner='<span class="cal-n">'+d+'</span>'+(pnlStr?'<span class="cal-p">'+pnlStr+'</span>':'')+(dayTs.length>1?'<span class="cal-cnt">'+dayTs.length+'t</span>':'');
-    var hasTooltip = tooltip ? 'onmouseenter="showCalTooltip(event,this)" onmouseleave="hideCalTooltip()"' : '';
-    html+='<div class="cal-cell '+cls+todayCls+'" style="'+dimStyle+'" '+hasTooltip+'>'+inner+discBarHtml+tooltip+'</div>';
+    var tipAttr = tooltip ? 'data-tip="'+tooltip.replace(/"/g,"&quot;")+'"' : '';
+    var hoverAttr = tooltip ? 'onmouseenter="showCalTooltip(event,this)" onmouseleave="hideCalTooltip()"' : '';
+    html+='<div class="cal-cell '+cls+todayCls+'" style="'+dimStyle+'" '+tipAttr+' '+hoverAttr+'>'+inner+discBarHtml+'</div>';
   }
   return html;
 }
@@ -3320,27 +3320,24 @@ function renderTradeLogTable(trades) {
 
 // CALENDAR VIEW
 function showCalTooltip(e, cell) {
-  var tip = cell.querySelector('.cal-tooltip');
-  if (!tip) return;
-  // Position first (while still hidden via CSS), then override display
+  var tipHtml = cell.getAttribute('data-tip');
+  if (!tipHtml) return;
+  var tip = document.getElementById('cal-tip-global');
+  tip.innerHTML = tipHtml;
+  tip.style.display = 'block';
   var r = cell.getBoundingClientRect();
   var tw = 200;
-  var vw = window.innerWidth, vh = window.innerHeight;
-  var left = r.left + r.width/2 - tw/2;
-  left = Math.max(8, Math.min(left, vw - tw - 8));
-  // Temp show to measure height
-  tip.style.visibility = 'hidden';
-  tip.style.display = 'block';
+  var vw = window.innerWidth;
   var th = tip.offsetHeight || 120;
-  tip.style.display = '';
-  tip.style.visibility = '';
+  var left = r.left + r.width / 2 - tw / 2;
+  left = Math.max(8, Math.min(left, vw - tw - 8));
   var top = r.top - th - 8;
   if (top < 8) top = r.bottom + 8;
   tip.style.left = left + 'px';
   tip.style.top  = top  + 'px';
 }
 function hideCalTooltip() {
-  document.querySelectorAll('.cal-tooltip').forEach(function(t){ t.style.display='none'; });
+  var _gt=document.getElementById('cal-tip-global'); if(_gt) _gt.style.display='none';
 }
 
 function renderCalendarView() {
