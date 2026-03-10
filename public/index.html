@@ -1395,19 +1395,29 @@ async function loadAccountData(id, silent) {
       };
       var alertTextColors = { danger: 'var(--red)', warn: 'var(--amber)', coach: '#5a9e9e' };
 
-      var alertParts = alerts.map(function(a) {
+      // Filter out dismissed alerts (stored in sessionStorage per session)
+      var dismissedAlerts = {};
+      try { dismissedAlerts = JSON.parse(sessionStorage.getItem('bb_dismissed_alerts') || '{}'); } catch(e) {}
+
+      var alertParts = alerts.map(function(a, idx) {
+          var alertKey = 'alert_' + (currentAccountId||'') + '_' + a.type + '_' + idx;
+          if (dismissedAlerts[alertKey]) return '';
           var st = alertStyles[a.type];
           var tc = alertTextColors[a.type];
           var ac = a.action;
-          return '<div style="' + st + ';border-radius:8px;padding:11px 14px;display:flex;align-items:flex-start;gap:10px;cursor:pointer" onclick="navigateTo(\'' + ac + '\')">'
-            + '<span style="font-size:14px;color:' + tc + ';flex-shrink:0;margin-top:1px">' + a.icon + '</span>'
-            + '<div style="flex:1;font-size:11px;color:var(--text2);line-height:1.5">' + a.text + '</div>'
-            + '<span style="font-size:9px;color:var(--text3);flex-shrink:0;margin-top:2px;letter-spacing:.5px">VER →</span>'
+          return '<div id="' + alertKey + '" style="' + st + ';border-radius:8px;padding:11px 14px;display:flex;align-items:flex-start;gap:10px">'
+            + '<span style="font-size:14px;color:' + tc + ';flex-shrink:0;margin-top:1px;cursor:pointer" onclick="navigateTo(\'' + ac + '\')">' + a.icon + '</span>'
+            + '<div style="flex:1;font-size:11px;color:var(--text2);line-height:1.5;cursor:pointer" onclick="navigateTo(\'' + ac + '\')">' + a.text + '</div>'
+            + '<span style="font-size:9px;color:var(--text3);flex-shrink:0;margin-top:2px;letter-spacing:.5px;cursor:pointer" onclick="navigateTo(\'' + ac + '\')">VER →</span>'
+            + '<span onclick="dismissOverviewAlert(\'' + alertKey + '\')" style="font-size:14px;color:var(--text3);flex-shrink:0;cursor:pointer;margin-left:4px;line-height:1;padding:0 2px" title="Cerrar">×</span>'
             + '</div>';
-        });
-      coachAlertHtml = '<div style="margin-bottom:12px;display:flex;flex-direction:column;gap:7px">'
-        + alertParts.join('')
-        + '</div>';
+        }).filter(Boolean);
+
+      if (alertParts.length) {
+        coachAlertHtml = '<div id="bb-overview-alerts" style="margin-bottom:12px;display:flex;flex-direction:column;gap:7px">'
+          + alertParts.join('')
+          + '</div>';
+      }
     }
   } catch(e) {}
 
@@ -6878,6 +6888,27 @@ function toggleExtSetting(key) {
   cfg[key] = !cfg[key];
   saveExtSettings(cfg);
   initExtSettings();
+}
+
+function dismissOverviewAlert(alertKey) {
+  // Hide the element immediately
+  var el = document.getElementById(alertKey);
+  if (el) {
+    el.style.transition = 'opacity .2s';
+    el.style.opacity = '0';
+    setTimeout(function() {
+      if (el.parentNode) el.remove();
+      // Hide container if empty
+      var container = document.getElementById('bb-overview-alerts');
+      if (container && !container.querySelector('[id^="alert_"]')) container.remove();
+    }, 200);
+  }
+  // Persist dismissal for this session
+  try {
+    var dismissed = JSON.parse(sessionStorage.getItem('bb_dismissed_alerts') || '{}');
+    dismissed[alertKey] = true;
+    sessionStorage.setItem('bb_dismissed_alerts', JSON.stringify(dismissed));
+  } catch(e) {}
 }
 
 async function saveProfile() {
