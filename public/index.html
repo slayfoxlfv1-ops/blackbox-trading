@@ -1472,7 +1472,7 @@ async function loadAccountData(id, silent) {
   var prevWR     = dayWR(prevTrades);
 
   // Week trades (Mon–today)
-  var weekStart = new Date(); weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
+  var weekStart = new Date(); weekStart.setDate(weekStart.getDate() - (weekStart.getDay()===0 ? 6 : weekStart.getDay()-1)); weekStart.setHours(0,0,0,0);
   var weekStartStr = weekStart.toISOString().slice(0,10);
   var weekTrades = trades.filter(function(t){ return t.entry_time && t.entry_time.slice(0,10) >= weekStartStr; });
   var weekPnl    = dayPnl(weekTrades);
@@ -1593,7 +1593,9 @@ async function loadAccountData(id, silent) {
   }
 
   function fmt(n, sign) {
-    var s = (sign&&n>0?'+':'') + (n<0?'-':'') + '$' + Math.abs(Math.round(n)).toLocaleString();
+    var abs = Math.abs(n);
+    var formatted = (abs % 1 === 0) ? abs.toLocaleString() : abs.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    var s = (sign&&n>0?'+':'') + (n<0?'-':'') + '$' + formatted;
     return s;
   }
 
@@ -1823,7 +1825,7 @@ async function loadAccountData(id, silent) {
   // Update sidebar PNL
   var pnlEl = document.getElementById('pnl-'+id);
   if (pnlEl) {
-    pnlEl.textContent = (netPnl>=0?'+':'-')+'$'+Math.abs(Math.round(netPnl)).toLocaleString();
+    var _abs = Math.abs(netPnl); pnlEl.textContent = (netPnl>=0?'+':'-')+'$'+(_abs%1===0?_abs.toLocaleString():_abs.toFixed(2));
     pnlEl.className = 'acc-pnl ' + (netPnl>0?'pos':netPnl<0?'neg':'zero');
   }
 }
@@ -2465,7 +2467,7 @@ function buildCalendar(daily, trades) {
     var cls=hasData?(pnl>0?'win':pnl<0?'loss':'flat'):'flat';
     var todayCls=isToday?' today':'';
     var dimStyle=(!hasData&&!isToday)?'opacity:0.18':'';
-    var pnlAbs=Math.abs(Math.round(pnl||0));
+    var _rawpnl=pnl||0; var pnlAbs=Math.abs(_rawpnl); var pnlAbs=(_rawpnl%1===0)?Math.abs(_rawpnl):Math.abs(_rawpnl);
     var pnlStr=hasData?(pnl>=0?'+':'-')+'$'+pnlAbs:'';
 
     var tooltip='';
@@ -3701,7 +3703,7 @@ function renderCalendarFull(year, month, trades) {
     var cls=hasData?(pnl>0?'win':pnl<0?'loss':'flat'):'flat';
     var todayCls=isToday?' today':'';
     var dimStyle=(!hasData&&!isToday)?'opacity:0.2':'';
-    var pnlStr=hasData?'<div class="cal-lg-pnl '+(pnl>=0?'pos':'neg')+'">'+(pnl>=0?'+':'-')+'$'+Math.abs(Math.round(pnl)).toLocaleString()+'</div>':'';
+    var _cpnl=Math.abs(pnl); var pnlStr=hasData?'<div class="cal-lg-pnl '+(pnl>=0?'pos':'neg')+'">'+(pnl>=0?'+':'-')+'$'+(_cpnl%1===0?_cpnl.toLocaleString():_cpnl.toFixed(2))+'</div>':'';
     var cnt=(dayTrades[dateStr]||[]).length;
     var cntStr=cnt>0?'<div class="cal-lg-cnt">'+cnt+' trade'+(cnt>1?'s':'')+'</div>':'';
     // Discipline bar inside cell
@@ -4437,7 +4439,7 @@ function renderOperativaTab(el) {
   var tickerRows=Object.entries(byTicker).sort(function(a,b){return b[1].count-a[1].count;}).map(function(e) {
     var tk=e[0],d=e[1];
     var wr=Math.round(d.wins/d.count*100);
-    return '<div class="stat-row"><span class="stat-key">'+tk+'</span><div style="display:flex;gap:12px"><span class="stat-v">'+d.count+' trades</span><span class="stat-v '+(d.pnl>=0?'pos':'neg')+'">'+(d.pnl>=0?'+':'-')+'$'+Math.abs(Math.round(d.pnl)).toLocaleString()+'</span><span class="stat-v">'+wr+'% WR</span></div></div>';
+    var _tp=Math.abs(d.pnl); return '<div class="stat-row"><span class="stat-key">'+tk+'</span><div style="display:flex;gap:12px"><span class="stat-v">'+d.count+' trades</span><span class="stat-v '+(d.pnl>=0?'pos':'neg')+'">'+(d.pnl>=0?'+':'-')+'$'+(_tp%1===0?_tp.toLocaleString():_tp.toFixed(2))+'</span><span class="stat-v">'+wr+'% WR</span></div></div>';
   }).join('');
   el.innerHTML='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px">'+
     '<div class="metric"><div class="m-label">Discipline Score</div><div class="m-val '+(disc.score>=60?'pos':disc.score>=40?'amber':'neg')+'">'+disc.score+'</div><div class="m-note">'+disc.lbl+'</div></div>'+
