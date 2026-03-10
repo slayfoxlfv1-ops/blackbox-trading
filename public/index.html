@@ -1879,9 +1879,11 @@ function calcReadinessScore(todayMood, clSessions, trades) {
     factors.push({label:'☐ Sin checklist', color:'var(--text3)', bg:'var(--surface2)', border:'var(--border)'});
   }
 
-  // Loss streak (20%) — penalize for active streak
+  // Loss streak (20%) — penalize for active streak TODAY only
+  var todayForStreak = new Date().toISOString().slice(0,10);
+  var todayTradesForStreak = (trades||[]).filter(function(t){ return t.entry_time && t.entry_time.startsWith(todayForStreak); });
   var lossStreak = 0;
-  var sorted = (trades||[]).slice().sort(function(a,b){ return new Date(b.exit_time||b.entry_time)-new Date(a.exit_time||a.entry_time); });
+  var sorted = todayTradesForStreak.slice().sort(function(a,b){ return new Date(b.exit_time||b.entry_time)-new Date(a.exit_time||a.entry_time); });
   for (var i=0; i<sorted.length; i++) {
     if ((sorted[i].pnl||0)<0) lossStreak++;
     else break;
@@ -1889,7 +1891,7 @@ function calcReadinessScore(todayMood, clSessions, trades) {
   if (lossStreak>=3) { score -= 20; factors.push({label:'📉 Racha perdedora ('+lossStreak+')', color:'#9e5a5a', bg:'var(--red-bg)', border:'var(--red-bd)'}); }
   else if (lossStreak>=1) { score -= 8; factors.push({label:'📉 '+lossStreak+' pérdidas seguidas', color:'#9e8050', bg:'var(--amber-bg)', border:'#3d3020'}); }
 
-  // Win streak bonus
+  // Win streak bonus — also today only
   var winStreak = 0;
   for (var j=0; j<sorted.length; j++) {
     if ((sorted[j].pnl||0)>0) winStreak++;
@@ -2001,14 +2003,20 @@ function calcPeriodMentalScore(tradesInPeriod) {
   var dayList = Object.keys(days).sort();
   if (!dayList.length) return null;
 
-  var scores = dayList.map(function(d) { return calcMentalScore(d); }).filter(function(s){ return s.total !== null; });
-  if (!scores.length) return null;
+  // Keep day-score pairs together so indexOf stays correct after filter
+  var scorePairs = dayList.map(function(d) { return { day: d, score: calcMentalScore(d) }; })
+                          .filter(function(p){ return p.score.total !== null; });
+  if (!scorePairs.length) return null;
+  var scores  = scorePairs.map(function(p){ return p.score; });
+  var dayList = scorePairs.map(function(p){ return p.day; }); // re-align
 
   var avg = Math.round(scores.reduce(function(s,x){ return s + x.total; }, 0) / scores.length);
-  var best  = scores.reduce(function(a,b){ return a.total > b.total ? a : b; });
-  var worst = scores.reduce(function(a,b){ return a.total < b.total ? a : b; });
-  var bestDay  = dayList[scores.indexOf(best)];
-  var worstDay = dayList[scores.indexOf(worst)];
+  var bestPair  = scorePairs.reduce(function(a,b){ return a.score.total > b.score.total ? a : b; });
+  var worstPair = scorePairs.reduce(function(a,b){ return a.score.total < b.score.total ? a : b; });
+  var best     = bestPair.score;
+  var worst    = worstPair.score;
+  var bestDay  = bestPair.day;
+  var worstDay = worstPair.day;
   var trend = scores.length >= 3
     ? (scores.slice(-3).reduce(function(s,x){return s+x.total;},0)/3) - (scores.slice(0,3).reduce(function(s,x){return s+x.total;},0)/3)
     : 0;
@@ -2123,7 +2131,7 @@ function calcAllAchievements(trades, clSessions, moodSessions) {
   // Day helpers
   function dayTrades(d) { return sortedT.filter(function(t){ return t.entry_time&&t.entry_time.slice(0,10)===d; }); }
   function clDay(d)     { return cl.find(function(s){ return s.session_date===d; }); }
-  function moodDay(d)   { return moods.find(function(s){ return s.date===d; }); }
+  function moodDay(d)   { return moods.find(function(s){ return (s.session_date||s.date)===d; }); }
 
   function hasViolations(d) {
     var viols = checkRuleViolations(rulesObj, dayTrades(d));
@@ -2184,10 +2192,9 @@ function calcAllAchievements(trades, clSessions, moodSessions) {
     },
     {
       id:'streak_journaling', emoji:'✍️', name:'Journaling Express',
-      desc:'Días consecutivos con trades registrados via extensión (TopstepX)',
+      desc:'Días consecutivos con al menos un trade registrado',
       levels:[3,7,14],
-      current: 0, // extension-only, always 0 without extension data
-      extensionOnly: true,
+      current: currentStreak(tDays, function(d){ return dayTrades(d).length > 0; }),
       type:'streak'
     }
   ];
@@ -2771,7 +2778,7 @@ function checkRuleViolations(rulesObj, trades) {
 function calcRulesDisciplineScore(rulesObj, trades) {
   var r = rulesObj || {};
   var activeRules = Object.keys(r).filter(function(k){ return r[k] && r[k].active; });
-  if (!activeRules.length) return { score: 50, violations: [], activeCount: 0 }; // neutral if no rules
+  if (!activeRules.length) return { score: 100, violations: [], activeCount: 0 }; // no rules = no violations = perfect
   var violations = checkRuleViolations(rulesObj, trades);
   var violatedIds = violations.map(function(v){ return v.rule.id; });
   var score;
@@ -6018,7 +6025,9 @@ function detectTilt(trades) {
   }
 
   // ── Signal 2: Frequency — 3+ trades in 30 min ──
-  var now30  = new Date(Date.now() - 30 * msMin);
+  // Use most recent trade time as anchor (works for both live and manual/historical trades)
+  var mostRecentTime = recent.length ? new Date(recent[0].entry_time || recent[0].exit_time) : new Date();
+  var now30  = new Date(mostRecentTime.getTime() - 30 * msMin);
   var last30 = recent.filter(function(t) {
     var d = new Date(t.entry_time || t.exit_time);
     return d > now30;
