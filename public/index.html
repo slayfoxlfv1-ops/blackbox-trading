@@ -7095,6 +7095,12 @@ function toggleExtSetting(key) {
   cfg[key] = !cfg[key];
   saveExtSettings(cfg);
   initExtSettings();
+  // Push to extension immediately so it takes effect without reload
+  try {
+    if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+      chrome.runtime.sendMessage({ type: 'SYNC_EXT_SETTINGS', settings: cfg });
+    }
+  } catch(e) {}
 }
 
 function dismissOverviewAlert(alertKey) {
