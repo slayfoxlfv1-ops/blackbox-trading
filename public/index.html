@@ -126,7 +126,7 @@ tr:hover td { background:var(--hover); }
 .cal-hdr  { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; padding:10px 14px 0; }
 .cal-hdr-day { font-family:'Geist Mono',monospace; font-size:8px; color:var(--text3); text-align:center; letter-spacing:.5px; }
 .cal-cell { aspect-ratio:1; border-radius:5px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; transition:all .1s; border:1px solid transparent; position:relative; }
-.cal-cell:hover .cal-tooltip { display:block; }
+/* tooltip positioning via JS */
 .cal-cell:hover { filter:brightness(1.15); transform:scale(1.04); z-index:2; }
 .cal-cell.win  { background:var(--green-bg); border-color:var(--green-bd); }
 .cal-cell.loss { background:var(--red-bg);   border-color:var(--red-bd); }
@@ -136,7 +136,7 @@ tr:hover td { background:var(--hover); }
 .cal-p { font-family:'Geist Mono',monospace; font-size:8px; font-weight:500; line-height:1; margin-top:2px; }
 .cal-cell.win .cal-p { color:var(--green); } .cal-cell.loss .cal-p { color:var(--red); } .cal-cell.flat .cal-p { color:var(--text3); }
 .cal-cnt { font-family:'Geist Mono',monospace; font-size:7px; color:var(--text3); }
-.cal-tooltip { display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--surface3); border:1px solid var(--border2); border-radius:8px; padding:10px; width:190px; z-index:50; box-shadow:0 8px 24px rgba(0,0,0,.5); pointer-events:none; }
+.cal-tooltip { display:none; position:fixed; background:var(--surface3); border:1px solid var(--border2); border-radius:8px; padding:10px; width:200px; z-index:9999; box-shadow:0 8px 24px rgba(0,0,0,.6); pointer-events:none; font-family:'Geist Mono',monospace; }
 .cal-tip-row { display:flex; align-items:center; gap:5px; margin-bottom:4px; font-family:'Geist Mono',monospace; font-size:9px; }
 .cal-tip-time { color:var(--text3); min-width:32px; }
 .cal-tip-tk { color:var(--text2); font-weight:500; flex:1; }
@@ -1466,7 +1466,7 @@ async function loadAccountData(id, silent) {
     weekDayMap[d] = (weekDayMap[d]||0) + (t.pnl||0);
   });
   var weekDayVals = Object.values(weekDayMap);
-  var bestDayW  = weekDayVals.length ? Math.max.apply(null,weekDayVals) : null;
+  var bestDayW  = weekDayVals.length ? (Math.max.apply(null,weekDayVals) > 0 ? Math.max.apply(null,weekDayVals) : 0) : null;
   var worstDayW = weekDayVals.length ? Math.min.apply(null,weekDayVals) : null;
 
   // Avg win / avg loss (all time)
@@ -1497,14 +1497,14 @@ async function loadAccountData(id, silent) {
   // Positives (today + prev day)
   function getPositives(ts) {
     var p = [];
-    var cleanTs = ts.filter(function(t){ return (t.discipline_tag||'clean')==='clean'; });
-    if (cleanTs.length) p.push({ icon:'✅', label: cleanTs.length + ' trade'+(cleanTs.length>1?'s':'')+' clean' });
+    // A positive trade = winner (pnl > 0) AND clean discipline tag
+    var truePositiveTs = ts.filter(function(t){ return (t.pnl||0) > 0 && (t.discipline_tag||'clean') === 'clean'; });
+    if (truePositiveTs.length) p.push({ icon:'✅', label: truePositiveTs.length + ' trade'+(truePositiveTs.length>1?'s':'')+' ganador'+(truePositiveTs.length>1?'es':'')+' y clean' });
     var winTs = ts.filter(function(t){ return (t.pnl||0)>0; });
     if (winTs.length === ts.length && ts.length > 0) p.push({ icon:'🏆', label:'Dia 100% ganador' });
-    else if (winTs.length >= 2) p.push({ icon:'📈', label: winTs.length + ' trades ganadores' });
     var wr2 = dayWR(ts);
     if (wr2 !== null && wr2 >= 70 && ts.length >= 3) p.push({ icon:'🎯', label:'Win rate '+wr2+'% hoy' });
-    // Check no violations
+    // No violations
     var rulesObj = getPersonalRules(currentAccountId||'');
     var viols = checkRuleViolations(rulesObj, ts);
     if (viols.length===0 && Object.keys(rulesObj).some(function(k){return rulesObj[k]&&rulesObj[k].active;}))
@@ -2162,7 +2162,8 @@ function buildCalendar(daily, trades) {
       discBarHtml='<div style="position:absolute;bottom:2px;left:3px;right:3px;height:2px;background:rgba(255,255,255,0.08);border-radius:1px;overflow:hidden"><div style="height:100%;width:'+ds2.score+'%;background:'+dcol2+'"></div></div>';
     }
     var inner='<span class="cal-n">'+d+'</span>'+(pnlStr?'<span class="cal-p">'+pnlStr+'</span>':'')+(dayTs.length>1?'<span class="cal-cnt">'+dayTs.length+'t</span>':'');
-    html+='<div class="cal-cell '+cls+todayCls+'" style="'+dimStyle+'">'+inner+discBarHtml+tooltip+'</div>';
+    var hasTooltip = tooltip ? 'onmouseenter="showCalTooltip(event,this)" onmouseleave="hideCalTooltip()"' : '';
+    html+='<div class="cal-cell '+cls+todayCls+'" style="'+dimStyle+'" '+hasTooltip+'>'+inner+discBarHtml+tooltip+'</div>';
   }
   return html;
 }
@@ -3318,6 +3319,26 @@ function renderTradeLogTable(trades) {
 }
 
 // CALENDAR VIEW
+function showCalTooltip(e, cell) {
+  var tip = cell.querySelector('.cal-tooltip');
+  if (!tip) return;
+  tip.style.display = 'block';
+  var r = cell.getBoundingClientRect();
+  var tw = 200, th = tip.offsetHeight || 120;
+  var vw = window.innerWidth, vh = window.innerHeight;
+  // Horizontal: center on cell, clamp to viewport
+  var left = r.left + r.width/2 - tw/2;
+  left = Math.max(8, Math.min(left, vw - tw - 8));
+  // Vertical: prefer above, flip below if not enough space
+  var top = r.top - th - 8;
+  if (top < 8) top = r.bottom + 8;
+  tip.style.left = left + 'px';
+  tip.style.top  = top  + 'px';
+}
+function hideCalTooltip() {
+  document.querySelectorAll('.cal-tooltip').forEach(function(t){ t.style.display='none'; });
+}
+
 function renderCalendarView() {
   var now=new Date();
   renderCalendarFull(now.getFullYear(), now.getMonth(), currentTrades||[]);
