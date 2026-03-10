@@ -981,7 +981,8 @@ async function saveTrade() {
 
     screenshot_url: screenshotUrl || existingScreenshot || null,
     entry_time:     entryTimeVal,
-    account_type:   (accounts.find(function(a){return a.id===currentAccountId;})||{}).type
+    account_type:   (accounts.find(function(a){return a.id===currentAccountId;})||{}).type,
+    source:         'manual'
   };
 
   var res;
@@ -1348,10 +1349,16 @@ async function loadAccountData(id, silent) {
     var alerts = [];
 
     if (lossStreak >= 2) {
+      // Detect if these trades are manual (no extension source)
+      var streakTrades = sortedByExit.slice(0, lossStreak);
+      var hasManual = streakTrades.every(function(t){ return t.source === 'manual' || !t.source; });
+      var streakText = hasManual
+        ? 'Has registrado <strong>' + lossStreak + ' trades en pérdida</strong> hoy. Revisa tu sesión antes de continuar.'
+        : 'Llevas <strong>' + lossStreak + ' trades perdedores consecutivos</strong>. Considera tomar un break antes de operar de nuevo.';
       alerts.push({
         type: 'danger',
         icon: '⚠',
-        text: 'Llevas <strong>' + lossStreak + ' trades perdedores consecutivos</strong>. Considera tomar un break antes de operar de nuevo.',
+        text: streakText,
         action: 'mind'
       });
     }
