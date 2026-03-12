@@ -2803,13 +2803,15 @@ function calcRulesDisciplineScore(rulesObj, trades) {
 
 // ── Discipline tag points ──
 var DISCIPLINE_TAG_PTS = {
-  clean:           30,
-  moved_sl:        10,
-  scaled_in:       10,
-  no_confirmation:  5,
-  impulse:          5,
-  fomo:             5,
-  overtrading:      5
+  // Scale: 0-30. Reflects true severity of each error in trading.
+  // clean = full marks. moved_sl = worst error (invalidates the plan).
+  clean:            30,  // 100% - perfect execution
+  no_confirmation:  24,  //  80% - minor: missed confirmation signal
+  fomo:             21,  //  70% - psychological but recoverable
+  impulse:          18,  //  60% - breaks process, more serious
+  overtrading:      15,  //  50% - destructive pattern
+  scaled_in:         9,  //  30% - adding to a loser, very serious
+  moved_sl:          6   //  20% - worst: invalidates the entire plan
 };
 
 // ── Unified daily Discipline Score (0–100) ──
