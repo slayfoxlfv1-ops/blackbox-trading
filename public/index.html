@@ -352,13 +352,10 @@ tr:hover td { background:var(--hover); }
       <button class="add-acc-btn" onclick="openModal()">+ Add account</button>
     </div>
     <div class="nav" style="flex:1">
-      <div class="nav-item active" data-view="overview"><span class="nav-icon">&#9638;</span> Overview</div>
-      <div class="nav-item" data-view="tradelog"><span class="nav-icon">&#8801;</span> Trade Log</div>
-      <div class="nav-item" data-view="calendar"><span class="nav-icon">&#8862;</span> Calendar</div>
-      <div class="nav-item" data-view="discipline"><span class="nav-icon">&#10095;</span> Discipline</div>
-      <div class="nav-item" data-view="mind"><span class="nav-icon">&#9679;</span> Mind</div>
-      <div class="nav-item" data-view="coach"><span class="nav-icon">&#9670;</span> Coach</div>
-      <div class="nav-item" data-view="reports"><span class="nav-icon">🧠</span> Psico Score</div>
+      <div class="nav-item active" data-view="dashboard"><span class="nav-icon">&#9638;</span> Dashboard</div>
+      <div class="nav-item" data-view="trades"><span class="nav-icon">&#8801;</span> Trades</div>
+      <div class="nav-item" data-view="psychology"><span class="nav-icon">&#9679;</span> Psychology</div>
+      <div class="nav-item" data-view="insights"><span class="nav-icon">🧠</span> Insights</div>
       <div class="nav-item" data-view="settings"><span class="nav-icon">&#9711;</span> Settings</div>
     </div>
     <div class="sidebar-footer">
@@ -372,7 +369,7 @@ tr:hover td { background:var(--hover); }
     <div class="topbar">
       <div>
         <div class="page-title" id="page-title">Select an account</div>
-        <div class="page-sub" id="page-sub">OVERVIEW</div>
+        <div class="page-sub" id="page-sub">DASHBOARD</div>
       </div>
       <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
         <button class="btn btn-solid" id="log-btn" style="display:none" onclick="openLogModal()">+ Log Trade</button>
@@ -611,7 +608,7 @@ const SUPABASE_URL = 'https://qljuusxpzsiqxnpfpdgg.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFsanV1c3hwenNpcXhucGZwZGdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1OTQ5NzUsImV4cCI6MjA4ODE3MDk3NX0.rUEwuG4zFE_EpAM4s3hWqVF81xiW9q_MSwQKKXYZmlk';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let currentUser = null, accounts = [], currentAccountId = null, currentTrades = [], currentChecklistSessions = [], currentMoodSessions = [], currentView = 'overview', authTab = 'login', editingTradeId = null;
+let currentUser = null, accounts = [], currentAccountId = null, currentTrades = [], currentChecklistSessions = [], currentMoodSessions = [], currentView = 'dashboard', authTab = 'login', editingTradeId = null;
 let tlFilters = { date:'', ticker:'', result:'all' };
 let repFilters = { period:'month', result:'all', ticker:'', dateFrom:'', dateTo:'' };
 let coachAnalysis = null, coachLoading = false;
@@ -748,8 +745,8 @@ async function selectAccount(id) {
   if (main) main.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:200px;color:var(--text3);font-size:12px">Cargando cuenta...</div>';
   await loadAccountData(id);
   // Restore last view or default to overview
-  var lastView = 'overview';
-  try { lastView = localStorage.getItem('bb_last_view') || 'overview'; } catch(e) {}
+  var lastView = 'dashboard';
+  try { lastView = localStorage.getItem('bb_last_view') || 'dashboard'; } catch(e) {}
   navigateTo(lastView);
   // Show onboarding guide first time ever
   checkAndShowOnboardingGuide();
@@ -1026,8 +1023,8 @@ async function saveTrade() {
   // Silent reload — don't change view or show spinner
   await loadAccountData(currentAccountId, true);
   // Re-render current view
-  if (currentView === 'tradelog') renderTradeLog();
-  else if (currentView === 'overview') renderOverview();
+  if (currentView === 'trades') renderTradesView();
+  else if (currentView === 'dashboard') loadAccountData(currentAccountId);
 }
 
 function openEditTrade(id) {
@@ -1084,7 +1081,7 @@ function openEditTrade(id) {
 async function confirmDeleteTrade(id) {
   if (!confirm('Delete this trade?')) return;
   await sb.from('trades').delete().eq('id', id);
-  if (currentView==='tradelog') renderTradeLog();
+  if (currentView==='trades') renderTradesView();
   else loadAccountData(currentAccountId);
 }
 
@@ -1094,14 +1091,27 @@ document.querySelectorAll('.nav-item[data-view]').forEach(function(item) {
 });
 
 function navigateTo(view) {
-  // Clear rules temp state when leaving discipline
-  if (currentView === 'discipline' && view !== 'discipline') _rulesTemp = null;
+  // Map legacy view names to new names (backwards compat for any saved localStorage)
+  var viewMap = {
+    'overview':'dashboard', 'tradelog':'trades', 'calendar':'trades',
+    'discipline':'psychology', 'mind':'psychology', 'rules':'psychology',
+    'coach':'insights', 'reports':'insights'
+  };
+  if (viewMap[view]) view = viewMap[view];
+
+  // Carry sub-tab intent so Psychology/Insights can restore the right tab
+  var subTabIntent = null;
+  if (view === 'psychology' && (arguments[1] === 'mind' || arguments[1] === 'checklist')) subTabIntent = arguments[1];
+  if (view === 'insights'   && (arguments[1] === 'coach'))  subTabIntent = arguments[1];
+
+  // Clear rules temp state when leaving psychology
+  if (currentView === 'psychology' && view !== 'psychology') _rulesTemp = null;
   currentView = view;
   try { localStorage.setItem('bb_last_view', view); } catch(e) {}
   document.querySelectorAll('.nav-item').forEach(function(i){i.classList.remove('active');});
   var navEl = document.querySelector('.nav-item[data-view="'+view+'"]');
   if (navEl) navEl.classList.add('active');
-  var titles = { overview:'Overview', tradelog:'Trade Log', calendar:'Calendar', discipline:'Discipline', mind:'Mind', rules:'Rules', reports:'Psico Score', settings:'Settings' };
+  var titles = { dashboard:'Dashboard', trades:'Trades', psychology:'Psychology', insights:'Insights', settings:'Settings' };
   var acc = accounts.find(function(a){return a.id===currentAccountId;});
   document.getElementById('page-title').textContent = acc ? acc.name : titles[view];
   document.getElementById('page-sub').textContent = (titles[view] || view || '').toUpperCase();
@@ -1110,13 +1120,10 @@ function navigateTo(view) {
     document.getElementById('main-content').innerHTML = '<div class="empty-state"><div class="empty-icon">*</div><div class="empty-title">No account selected</div><div class="empty-msg">Select or create an account first.</div></div>';
     return;
   }
-  if (view==='overview')   loadAccountData(currentAccountId);
-  if (view==='tradelog')   renderTradeLog();
-  if (view==='calendar')   renderCalendarView();
-  if (view==='discipline') renderDisciplineView();
-  if (view==='mind')       renderMindView();
-  if (view==='coach')      renderCoachView();
-  if (view==='reports')    renderReports();
+  if (view==='dashboard')  loadAccountData(currentAccountId);
+  if (view==='trades')     renderTradesView();
+  if (view==='psychology') renderPsychologyView(subTabIntent);
+  if (view==='insights')   renderInsightsView(subTabIntent);
   if (view==='settings')   renderSettings();
 }
 
@@ -1359,7 +1366,7 @@ async function loadAccountData(id, silent) {
         type: 'danger',
         icon: '⚠',
         text: streakText,
-        action: 'mind'
+        action: 'psychology'
       });
     }
 
@@ -1368,7 +1375,7 @@ async function loadAccountData(id, silent) {
         type: 'warn',
         icon: '↻',
         text: 'Error repetido: <strong>' + (errorLabels[topError]||topError) + '</strong> aparece ' + topErrorCount + ' veces en tus últimos 10 trades.',
-        action: 'mind'
+        action: 'psychology'
       });
     }
 
@@ -1380,7 +1387,7 @@ async function loadAccountData(id, silent) {
           type: 'coach',
           icon: '✦',
           text: '<strong>Coach IA</strong> — ' + lastMsg.message.slice(0, 160) + (lastMsg.message.length > 160 ? '...' : ''),
-          action: 'mind'
+          action: 'psychology'
         });
       }
     }
@@ -1392,7 +1399,7 @@ async function loadAccountData(id, silent) {
         type:   'warn',
         icon:   '⊘',
         text:   'Regla incumplida: <strong>' + v.rule.label + '</strong> — ' + v.detail,
-        action: 'rules'
+        action: 'psychology'
       });
     });
 
@@ -1637,7 +1644,7 @@ async function loadAccountData(id, silent) {
   '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">' +
 
   // Mind
-  '<div class="panel" style="padding:16px;cursor:pointer" onclick=\'navigateTo(\'mind\')\'>' +
+  '<div class="panel" style="padding:16px;cursor:pointer" onclick=\'navigateTo(\'psychology\')\'>' +
   '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Mind</div>' +
   '<div style="display:flex;align-items:baseline;gap:4px;margin-bottom:8px">' +
   '<span style="font-size:36px;font-weight:800;color:'+(mindData.total>=75?'var(--green)':mindData.total>=50?'var(--amber)':'var(--red)')+'">'+mindData.total+'</span>' +
@@ -1650,7 +1657,7 @@ async function loadAccountData(id, silent) {
   '</div></div>' +
 
   // Disciplina
-  '<div class="panel" style="padding:16px;cursor:pointer" onclick=\'navigateTo(\'discipline\')\'>' +
+  '<div class="panel" style="padding:16px;cursor:pointer" onclick=\'navigateTo(\'psychology\')\'>' +
   '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Disciplina</div>' +
   '<div style="display:flex;align-items:baseline;gap:4px;margin-bottom:8px">' +
   '<span style="font-size:36px;font-weight:800;color:'+(discData.total>=75?'var(--green)':discData.total>=50?'var(--amber)':'var(--red)')+'">'+discData.total+'</span>' +
@@ -2359,9 +2366,9 @@ function buildOnboardingScreen(acc) {
     + '<div class="panel" style="padding:20px;margin-bottom:16px">'
     + '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px">Mientras tanto, configura tu herramienta</div>'
     + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
-    + '<div style="padding:12px;background:var(--surface2);border-radius:8px;cursor:pointer;border:1px solid var(--border)" onclick="navigateTo(\'discipline\')">'
+    + '<div style="padding:12px;background:var(--surface2);border-radius:8px;cursor:pointer;border:1px solid var(--border)" onclick="navigateTo(\'psychology\')">'
     + '<div style="font-size:16px;margin-bottom:6px">📋</div><div style="font-size:10px;font-weight:600;color:var(--text)">Crea tu checklist</div><div style="font-size:9px;color:var(--text3);margin-top:2px">Define tus reglas pre-trade</div></div>'
-    + '<div style="padding:12px;background:var(--surface2);border-radius:8px;cursor:pointer;border:1px solid var(--border)" onclick="navigateTo(\'rules\')">'
+    + '<div style="padding:12px;background:var(--surface2);border-radius:8px;cursor:pointer;border:1px solid var(--border)" onclick="navigateTo(\'psychology\')">'
     + '<div style="font-size:16px;margin-bottom:6px">⚖️</div><div style="font-size:10px;font-weight:600;color:var(--text)">Define tus reglas</div><div style="font-size:9px;color:var(--text3);margin-top:2px">Daily loss limit, max drawdown</div></div>'
     + '</div></div>'
     + '</div>';
@@ -3564,9 +3571,48 @@ function renderTagPills(selectedTags, onChange) {
   }).join('');
 }
 
+// ── TRADES VIEW (wrapper: Trade Log + Calendar tabs) ──────────────────────
+var _tradesActiveTab = 'log'; // 'log' | 'calendar'
+
+function renderTradesView() {
+  var el = document.getElementById('main-content');
+  // Tab bar
+  var tabs = [
+    { id: 'log',      label: '&#8801; Trade Log' },
+    { id: 'calendar', label: '&#8862; Calendar'  },
+  ];
+  var tabBar = '<div style="display:flex;gap:2px;padding:14px 16px 0;border-bottom:1px solid var(--border);background:var(--surface);margin-bottom:0">'
+    + tabs.map(function(t) {
+        var active = _tradesActiveTab === t.id;
+        return '<div onclick="switchTradesTab(\''+t.id+'\')" style="padding:7px 16px;font-size:11px;font-weight:600;cursor:pointer;border-radius:6px 6px 0 0;letter-spacing:.3px;transition:all .15s;'
+          + (active
+              ? 'color:var(--text);background:var(--surface2);border:1px solid var(--border);border-bottom:1px solid var(--surface2);margin-bottom:-1px'
+              : 'color:var(--text3);background:transparent;border:1px solid transparent')
+          + '">' + t.label + '</div>';
+      }).join('')
+    + '</div>';
+  el.innerHTML = tabBar + '<div id="trades-tab-content"></div>';
+  _renderTradesTabContent();
+}
+
+function switchTradesTab(tab) {
+  _tradesActiveTab = tab;
+  renderTradesView();
+}
+
+function _renderTradesTabContent() {
+  if (_tradesActiveTab === 'log')      renderTradeLog();
+  else if (_tradesActiveTab === 'calendar') renderCalendarView();
+}
+
+// Helper: when inside a tab wrapper, write to the tab content div
+function getTabEl(tabId) {
+  return document.getElementById(tabId) || document.getElementById('main-content');
+}
+
 // TRADE LOG VIEW
 async function renderTradeLog() {
-  var el=document.getElementById('main-content');
+  var el=getTabEl('trades-tab-content');
   el.innerHTML='<div class="loading"><div class="spinner"></div></div>';
   var res=await sb.from('trades').select('*').eq('account_id',currentAccountId).order('entry_time',{ascending:false});
   currentTrades=res.data||[];
@@ -3574,7 +3620,7 @@ async function renderTradeLog() {
 }
 
 function renderTradeLogTable(trades) {
-  var el=document.getElementById('main-content');
+  var el=getTabEl('trades-tab-content');
   var filtered=trades.filter(function(t) {
     if (tlFilters.date && !(t.entry_time||'').startsWith(tlFilters.date)) return false;
     if (tlFilters.ticker && !(t.ticker||'').toLowerCase().includes(tlFilters.ticker.toLowerCase())) return false;
@@ -3677,7 +3723,7 @@ function renderCalendarView() {
 }
 
 function renderCalendarFull(year, month, trades) {
-  var el=document.getElementById('main-content');
+  var el=getTabEl('trades-tab-content');
   var monthNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
   var daily={};
   var dayTrades={};
@@ -3930,9 +3976,44 @@ function openReplay(url) {
   window.open(url, "_blank");
 }
 
+// ── PSYCHOLOGY VIEW (wrapper: Discipline tabs + Mind) ────────────────────
+var _psychActiveTab = 'discipline'; // 'discipline' | 'mind'
+
+function renderPsychologyView(subTabIntent) {
+  if (subTabIntent === 'mind') _psychActiveTab = 'mind';
+  else if (subTabIntent === 'checklist') { _psychActiveTab = 'discipline'; window._discTab = 'checklist'; }
+  var el = document.getElementById('main-content');
+  var tabs = [
+    { id: 'discipline', label: '⊘ Discipline' },
+    { id: 'mind',       label: '◉ Mind'       },
+  ];
+  var tabBar = '<div style="display:flex;gap:2px;padding:14px 16px 0;border-bottom:1px solid var(--border);background:var(--surface);margin-bottom:0">'
+    + tabs.map(function(t) {
+        var active = _psychActiveTab === t.id;
+        return '<div onclick="switchPsychTab(\''+t.id+'\')" style="padding:7px 16px;font-size:11px;font-weight:600;cursor:pointer;border-radius:6px 6px 0 0;letter-spacing:.3px;transition:all .15s;'
+          + (active
+              ? 'color:var(--text);background:var(--surface2);border:1px solid var(--border);border-bottom:1px solid var(--surface2);margin-bottom:-1px'
+              : 'color:var(--text3);background:transparent;border:1px solid transparent')
+          + '">' + t.label + '</div>';
+      }).join('')
+    + '</div>';
+  el.innerHTML = tabBar + '<div id="psych-tab-content"></div>';
+  _renderPsychTabContent();
+}
+
+function switchPsychTab(tab) {
+  _psychActiveTab = tab;
+  renderPsychologyView();
+}
+
+function _renderPsychTabContent() {
+  if (_psychActiveTab === 'discipline') renderDisciplineView();
+  else if (_psychActiveTab === 'mind')  renderMindView();
+}
+
 // DISCIPLINE VIEW
 function renderDisciplineView() {
-  var el=document.getElementById('main-content');
+  var el=getTabEl('psych-tab-content');
   var activeTab=window._discTab||'rules';
   el.innerHTML='<div class="tab-bar fade-in">'+
     '<button class="tab-btn '+(activeTab==='rules'?'active':'')+'" onclick="switchDiscTab(\'rules\')">Rules</button>'+
@@ -4539,9 +4620,43 @@ function renderOperativaTab(el) {
 
 }
 
+// ── INSIGHTS VIEW (wrapper: Psico Score + Coach tabs) ────────────────────
+var _insightsActiveTab = 'psico'; // 'psico' | 'coach'
+
+function renderInsightsView(subTabIntent) {
+  if (subTabIntent === 'coach') _insightsActiveTab = 'coach';
+  var el = document.getElementById('main-content');
+  var tabs = [
+    { id: 'psico', label: '🧠 Psico Score' },
+    { id: 'coach', label: '✦ Coach IA'    },
+  ];
+  var tabBar = '<div style="display:flex;gap:2px;padding:14px 16px 0;border-bottom:1px solid var(--border);background:var(--surface);margin-bottom:0">'
+    + tabs.map(function(t) {
+        var active = _insightsActiveTab === t.id;
+        return '<div onclick="switchInsightsTab(\''+t.id+'\')" style="padding:7px 16px;font-size:11px;font-weight:600;cursor:pointer;border-radius:6px 6px 0 0;letter-spacing:.3px;transition:all .15s;'
+          + (active
+              ? 'color:var(--text);background:var(--surface2);border:1px solid var(--border);border-bottom:1px solid var(--surface2);margin-bottom:-1px'
+              : 'color:var(--text3);background:transparent;border:1px solid transparent')
+          + '">' + t.label + '</div>';
+      }).join('')
+    + '</div>';
+  el.innerHTML = tabBar + '<div id="insights-tab-content"></div>';
+  _renderInsightsTabContent();
+}
+
+function switchInsightsTab(tab) {
+  _insightsActiveTab = tab;
+  renderInsightsView();
+}
+
+function _renderInsightsTabContent() {
+  if (_insightsActiveTab === 'psico') renderReports();
+  else if (_insightsActiveTab === 'coach') renderCoachView();
+}
+
 // COACH TAB
 function renderCoachView() {
-  var el = document.getElementById('main-content');
+  var el = getTabEl('insights-tab-content');
   el.innerHTML = '<div id="disc-tab-content"></div>';
   renderCoachTab(document.getElementById('disc-tab-content'));
 }
@@ -4636,14 +4751,14 @@ var mindCoachAnalysis = '';
 var mindCoachLoading  = false;
 
 function renderMindView() {
-  var el = document.getElementById('main-content');
+  var el = getTabEl('psych-tab-content');
   var trades = currentTrades || [];
   el.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
   setTimeout(function() { buildMindView(trades); }, 30);
 }
 
 function buildMindView(trades) {
-  var el = document.getElementById('main-content');
+  var el = getTabEl('psych-tab-content');
   if (!trades.length) {
     el.innerHTML = '<div class="empty-state"><div class="empty-icon">&#9679;</div><div class="empty-title">No trades yet</div><div class="empty-msg">Take some trades to unlock your psychological profile.</div></div>';
     return;
@@ -6383,7 +6498,7 @@ function showCoachNotification(message, type, errors) {
   document.getElementById('coach-notif-full').onclick     = function() {
     notif.remove();
     mindCoachAnalysis = message;
-    navigateTo('mind');
+    navigateTo('psychology');
   };
 
   // Auto-dismiss after 45 seconds
@@ -6478,12 +6593,12 @@ async function generateMindCoach() {
 // REPORTS VIEW
 
 function renderReports() {
-  document.getElementById('main-content').innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  getTabEl('insights-tab-content').innerHTML='<div class="loading"><div class="spinner"></div></div>';
   buildReports(currentTrades||[]);
 }
 
 function buildReports(allTrades) {
-  var el = document.getElementById('main-content');
+  var el = getTabEl('insights-tab-content');
   if (!allTrades.length) {
     el.innerHTML = '<div class="empty-state"><div class="empty-icon">🧠</div><div class="empty-title">Sin trades aún</div><div class="empty-sub">Opera y registra trades para ver tu Psico Score</div></div>';
     return;
