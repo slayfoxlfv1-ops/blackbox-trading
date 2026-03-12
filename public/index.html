@@ -4766,7 +4766,7 @@ function buildMindView(trades) {
 
   // ── Compute all psychology metrics ──
   var tagged  = trades.filter(function(t){ return t.discipline_tag; });
-  var withEmo = trades.filter(function(t){ return t.notes && t.notes.includes('Emocion:'); });
+  var withEmo = trades.filter(function(t){ return t.emotion; });
 
   // Discipline breakdown
   var discCounts = {};
@@ -4780,9 +4780,8 @@ function buildMindView(trades) {
   // Emotion extraction
   var emoCounts = {}, emoPnl = {};
   withEmo.forEach(function(t) {
-    var m = (t.notes||'').match(/Emocion: ([^\n]+)/);
-    if (!m) return;
-    var emo = m[1].trim();
+    var emo = t.emotion; // use direct field, not notes parse
+    if (!emo) return;
     emoCounts[emo] = (emoCounts[emo]||0) + 1;
     emoPnl[emo] = (emoPnl[emo]||0) + (t.pnl||0);
   });
@@ -5101,9 +5100,7 @@ function buildMindView(trades) {
   Object.keys(emoCounts).forEach(function(emo) {
     var tradesWithEmo = [];
     trades.forEach(function(t) {
-      var m = (t.notes||'').match(/Emocion: ([^\n]+)/);
-      var noteEmo = m ? m[1].trim() : '';
-      if ((t.emotion||'')===emo || noteEmo===emo) tradesWithEmo.push(t);
+      if ((t.emotion||'')===emo) tradesWithEmo.push(t);
     });
     var emoWins  = tradesWithEmo.filter(function(t){ return (t.pnl||0)>0; }).length;
     var avgPnl2  = emoPnl[emo] / emoCounts[emo];
@@ -5652,6 +5649,144 @@ function buildMindView(trades) {
     html += '</div></div>';
   }
 
+  // ── EMOTIONAL PNL HEATMAP (emoción × hora) ──────────────────────────────
+  (function() {
+    var tradesWithBoth = trades.filter(function(t){ return t.emotion && t.entry_time; });
+    if (tradesWithBoth.length < 5) return;
+
+    // Build emo × hour map: { emotion: { hour: { pnl, count, wins } } }
+    var emoHourMap = {};
+    var emoLabels  = { calm:'Tranquilo', neutral:'Neutral', confident:'Seguro', anxious:'Ansioso',
+                       fear:'Con miedo', greedy:'Codicioso', bored:'Aburrido', frustrated:'Frustrado' };
+    var emoColors  = { calm:'#5a9e72', neutral:'#a0a0aa', confident:'#5a9e9e',
+                       anxious:'#9e8050', fear:'#9e5a5a', greedy:'#9e8050', bored:'#606068', frustrated:'#9e5a5a' };
+
+    tradesWithBoth.forEach(function(t) {
+      var emo  = t.emotion;
+      var hour = new Date(t.entry_time).getHours();
+      if (!emoHourMap[emo]) emoHourMap[emo] = {};
+      if (!emoHourMap[emo][hour]) emoHourMap[emo][hour] = { pnl:0, count:0, wins:0 };
+      emoHourMap[emo][hour].pnl   += (t.pnl||0);
+      emoHourMap[emo][hour].count++;
+      if ((t.pnl||0) > 0) emoHourMap[emo][hour].wins++;
+    });
+
+    // For each emotion, find the best and worst hour
+    var emoSummary = [];
+    Object.keys(emoHourMap).forEach(function(emo) {
+      var hours = Object.keys(emoHourMap[emo]).map(Number);
+      if (!hours.length) return;
+      var totalPnl   = hours.reduce(function(s,h){ return s + emoHourMap[emo][h].pnl; }, 0);
+      var totalCount = hours.reduce(function(s,h){ return s + emoHourMap[emo][h].count; }, 0);
+      var totalWins  = hours.reduce(function(s,h){ return s + emoHourMap[emo][h].wins; }, 0);
+      var bestH  = hours.reduce(function(a,b){ return emoHourMap[emo][a].pnl > emoHourMap[emo][b].pnl ? a : b; });
+      var worstH = hours.reduce(function(a,b){ return emoHourMap[emo][a].pnl < emoHourMap[emo][b].pnl ? a : b; });
+      emoSummary.push({
+        emo: emo, label: emoLabels[emo]||emo, color: emoColors[emo]||'#a0a0aa',
+        totalPnl: totalPnl, totalCount: totalCount,
+        wr: Math.round(totalWins/totalCount*100),
+        bestH: bestH,  bestPnl:  emoHourMap[emo][bestH].pnl,  bestCount:  emoHourMap[emo][bestH].count,
+        worstH: worstH, worstPnl: emoHourMap[emo][worstH].pnl, worstCount: emoHourMap[emo][worstH].count,
+      });
+    });
+
+    // Sort by total pnl descending
+    emoSummary.sort(function(a,b){ return b.totalPnl - a.totalPnl; });
+    if (!emoSummary.length) return;
+
+    var fmtH = function(h) {
+      return String(h).padStart(2,'0') + ':00';
+    };
+    var fmtP = function(p) {
+      return (p >= 0 ? '+' : '') + '$' + Math.abs(Math.round(p));
+    };
+
+    html += '<div class="panel" style="padding:20px">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">'
+      + '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Emoción × Hora — P&L Real</div>'
+      + '<div style="font-size:9px;color:var(--text3)">'+tradesWithBoth.length+' trades</div>'
+      + '</div>'
+      + '<div style="font-size:10px;color:var(--text3);margin-bottom:14px;line-height:1.5">¿En qué horario eres rentable según tu estado emocional?</div>'
+      + '<div style="display:flex;flex-direction:column;gap:8px">';
+
+    emoSummary.forEach(function(e) {
+      var barPct = 0;
+      var maxAbs = emoSummary.reduce(function(m,x){ return Math.max(m, Math.abs(x.totalPnl)); }, 1);
+      barPct = Math.round(Math.abs(e.totalPnl) / maxAbs * 100);
+      var isPos   = e.totalPnl >= 0;
+      var barCol  = isPos ? 'var(--green)' : 'var(--red)';
+      html += '<div style="background:var(--surface2);border-radius:8px;padding:10px 12px">'
+        + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'
+        + '<span style="font-size:12px;width:20px;text-align:center;color:'+e.color+'">●</span>'
+        + '<span style="font-size:11px;font-weight:700;color:var(--text);flex:1">'+e.label+'</span>'
+        + '<span style="font-size:12px;font-weight:800;color:'+barCol+'">'+fmtP(e.totalPnl)+'</span>'
+        + '<span style="font-size:9px;color:var(--text3);margin-left:8px">'+e.wr+'% WR</span>'
+        + '<span style="font-size:9px;color:var(--text3);margin-left:8px">'+e.totalCount+'t</span>'
+        + '</div>'
+        // Progress bar
+        + '<div style="background:var(--surface3);border-radius:3px;height:4px;margin-bottom:8px">'
+        + '<div style="height:100%;width:'+barPct+'%;background:'+barCol+';border-radius:3px"></div></div>'
+        // Best / worst hour chips
+        + '<div style="display:flex;gap:6px;flex-wrap:wrap">'
+        + (e.bestCount > 0
+          ? '<span style="font-size:9px;padding:3px 8px;border-radius:10px;background:var(--green-bg);border:1px solid var(--green-bd);color:var(--green)">✓ '+fmtH(e.bestH)+' '+fmtP(e.bestPnl)+' ('+e.bestCount+'t)</span>'
+          : '')
+        + (e.worstH !== e.bestH && e.worstCount > 0
+          ? '<span style="font-size:9px;padding:3px 8px;border-radius:10px;background:var(--red-bg);border:1px solid var(--red-bd);color:var(--red)">✗ '+fmtH(e.worstH)+' '+fmtP(e.worstPnl)+' ('+e.worstCount+'t)</span>'
+          : '')
+        + '</div></div>';
+    });
+
+    html += '</div></div>';
+  })();
+
+  // ── PATTERN SEVERITY (impacto real en $) ─────────────────────────────────
+  (function() {
+    var acc2 = (accounts||[]).find(function(a){ return a.id === currentAccountId; });
+    var patterns = calcPatternSeverity(trades, acc2);
+    if (!patterns.length) return;
+
+    var totalLoss = Math.abs(trades.filter(function(t){ return (t.pnl||0)<0; })
+      .reduce(function(s,t){ return s+(t.pnl||0); }, 0));
+
+    html += '<div class="panel" style="padding:20px">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">'
+      + '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Pattern Severity — Impacto Real</div>'
+      + '<div style="font-size:9px;color:var(--red)">Total pérdidas por errores: $'+Math.round(totalLoss)+'</div>'
+      + '</div>'
+      + '<div style="font-size:10px;color:var(--text3);margin-bottom:14px;line-height:1.5">¿Qué errores te cuestan más dinero en términos absolutos?</div>'
+      + '<div style="display:flex;flex-direction:column;gap:8px">';
+
+    patterns.forEach(function(p) {
+      var barPct  = patterns[0].lossAmt > 0 ? Math.round(p.lossAmt / patterns[0].lossAmt * 100) : 0;
+      var isHigh  = p.impactPct >= 20;
+      var barCol  = isHigh ? 'var(--red)' : 'var(--amber)';
+      var bg      = isHigh ? 'var(--red-bg)' : 'var(--surface2)';
+      var bd      = isHigh ? 'var(--red-bd)' : 'var(--border)';
+      var fmtP2   = function(n){ return '$'+Math.round(Math.abs(n)); };
+      html += '<div style="background:'+bg+';border:1px solid '+bd+';border-radius:8px;padding:10px 12px">'
+        + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'
+        + '<span style="font-size:14px">'+p.icon+'</span>'
+        + '<span style="font-size:11px;font-weight:700;color:var(--text);flex:1">'+p.label+'</span>'
+        + (p.isAuto ? '<span style="font-size:8px;color:var(--text3);background:var(--surface3);padding:2px 6px;border-radius:8px">auto</span>' : '')
+        + '<span style="font-size:9px;color:var(--text3)">'+p.count+' trades</span>'
+        + '</div>'
+        + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">'
+        + '<span style="font-size:18px;font-weight:800;color:'+barCol+'">-'+fmtP2(p.lossAmt)+'</span>'
+        + '<span style="font-size:10px;color:var(--text3)">en pérdidas</span>'
+        + '<span style="font-size:11px;font-weight:700;color:'+barCol+';margin-left:auto">'+p.impactPct+'% de tus pérdidas</span>'
+        + '</div>'
+        + '<div style="background:var(--surface3);border-radius:3px;height:5px;margin-bottom:6px">'
+        + '<div style="height:100%;width:'+barPct+'%;background:'+barCol+';border-radius:3px"></div></div>'
+        + '<div style="display:flex;gap:12px">'
+        + '<span style="font-size:9px;color:var(--text3)">'+p.winRate+'% WR en estos trades</span>'
+        + (p.avgLoss > 0 ? '<span style="font-size:9px;color:var(--text3)">avg pérdida: -$'+p.avgLoss+'</span>' : '')
+        + '</div></div>';
+    });
+
+    html += '</div></div>';
+  })();
+
   html += '</div>'; // end padding wrapper
   el.innerHTML = html;
 }
@@ -6114,6 +6249,147 @@ function showMoodCheck(accountId) {
 var tiltCheckInterval = null;
 var lastTiltAlert     = 0; // timestamp of last tilt notification (avoid spam)
 
+// ── AUTO-DETECT discipline signals from trade sequence ──────────────────────
+// Returns an object with detected signals per trade and day-level patterns.
+// Does NOT overwrite trade.discipline_tag — it enriches the display only.
+//
+// Signals detected:
+//   revenge   — trade entered < 5min after a losing trade
+//   overtrading — trade is beyond the configured max trades/day (default 6 if not set)
+//   early_exit — rr_achieved < 50% of rr_planned on a winning trade
+//   size_escalation — quantity > previous trade after a loss
+//
+function autoDetectSignals(trades, acc) {
+  if (!trades || !trades.length) return {};
+  var maxTrades = (acc && acc.rules_v2 && acc.rules_v2.maxtrades && acc.rules_v2.maxtrades.active)
+    ? (acc.rules_v2.maxtrades.value || 6) : 6;
+
+  // Sort ascending by entry_time for sequence analysis
+  var sorted = trades.slice().sort(function(a,b){
+    return new Date(a.entry_time||0) - new Date(b.entry_time||0);
+  });
+
+  // Group by day
+  var byDay = {};
+  sorted.forEach(function(t) {
+    if (!t.entry_time) return;
+    var d = t.entry_time.slice(0,10);
+    if (!byDay[d]) byDay[d] = [];
+    byDay[d].push(t);
+  });
+
+  // Per-trade signal map: { tradeId: [signal, ...] }
+  var signals = {};
+
+  Object.keys(byDay).forEach(function(day) {
+    var dayT = byDay[day];
+    dayT.forEach(function(t, i) {
+      var s = [];
+
+      // Only auto-detect if user hasn't already tagged it
+      var userTagged = t.discipline_tag && t.discipline_tag !== 'clean';
+
+      // Revenge: entry < 5min after previous trade exit and that trade was a loss
+      if (!userTagged && i > 0) {
+        var prev = dayT[i-1];
+        if ((prev.pnl||0) < 0) {
+          var prevExit = new Date(prev.exit_time || prev.entry_time);
+          var thisEntry = new Date(t.entry_time);
+          var gapMin = (thisEntry - prevExit) / 60000;
+          if (gapMin >= 0 && gapMin < 5) s.push('revenge');
+        }
+      }
+
+      // Overtrading: beyond max trades for the day
+      if (!userTagged && i >= maxTrades) s.push('overtrading');
+
+      // Early exit: win but rr_achieved < 50% of rr_planned
+      if (!userTagged && t.rr_planned > 0 && t.rr_achieved > 0 && (t.pnl||0) > 0) {
+        if (t.rr_achieved / t.rr_planned < 0.5) s.push('early_exit');
+      }
+
+      // Size escalation after loss
+      if (!userTagged && i > 0) {
+        var prev2 = dayT[i-1];
+        if ((prev2.pnl||0) < 0 && (t.quantity||0) > (prev2.quantity||0) && t.quantity > 0) {
+          s.push('size_escalation');
+        }
+      }
+
+      if (s.length) signals[t.id] = s;
+    });
+  });
+
+  return signals; // { tradeId: ['revenge', ...] }
+}
+
+// ── PATTERN SEVERITY — what each error pattern costs in real $ ──────────────
+// Returns array of pattern objects sorted by total loss impact descending.
+function calcPatternSeverity(trades, acc) {
+  if (!trades || trades.length < 3) return [];
+
+  var autoSigs = autoDetectSignals(trades, acc);
+  var totalLosses = Math.abs(trades.filter(function(t){ return (t.pnl||0) < 0; })
+    .reduce(function(s,t){ return s + (t.pnl||0); }, 0));
+  if (totalLosses === 0) totalLosses = 1; // avoid div/0
+
+  // Build pattern buckets combining user tags + auto signals
+  var patterns = {
+    revenge:        { label:'Revenge Trade',      icon:'⚡', trades:[], color:'#9e5a5a' },
+    impulse:        { label:'Trade Impulsivo',    icon:'🎯', trades:[], color:'#9e5a5a' },
+    fomo:           { label:'FOMO',               icon:'😰', trades:[], color:'#9e8050' },
+    overtrading:    { label:'Overtrading',        icon:'🔄', trades:[], color:'#9e8050' },
+    moved_sl:       { label:'Movió Stop Loss',    icon:'🚧', trades:[], color:'#9e8050' },
+    early_exit:     { label:'Salida Prematura',   icon:'🚪', trades:[], color:'#9e8050' },
+    size_escalation:{ label:'Escaló Tamaño',      icon:'📈', trades:[], color:'#9e5a5a' },
+    no_confirmation:{ label:'Sin Confirmación',   icon:'❓', trades:[], color:'#9e8050' },
+  };
+
+  trades.forEach(function(t) {
+    // User-tagged patterns
+    var tag = t.discipline_tag;
+    if (tag && tag !== 'clean' && patterns[tag]) {
+      patterns[tag].trades.push(t);
+    }
+    // Auto-detected (only if not already user-tagged)
+    var autoList = autoSigs[t.id] || [];
+    autoList.forEach(function(sig) {
+      if (patterns[sig] && !(tag && tag !== 'clean')) {
+        patterns[sig].trades.push(t);
+      }
+    });
+  });
+
+  var result = [];
+  Object.keys(patterns).forEach(function(key) {
+    var p = patterns[key];
+    if (!p.trades.length) return;
+    var pnlTotal = p.trades.reduce(function(s,t){ return s + (t.pnl||0); }, 0);
+    var losses   = p.trades.filter(function(t){ return (t.pnl||0) < 0; });
+    var wins     = p.trades.filter(function(t){ return (t.pnl||0) > 0; });
+    var lossAmt  = Math.abs(losses.reduce(function(s,t){ return s + (t.pnl||0); }, 0));
+    var impactPct = totalLosses > 0 ? Math.round(lossAmt / totalLosses * 100) : 0;
+    var avgLoss  = losses.length ? Math.round(lossAmt / losses.length) : 0;
+    result.push({
+      key:       key,
+      label:     p.label,
+      icon:      p.icon,
+      color:     p.color,
+      count:     p.trades.length,
+      pnlTotal:  pnlTotal,
+      lossAmt:   lossAmt,
+      impactPct: impactPct,
+      winRate:   p.trades.length ? Math.round(wins.length / p.trades.length * 100) : 0,
+      avgLoss:   avgLoss,
+      isAuto:    !p.trades.some(function(t){ return t.discipline_tag === key; })
+    });
+  });
+
+  // Sort by loss impact descending
+  result.sort(function(a,b){ return b.lossAmt - a.lossAmt; });
+  return result;
+}
+
 function detectTilt(trades) {
   if (!trades || trades.length < 2) return null;
 
@@ -6385,8 +6661,8 @@ async function generateAutoFullAnalysis(trades, accountId, day) {
 
   // Emotion trend
   var emoRecent = {}; var emoOld = {};
-  t7days.forEach(function(t){ var m=(t.notes||'').match(/Emocion: ([^\n]+)/); if(m){var e=m[1].trim();emoRecent[e]=(emoRecent[e]||0)+1;} });
-  tPrevWeek.forEach(function(t){ var m=(t.notes||'').match(/Emocion: ([^\n]+)/); if(m){var e=m[1].trim();emoOld[e]=(emoOld[e]||0)+1;} });
+  t7days.forEach(function(t){ if(t.emotion){emoRecent[t.emotion]=(emoRecent[t.emotion]||0)+1;} });
+  tPrevWeek.forEach(function(t){ if(t.emotion){emoOld[t.emotion]=(emoOld[t.emotion]||0)+1;} });
   var emoStr = 'Esta semana: ' + (Object.entries(emoRecent).map(function(e){return e[0]+':'+e[1];}).join(', ')||'sin datos')
     + ' | Semana pasada: ' + (Object.entries(emoOld).map(function(e){return e[0]+':'+e[1];}).join(', ')||'sin datos');
 
@@ -6512,7 +6788,7 @@ async function generateMindCoach() {
 
   var trades  = currentTrades || [];
   var tagged  = trades.filter(function(t){ return t.discipline_tag; });
-  var withEmo = trades.filter(function(t){ return t.notes && t.notes.includes('Emocion:'); });
+  var withEmo = trades.filter(function(t){ return t.emotion; });
 
   // Build discipline summary
   var discSummary = {};
@@ -6524,9 +6800,8 @@ async function generateMindCoach() {
   // Build emotion→pnl summary
   var emoPnlMap = {};
   withEmo.forEach(function(t) {
-    var m = (t.notes||'').match(/Emocion: ([^\n]+)/);
-    if (!m) return;
-    var emo = m[1].trim();
+    var emo = t.emotion;
+    if (!emo) return;
     if (!emoPnlMap[emo]) emoPnlMap[emo] = [];
     emoPnlMap[emo].push(t.pnl||0);
   });
