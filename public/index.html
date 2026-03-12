@@ -3675,6 +3675,19 @@ function getTabEl(tabId) {
 // TRADE LOG VIEW
 async function renderTradeLog() {
   var el=getTabEl('trades-tab-content');
+  // If we already have trades loaded, render immediately — no spinner
+  if (currentTrades && currentTrades.length > 0) {
+    renderTradeLogTable(currentTrades);
+    // Silently refresh in background to catch new trades
+    sb.from('trades').select('*').eq('account_id',currentAccountId).order('entry_time',{ascending:false}).then(function(res) {
+      if (res.data && res.data.length !== currentTrades.length) {
+        currentTrades = res.data;
+        renderTradeLogTable(currentTrades);
+      }
+    });
+    return;
+  }
+  // First load — show spinner then fetch
   el.innerHTML='<div class="loading"><div class="spinner"></div></div>';
   var res=await sb.from('trades').select('*').eq('account_id',currentAccountId).order('entry_time',{ascending:false});
   currentTrades=res.data||[];
@@ -4941,10 +4954,12 @@ function buildMindView(trades) {
   if (curWin  > 0) allStreaks.push({type:'win', len:curWin});
   var maxStreak = maxLossStreak; // backward compat
 
-  // Current streak (from most recent)
+  // Current streak — TODAY only to avoid stale alerts from previous sessions
+  var todayOnlyStr = new Date().toISOString().slice(0,10);
+  var todayOnlyTrades = sortedTrades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(todayOnlyStr); });
   var currentLossStreak = 0, currentWinStreak = 0;
-  for (var j = sortedTrades.length-1; j >= 0; j--) {
-    var _p = (sortedTrades[j].pnl||0);
+  for (var j = todayOnlyTrades.length-1; j >= 0; j--) {
+    var _p = (todayOnlyTrades[j].pnl||0);
     if (_p < 0) { if (currentWinStreak===0) currentLossStreak++; else break; }
     else if (_p > 0) { if (currentLossStreak===0) currentWinStreak++; else break; }
     else break;
@@ -4977,8 +4992,9 @@ function buildMindView(trades) {
   if (currentLossStreak >= 2) {
     html += '<div style="background:#2e0d0d;border:1px solid #5c1e1e;border-left:4px solid var(--red);border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:12px">'
       + '<span style="font-size:24px">⚠️</span>'
-      + '<div><div style="font-weight:700;color:var(--red);font-size:13px">'+currentLossStreak+' pérdidas consecutivas</div>'
+      + '<div style="flex:1"><div style="font-weight:700;color:var(--red);font-size:13px">'+currentLossStreak+' pérdidas consecutivas hoy</div>'
       + '<div style="font-size:11px;color:var(--text3);margin-top:3px">Considera tomarte un descanso. El revenge trading es el mayor destructor de cuentas.</div></div>'
+      + '<span onclick="dismissOverviewAlert(\'mind_loss_streak_'+currentAccountId+'_'+new Date().toISOString().slice(0,10)+'\')" style="font-size:18px;color:var(--text3);cursor:pointer;padding:0 4px;flex-shrink:0" title="Cerrar">×</span>'
       + '</div>';
   }
 
