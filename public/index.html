@@ -355,7 +355,7 @@ tr:hover td { background:var(--hover); }
       <div class="nav-item active" data-view="dashboard"><span class="nav-icon">&#9638;</span> Dashboard</div>
       <div class="nav-item" data-view="trades"><span class="nav-icon">&#8801;</span> Trades</div>
       <div class="nav-item" data-view="psychology"><span class="nav-icon">&#9679;</span> Psychology</div>
-      <div class="nav-item" data-view="insights"><span class="nav-icon">🧠</span> Insights</div>
+      <div class="nav-item" data-view="insights"><span class="nav-icon">◈</span> Insights</div>
       <div class="nav-item" data-view="settings"><span class="nav-icon">&#9711;</span> Settings</div>
     </div>
     <div class="sidebar-footer">
@@ -1334,9 +1334,11 @@ async function loadAccountData(id, silent) {
     var coachMem = {};
     try { coachMem = JSON.parse(bbStore.get('coach_mem_' + id) || '{}'); } catch(e) {}
 
-    // Current loss streak alert
+    // Current loss streak alert — TODAY only to avoid stale alerts from previous days
+    var todayStr = new Date().toISOString().slice(0,10);
+    var todayTradesOnly = trades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(todayStr); });
     var lossStreak = 0;
-    var sortedByExit = trades.slice().sort(function(a,b){ return new Date(b.exit_time||b.entry_time) - new Date(a.exit_time||a.entry_time); });
+    var sortedByExit = todayTradesOnly.slice().sort(function(a,b){ return new Date(b.exit_time||b.entry_time) - new Date(a.exit_time||a.entry_time); });
     for (var _i=0; _i<sortedByExit.length; _i++) {
       if ((sortedByExit[_i].pnl||0) < 0) lossStreak++;
       else break;
@@ -1493,6 +1495,54 @@ async function loadAccountData(id, silent) {
   var weekDayVals = Object.values(weekDayMap);
   var bestDayW  = weekDayVals.length ? (Math.max.apply(null,weekDayVals) > 0 ? Math.max.apply(null,weekDayVals) : 0) : null;
   var worstDayW = weekDayVals.length ? Math.min.apply(null,weekDayVals) : null;
+
+  // Find the actual date keys for best/worst to build insight text
+  var bestDayKey  = weekDayVals.length ? Object.keys(weekDayMap).reduce(function(a,b){ return weekDayMap[a]>weekDayMap[b]?a:b; }) : null;
+  var worstDayKey = weekDayVals.length ? Object.keys(weekDayMap).reduce(function(a,b){ return weekDayMap[a]<weekDayMap[b]?a:b; }) : null;
+
+  // Build psychological insight for best day
+  var bestDayInsight = '';
+  if (bestDayKey && bestDayW > 0) {
+    var bestDayTrades = weekTrades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(bestDayKey); });
+    var bdClean   = bestDayTrades.filter(function(t){ return (t.discipline_tag||'clean')==='clean'; }).length;
+    var bdEmo     = bestDayTrades.filter(function(t){ return t.emotion; }).map(function(t){ return t.emotion; });
+    var bdTopEmo  = bdEmo.length ? bdEmo.sort(function(a,b){ return bdEmo.filter(function(x){return x===b;}).length - bdEmo.filter(function(x){return x===a;}).length; })[0] : null;
+    var bdWins    = bestDayTrades.filter(function(t){ return (t.pnl||0)>0; }).length;
+    var bdWR      = bestDayTrades.length ? Math.round(bdWins/bestDayTrades.length*100) : 0;
+    var bdInsights = [];
+    if (bdClean === bestDayTrades.length && bestDayTrades.length > 0) bdInsights.push('ejecutaste todos tus trades de forma limpia');
+    else if (bdClean > 0) bdInsights.push(bdClean + ' de ' + bestDayTrades.length + ' trades fueron clean');
+    if (bdTopEmo === 'calm' || bdTopEmo === 'confident') bdInsights.push('operaste ' + (bdTopEmo === 'calm' ? 'tranquilo' : 'con confianza'));
+    if (bdWR >= 70) bdInsights.push('tu win rate fue ' + bdWR + '%');
+    bestDayInsight = bdInsights.length ? bdInsights.join(' · ') : 'día con buen control y resultados';
+  }
+
+  // Build psychological insight for worst day
+  var worstDayInsight = '';
+  if (worstDayKey) {
+    var worstDayTrades = weekTrades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(worstDayKey); });
+    var wdErrors  = worstDayTrades.filter(function(t){ return t.discipline_tag && t.discipline_tag !== 'clean'; });
+    var wdTopTag  = null;
+    if (wdErrors.length) {
+      var wdTagCount = {};
+      wdErrors.forEach(function(t){ wdTagCount[t.discipline_tag] = (wdTagCount[t.discipline_tag]||0)+1; });
+      wdTopTag = Object.keys(wdTagCount).sort(function(a,b){ return wdTagCount[b]-wdTagCount[a]; })[0];
+    }
+    var wdEmo    = worstDayTrades.filter(function(t){ return t.emotion; }).map(function(t){ return t.emotion; });
+    var wdTopEmo = wdEmo.length ? wdEmo.sort(function(a,b){ return wdEmo.filter(function(x){return x===b;}).length - wdEmo.filter(function(x){return x===a;}).length; })[0] : null;
+    var wdInsights = [];
+    var tagNames = { fomo:'FOMO', impulse:'trades impulsivos', moved_sl:'mover el stop', overtrading:'overtrading', no_confirmation:'entrar sin confirmación', scaled_in:'escalar en pérdidas' };
+    if (wdTopTag) wdInsights.push('error principal: ' + (tagNames[wdTopTag]||wdTopTag));
+    if (wdTopEmo && (wdTopEmo==='frustrated'||wdTopEmo==='anxious'||wdTopEmo==='fear')) {
+      var emoSpanish = { frustrated:'frustración', anxious:'ansiedad', fear:'miedo' };
+      wdInsights.push('operaste con ' + emoSpanish[wdTopEmo]);
+    }
+    if (wdErrors.length > 0 && worstDayTrades.length > 0) {
+      var errRate = Math.round(wdErrors.length/worstDayTrades.length*100);
+      if (errRate >= 50) wdInsights.push(errRate + '% de trades con error');
+    }
+    worstDayInsight = wdInsights.length ? wdInsights.join(' · ') : 'día con pérdidas y errores de disciplina';
+  }
 
   // Avg win / avg loss (all time)
   var wins  = trades.filter(function(t){ return (t.pnl||0)>0; });
@@ -1771,16 +1821,16 @@ async function loadAccountData(id, silent) {
 
   '</div>' +
 
-  // ── ROW 4: Equity curve · Achievements ──
+  // ── ROW 4: Discipline Breakdown · Achievements ──
   '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' +
 
-  '<div class="panel" style="padding:16px">' +
-  '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Equity Curve — Semana</div>' +
-  miniEquity(weekTrades) +
-  '<div style="display:flex;justify-content:space-between;margin-top:6px">' +
-  '<span style="font-size:9px;color:var(--text3)">P&L semana</span>' +
-  '<span style="font-size:11px;font-weight:700;color:'+(weekPnl>=0?'var(--green)':'var(--red)')+'">'+fmt(weekPnl,true)+'</span></div>' +
-  '</div>' +
+  '<div class="panel"><div class="panel-head"><span class="panel-title">Discipline Breakdown</span></div>' +
+  '<div style="padding:14px 18px"><div class="disc-bar"><div class="disc-fill" style="width:'+disc.score+'%;background:'+(disc.score>=60?'var(--green)':disc.score>=40?'var(--amber)':'var(--red)')+'"></div></div></div>' +
+  '<div class="disc-rows">' +
+  [['ok','Clean',discCounts2.clean],['warn','Moved SL',discCounts2.moved_sl],['bad','Scaled in',discCounts2.scaled_in],['bad','Impulse',discCounts2.impulse],['bad','No confirm',discCounts2.no_confirmation],['warn','Overtrade',discCounts2.overtrading],['bad','FOMO',discCounts2.fomo]].map(function(row){
+    return '<div class="disc-row"><div class="d-dot '+row[0]+'"></div><div class="d-desc">'+row[1]+'</div><div class="d-val">'+row[2]+'</div></div>';
+  }).join('') +
+  '</div></div>' +
 
   '<div class="panel" style="padding:16px">' +
   '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px"><span style="color:var(--amber)">★</span> Achievements</div>' +
@@ -1806,24 +1856,34 @@ async function loadAccountData(id, silent) {
   '</div>' +
 
   '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
-  '<div class="metric"><div class="m-label">Mejor día semana</div><div class="m-val pos">'+(bestDayW!==null?fmt(bestDayW,true):'--')+'</div></div>' +
-  '<div class="metric"><div class="m-label">Peor día semana</div><div class="m-val neg">'+(worstDayW!==null?fmt(worstDayW,false):'--')+'</div></div>' +
+  // Best day
+  '<div class="metric" style="display:flex;flex-direction:column;gap:4px;padding:12px">' +
+  '<div class="m-label">Mejor día semana</div>' +
+  '<div class="m-val pos">'+(bestDayW!==null?fmt(bestDayW,true):'--')+'</div>' +
+  (bestDayInsight ? '<div style="font-size:9px;color:var(--text3);line-height:1.5;margin-top:3px;border-top:1px solid var(--border);padding-top:5px">✓ '+bestDayInsight+'</div>' : '') +
+  '</div>' +
+  // Worst day
+  '<div class="metric" style="display:flex;flex-direction:column;gap:4px;padding:12px">' +
+  '<div class="m-label">Peor día semana</div>' +
+  '<div class="m-val neg">'+(worstDayW!==null?fmt(worstDayW,false):'--')+'</div>' +
+  (worstDayInsight ? '<div style="font-size:9px;color:var(--text3);line-height:1.5;margin-top:3px;border-top:1px solid var(--border);padding-top:5px">⚠ '+worstDayInsight+'</div>' : '') +
+  '</div>' +
   '</div>' +
 
-  // ── ROW 6: P&L Calendar · Discipline Breakdown ──
+  // ── ROW 6: P&L Calendar · Equity Curve ──
   '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' +
 
   '<div class="panel"><div class="panel-head"><span class="panel-title">P&L Calendar</span></div>' +
   '<div class="cal-hdr">'+['M','T','W','T','F','S','S'].map(function(d){ return '<div class="cal-hdr-day">'+d+'</div>'; }).join('')+'</div>' +
   '<div class="cal-grid" style="overflow:visible">'+calHtml+'</div></div>' +
 
-  '<div class="panel"><div class="panel-head"><span class="panel-title">Discipline Breakdown</span></div>' +
-  '<div style="padding:14px 18px"><div class="disc-bar"><div class="disc-fill" style="width:'+disc.score+'%;background:'+(disc.score>=60?'var(--green)':disc.score>=40?'var(--amber)':'var(--red)')+'"></div></div></div>' +
-  '<div class="disc-rows">' +
-  [['ok','Clean',discCounts2.clean],['warn','Moved SL',discCounts2.moved_sl],['bad','Scaled in',discCounts2.scaled_in],['bad','Impulse',discCounts2.impulse],['bad','No confirm',discCounts2.no_confirmation],['warn','Overtrade',discCounts2.overtrading],['bad','FOMO',discCounts2.fomo]].map(function(row){
-    return '<div class="disc-row"><div class="d-dot '+row[0]+'"></div><div class="d-desc">'+row[1]+'</div><div class="d-val">'+row[2]+'</div></div>';
-  }).join('') +
-  '</div></div>' +
+  '<div class="panel" style="padding:16px">' +
+  '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Equity Curve — Semana</div>' +
+  miniEquity(weekTrades) +
+  '<div style="display:flex;justify-content:space-between;margin-top:6px">' +
+  '<span style="font-size:9px;color:var(--text3)">P&L semana</span>' +
+  '<span style="font-size:11px;font-weight:700;color:'+(weekPnl>=0?'var(--green)':'var(--red)')+'">'+fmt(weekPnl,true)+'</span></div>' +
+  '</div>' +
 
   '</div>' +
 
@@ -3631,7 +3691,15 @@ function renderTradeLogTable(trades) {
     return true;
   });
   var tagMap={clean:'clean',moved_sl:'moved sl',scaled_in:'scale in',impulse:'impulse',no_confirmation:'no confirm',overtrading:'overtrading',fomo:'fomo'};
-  var rows=filtered.map(function(t) {
+  // Pagination: 15 trades per page. Reset to page 1 when filters change.
+  var PAGE_SIZE = 15;
+  var totalFiltered = filtered.length;
+  var totalPages = Math.max(1, Math.ceil(totalFiltered / PAGE_SIZE));
+  if (tlPage > totalPages) tlPage = totalPages;
+  var pageStart = (tlPage - 1) * PAGE_SIZE;
+  var paginated = filtered.slice(pageStart, pageStart + PAGE_SIZE);
+
+  var rows=paginated.map(function(t) {
     var pnl=t.pnl||0;
     var pnlDisp=(pnl>=0?'+':'-')+'$'+Math.abs(pnl).toLocaleString();
     var pnlCls=pnl>=0?'pos':'neg';
@@ -3673,12 +3741,27 @@ function renderTradeLogTable(trades) {
       '<td><span class="edit-btn" onclick="openEditTrade(\''+t.id+'\')" title="Edit">e</span> <span class="edit-btn del-btn" onclick="confirmDeleteTrade(\''+t.id+'\')" title="Delete">x</span></td>'+
       '</tr>';
   }).join('');
+  // Build pagination controls
+  var paginationHtml = '';
+  if (totalPages > 1) {
+    var btns = '';
+    btns += '<button onclick="tlPage=Math.max(1,tlPage-1);renderTradeLogTable(currentTrades)" style="padding:4px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text3);font-size:11px;cursor:pointer'+(tlPage===1?';opacity:.4;cursor:default':'')+'">‹</button>';
+    // show window of pages
+    var pStart = Math.max(1, tlPage-2); var pEnd = Math.min(totalPages, tlPage+2);
+    for (var _p = pStart; _p <= pEnd; _p++) {
+      var isActive = _p === tlPage;
+      btns += '<button onclick="tlPage='+_p+';renderTradeLogTable(currentTrades)" style="padding:4px 10px;background:'+(isActive?'var(--green)':'var(--surface2)')+';border:1px solid '+(isActive?'var(--green)':'var(--border)')+';border-radius:5px;color:'+(isActive?'#fff':'var(--text3)')+';font-size:11px;cursor:pointer">'+_p+'</button>';
+    }
+    btns += '<button onclick="tlPage=Math.min(totalPages,tlPage+1);renderTradeLogTable(currentTrades)" style="padding:4px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text3);font-size:11px;cursor:pointer'+(tlPage===totalPages?';opacity:.4;cursor:default':'')+'">›</button>';
+    paginationHtml = '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 18px;border-top:1px solid var(--border)">'      + '<span style="font-size:10px;color:var(--text3)">'+pageStart+1+' – '+Math.min(pageStart+PAGE_SIZE, totalFiltered)+' de '+totalFiltered+' trades</span>'      + '<div style="display:flex;gap:4px">'+btns+'</div>'      + '</span></div>';
+  }
+
   el.innerHTML='<div class="panel fade-in">'+
     '<div class="panel-head"><span class="panel-title">Trade Log</span><span class="panel-cap">'+filtered.length+' of '+trades.length+' trades</span></div>'+
     '<div style="display:flex;gap:8px;padding:12px 18px;border-bottom:1px solid var(--border);flex-wrap:wrap">'+
-    '<input class="form-input" style="width:130px;padding:6px 10px" type="date" value="'+tlFilters.date+'" onchange="tlFilters.date=this.value;renderTradeLogTable(currentTrades)">'+
-    '<input class="form-input" style="width:120px;padding:6px 10px" type="text" placeholder="Ticker..." value="'+tlFilters.ticker+'" oninput="tlFilters.ticker=this.value;renderTradeLogTable(currentTrades)">'+
-    '<select class="form-select" style="width:120px;padding:6px 10px" onchange="tlFilters.result=this.value;renderTradeLogTable(currentTrades)">'+
+    '<input class="form-input" style="width:130px;padding:6px 10px" type="date" value="'+tlFilters.date+'" onchange="tlFilters.date=this.value;tlPage=1;renderTradeLogTable(currentTrades)">'+
+    '<input class="form-input" style="width:120px;padding:6px 10px" type="text" placeholder="Ticker..." value="'+tlFilters.ticker+'" oninput="tlFilters.ticker=this.value;tlPage=1;renderTradeLogTable(currentTrades)">'+
+    '<select class="form-select" style="width:120px;padding:6px 10px" onchange="tlFilters.result=this.value;tlPage=1;renderTradeLogTable(currentTrades)">'+
     '<option value="all"'+(tlFilters.result==='all'?' selected':'')+'>All trades</option>'+
     '<option value="win"'+(tlFilters.result==='win'?' selected':'')+'>Winners</option>'+
     '<option value="loss"'+(tlFilters.result==='loss'?' selected':'')+'>Losers</option>'+
@@ -3688,7 +3771,7 @@ function renderTradeLogTable(trades) {
     '<div class="table-scroll"><table>'+
     '<thead><tr><th>Ticker</th><th>Side</th><th>Entry</th><th>Exit</th><th>Qty</th><th>P&L</th><th>R:R</th><th>Discipline</th><th>Notes</th><th>Time</th><th></th></tr></thead>'+
     '<tbody>'+(rows||'<tr><td colspan="12" style="text-align:center;padding:24px;color:var(--text3);font-size:11px">No trades found</td></tr>')+'</tbody>'+
-    '</table></div></div>';
+    '</table></div>'+paginationHtml+'</div>';
   // Click delegation for note cells
   var tbl = el.querySelector('.table-scroll table');
   if (tbl) tbl.addEventListener('click', function(e) {
@@ -3979,15 +4062,15 @@ function openReplay(url) {
 }
 
 // ── PSYCHOLOGY VIEW (wrapper: Discipline tabs + Mind) ────────────────────
-var _psychActiveTab = 'discipline'; // 'discipline' | 'mind'
+var _psychActiveTab = 'mind'; // 'mind' | 'discipline'
 
 function renderPsychologyView(subTabIntent) {
   if (subTabIntent === 'mind') _psychActiveTab = 'mind';
   else if (subTabIntent === 'checklist') { _psychActiveTab = 'discipline'; window._discTab = 'checklist'; }
   var el = document.getElementById('main-content');
   var tabs = [
-    { id: 'discipline', label: '⊘ Discipline' },
     { id: 'mind',       label: '◉ Mind'       },
+    { id: 'discipline', label: '⊘ Discipline' },
   ];
   var tabBar = '<div style="display:flex;gap:2px;padding:14px 16px 0;border-bottom:1px solid var(--border);background:var(--surface);margin-bottom:0">'
     + tabs.map(function(t) {
@@ -4629,7 +4712,7 @@ function renderInsightsView(subTabIntent) {
   if (subTabIntent === 'coach') _insightsActiveTab = 'coach';
   var el = document.getElementById('main-content');
   var tabs = [
-    { id: 'psico', label: '🧠 Psico Score' },
+    { id: 'psico', label: '◈ Psico Score' },
     { id: 'coach', label: '✦ Coach IA'    },
   ];
   var tabBar = '<div style="display:flex;gap:2px;padding:14px 16px 0;border-bottom:1px solid var(--border);background:var(--surface);margin-bottom:0">'
@@ -5325,6 +5408,21 @@ function buildMindView(trades) {
           + '<div style="font-size:32px;margin-bottom:8px">✓</div>'
           + '<div style="font-size:13px;color:var(--text);font-weight:600;margin-bottom:4px">Sin patrones detectados</div>'
           + '<div style="font-size:11px;color:var(--text3)">No se detectan patrones de autosabotaje con los datos actuales.</div>'
+          + '</div></div>';
+      } else {
+        var needed = 10 - trades.length;
+        html += '<div class="panel" style="padding:20px">'
+          + '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">Patrones de autosabotaje</div>'
+          + '<div style="text-align:center;padding:24px 0">'
+          + '<div style="font-size:28px;margin-bottom:10px">📊</div>'
+          + '<div style="font-size:12px;color:var(--text);font-weight:600;margin-bottom:6px">Acumulando datos...</div>'
+          + '<div style="font-size:10px;color:var(--text3);line-height:1.6;max-width:260px;margin:0 auto">'
+          + 'Registra <strong style="color:var(--text)">' + needed + ' trade' + (needed !== 1 ? 's' : '') + ' más</strong> para que el sistema pueda detectar tus patrones de comportamiento.'
+          + '</div>'
+          + '<div style="margin-top:12px;background:var(--surface2);border-radius:20px;height:5px;width:160px;margin-left:auto;margin-right:auto;overflow:hidden">'
+          + '<div style="height:100%;width:' + Math.round(trades.length/10*100) + '%;background:var(--amber);border-radius:20px"></div>'
+          + '</div>'
+          + '<div style="font-size:9px;color:var(--text3);margin-top:5px">' + trades.length + ' / 10 trades</div>'
           + '</div></div>';
       }
       return;
@@ -6933,7 +7031,7 @@ function renderMentalScorePanel(allTrades, period) {
   }
 
   return '<div class="panel" style="margin-bottom:12px">'
-    +'<div class="panel-head"><span class="panel-title">🧠 Mental Score</span><span class="panel-cap" style="font-size:9px;color:var(--text3)">Promedio de tus días activos</span></div>'
+    +'<div class="panel-head"><span class="panel-title">◈ Mental Score</span><span class="panel-cap" style="font-size:9px;color:var(--text3)">Promedio de tus días activos</span></div>'
     +'<div style="padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px">'
     +scoreCard('Esta semana', weekly, weekTrades)
     +scoreCard('Este mes', monthly, monthTrades)
