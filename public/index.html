@@ -1153,29 +1153,28 @@ async function loadAccountData(id, silent) {
   if (!silent) el.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
   var acc = accounts.find(function(a){return a.id===id;});
   if (!acc) return;
-  var res = await sb.from('trades').select('*').eq('account_id', id).order('entry_time', { ascending: true });
+  // Fire all Supabase fetches in parallel — much faster than sequential awaits
+  var todayStr3 = new Date().toISOString().slice(0,10);
+  var _results = await Promise.all([
+    sb.from('trades').select('*').eq('account_id', id).order('entry_time', { ascending: true }),
+    sb.from('checklist_sessions').select('session_date,items,score_pct,verdict').eq('account_id', id).order('session_date', { ascending: false }).limit(60),
+    sb.from('mood_sessions').select('answers,score,level,session_date').eq('account_id', id).order('session_date', { ascending: false }).limit(90),
+    sb.from('checklist_items').select('items,setup_tags').eq('account_id', id).limit(1),
+    sb.from('mood_sessions').select('answers,score,level,session_date').eq('account_id', id).eq('session_date', todayStr3).limit(1)
+  ]);
+  var res        = _results[0];
+  var clRes      = _results[1];
+  var moodAllRes = _results[2];
+  var clItemsRes = _results[3];
+  var moodDbRes  = _results[4];
+
   var trades = res.data || [];
   currentTrades = trades;
-  _tradesLoadedForAccount = id; // mark trades as loaded for this account
-  // Load checklist sessions for this account
-  var clRes = await sb.from('checklist_sessions')
-    .select('session_date,items,score_pct,verdict')
-    .eq('account_id', id)
-    .order('session_date', { ascending: false })
-    .limit(60);
+  _tradesLoadedForAccount = id;
   currentChecklistSessions = (clRes.data || []);
-
-  // Load all mood sessions for psychological analysis (last 90 days)
-  var moodAllRes = await sb.from('mood_sessions')
-    .select('answers,score,level,session_date')
-    .eq('account_id', id)
-    .order('session_date', { ascending: false })
-    .limit(90);
   currentMoodSessions = (moodAllRes.data || []);
 
-  // Sync checklist items from Supabase → bbStore (so offline also works)
-  var clItemsRes = await sb.from('checklist_items')
-    .select('items,setup_tags').eq('account_id', id).limit(1);
+  // Sync checklist items → bbStore
   if (clItemsRes.data && clItemsRes.data[0]) {
     if (clItemsRes.data[0].items) {
       bbStore.set('checklist_' + id, JSON.stringify(clItemsRes.data[0].items));
@@ -1190,11 +1189,7 @@ async function loadAccountData(id, silent) {
     }
   }
 
-  // Sync mood from Supabase for today
-  var todayStr3 = new Date().toISOString().slice(0,10);
-  var moodDbRes = await sb.from('mood_sessions')
-    .select('answers,score,level,session_date')
-    .eq('account_id', id).eq('session_date', todayStr3).limit(1);
+  // Sync today's mood → bbStore
   if (moodDbRes.data && moodDbRes.data[0]) {
     var moodFromDb = moodDbRes.data[0];
     bbStore.set('mood_today_' + id, JSON.stringify({
@@ -1203,7 +1198,6 @@ async function loadAccountData(id, silent) {
       score: moodFromDb.score,
       level: moodFromDb.level
     }));
-    // Mark as done so popup doesn't show again today
     try { localStorage.setItem('mood_' + id + '_' + todayStr3, JSON.stringify(moodFromDb)); } catch(e) {}
   }
   // Cache screenshot_url from DB into bbStore so extension-imported photos show up
@@ -3713,15 +3707,21 @@ function getTabEl(tabId) {
 async function renderTradeLog() {
   var el = document.getElementById('trades-tab-content');
   if (!el) { setTimeout(renderTradeLog, 50); return; }
-  // Always fetch fresh from Supabase — simple and reliable, no cache issues
+
+  // If currentTrades was already loaded for this account (by loadAccountData), use it instantly
+  if (_tradesLoadedForAccount === currentAccountId && currentTrades !== null) {
+    renderTradeLogTable(currentTrades);
+    return;
+  }
+
+  // Otherwise fetch from Supabase (e.g. first visit before dashboard loaded)
   el.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
   var res = await sb.from('trades').select('*').eq('account_id', currentAccountId).order('entry_time', {ascending: false});
-  var data = res.data || [];
-  currentTrades = data;
-  // Re-get el in case DOM changed while awaiting
+  currentTrades = res.data || [];
+  _tradesLoadedForAccount = currentAccountId;
   el = document.getElementById('trades-tab-content');
   if (!el) return;
-  renderTradeLogTable(data);
+  renderTradeLogTable(currentTrades);
 }
 
 function renderTradeLogTable(trades) {
