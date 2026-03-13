@@ -196,9 +196,9 @@ tr:hover td { background:var(--hover); }
 .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
 
 /* MODALS */
-.overlay { position:fixed; inset:0; background:rgba(0,0,0,.65); z-index:200; display:none; align-items:center; justify-content:center; padding:16px; box-sizing:border-box; }
+.overlay { position:fixed; inset:0; background:rgba(0,0,0,.65); z-index:200; display:none; align-items:flex-start; justify-content:center; padding:24px 16px; box-sizing:border-box; overflow-y:auto; }
 .overlay.open { display:flex; }
-.modal { background:var(--surface); border:1px solid var(--border2); border-radius:14px; padding:20px 24px; width:min(560px,94vw); max-height:92vh; overflow-y:auto; overflow-x:hidden; box-sizing:border-box; }
+.modal { background:var(--surface); border:1px solid var(--border2); border-radius:14px; padding:20px 24px; width:min(560px,94vw); box-sizing:border-box; margin:auto; }
 .modal-title { font-size:15px; font-weight:600; margin-bottom:22px; }
 .modal-foot { display:flex; justify-content:flex-end; gap:8px; margin-top:22px; padding-top:18px; border-top:1px solid var(--border); }
 
@@ -591,7 +591,7 @@ tr:hover td { background:var(--hover); }
       </div>
       <input type="range" id="t-checklist-pct" min="0" max="100" step="10" value="100"
         style="width:100%;accent-color:var(--green);cursor:pointer"
-        oninput="document.getElementById('t-checklist-pct-display').textContent=this.value+'%';document.getElementById('t-checklist-pct-display').style.color=this.value>=80?'var(--green)':this.value>=50?'var(--amber)':'var(--red)'">
+        oninput="updateChecklistDisplay(this.value)">
       <div style="display:flex;justify-content:space-between;margin-top:4px">
         <span style="font-size:9px;color:var(--text3)">0%</span>
         <span style="font-size:9px;color:var(--text3)">50%</span>
@@ -8002,6 +8002,13 @@ var TICKER_MAP = {
 };
 
 var ALL_TICKERS = Object.keys(TICKER_MAP);
+
+function updateChecklistDisplay(val) {
+  var disp = document.getElementById('t-checklist-pct-display');
+  if (!disp) return;
+  disp.textContent = val + '%';
+  disp.style.color = val >= 80 ? 'var(--green)' : val >= 50 ? 'var(--amber)' : 'var(--red)';
+}
 
 function filterTickerSuggestions(val) {
   var box = document.getElementById("ticker-suggestions");
