@@ -3654,7 +3654,8 @@ function renderTradesView() {
       }).join('')
     + '</div>';
   el.innerHTML = tabBar + '<div id="trades-tab-content"></div>';
-  _renderTradesTabContent();
+  // Use setTimeout(0) so the DOM updates before sub-render tries to find #trades-tab-content
+  setTimeout(_renderTradesTabContent, 0);
 }
 
 function switchTradesTab(tab) {
@@ -3675,19 +3676,22 @@ function getTabEl(tabId) {
 // TRADE LOG VIEW
 async function renderTradeLog() {
   var el=getTabEl('trades-tab-content');
-  // If we already have trades loaded, render immediately — no spinner
-  if (currentTrades && currentTrades.length > 0) {
+  if (!el) { setTimeout(renderTradeLog, 50); return; } // DOM not ready yet, retry
+
+  // If trades already fetched (including empty array), render instantly
+  if (currentTrades !== null && currentTrades !== undefined) {
     renderTradeLogTable(currentTrades);
-    // Silently refresh in background to catch new trades
+    // Silently refresh in background — only re-render if count changed
     sb.from('trades').select('*').eq('account_id',currentAccountId).order('entry_time',{ascending:false}).then(function(res) {
-      if (res.data && res.data.length !== currentTrades.length) {
+      if (res.data) {
         currentTrades = res.data;
-        renderTradeLogTable(currentTrades);
+        var el2 = getTabEl('trades-tab-content');
+        if (el2) renderTradeLogTable(currentTrades);
       }
     });
     return;
   }
-  // First load — show spinner then fetch
+  // First ever load for this account — show spinner then fetch
   el.innerHTML='<div class="loading"><div class="spinner"></div></div>';
   var res=await sb.from('trades').select('*').eq('account_id',currentAccountId).order('entry_time',{ascending:false});
   currentTrades=res.data||[];
@@ -5960,8 +5964,10 @@ async function autoCoachCheck(trades, accountId) {
   var todayStr  = today.toISOString().slice(0,10);
   var dayOfWeek = today.getDay();
 
-  // ── 1. Repeated error detection ──
-  var last10   = trades.slice(-10).filter(function(t){ return t.discipline_tag; });
+  // ── 1. Repeated error detection — today's trades only to avoid stale alerts ──
+  var todayKeyCoach = new Date().toISOString().slice(0,10);
+  var todayTradesCoach = trades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(todayKeyCoach); });
+  var last10   = todayTradesCoach.slice(-10).filter(function(t){ return t.discipline_tag; });
   var tagCount = {};
   last10.forEach(function(t) {
     var tag = t.discipline_tag;
@@ -6696,7 +6702,11 @@ function startTiltMonitor() {
   if (tiltCheckInterval) clearInterval(tiltCheckInterval);
   tiltCheckInterval = setInterval(function() {
     if (!currentTrades || !currentTrades.length) return;
-    var tilt = detectTilt(currentTrades);
+    // Only check tilt on TODAY's trades — avoids stale alerts from previous sessions
+    var todayKey = new Date().toISOString().slice(0,10);
+    var todayT   = currentTrades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(todayKey); });
+    if (!todayT.length) return; // no trades today → no tilt possible
+    var tilt = detectTilt(todayT);
     if (tilt) showTiltAlert(tilt);
   }, 2 * 60000);
 }
