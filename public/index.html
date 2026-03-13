@@ -4093,20 +4093,19 @@ function openReplay(url) {
 var _psychActiveTab = 'mind'; // 'mind' | 'discipline'
 
 function renderPsychologyView(subTabIntent) {
-  if (subTabIntent === 'mind') _psychActiveTab = 'mind';
-  else if (subTabIntent === 'checklist') { _psychActiveTab = 'discipline'; window._discTab = 'checklist'; }
+  if (subTabIntent === 'checklist') { _psychActiveTab = 'discipline'; window._discTab = 'checklist'; }
+  else if (subTabIntent === 'mind') _psychActiveTab = 'mind';
   var el = document.getElementById('main-content');
   var tabs = [
-    { id: 'mind',       label: '◉ Mind'       },
-    { id: 'discipline', label: '⊘ Discipline' },
+    { id: 'mind',       label: '&#9675; Psicolog&#237;a' },
+    { id: 'discipline', label: '&#8856; Discipline'     },
   ];
   var tabBar = '<div style="display:flex;gap:2px;padding:14px 16px 0;border-bottom:1px solid var(--border);background:var(--surface);margin-bottom:0">'
     + tabs.map(function(t) {
         var active = _psychActiveTab === t.id;
-        return '<div onclick="switchPsychTab(\''+t.id+'\')" style="padding:7px 16px;font-size:11px;font-weight:600;cursor:pointer;border-radius:6px 6px 0 0;letter-spacing:.3px;transition:all .15s;'
-          + (active
-              ? 'color:var(--text);background:var(--surface2);border:1px solid var(--border);border-bottom:1px solid var(--surface2);margin-bottom:-1px'
-              : 'color:var(--text3);background:transparent;border:1px solid transparent')
+        return '<div onclick="switchPsychTab(\'' + t.id + '\')" style="padding:7px 16px;font-size:11px;font-weight:600;cursor:pointer;border-radius:6px 6px 0 0;letter-spacing:.3px;transition:all .15s;'
+          + (active ? 'color:var(--text);background:var(--surface2);border:1px solid var(--border);border-bottom:1px solid var(--surface2);margin-bottom:-1px'
+                    : 'color:var(--text3);background:transparent;border:1px solid transparent')
           + '">' + t.label + '</div>';
       }).join('')
     + '</div>';
@@ -4121,7 +4120,7 @@ function switchPsychTab(tab) {
 
 function _renderPsychTabContent() {
   if (_psychActiveTab === 'discipline') renderDisciplineView();
-  else if (_psychActiveTab === 'mind')  renderMindView();
+  else renderMindView();
 }
 
 // DISCIPLINE VIEW
@@ -5022,28 +5021,96 @@ function buildMindView(trades) {
       + '</div>';
   }
 
-  // ── ROW 1: Mind Score + Discipline Ring + Revenge ──
-  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">';
+  
+  // ── 1: Coach IA ──
+// ── ROW 5: AI Coach ──
+  var acctId2   = currentAccountId || '';
+  var coachFreq = getCoachFrequency(acctId2);
+  var freqMode  = coachFreq.mode || 'biweekly';
+  var freqOpts  = [
+    { val:'daily',    lbl:'Cada día' },
+    { val:'biweekly', lbl:'Mié y Vie' },
+    { val:'weekly',   lbl:'Semanal' },
+    { val:'monthly',  lbl:'Mensual' },
+    { val:'custom',   lbl:'Personalizado' }
+  ];
 
-  // Mind Score card — 3 pillars
   html += '<div class="panel" style="padding:20px">'
-    + '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">Mind Score</div>'
-    + '<div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">'
-    + '<div style="font-size:52px;font-weight:800;color:'+scoreColor(mindScore)+';line-height:1">'+mindScore+'</div>'
-    + '<div><div style="font-size:12px;color:var(--text2);font-weight:600">'+mindData.label+'</div>'
-    + '<div style="font-size:10px;color:var(--text3);margin-top:3px">'+(mindData.hasTrades?mindData.tradeCount+' trade'+(mindData.tradeCount!==1?'s':'')+' hoy':'Sin trades hoy')+'</div>'
-    + '</div></div>'
-    + '<div style="display:flex;flex-direction:column;gap:8px">'
-    + '<div><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:9px;color:var(--text3)">Mood check</span><span style="font-size:9px;color:var(--text2);font-weight:600">'+mindData.moodPts+' / 40</span></div>'
-    + '<div style="height:4px;background:var(--surface2);border-radius:2px;overflow:hidden"><div style="height:100%;width:'+Math.round(mindData.moodPts/40*100)+'%;background:'+(mindData.moodPts>=35?'var(--green)':mindData.moodPts>=20?'var(--amber)':'var(--red)')+';border-radius:2px"></div></div></div>'
-    + '<div><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:9px;color:var(--text3)">Emocion trades</span><span style="font-size:9px;color:var(--text2);font-weight:600">'+(mindData.emotionPts!==null?mindData.emotionPts+' / 40':'— / 40')+'</span></div>'
-    + '<div style="height:4px;background:var(--surface2);border-radius:2px;overflow:hidden"><div style="height:100%;width:'+(mindData.emotionPts!==null?Math.round(mindData.emotionPts/40*100):0)+'%;background:'+(mindData.emotionPts===null?'var(--border)':mindData.emotionPts>=32?'var(--green)':mindData.emotionPts>=20?'var(--amber)':'var(--red)')+';border-radius:2px"></div></div></div>'
-    + '<div><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:9px;color:var(--text3)">Comportamiento</span><span style="font-size:9px;color:var(--text2);font-weight:600">'+mindData.behaviorPts+' / 20</span></div>'
-    + '<div style="height:4px;background:var(--surface2);border-radius:2px;overflow:hidden"><div style="height:100%;width:'+Math.round(mindData.behaviorPts/20*100)+'%;background:'+(mindData.behaviorPts>=18?'var(--green)':mindData.behaviorPts>=12?'var(--amber)':'var(--red)')+';border-radius:2px"></div></div>'
-    + (mindData.behaviorDetails.length?'<div style="margin-top:5px">'+mindData.behaviorDetails.map(function(d){return '<div style="font-size:9px;color:'+d.color+'">'+d.label+' ('+d.pts+'pts)</div>';}).join('')+'</div>':'')
-    + '</div></div></div>';
+    + '<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;gap:12px">'
+    + '<div>'
+    + '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Coach IA — Análisis psicológico</div>'
+    + '<div style="font-size:11px;color:var(--text3);margin-top:3px">Evolución: 2 días · semana · semana anterior · mes · mes anterior</div>'
+    + '</div>'
+    + '<button class="btn btn-solid" id="mind-coach-btn" style="white-space:nowrap;flex-shrink:0" onclick="generateMindCoach()">'
+    + (mindCoachLoading ? '<span class="spinner" style="width:12px;height:12px;margin-right:6px"></span>Analizando...' : '⚡ Analizar ahora')
+    + '</button>'
+    + '</div>'
+    + '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:11px;margin-bottom:14px">'
+    + '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:9px">Frecuencia del análisis automático</div>'
+    + '<div style="display:flex;gap:5px;flex-wrap:wrap">'
+    + freqOpts.map(function(o) {
+        var isActive = freqMode === o.val;
+        return '<button onclick="setCoachFrequency(\'' + o.val + '\')" style="padding:5px 11px;border-radius:20px;border:1px solid '
+          + (isActive ? '#5a9e9e;background:#1e2a2a;color:#5a9e9e' : 'var(--border);background:transparent;color:var(--text3)')
+          + ';font-size:10px;cursor:pointer;font-family:inherit">' + o.lbl + '</button>';
+      }).join('')
+    + '</div>'
+    + (freqMode === 'custom'
+        ? '<div style="margin-top:9px;display:flex;align-items:center;gap:8px">'
+          + '<span style="font-size:10px;color:var(--text3)">Cada</span>'
+          + '<input id="custom-freq-days" type="number" min="1" max="30" value="' + (coachFreq.customDays||7) + '" style="width:50px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-size:12px;font-family:inherit;text-align:center">'
+          + '<span style="font-size:10px;color:var(--text3)">días</span>'
+          + '<button onclick="saveCustomFreqDays()" style="padding:4px 10px;background:#5a9e9e;border:none;border-radius:6px;color:#fff;font-size:10px;cursor:pointer;font-family:inherit">Guardar</button>'
+          + '</div>'
+        : '')
+    + '</div>'
+    + '<div id="mind-coach-output">';
 
-  // Discipline breakdown
+  if (mindCoachAnalysis) {
+    html += '<div style="font-size:13px;color:var(--text2);line-height:1.8;white-space:pre-wrap;background:var(--surface2);border-radius:8px;padding:16px">' + mindCoachAnalysis + '</div>'
+      + '<button class="btn btn-ghost" style="margin-top:10px;font-size:11px" onclick="mindCoachAnalysis=\'\';renderMindView()">Limpiar</button>';
+  } else {
+    html += '<div style="font-size:11px;color:var(--text3);text-align:center;padding:24px 0">Presiona "Analizar ahora" para recibir un diagnóstico basado en tu evolución histórica.</div>';
+  }
+  html += '</div></div>';
+
+  
+  // ── 2: Mind Score Hoy | Semana | Mes ──
+  (function() {
+    var _now = new Date();
+    var _ws = new Date(); _ws.setDate(_ws.getDate()-_ws.getDay()+(_ws.getDay()===0?-6:1)); _ws.setHours(0,0,0,0);
+    var _ms = new Date(_now.getFullYear(), _now.getMonth(), 1);
+    var _wt = trades.filter(function(t){ return t.entry_time && new Date(t.entry_time)>=_ws; });
+    var _mt = trades.filter(function(t){ return t.entry_time && new Date(t.entry_time)>=_ms; });
+    var _wp = calcPeriodMentalScore(_wt);
+    var _mp = calcPeriodMentalScore(_mt);
+
+    function _mini(label, score, color, sub) {
+      return '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:18px;text-align:center">'
+        + '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">'+label+'</div>'
+        + '<div style="font-size:42px;font-weight:800;color:'+color+';line-height:1;letter-spacing:-1px">'+score+'</div>'
+        + '<div style="font-size:9px;color:var(--text3);margin-top:8px">'+sub+'</div>'
+        + '</div>';
+    }
+
+    var _ws2 = _wp ? _wp.avg : '--';
+    var _ms2 = _mp ? _mp.avg : '--';
+    var _wc  = _wp ? scoreColor(_wp.avg) : 'var(--text3)';
+    var _mc  = _mp ? scoreColor(_mp.avg) : 'var(--text3)';
+
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">';
+    html += _mini('Mind Score Hoy',    mindScore, scoreColor(mindScore), mindData.label);
+    html += _mini('Mind Score Semana', _ws2, _wc, _wp ? _wp.label : 'Sin datos suficientes');
+    html += _mini('Mind Score Mes',    _ms2, _mc, _mp ? _mp.label : 'Sin datos suficientes');
+    html += '</div>';
+  })();
+
+  // ── 3: Perfil Psicológico ──
+  html += renderPsychProfilePanel(trades);
+
+  // ── 4: Disciplina | P&L por tipo | Patrones autosabotaje ──
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">';
+// Discipline breakdown
   var discColors = { clean:'#5ec26a', moved_sl:'#f0b429', scaled_loss:'#e05c5c', impulse:'#e05c5c', no_confirmation:'#f0b429', overtrading:'#e05c5c', fomo:'#e05c5c' };
   var discLabels = { clean:'Clean', moved_sl:'Moved SL', scaled_loss:'Scaled↓', impulse:'Impulse', no_confirmation:'No confirm', overtrading:'Overtrade', fomo:'FOMO' };
   html += '<div class="panel" style="padding:20px">'
@@ -5060,229 +5127,8 @@ function buildMindView(trades) {
   });
   html += '</div></div>';
 
-  // Revenge + streak card
-  html += '<div class="panel" style="padding:20px">'
-    + '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px">Streaks & Alertas</div>'    + '<div style="display:flex;flex-direction:column;gap:0">'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'    + '<span style="font-size:11px;color:var(--text2)">Racha wins actual</span>'    + '<span style="font-size:16px;font-weight:700;color:'+(currentWinStreak>=3?'var(--green)':currentWinStreak>=1?'var(--text)':'var(--text3)')+'">'+currentWinStreak+'</span></div>'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'    + '<span style="font-size:11px;color:var(--text2)">Racha pérdidas actual</span>'    + '<span style="font-size:16px;font-weight:700;color:'+(currentLossStreak>=2?'var(--red)':currentLossStreak>=1?'var(--amber)':'var(--text3)')+'">'+currentLossStreak+'</span></div>'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'    + '<span style="font-size:11px;color:var(--text2)">Hot streak máx <span style="font-size:9px;color:var(--text3)">(wins seguidos)</span></span>'    + '<span style="font-size:16px;font-weight:700;color:var(--green)">'+maxWinStreak+'</span></div>'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'    + '<span style="font-size:11px;color:var(--text2)">Racha pérdidas máx</span>'    + '<span style="font-size:16px;font-weight:700;color:'+(maxLossStreak>=4?'var(--red)':maxLossStreak>=2?'var(--amber)':'var(--text)')+'">'+maxLossStreak+'</span></div>'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'    + '<span style="font-size:11px;color:var(--text2)">Revenge trades</span>'    + '<span style="font-size:16px;font-weight:700;color:'+(revengeTrades.length>0?'var(--red)':'var(--green)')+'">'+revengeTrades.length+'</span></div>'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0">'    + '<span style="font-size:11px;color:var(--text2)">% Clean trades</span>'    + '<span style="font-size:16px;font-weight:700;color:'+(cleanPct>=60?'var(--green)':cleanPct>=40?'var(--amber)':'var(--red)')+'">'+cleanPct+'%</span></div>'    + (currentWinStreak>=4 ? '<div style="background:var(--green-bg);border:1px solid var(--green-bd);border-left:3px solid var(--green);border-radius:7px;padding:9px 12px;margin-top:8px;font-size:10px;color:var(--text2);line-height:1.5">🔥 <strong>Hot streak de '+currentWinStreak+' wins.</strong> Cuidado con el exceso de confianza — es cuando más errores se cometen por sobre-dimensionar posiciones.</div>' : '')    + '</div></div>';
-
-  html += '</div>'; // end row 1
-
-  html += '</div>'; // end row 1
-
-  // ── ROW 2: Heatmap + Deep Hour Analysis ──
-
-  // ── Session buckets (London, NY Open, NY Midday, NY Close) ──
-  var sessions = [
-    { name:'Pre-market', start:6,  end:8,  color:'#5a7a9e' },
-    { name:'London',     start:8,  end:11, color:'#5a9e9e' },
-    { name:'NY Open',    start:11, end:14, color:'#5a9e72' },
-    { name:'NY Midday',  start:14, end:16, color:'#9e8050' },
-    { name:'NY Close',   start:16, end:18, color:'#9e5a5a' }
-  ];
-  var sessionStats = {};
-  sessions.forEach(function(s) { sessionStats[s.name] = {pnl:0,count:0,wins:0}; });
-  trades.forEach(function(t) {
-    if (!t.entry_time) return;
-    var h = new Date(t.entry_time).getHours();
-    sessions.forEach(function(s) {
-      if (h >= s.start && h < s.end) {
-        sessionStats[s.name].pnl   += (t.pnl||0);
-        sessionStats[s.name].count++;
-        if ((t.pnl||0) > 0) sessionStats[s.name].wins++;
-      }
-    });
-  });
-
-  html += '<div class="panel" style="padding:20px">'
-    + '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:16px">Análisis por horario</div>';
-
-  // ── Session cards row ──
-  html += '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:20px">';
-  sessions.forEach(function(s) {
-    var st = sessionStats[s.name];
-    var wr = st.count ? Math.round(st.wins/st.count*100) : 0;
-    var hasData = st.count > 0;
-    var pnlColor = st.pnl >= 0 ? 'var(--green)' : 'var(--red)';
-    html += '<div style="background:var(--surface2);border-radius:8px;padding:10px 8px;border-top:2px solid '+(hasData?s.color:'var(--border)')+';text-align:center">'
-      + '<div style="font-size:9px;color:var(--text3);margin-bottom:4px">'+s.name+'</div>'
-      + '<div style="font-size:9px;color:var(--text3);margin-bottom:6px">'+s.start+':00–'+s.end+':00</div>'
-      + (hasData
-          ? '<div style="font-size:13px;font-weight:700;color:'+pnlColor+'">'+(st.pnl>=0?'+':'')+'$'+Math.round(st.pnl)+'</div>'
-          + '<div style="font-size:9px;color:var(--text3)">'+st.count+'t · '+wr+'% WR</div>'
-          : '<div style="font-size:10px;color:var(--text3)">sin datos</div>')
-      + '</div>';
-  });
-  html += '</div>';
-
-  // ── Top 3 best / worst hours bar chart ──
-  if (hourArr.length >= 2) {
-    var top3Best  = hourArr.slice(0,3);
-    var top3Worst = hourArr.slice().reverse().slice(0,3);
-    var maxBar    = Math.max.apply(null, hourArr.map(function(h){ return Math.abs(h.pnl); })) || 1;
-
-    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">';
-
-    // Best hours
-    html += '<div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">🏆 Mejores horas</div>'
-      + '<div style="display:flex;flex-direction:column;gap:6px">';
-    top3Best.forEach(function(h) {
-      var barPct = Math.round(Math.abs(h.pnl)/maxBar*100);
-      html += '<div>'
-        + '<div style="display:flex;justify-content:space-between;margin-bottom:3px">'
-        + '<span style="font-size:10px;color:var(--text2);font-weight:600">'+h.h+':00</span>'
-        + '<span style="font-size:10px;color:var(--green)">+'+(h.pnl>=0?'$':'')+Math.abs(Math.round(h.pnl))+' · '+h.wr+'% WR · '+h.count+'t</span>'
-        + '</div>'
-        + '<div style="background:var(--surface2);border-radius:3px;height:6px">'
-        + '<div style="height:100%;width:'+barPct+'%;background:var(--green);border-radius:3px;opacity:.8"></div>'
-        + '</div></div>';
-    });
-    html += '</div></div>';
-
-    // Worst hours
-    html += '<div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">⚠ Peores horas</div>'
-      + '<div style="display:flex;flex-direction:column;gap:6px">';
-    top3Worst.forEach(function(h) {
-      var barPct = Math.round(Math.abs(h.pnl)/maxBar*100);
-      html += '<div>'
-        + '<div style="display:flex;justify-content:space-between;margin-bottom:3px">'
-        + '<span style="font-size:10px;color:var(--text2);font-weight:600">'+h.h+':00</span>'
-        + '<span style="font-size:10px;color:var(--red)">'+(h.pnl>=0?'+':'-')+'$'+Math.abs(Math.round(h.pnl))+' · '+h.wr+'% WR · '+h.count+'t</span>'
-        + '</div>'
-        + '<div style="background:var(--surface2);border-radius:3px;height:6px">'
-        + '<div style="height:100%;width:'+barPct+'%;background:var(--red);border-radius:3px;opacity:.8"></div>'
-        + '</div></div>';
-    });
-    html += '</div></div>';
-    html += '</div>'; // end grid
-  }
-
-  // ── Heatmap ──
-  html += '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Heatmap — Hora × Día</div>';
-
-  var hmHours = [];
-  for (var hh=8; hh<=17; hh++) hmHours.push(hh);
-  var hmDays  = [1,2,3,4,5];
-  var maxAbsPnl = 1;
-  hmDays.forEach(function(dw) {
-    hmHours.forEach(function(hh) {
-      var k = dw+'_'+hh;
-      if (heatmap[k]) maxAbsPnl = Math.max(maxAbsPnl, Math.abs(heatmap[k].pnl));
-    });
-  });
-
-  html += '<div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%">'
-    + '<thead><tr><th style="font-size:9px;color:var(--text3);padding:3px 6px;text-align:left;font-weight:500">Hora</th>';
-  hmDays.forEach(function(dw) {
-    html += '<th style="font-size:9px;color:var(--text3);padding:3px 8px;text-align:center;font-weight:500">'+dayNames[dw]+'</th>';
-  });
-  html += '</tr></thead><tbody>';
-  hmHours.forEach(function(hh) {
-    html += '<tr><td style="font-size:9px;color:var(--text3);padding:3px 6px;white-space:nowrap">'+hh+':00</td>';
-    hmDays.forEach(function(dw) {
-      var k   = dw+'_'+hh;
-      var val = heatmap[k];
-      var bg  = 'var(--surface2)';
-      var txt = '';
-      var tip = '';
-      if (val && val.count) {
-        var intensity = Math.min(0.9, Math.abs(val.pnl) / maxAbsPnl);
-        bg  = val.pnl >= 0
-          ? 'rgba(94,194,106,'  + (0.15 + intensity*0.75) + ')'
-          : 'rgba(224,92,92,'   + (0.15 + intensity*0.75) + ')';
-        txt = (val.pnl>=0?'+':'')+Math.round(val.pnl);
-        tip = val.count+'t '+(val.pnl>=0?'+$':'-$')+Math.abs(Math.round(val.pnl));
-      }
-      html += '<td style="padding:3px 4px;text-align:center">'
-        + '<div title="'+tip+'" style="background:'+bg+';border-radius:4px;padding:4px 2px;font-size:9px;color:var(--text2);min-width:44px;line-height:1.3">'
-        + (txt?txt:'·')
-        + (val&&val.count?'<br><span style="font-size:8px;color:var(--text3)">'+val.count+'t</span>':'')
-        + '</div></td>';
-    });
-    html += '</tr>';
-  });
-  html += '</tbody></table></div>';
-
-  // Insight box
-  if (bestHour && worstHour) {
-    html += '<div style="display:flex;gap:10px;margin-top:14px">'
-      + '<div style="flex:1;background:var(--green-bg);border:1px solid var(--green-bd);border-left:3px solid var(--green);border-radius:8px;padding:10px 14px">'
-      + '<div style="font-size:9px;color:var(--text3);margin-bottom:4px">MEJOR HORA</div>'
-      + '<div style="font-size:18px;font-weight:700;color:var(--green)">'+bestHour.h+':00</div>'
-      + '<div style="font-size:9px;color:var(--text3)">'+bestHour.wr+'% WR · +'+'$'+Math.abs(Math.round(bestHour.pnl))+'</div>'
-      + '</div>'
-      + '<div style="flex:1;background:var(--red-bg);border:1px solid var(--red-bd);border-left:3px solid var(--red);border-radius:8px;padding:10px 14px">'
-      + '<div style="font-size:9px;color:var(--text3);margin-bottom:4px">PEOR HORA</div>'
-      + '<div style="font-size:18px;font-weight:700;color:var(--red)">'+worstHour.h+':00</div>'
-      + '<div style="font-size:9px;color:var(--text3)">'+worstHour.wr+'% WR · -'+'$'+Math.abs(Math.round(worstHour.pnl))+'</div>'
-      + '</div></div>';
-  }
-  html += '</div>'; // end panel
-
-  // ── ROW 3: Emotions + P&L by discipline ──
-  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">';
-
-  // ── Confidence Calibration ──
-  var calibData = {};
-  Object.keys(emoCounts).forEach(function(emo) {
-    var tradesWithEmo = [];
-    trades.forEach(function(t) {
-      if ((t.emotion||'')===emo) tradesWithEmo.push(t);
-    });
-    var emoWins  = tradesWithEmo.filter(function(t){ return (t.pnl||0)>0; }).length;
-    var avgPnl2  = emoPnl[emo] / emoCounts[emo];
-    var winRate2 = emoCounts[emo] ? Math.round(emoWins/emoCounts[emo]*100) : 0;
-    var positiveEmos = ['Tranquilo','Disciplinado','Seguro','En zona'];
-    var negativeEmos = ['Ansioso','Impulsivo','Con miedo','Frustrado'];
-    var isPos = positiveEmos.includes(emo);
-    var isNeg = negativeEmos.includes(emo);
-    var cs = 0;
-    if (isPos) cs = winRate2 - 50;
-    if (isNeg) cs = 50 - winRate2;
-    calibData[emo] = { count:emoCounts[emo], avgPnl:avgPnl2, winRate:winRate2, calibScore:cs };
-  });
-
-  html += '<div class="panel" style="padding:20px">'
-    + '<div style="display:flex;align-items:baseline;gap:8px;margin-bottom:4px">'
-    + '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Confidence Calibration</div>'
-    + '</div>'
-    + '<div style="font-size:10px;color:var(--text3);margin-bottom:12px;line-height:1.5">¿Tu autopercepción es precisa? Cuando dices "Seguro", ¿realmente ganas más?</div>';
-
-  if (Object.keys(calibData).length) {
-    html += '<div style="display:flex;flex-direction:column;gap:6px">';
-    Object.keys(calibData).sort(function(a,b){ return calibData[b].calibScore-calibData[a].calibScore; }).forEach(function(emo) {
-      var d = calibData[emo];
-      if (d.count < 2) return;
-      var barW = Math.min(100, Math.abs(d.calibScore));
-      var isGood = d.calibScore > 10;
-      var isBad  = d.calibScore < -10;
-      var barColor   = isGood ? 'var(--green)' : isBad ? 'var(--red)' : 'var(--amber)';
-      var labelColor = barColor;
-      var label      = isGood ? '✓ Preciso' : isBad ? '✗ Descalibrado' : '~ Neutral';
-      html += '<div style="background:var(--surface2);border-radius:8px;padding:10px 12px">'
-        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
-        + '<div><div style="font-size:11px;color:var(--text);font-weight:600">'+emo+'</div>'
-        + '<div style="font-size:9px;color:var(--text3)">'+d.count+' trades · '+d.winRate+'% WR · avg '+(d.avgPnl>=0?'+':'')+'$'+Math.round(d.avgPnl)+'</div></div>'
-        + '<span style="font-size:9px;font-weight:700;color:'+labelColor+'">'+label+'</span>'
-        + '</div>'
-        + '<div style="background:var(--surface3);border-radius:4px;height:5px;overflow:hidden">'
-        + '<div style="height:100%;width:'+barW+'%;background:'+barColor+';border-radius:4px"></div>'
-        + '</div></div>';
-    });
-    html += '</div>';
-    var emos2 = Object.keys(calibData).filter(function(e){ return calibData[e].count>=2; });
-    var bestE  = emos2.sort(function(a,b){ return calibData[b].calibScore-calibData[a].calibScore; })[0];
-    var worstE = emos2.sort(function(a,b){ return calibData[a].calibScore-calibData[b].calibScore; })[0];
-    if (bestE || worstE) {
-      html += '<div style="margin-top:10px;padding:10px;background:var(--surface3);border-radius:7px;font-size:10px;color:var(--text2);line-height:1.6">';
-      if (bestE && calibData[bestE].calibScore>10) html += '✓ <strong>'+bestE+'</strong> es tu emoción más precisa. ';
-      if (worstE && calibData[worstE].calibScore<-10) html += '⚠ <strong>'+worstE+'</strong> te engaña — tus resultados no coinciden con lo que sientes.';
-      html += '</div>';
-    }
-  } else {
-    html += '<div style="font-size:11px;color:var(--text3);text-align:center;padding:20px">Registra al menos 2 trades con la misma emoción para ver tu calibración.</div>';
-  }
-  html += '</div>';
-
-  // P&L by discipline
+  
+// P&L by discipline
   html += '<div class="panel" style="padding:20px">'
     + '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px">P&L por tipo de trade</div>'
     + '<div style="display:flex;flex-direction:column;gap:7px">';
@@ -5302,45 +5148,8 @@ function buildMindView(trades) {
   });
   html += '</div></div>';
 
-  html += '</div>'; // end row 3
-
-  // ── ROW 4: Revenge trade list ──
-  if (revengeTrades.length) {
-    // Newest first, paginate 5 per page
-    var revSorted = revengeTrades.slice().sort(function(a,b){ return new Date(b.cur.entry_time||0)-new Date(a.cur.entry_time||0); });
-    var REV_PG = 5;
-    var revTP  = Math.max(1, Math.ceil(revSorted.length / REV_PG));
-    if (!window._revPage || window._revPage > revTP) window._revPage = 1;
-    var revS   = (window._revPage - 1) * REV_PG;
-    var revSlice = revSorted.slice(revS, revS + REV_PG);
-    html += '<div class="panel" style="padding:20px">'
-      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">'
-      + '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Revenge Trades detectados</div>'
-      + '<span style="font-size:10px;color:var(--red);background:var(--red-bg);border:1px solid var(--red-bd);padding:2px 8px;border-radius:10px">'+revSorted.length+' total</span>'
-      + '</div>'
-      + '<div style="display:flex;flex-direction:column;gap:6px">';
-    revSlice.forEach(function(r) {
-      var dt = r.cur.entry_time ? new Date(r.cur.entry_time) : null;
-      var ts = dt ? (String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0')+' '+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0')) : '';
-      html += '<div style="display:flex;align-items:center;gap:12px;padding:8px 12px;background:var(--surface2);border-radius:7px;border-left:3px solid var(--red)">'
-        + '<div style="font-size:10px;color:var(--text3);width:80px">'+ts+'</div>'
-        + '<div style="font-size:11px;color:var(--text2)">Pérdida <strong style="color:var(--red)">'+(r.prev.pnl>=0?'+':'')+'$'+Math.round(r.prev.pnl)+'</strong> → siguiente en <strong>'+r.gap+'min</strong></div>'
-        + '<div style="margin-left:auto;font-size:11px;font-weight:700;color:'+(r.cur.pnl>=0?'var(--green)':'var(--red)')+'">'+(r.cur.pnl>=0?'+':'')+'$'+Math.round(r.cur.pnl)+'</div>'
-        + '</div>';
-    });
-    if (revTP > 1) {
-      html += '<div style="display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid var(--border);margin-top:4px">';
-      html += '<span style="font-size:10px;color:var(--text3)">'+(revS+1)+' – '+Math.min(revS+REV_PG,revSorted.length)+' de '+revSorted.length+'</span>';
-      html += '<div style="display:flex;gap:4px">';
-      html += '<button onclick="window._revPage=Math.max(1,(window._revPage||1)-1);buildMindView(currentTrades||[])" style="padding:3px 9px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text3);font-size:11px;cursor:pointer">‹</button>';
-      for (var _rp=1;_rp<=revTP;_rp++){var _ra=(_rp===(window._revPage||1));var _rbg=_ra?'var(--green)':'var(--surface2)';var _rbd=_ra?'var(--green)':'var(--border)';var _rc=_ra?'#fff':'var(--text3)';html+='<button onclick="window._revPage='+_rp+';buildMindView(currentTrades||[])" style="padding:3px 9px;background:'+_rbg+';border:1px solid '+_rbd+';border-radius:5px;color:'+_rc+';font-size:11px;cursor:pointer">'+_rp+'</button>';}
-      html += '<button onclick="window._revPage=Math.min('+revTP+',(window._revPage||1)+1);buildMindView(currentTrades||[])" style="padding:3px 9px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text3);font-size:11px;cursor:pointer">›</button>';
-      html += '</div></div>';
-    }
-    html += '</div></div>';
-  }
-
-  // ── ROW 5: Patrones de autosabotaje ──
+  
+// ── ROW 5: Patrones de autosabotaje ──
   (function() {
     var sabotage = [];
 
@@ -5514,191 +5323,267 @@ function buildMindView(trades) {
     html += '</div></div>';
   })();
 
-  // ── ROW 6: Checklist Compliance ──
-  (function() {
-    var sessions = currentChecklistSessions || [];
-    if (!sessions.length) return;
+  
+  html += '</div>'; // end section 4
 
-    // Stats
-    var avgScore  = Math.round(sessions.reduce(function(s,x){return s+(x.score_pct||0);},0)/sessions.length);
-    var readyDays = sessions.filter(function(s){return s.verdict==='ready';}).length;
-    var cautionDays = sessions.filter(function(s){return s.verdict==='caution';}).length;
-    var noTradeDays = sessions.filter(function(s){return s.verdict==='no_trade';}).length;
-
-    // Worst items (most often unchecked)
-    var itemFails = {};
-    sessions.forEach(function(s) {
-      if (!s.items) return;
-      ['trend','setup','sl','rr','size','no_fomo','emotion'].forEach(function(k) {
-        if (!s.items[k]) itemFails[k] = (itemFails[k]||0)+1;
-      });
+  // ── 5: Confidence Calibration | Revenge Trades ──
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">';
+  // ── Confidence Calibration ──
+  var calibData = {};
+  Object.keys(emoCounts).forEach(function(emo) {
+    var tradesWithEmo = [];
+    trades.forEach(function(t) {
+      if ((t.emotion||'')===emo) tradesWithEmo.push(t);
     });
-    var itemLabels = {
-      trend:'Tendencia identificada', setup:'Setup completo', sl:'SL definido antes',
-      rr:'R:R mínimo cumplido', size:'Tamaño correcto', no_fomo:'Sin FOMO', emotion:'Estado emocional OK'
-    };
-    var worstItems = Object.keys(itemFails)
-      .sort(function(a,b){return itemFails[b]-itemFails[a];})
-      .slice(0,3);
+    var emoWins  = tradesWithEmo.filter(function(t){ return (t.pnl||0)>0; }).length;
+    var avgPnl2  = emoPnl[emo] / emoCounts[emo];
+    var winRate2 = emoCounts[emo] ? Math.round(emoWins/emoCounts[emo]*100) : 0;
+    var positiveEmos = ['Tranquilo','Disciplinado','Seguro','En zona'];
+    var negativeEmos = ['Ansioso','Impulsivo','Con miedo','Frustrado'];
+    var isPos = positiveEmos.includes(emo);
+    var isNeg = negativeEmos.includes(emo);
+    var cs = 0;
+    if (isPos) cs = winRate2 - 50;
+    if (isNeg) cs = 50 - winRate2;
+    calibData[emo] = { count:emoCounts[emo], avgPnl:avgPnl2, winRate:winRate2, calibScore:cs };
+  });
 
-    // Correlation: checklist score vs P&L
-    var correlation = [];
-    sessions.forEach(function(s) {
-      var dayTrades = (currentTrades||[]).filter(function(t){
-        return t.entry_time && t.entry_time.slice(0,10)===s.session_date;
-      });
-      if (!dayTrades.length) return;
-      var dayPnl = dayTrades.reduce(function(acc,t){return acc+(t.pnl||0);},0);
-      correlation.push({ score: s.score_pct, pnl: dayPnl, verdict: s.verdict });
-    });
-    var readyPnl   = correlation.filter(function(x){return x.verdict==='ready';});
-    var nontradePnl= correlation.filter(function(x){return x.verdict==='no_trade';});
-    var avgReadyPnl    = readyPnl.length    ? Math.round(readyPnl.reduce(function(s,x){return s+x.pnl;},0)/readyPnl.length)    : null;
-    var avgNoTradePnl  = nontradePnl.length ? Math.round(nontradePnl.reduce(function(s,x){return s+x.pnl;},0)/nontradePnl.length) : null;
+  html += '<div class="panel" style="padding:20px">'
+    + '<div style="display:flex;align-items:baseline;gap:8px;margin-bottom:4px">'
+    + '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Confidence Calibration</div>'
+    + '</div>'
+    + '<div style="font-size:10px;color:var(--text3);margin-bottom:12px;line-height:1.5">¿Tu autopercepción es precisa? Cuando dices "Seguro", ¿realmente ganas más?</div>';
 
-    html += '<div class="panel" style="padding:20px">'
-      + '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px">Pre-trade Checklist — Compliance</div>'
-
-      // Summary stats row
-      + '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px">'
-      + '<div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center">'
-      + '<div style="font-size:18px;font-weight:700;color:var(--text)">'+avgScore+'%</div>'
-      + '<div style="font-size:9px;color:var(--text3);margin-top:2px">Avg score</div></div>'
-      + '<div style="background:var(--green-bg);border:1px solid var(--green-bd);border-radius:8px;padding:10px;text-align:center">'
-      + '<div style="font-size:18px;font-weight:700;color:var(--green)">'+readyDays+'</div>'
-      + '<div style="font-size:9px;color:var(--text3);margin-top:2px">🟢 Ready</div></div>'
-      + '<div style="background:var(--amber-bg);border:1px solid #3d3020;border-radius:8px;padding:10px;text-align:center">'
-      + '<div style="font-size:18px;font-weight:700;color:var(--amber)">'+cautionDays+'</div>'
-      + '<div style="font-size:9px;color:var(--text3);margin-top:2px">🟡 Caution</div></div>'
-      + '<div style="background:var(--red-bg);border:1px solid var(--red-bd);border-radius:8px;padding:10px;text-align:center">'
-      + '<div style="font-size:18px;font-weight:700;color:var(--red)">'+noTradeDays+'</div>'
-      + '<div style="font-size:9px;color:var(--text3);margin-top:2px">🔴 No trade</div></div>'
-      + '</div>'
-
-      // Correlation insight
-      + (avgReadyPnl!==null || avgNoTradePnl!==null
-        ? '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">'
-          + (avgReadyPnl!==null ? '<div style="background:var(--green-bg);border:1px solid var(--green-bd);border-left:3px solid var(--green);border-radius:8px;padding:10px 12px">'
-            + '<div style="font-size:9px;color:var(--text3);margin-bottom:3px">P&L promedio días 🟢</div>'
-            + '<div style="font-size:16px;font-weight:700;color:'+(avgReadyPnl>=0?'var(--green)':'var(--red)')+'">'+(avgReadyPnl>=0?'+':'')+avgReadyPnl+'</div>'
-            + '</div>' : '')
-          + (avgNoTradePnl!==null ? '<div style="background:var(--red-bg);border:1px solid var(--red-bd);border-left:3px solid var(--red);border-radius:8px;padding:10px 12px">'
-            + '<div style="font-size:9px;color:var(--text3);margin-bottom:3px">P&L promedio días 🔴</div>'
-            + '<div style="font-size:16px;font-weight:700;color:'+(avgNoTradePnl>=0?'var(--green)':'var(--red)')+'">'+(avgNoTradePnl>=0?'+':'')+avgNoTradePnl+'</div>'
-            + '</div>' : '')
-          + '</div>'
-        : '')
-
-      // Worst items
-      + (worstItems.length
-        ? '<div style="background:var(--surface2);border-radius:8px;padding:12px">'
-          + '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Puntos que más saltas</div>'
-          + worstItems.map(function(k) {
-              var failPct = Math.round(itemFails[k]/sessions.length*100);
-              return '<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)">'
-                + '<span style="font-size:10px;color:var(--text2)">'+itemLabels[k]+'</span>'
-                + '<span style="font-size:10px;font-weight:700;color:var(--red)">'+failPct+'% días</span>'
-                + '</div>';
-            }).join('')
-          + '</div>'
-        : '')
-
-      + '</div>';
-  })();
-
-
-  // ── ROW 7: Mood Factors vs P&L Analysis ──
-  (function() {
-    var moodSessions = currentMoodSessions || [];
-    var allTrades = currentTrades || [];
-    if (moodSessions.length < 3) return;
-
-    // Build daily trade map
-    var dailyPnl = {}, dailyWins = {}, dailyCount = {};
-    allTrades.forEach(function(t) {
-      if (!t.entry_time) return;
-      var d = t.entry_time.slice(0,10);
-      dailyPnl[d]   = (dailyPnl[d]||0) + (t.pnl||0);
-      dailyCount[d] = (dailyCount[d]||0) + 1;
-      if ((t.pnl||0) > 0) dailyWins[d] = (dailyWins[d]||0) + 1;
-    });
-
-    var factors = [
-      { id:'sleep',    label:'Sueño',            goodVals:[0,1], badVals:[2,3], goodLabel:'Bien descansado', badLabel:'Mal sueño' },
-      { id:'stress',   label:'Estrés',            goodVals:[0,1], badVals:[2,3], goodLabel:'Sin estrés',      badLabel:'Estresado' },
-      { id:'focus',    label:'Concentración',     goodVals:[0,1], badVals:[2,3], goodLabel:'Concentrado',     badLabel:'Distraído' },
-      { id:'pressure', label:'Presión de dinero', goodVals:[0,1], badVals:[2,3], goodLabel:'Sin presión',     badLabel:'Con presión' }
-    ];
-
-    var factorStats = [];
-    factors.forEach(function(fac) {
-      var goodDays = [], badDays = [];
-      moodSessions.forEach(function(ms) {
-        if (!ms.answers || !ms.session_date) return;
-        var val = ms.answers[fac.id];
-        if (val === undefined || val === null) return;
-        var date = ms.session_date;
-        if (dailyCount[date] === undefined) return;
-        var dayData = { pnl: dailyPnl[date]||0, wins: dailyWins[date]||0, count: dailyCount[date]||0 };
-        if (fac.goodVals.indexOf(val) >= 0) goodDays.push(dayData);
-        else badDays.push(dayData);
-      });
-      if (goodDays.length < 2 || badDays.length < 2) return;
-      var goodPnl    = goodDays.reduce(function(s,d){return s+d.pnl;},0);
-      var badPnl     = badDays.reduce(function(s,d){return s+d.pnl;},0);
-      var goodTrades = goodDays.reduce(function(s,d){return s+d.count;},0);
-      var badTrades  = badDays.reduce(function(s,d){return s+d.count;},0);
-      var goodW      = goodDays.reduce(function(s,d){return s+d.wins;},0);
-      var badW       = badDays.reduce(function(s,d){return s+d.wins;},0);
-      var goodWr     = Math.round(goodW/goodTrades*100);
-      var badWr      = Math.round(badW/badTrades*100);
-      var avgGoodPnl = Math.round(goodPnl/goodDays.length);
-      var avgBadPnl  = Math.round(badPnl/badDays.length);
-      factorStats.push({
-        label:fac.label, goodLabel:fac.goodLabel, badLabel:fac.badLabel,
-        goodDays:goodDays.length, badDays:badDays.length,
-        avgGoodPnl:avgGoodPnl, avgBadPnl:avgBadPnl,
-        goodWr:goodWr, badWr:badWr,
-        impact:Math.abs(avgGoodPnl-avgBadPnl), hurts:avgBadPnl < avgGoodPnl
-      });
-    });
-    if (!factorStats.length) return;
-    factorStats.sort(function(a,b){return b.impact-a.impact;});
-
-    var rowsHtml = factorStats.map(function(f) {
-      var goodClr = f.avgGoodPnl >= 0 ? 'var(--green)' : 'var(--red)';
-      var badClr  = f.avgBadPnl  >= 0 ? 'var(--green)' : 'var(--red)';
-      var tag = f.hurts
-        ? '<span style="font-size:8px;padding:2px 7px;border-radius:9px;background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd)">te afecta</span>'
-        : '<span style="font-size:8px;padding:2px 7px;border-radius:9px;background:var(--green-bg);color:var(--green);border:1px solid var(--green-bd)">sin impacto</span>';
-      return '<div style="display:grid;grid-template-columns:110px 1fr 1fr auto;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)">'
-        + '<div style="font-size:10px;color:var(--text);font-weight:600">'+f.label+'</div>'
-        + '<div><div style="font-size:9px;color:var(--text3)">'+f.goodLabel+' ('+f.goodDays+'d)</div><div style="font-size:11px;font-weight:700;color:'+goodClr+'">'+(f.avgGoodPnl>=0?'+':'')+f.avgGoodPnl+'<span style="font-size:8px;color:var(--text3)"> · '+f.goodWr+'% WR</span></div></div>'
-        + '<div><div style="font-size:9px;color:var(--text3)">'+f.badLabel+' ('+f.badDays+'d)</div><div style="font-size:11px;font-weight:700;color:'+badClr+'">'+(f.avgBadPnl>=0?'+':'')+f.avgBadPnl+'<span style="font-size:8px;color:var(--text3)"> · '+f.badWr+'% WR</span></div></div>'
-        + '<div>'+tag+'</div></div>';
-    }).join('');
-
-    var worst = factorStats.filter(function(f){return f.hurts;})[0];
-    var insightHtml = worst
-      ? '<div style="margin-bottom:14px;padding:10px 14px;border-radius:8px;background:var(--red-bg);border:1px solid var(--red-bd);font-size:10px;color:var(--text2);line-height:1.6">'
-        + '<strong style="color:var(--red)">⚠ Mayor impacto:</strong> Cuando '+worst.badLabel.toLowerCase()+', tu P&L diario promedio es '
-        + '<strong style="color:var(--red)">'+(worst.avgBadPnl>=0?'+':'')+worst.avgBadPnl+'</strong>'
-        + ' vs <strong style="color:var(--green)">'+(worst.avgGoodPnl>=0?'+':'')+worst.avgGoodPnl+'</strong> en días normales. Diferencia: $'+worst.impact+' por día.'
+  if (Object.keys(calibData).length) {
+    html += '<div style="display:flex;flex-direction:column;gap:6px">';
+    Object.keys(calibData).sort(function(a,b){ return calibData[b].calibScore-calibData[a].calibScore; }).forEach(function(emo) {
+      var d = calibData[emo];
+      if (d.count < 2) return;
+      var barW = Math.min(100, Math.abs(d.calibScore));
+      var isGood = d.calibScore > 10;
+      var isBad  = d.calibScore < -10;
+      var barColor   = isGood ? 'var(--green)' : isBad ? 'var(--red)' : 'var(--amber)';
+      var labelColor = barColor;
+      var label      = isGood ? '✓ Preciso' : isBad ? '✗ Descalibrado' : '~ Neutral';
+      html += '<div style="background:var(--surface2);border-radius:8px;padding:10px 12px">'
+        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
+        + '<div><div style="font-size:11px;color:var(--text);font-weight:600">'+emo+'</div>'
+        + '<div style="font-size:9px;color:var(--text3)">'+d.count+' trades · '+d.winRate+'% WR · avg '+(d.avgPnl>=0?'+':'')+'$'+Math.round(d.avgPnl)+'</div></div>'
+        + '<span style="font-size:9px;font-weight:700;color:'+labelColor+'">'+label+'</span>'
         + '</div>'
-      : '';
+        + '<div style="background:var(--surface3);border-radius:4px;height:5px;overflow:hidden">'
+        + '<div style="height:100%;width:'+barW+'%;background:'+barColor+';border-radius:4px"></div>'
+        + '</div></div>';
+    });
+    html += '</div>';
+    var emos2 = Object.keys(calibData).filter(function(e){ return calibData[e].count>=2; });
+    var bestE  = emos2.sort(function(a,b){ return calibData[b].calibScore-calibData[a].calibScore; })[0];
+    var worstE = emos2.sort(function(a,b){ return calibData[a].calibScore-calibData[b].calibScore; })[0];
+    if (bestE || worstE) {
+      html += '<div style="margin-top:10px;padding:10px;background:var(--surface3);border-radius:7px;font-size:10px;color:var(--text2);line-height:1.6">';
+      if (bestE && calibData[bestE].calibScore>10) html += '✓ <strong>'+bestE+'</strong> es tu emoción más precisa. ';
+      if (worstE && calibData[worstE].calibScore<-10) html += '⚠ <strong>'+worstE+'</strong> te engaña — tus resultados no coinciden con lo que sientes.';
+      html += '</div>';
+    }
+  } else {
+    html += '<div style="font-size:11px;color:var(--text3);text-align:center;padding:20px">Registra al menos 2 trades con la misma emoción para ver tu calibración.</div>';
+  }
+  html += '</div>';
 
-    html += '<div class="panel" style="margin-bottom:12px">'
-      + '<div class="panel-head"><span class="panel-title">Mood vs Performance</span><span class="panel-cap" style="color:var(--text3)">'+moodSessions.length+' días analizados</span></div>'
-      + '<div style="padding:14px 18px">'
-      + insightHtml
-      + '<div style="display:grid;grid-template-columns:110px 1fr 1fr auto;gap:8px;padding:0 0 6px;border-bottom:1px solid var(--border2)">'
-      + ['Factor','Días buenos','Días malos',''].map(function(h){return '<div style="font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px">'+h+'</div>';}).join('')
+  
+// ── ROW 4: Revenge trade list ──
+  if (revengeTrades.length) {
+    // Newest first, paginate 5 per page
+    var revSorted = revengeTrades.slice().sort(function(a,b){ return new Date(b.cur.entry_time||0)-new Date(a.cur.entry_time||0); });
+    var REV_PG = 5;
+    var revTP  = Math.max(1, Math.ceil(revSorted.length / REV_PG));
+    if (!window._revPage || window._revPage > revTP) window._revPage = 1;
+    var revS   = (window._revPage - 1) * REV_PG;
+    var revSlice = revSorted.slice(revS, revS + REV_PG);
+    html += '<div class="panel" style="padding:20px">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">'
+      + '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Revenge Trades detectados</div>'
+      + '<span style="font-size:10px;color:var(--red);background:var(--red-bg);border:1px solid var(--red-bd);padding:2px 8px;border-radius:10px">'+revSorted.length+' total</span>'
       + '</div>'
-      + rowsHtml
-      + '</div></div>';
-  })();
+      + '<div style="display:flex;flex-direction:column;gap:6px">';
+    revSlice.forEach(function(r) {
+      var dt = r.cur.entry_time ? new Date(r.cur.entry_time) : null;
+      var ts = dt ? (String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0')+' '+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0')) : '';
+      html += '<div style="display:flex;align-items:center;gap:12px;padding:8px 12px;background:var(--surface2);border-radius:7px;border-left:3px solid var(--red)">'
+        + '<div style="font-size:10px;color:var(--text3);width:80px">'+ts+'</div>'
+        + '<div style="font-size:11px;color:var(--text2)">Pérdida <strong style="color:var(--red)">'+(r.prev.pnl>=0?'+':'')+'$'+Math.round(r.prev.pnl)+'</strong> → siguiente en <strong>'+r.gap+'min</strong></div>'
+        + '<div style="margin-left:auto;font-size:11px;font-weight:700;color:'+(r.cur.pnl>=0?'var(--green)':'var(--red)')+'">'+(r.cur.pnl>=0?'+':'')+'$'+Math.round(r.cur.pnl)+'</div>'
+        + '</div>';
+    });
+    if (revTP > 1) {
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid var(--border);margin-top:4px">';
+      html += '<span style="font-size:10px;color:var(--text3)">'+(revS+1)+' – '+Math.min(revS+REV_PG,revSorted.length)+' de '+revSorted.length+'</span>';
+      html += '<div style="display:flex;gap:4px">';
+      html += '<button onclick="window._revPage=Math.max(1,(window._revPage||1)-1);buildMindView(currentTrades||[])" style="padding:3px 9px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text3);font-size:11px;cursor:pointer">‹</button>';
+      for (var _rp=1;_rp<=revTP;_rp++){var _ra=(_rp===(window._revPage||1));var _rbg=_ra?'var(--green)':'var(--surface2)';var _rbd=_ra?'var(--green)':'var(--border)';var _rc=_ra?'#fff':'var(--text3)';html+='<button onclick="window._revPage='+_rp+';buildMindView(currentTrades||[])" style="padding:3px 9px;background:'+_rbg+';border:1px solid '+_rbd+';border-radius:5px;color:'+_rc+';font-size:11px;cursor:pointer">'+_rp+'</button>';}
+      html += '<button onclick="window._revPage=Math.min('+revTP+',(window._revPage||1)+1);buildMindView(currentTrades||[])" style="padding:3px 9px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text3);font-size:11px;cursor:pointer">›</button>';
+      html += '</div></div>';
+    }
+    html += '</div></div>';
+  }
 
-  // ── ROW 8: Discipline Streaks ──
+  
+  html += '</div>'; // end section 5
+
+  // ── 6: Análisis por horario ──
+// ── ROW 2: Heatmap + Deep Hour Analysis ──
+
+  // ── Session buckets (London, NY Open, NY Midday, NY Close) ──
+  var sessions = [
+    { name:'Pre-market', start:6,  end:8,  color:'#5a7a9e' },
+    { name:'London',     start:8,  end:11, color:'#5a9e9e' },
+    { name:'NY Open',    start:11, end:14, color:'#5a9e72' },
+    { name:'NY Midday',  start:14, end:16, color:'#9e8050' },
+    { name:'NY Close',   start:16, end:18, color:'#9e5a5a' }
+  ];
+  var sessionStats = {};
+  sessions.forEach(function(s) { sessionStats[s.name] = {pnl:0,count:0,wins:0}; });
+  trades.forEach(function(t) {
+    if (!t.entry_time) return;
+    var h = new Date(t.entry_time).getHours();
+    sessions.forEach(function(s) {
+      if (h >= s.start && h < s.end) {
+        sessionStats[s.name].pnl   += (t.pnl||0);
+        sessionStats[s.name].count++;
+        if ((t.pnl||0) > 0) sessionStats[s.name].wins++;
+      }
+    });
+  });
+
+  html += '<div class="panel" style="padding:20px">'
+    + '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:16px">Análisis por horario</div>';
+
+  // ── Session cards row ──
+  html += '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:20px">';
+  sessions.forEach(function(s) {
+    var st = sessionStats[s.name];
+    var wr = st.count ? Math.round(st.wins/st.count*100) : 0;
+    var hasData = st.count > 0;
+    var pnlColor = st.pnl >= 0 ? 'var(--green)' : 'var(--red)';
+    html += '<div style="background:var(--surface2);border-radius:8px;padding:10px 8px;border-top:2px solid '+(hasData?s.color:'var(--border)')+';text-align:center">'
+      + '<div style="font-size:9px;color:var(--text3);margin-bottom:4px">'+s.name+'</div>'
+      + '<div style="font-size:9px;color:var(--text3);margin-bottom:6px">'+s.start+':00–'+s.end+':00</div>'
+      + (hasData
+          ? '<div style="font-size:13px;font-weight:700;color:'+pnlColor+'">'+(st.pnl>=0?'+':'')+'$'+Math.round(st.pnl)+'</div>'
+          + '<div style="font-size:9px;color:var(--text3)">'+st.count+'t · '+wr+'% WR</div>'
+          : '<div style="font-size:10px;color:var(--text3)">sin datos</div>')
+      + '</div>';
+  });
+  html += '</div>';
+
+  // ── Top 3 best / worst hours bar chart ──
+  if (hourArr.length >= 2) {
+    var top3Best  = hourArr.slice(0,3);
+    var top3Worst = hourArr.slice().reverse().slice(0,3);
+    var maxBar    = Math.max.apply(null, hourArr.map(function(h){ return Math.abs(h.pnl); })) || 1;
+
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">';
+
+    // Best hours
+    html += '<div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">🏆 Mejores horas</div>'
+      + '<div style="display:flex;flex-direction:column;gap:6px">';
+    top3Best.forEach(function(h) {
+      var barPct = Math.round(Math.abs(h.pnl)/maxBar*100);
+      html += '<div>'
+        + '<div style="display:flex;justify-content:space-between;margin-bottom:3px">'
+        + '<span style="font-size:10px;color:var(--text2);font-weight:600">'+h.h+':00</span>'
+        + '<span style="font-size:10px;color:var(--green)">+'+(h.pnl>=0?'$':'')+Math.abs(Math.round(h.pnl))+' · '+h.wr+'% WR · '+h.count+'t</span>'
+        + '</div>'
+        + '<div style="background:var(--surface2);border-radius:3px;height:6px">'
+        + '<div style="height:100%;width:'+barPct+'%;background:var(--green);border-radius:3px;opacity:.8"></div>'
+        + '</div></div>';
+    });
+    html += '</div></div>';
+
+    // Worst hours
+    html += '<div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">⚠ Peores horas</div>'
+      + '<div style="display:flex;flex-direction:column;gap:6px">';
+    top3Worst.forEach(function(h) {
+      var barPct = Math.round(Math.abs(h.pnl)/maxBar*100);
+      html += '<div>'
+        + '<div style="display:flex;justify-content:space-between;margin-bottom:3px">'
+        + '<span style="font-size:10px;color:var(--text2);font-weight:600">'+h.h+':00</span>'
+        + '<span style="font-size:10px;color:var(--red)">'+(h.pnl>=0?'+':'-')+'$'+Math.abs(Math.round(h.pnl))+' · '+h.wr+'% WR · '+h.count+'t</span>'
+        + '</div>'
+        + '<div style="background:var(--surface2);border-radius:3px;height:6px">'
+        + '<div style="height:100%;width:'+barPct+'%;background:var(--red);border-radius:3px;opacity:.8"></div>'
+        + '</div></div>';
+    });
+    html += '</div></div>';
+    html += '</div>'; // end grid
+  }
+
+  // ── Heatmap ──
+  html += '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Heatmap — Hora × Día</div>';
+
+  var hmHours = [];
+  for (var hh=8; hh<=17; hh++) hmHours.push(hh);
+  var hmDays  = [1,2,3,4,5];
+  var maxAbsPnl = 1;
+  hmDays.forEach(function(dw) {
+    hmHours.forEach(function(hh) {
+      var k = dw+'_'+hh;
+      if (heatmap[k]) maxAbsPnl = Math.max(maxAbsPnl, Math.abs(heatmap[k].pnl));
+    });
+  });
+
+  html += '<div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%">'
+    + '<thead><tr><th style="font-size:9px;color:var(--text3);padding:3px 6px;text-align:left;font-weight:500">Hora</th>';
+  hmDays.forEach(function(dw) {
+    html += '<th style="font-size:9px;color:var(--text3);padding:3px 8px;text-align:center;font-weight:500">'+dayNames[dw]+'</th>';
+  });
+  html += '</tr></thead><tbody>';
+  hmHours.forEach(function(hh) {
+    html += '<tr><td style="font-size:9px;color:var(--text3);padding:3px 6px;white-space:nowrap">'+hh+':00</td>';
+    hmDays.forEach(function(dw) {
+      var k   = dw+'_'+hh;
+      var val = heatmap[k];
+      var bg  = 'var(--surface2)';
+      var txt = '';
+      var tip = '';
+      if (val && val.count) {
+        var intensity = Math.min(0.9, Math.abs(val.pnl) / maxAbsPnl);
+        bg  = val.pnl >= 0
+          ? 'rgba(94,194,106,'  + (0.15 + intensity*0.75) + ')'
+          : 'rgba(224,92,92,'   + (0.15 + intensity*0.75) + ')';
+        txt = (val.pnl>=0?'+':'')+Math.round(val.pnl);
+        tip = val.count+'t '+(val.pnl>=0?'+$':'-$')+Math.abs(Math.round(val.pnl));
+      }
+      html += '<td style="padding:3px 4px;text-align:center">'
+        + '<div title="'+tip+'" style="background:'+bg+';border-radius:4px;padding:4px 2px;font-size:9px;color:var(--text2);min-width:44px;line-height:1.3">'
+        + (txt?txt:'·')
+        + (val&&val.count?'<br><span style="font-size:8px;color:var(--text3)">'+val.count+'t</span>':'')
+        + '</div></td>';
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+
+  // Insight box
+  if (bestHour && worstHour) {
+    html += '<div style="display:flex;gap:10px;margin-top:14px">'
+      + '<div style="flex:1;background:var(--green-bg);border:1px solid var(--green-bd);border-left:3px solid var(--green);border-radius:8px;padding:10px 14px">'
+      + '<div style="font-size:9px;color:var(--text3);margin-bottom:4px">MEJOR HORA</div>'
+      + '<div style="font-size:18px;font-weight:700;color:var(--green)">'+bestHour.h+':00</div>'
+      + '<div style="font-size:9px;color:var(--text3)">'+bestHour.wr+'% WR · +'+'$'+Math.abs(Math.round(bestHour.pnl))+'</div>'
+      + '</div>'
+      + '<div style="flex:1;background:var(--red-bg);border:1px solid var(--red-bd);border-left:3px solid var(--red);border-radius:8px;padding:10px 14px">'
+      + '<div style="font-size:9px;color:var(--text3);margin-bottom:4px">PEOR HORA</div>'
+      + '<div style="font-size:18px;font-weight:700;color:var(--red)">'+worstHour.h+':00</div>'
+      + '<div style="font-size:9px;color:var(--text3)">'+worstHour.wr+'% WR · -'+'$'+Math.abs(Math.round(worstHour.pnl))+'</div>'
+      + '</div></div>';
+  }
+  html += '</div>'; // end panel
+
+  
+  // ── 7: Discipline Streaks | Streaks & Alertas ──
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">';
+// ── ROW 8: Discipline Streaks ──
   (function() {
     var allTrades = currentTrades || [];
     var clSessions = currentChecklistSessions || [];
@@ -5727,88 +5612,65 @@ function buildMindView(trades) {
       + '</div></div>';
   })();
 
-  // ── ROW 5: AI Coach ──
-  var acctId2   = currentAccountId || '';
-  var coachFreq = getCoachFrequency(acctId2);
-  var freqMode  = coachFreq.mode || 'biweekly';
-  var freqOpts  = [
-    { val:'daily',    lbl:'Cada día' },
-    { val:'biweekly', lbl:'Mié y Vie' },
-    { val:'weekly',   lbl:'Semanal' },
-    { val:'monthly',  lbl:'Mensual' },
-    { val:'custom',   lbl:'Personalizado' }
-  ];
-
+  
+// Revenge + streak card
   html += '<div class="panel" style="padding:20px">'
-    + '<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;gap:12px">'
-    + '<div>'
-    + '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Coach IA — Análisis psicológico</div>'
-    + '<div style="font-size:11px;color:var(--text3);margin-top:3px">Evolución: 2 días · semana · semana anterior · mes · mes anterior</div>'
-    + '</div>'
-    + '<button class="btn btn-solid" id="mind-coach-btn" style="white-space:nowrap;flex-shrink:0" onclick="generateMindCoach()">'
-    + (mindCoachLoading ? '<span class="spinner" style="width:12px;height:12px;margin-right:6px"></span>Analizando...' : '⚡ Analizar ahora')
-    + '</button>'
-    + '</div>'
-    + '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:11px;margin-bottom:14px">'
-    + '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:9px">Frecuencia del análisis automático</div>'
-    + '<div style="display:flex;gap:5px;flex-wrap:wrap">'
-    + freqOpts.map(function(o) {
-        var isActive = freqMode === o.val;
-        return '<button onclick="setCoachFrequency(\'' + o.val + '\')" style="padding:5px 11px;border-radius:20px;border:1px solid '
-          + (isActive ? '#5a9e9e;background:#1e2a2a;color:#5a9e9e' : 'var(--border);background:transparent;color:var(--text3)')
-          + ';font-size:10px;cursor:pointer;font-family:inherit">' + o.lbl + '</button>';
-      }).join('')
-    + '</div>'
-    + (freqMode === 'custom'
-        ? '<div style="margin-top:9px;display:flex;align-items:center;gap:8px">'
-          + '<span style="font-size:10px;color:var(--text3)">Cada</span>'
-          + '<input id="custom-freq-days" type="number" min="1" max="30" value="' + (coachFreq.customDays||7) + '" style="width:50px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-size:12px;font-family:inherit;text-align:center">'
-          + '<span style="font-size:10px;color:var(--text3)">días</span>'
-          + '<button onclick="saveCustomFreqDays()" style="padding:4px 10px;background:#5a9e9e;border:none;border-radius:6px;color:#fff;font-size:10px;cursor:pointer;font-family:inherit">Guardar</button>'
-          + '</div>'
-        : '')
-    + '</div>'
-    + '<div id="mind-coach-output">';
+    + '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px">Streaks & Alertas</div>'    + '<div style="display:flex;flex-direction:column;gap:0">'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'    + '<span style="font-size:11px;color:var(--text2)">Racha wins actual</span>'    + '<span style="font-size:16px;font-weight:700;color:'+(currentWinStreak>=3?'var(--green)':currentWinStreak>=1?'var(--text)':'var(--text3)')+'">'+currentWinStreak+'</span></div>'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'    + '<span style="font-size:11px;color:var(--text2)">Racha pérdidas actual</span>'    + '<span style="font-size:16px;font-weight:700;color:'+(currentLossStreak>=2?'var(--red)':currentLossStreak>=1?'var(--amber)':'var(--text3)')+'">'+currentLossStreak+'</span></div>'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'    + '<span style="font-size:11px;color:var(--text2)">Hot streak máx <span style="font-size:9px;color:var(--text3)">(wins seguidos)</span></span>'    + '<span style="font-size:16px;font-weight:700;color:var(--green)">'+maxWinStreak+'</span></div>'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'    + '<span style="font-size:11px;color:var(--text2)">Racha pérdidas máx</span>'    + '<span style="font-size:16px;font-weight:700;color:'+(maxLossStreak>=4?'var(--red)':maxLossStreak>=2?'var(--amber)':'var(--text)')+'">'+maxLossStreak+'</span></div>'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'    + '<span style="font-size:11px;color:var(--text2)">Revenge trades</span>'    + '<span style="font-size:16px;font-weight:700;color:'+(revengeTrades.length>0?'var(--red)':'var(--green)')+'">'+revengeTrades.length+'</span></div>'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0">'    + '<span style="font-size:11px;color:var(--text2)">% Clean trades</span>'    + '<span style="font-size:16px;font-weight:700;color:'+(cleanPct>=60?'var(--green)':cleanPct>=40?'var(--amber)':'var(--red)')+'">'+cleanPct+'%</span></div>'    + (currentWinStreak>=4 ? '<div style="background:var(--green-bg);border:1px solid var(--green-bd);border-left:3px solid var(--green);border-radius:7px;padding:9px 12px;margin-top:8px;font-size:10px;color:var(--text2);line-height:1.5">🔥 <strong>Hot streak de '+currentWinStreak+' wins.</strong> Cuidado con el exceso de confianza — es cuando más errores se cometen por sobre-dimensionar posiciones.</div>' : '')    + '</div></div>';
 
-  if (mindCoachAnalysis) {
-    html += '<div style="font-size:13px;color:var(--text2);line-height:1.8;white-space:pre-wrap;background:var(--surface2);border-radius:8px;padding:16px">' + mindCoachAnalysis + '</div>'
-      + '<button class="btn btn-ghost" style="margin-top:10px;font-size:11px" onclick="mindCoachAnalysis=\'\';renderMindView()">Limpiar</button>';
-  } else {
-    html += '<div style="font-size:11px;color:var(--text3);text-align:center;padding:24px 0">Presiona "Analizar ahora" para recibir un diagnóstico basado en tu evolución histórica.</div>';
-  }
-  html += '</div></div>';
+  
+  html += '</div>'; // end section 7
 
-  // ── ROW 6: Coach Message History ──
-  var coachHistory = getCoachHistory(currentAccountId || '');
-  if (coachHistory.length) {
+  // ── 8: Pattern Severity — Impacto Real ──
+// ── PATTERN SEVERITY (impacto real en $) ─────────────────────────────────
+  (function() {
+    var acc2 = (accounts||[]).find(function(a){ return a.id === currentAccountId; });
+    var patterns = calcPatternSeverity(trades, acc2);
+    if (!patterns.length) return;
+
+    var totalLoss = Math.abs(trades.filter(function(t){ return (t.pnl||0)<0; })
+      .reduce(function(s,t){ return s+(t.pnl||0); }, 0));
+
     html += '<div class="panel" style="padding:20px">'
-      + '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:16px">Historial del Coach</div>'
-      + '<div style="display:flex;flex-direction:column;gap:10px">';
+      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">'
+      + '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Pattern Severity — Impacto Real</div>'
+      + '<div style="font-size:9px;color:var(--red)">Total pérdidas por errores: $'+Math.round(totalLoss)+'</div>'
+      + '</div>'
+      + '<div style="font-size:10px;color:var(--text3);margin-bottom:14px;line-height:1.5">¿Qué errores te cuestan más dinero en términos absolutos?</div>'
+      + '<div style="display:flex;flex-direction:column;gap:8px">';
 
-    coachHistory.slice(0,5).forEach(function(item) {
-      var dt      = item.ts ? new Date(item.ts) : null;
-      var dateStr = dt ? (String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0')+' '+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0')) : '';
-      var isError = item.type === 'error_alert';
-      var accent  = isError ? 'var(--red)' : '#5a9e9e';
-      var badge   = isError ? 'Alerta' : item.type === 'error_alert' ? 'Alerta' : 'Auto-Coach';
-      var preview = (item.message||'').slice(0,180) + ((item.message||'').length > 180 ? '...' : '');
-
-      html += '<div style="background:var(--surface2);border-radius:8px;padding:14px;border-left:3px solid '+accent+'">'
-        + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
-        + '<span style="font-size:9px;padding:2px 8px;border-radius:10px;background:'+accent+'22;color:'+accent+';font-weight:600">'+badge+'</span>'
-        + '<span style="font-size:9px;color:var(--text3)">'+dateStr+'</span>'
+    patterns.forEach(function(p) {
+      var barPct  = patterns[0].lossAmt > 0 ? Math.round(p.lossAmt / patterns[0].lossAmt * 100) : 0;
+      var isHigh  = p.impactPct >= 20;
+      var barCol  = isHigh ? 'var(--red)' : 'var(--amber)';
+      var bg      = isHigh ? 'var(--red-bg)' : 'var(--surface2)';
+      var bd      = isHigh ? 'var(--red-bd)' : 'var(--border)';
+      var fmtP2   = function(n){ return '$'+Math.round(Math.abs(n)); };
+      html += '<div style="background:'+bg+';border:1px solid '+bd+';border-radius:8px;padding:10px 12px">'
+        + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'
+        + '<span style="font-size:14px">'+p.icon+'</span>'
+        + '<span style="font-size:11px;font-weight:700;color:var(--text);flex:1">'+p.label+'</span>'
+        + (p.isAuto ? '<span style="font-size:8px;color:var(--text3);background:var(--surface3);padding:2px 6px;border-radius:8px">auto</span>' : '')
+        + '<span style="font-size:9px;color:var(--text3)">'+p.count+' trades</span>'
         + '</div>'
-        + '<div style="font-size:11px;color:var(--text2);line-height:1.6">'+preview+'</div>'
-        + (item.message&&item.message.length>180
-          ? '<button onclick="mindCoachAnalysis='+JSON.stringify(item.message)+';renderMindView()" style="margin-top:8px;background:none;border:1px solid var(--border2);border-radius:5px;color:var(--text3);font-size:10px;padding:3px 10px;cursor:pointer">Ver completo</button>'
-          : '')
-        + '</div>';
+        + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">'
+        + '<span style="font-size:18px;font-weight:800;color:'+barCol+'">-'+fmtP2(p.lossAmt)+'</span>'
+        + '<span style="font-size:10px;color:var(--text3)">en pérdidas</span>'
+        + '<span style="font-size:11px;font-weight:700;color:'+barCol+';margin-left:auto">'+p.impactPct+'% de tus pérdidas</span>'
+        + '</div>'
+        + '<div style="background:var(--surface3);border-radius:3px;height:5px;margin-bottom:6px">'
+        + '<div style="height:100%;width:'+barPct+'%;background:'+barCol+';border-radius:3px"></div></div>'
+        + '<div style="display:flex;gap:12px">'
+        + '<span style="font-size:9px;color:var(--text3)">'+p.winRate+'% WR en estos trades</span>'
+        + (p.avgLoss > 0 ? '<span style="font-size:9px;color:var(--text3)">avg pérdida: -$'+p.avgLoss+'</span>' : '')
+        + '</div></div>';
     });
 
     html += '</div></div>';
-  }
+  })();
 
-  // ── EMOTIONAL PNL HEATMAP (emoción × hora) ──────────────────────────────
+  
+  // ── 9: Emoción × Hora — P&L Real ──
+// ── EMOTIONAL PNL HEATMAP (emoción × hora) ──────────────────────────────
   (function() {
     var tradesWithBoth = trades.filter(function(t){ return t.emotion && t.entry_time; });
     if (tradesWithBoth.length < 5) return;
@@ -5899,57 +5761,42 @@ function buildMindView(trades) {
     html += '</div></div>';
   })();
 
-  // ── PATTERN SEVERITY (impacto real en $) ─────────────────────────────────
-  (function() {
-    var acc2 = (accounts||[]).find(function(a){ return a.id === currentAccountId; });
-    var patterns = calcPatternSeverity(trades, acc2);
-    if (!patterns.length) return;
-
-    var totalLoss = Math.abs(trades.filter(function(t){ return (t.pnl||0)<0; })
-      .reduce(function(s,t){ return s+(t.pnl||0); }, 0));
-
+  
+  // ── 10: Coach History ──
+// ── ROW 6: Coach Message History ──
+  var coachHistory = getCoachHistory(currentAccountId || '');
+  if (coachHistory.length) {
     html += '<div class="panel" style="padding:20px">'
-      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">'
-      + '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Pattern Severity — Impacto Real</div>'
-      + '<div style="font-size:9px;color:var(--red)">Total pérdidas por errores: $'+Math.round(totalLoss)+'</div>'
-      + '</div>'
-      + '<div style="font-size:10px;color:var(--text3);margin-bottom:14px;line-height:1.5">¿Qué errores te cuestan más dinero en términos absolutos?</div>'
-      + '<div style="display:flex;flex-direction:column;gap:8px">';
+      + '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:16px">Historial del Coach</div>'
+      + '<div style="display:flex;flex-direction:column;gap:10px">';
 
-    patterns.forEach(function(p) {
-      var barPct  = patterns[0].lossAmt > 0 ? Math.round(p.lossAmt / patterns[0].lossAmt * 100) : 0;
-      var isHigh  = p.impactPct >= 20;
-      var barCol  = isHigh ? 'var(--red)' : 'var(--amber)';
-      var bg      = isHigh ? 'var(--red-bg)' : 'var(--surface2)';
-      var bd      = isHigh ? 'var(--red-bd)' : 'var(--border)';
-      var fmtP2   = function(n){ return '$'+Math.round(Math.abs(n)); };
-      html += '<div style="background:'+bg+';border:1px solid '+bd+';border-radius:8px;padding:10px 12px">'
-        + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'
-        + '<span style="font-size:14px">'+p.icon+'</span>'
-        + '<span style="font-size:11px;font-weight:700;color:var(--text);flex:1">'+p.label+'</span>'
-        + (p.isAuto ? '<span style="font-size:8px;color:var(--text3);background:var(--surface3);padding:2px 6px;border-radius:8px">auto</span>' : '')
-        + '<span style="font-size:9px;color:var(--text3)">'+p.count+' trades</span>'
+    coachHistory.slice(0,5).forEach(function(item) {
+      var dt      = item.ts ? new Date(item.ts) : null;
+      var dateStr = dt ? (String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0')+' '+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0')) : '';
+      var isError = item.type === 'error_alert';
+      var accent  = isError ? 'var(--red)' : '#5a9e9e';
+      var badge   = isError ? 'Alerta' : item.type === 'error_alert' ? 'Alerta' : 'Auto-Coach';
+      var preview = (item.message||'').slice(0,180) + ((item.message||'').length > 180 ? '...' : '');
+
+      html += '<div style="background:var(--surface2);border-radius:8px;padding:14px;border-left:3px solid '+accent+'">'
+        + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
+        + '<span style="font-size:9px;padding:2px 8px;border-radius:10px;background:'+accent+'22;color:'+accent+';font-weight:600">'+badge+'</span>'
+        + '<span style="font-size:9px;color:var(--text3)">'+dateStr+'</span>'
         + '</div>'
-        + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">'
-        + '<span style="font-size:18px;font-weight:800;color:'+barCol+'">-'+fmtP2(p.lossAmt)+'</span>'
-        + '<span style="font-size:10px;color:var(--text3)">en pérdidas</span>'
-        + '<span style="font-size:11px;font-weight:700;color:'+barCol+';margin-left:auto">'+p.impactPct+'% de tus pérdidas</span>'
-        + '</div>'
-        + '<div style="background:var(--surface3);border-radius:3px;height:5px;margin-bottom:6px">'
-        + '<div style="height:100%;width:'+barPct+'%;background:'+barCol+';border-radius:3px"></div></div>'
-        + '<div style="display:flex;gap:12px">'
-        + '<span style="font-size:9px;color:var(--text3)">'+p.winRate+'% WR en estos trades</span>'
-        + (p.avgLoss > 0 ? '<span style="font-size:9px;color:var(--text3)">avg pérdida: -$'+p.avgLoss+'</span>' : '')
-        + '</div></div>';
+        + '<div style="font-size:11px;color:var(--text2);line-height:1.6">'+preview+'</div>'
+        + (item.message&&item.message.length>180
+          ? '<button onclick="mindCoachAnalysis='+JSON.stringify(item.message)+';renderMindView()" style="margin-top:8px;background:none;border:1px solid var(--border2);border-radius:5px;color:var(--text3);font-size:10px;padding:3px 10px;cursor:pointer">Ver completo</button>'
+          : '')
+        + '</div>';
     });
 
     html += '</div></div>';
-  })();
+  }
 
+  
   html += '</div>'; // end padding wrapper
   el.innerHTML = html;
 }
-
 // ══════════════════════════════════════════════════════════════
 // AUTO COACH SYSTEM
 // - Watches for repeated errors (same tag 2x in last 10 trades)
