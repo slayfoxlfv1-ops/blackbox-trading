@@ -1626,7 +1626,18 @@ async function loadAccountData(id, silent) {
   var dayLabel   = moodLevel3==='green'?'GREEN DAY':moodLevel3==='yellow'?'YELLOW DAY':moodLevel3==='red'?'RED DAY':'SIN MOOD CHECK';
 
   // Checklist status
-  var clToday    = (currentChecklistSessions||[]).find(function(s){ return s.session_date===today; });
+  // Check Supabase sessions first, fall back to bbStore (local) which is always current
+  var clToday = (currentChecklistSessions||[]).find(function(s){ return s.session_date===today; });
+  if (!clToday) {
+    // bbStore fallback: if user checked anything today, consider checklist started
+    try {
+      var _clLocalKey = 'checks_'+currentAccountId+'_'+today;
+      var _clLocal = JSON.parse(bbStore.get(_clLocalKey)||'{}');
+      if (Object.values(_clLocal).some(Boolean)) {
+        clToday = { session_date: today, score_pct: 1, verdict: 'caution' }; // minimal object
+      }
+    } catch(e) {}
+  }
   var rulesObj2  = getPersonalRules(currentAccountId||'');
   var hasRules   = Object.keys(rulesObj2).some(function(k){ return rulesObj2[k]&&rulesObj2[k].active; });
 
@@ -1690,7 +1701,34 @@ async function loadAccountData(id, silent) {
   '<div style="text-align:center;padding:10px 14px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">' +
   '<div style="font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px">Reglas</div>' +
   '<div style="font-size:11px;font-weight:700;color:'+(hasRules?'var(--green)':'var(--amber)')+'">'+( hasRules?'✓ Activas':'Sin reglas')+'</div></div>' +
-  '</div></div>' +
+  '</div>' +
+  // ── Trader Profile square ──
+  (function(){
+    var _tw = trades.length;
+    var _wn = trades.filter(function(t){return (t.pnl||0)>0;});
+    var _ls = trades.filter(function(t){return (t.pnl||0)<0;});
+    var _wr = _tw ? Math.round(_wn.length/_tw*100) : 0;
+    var _aw = _wn.length ? Math.round(_wn.reduce(function(s,t){return s+(t.pnl||0);},0)/_wn.length) : 0;
+    var _al = _ls.length ? Math.round(Math.abs(_ls.reduce(function(s,t){return s+(t.pnl||0);},0)/_ls.length)) : 0;
+    var _rr = _al>0 ? (_aw/_al).toFixed(1) : '—';
+    var _cp = _tw ? Math.round(trades.filter(function(t){return (t.discipline_tag||'clean')==='clean';}).length/_tw*100) : 100;
+    var _ec={}; trades.forEach(function(t){if(t.emotion)_ec[t.emotion]=(_ec[t.emotion]||0)+1;});
+    var _ek=Object.keys(_ec); var _te=_ek.length?_ek.sort(function(a,b){return _ec[b]-_ec[a];})[0]:null;
+    var _ee={calm:'😌',confident:'💪',anxious:'😰',fear:'😨',greedy:'🤑',bored:'😐',frustrated:'😤',neutral:'😶'};
+    var _pt = _wr>=60&&_cp>=70?'Disciplinado':_wr>=60&&_cp<70?'Alta WR, baja disciplina':_wr<40&&_cp>=70?'Disciplinado, baja WR':'En desarrollo';
+    var _pc = _wr>=60&&_cp>=70?'var(--green)':_wr>=40?'var(--amber)':'var(--red)';
+    return '<div style="flex-shrink:0;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;min-width:160px">'
+      + '<div style="font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px">Perfil</div>'
+      + '<div style="font-size:11px;font-weight:700;color:'+_pc+';margin-bottom:8px">'+_pt+'</div>'
+      + '<div style="display:flex;flex-direction:column;gap:3px">'
+      + '<div style="display:flex;justify-content:space-between;gap:12px"><span style="font-size:9px;color:var(--text3)">Win Rate</span><span style="font-size:9px;font-weight:600;color:'+(_wr>=60?'var(--green)':_wr>=40?'var(--amber)':'var(--red)')+'">'+_wr+'%</span></div>'
+      + '<div style="display:flex;justify-content:space-between;gap:12px"><span style="font-size:9px;color:var(--text3)">R:R real</span><span style="font-size:9px;font-weight:600;color:var(--text)">'+_rr+'</span></div>'
+      + '<div style="display:flex;justify-content:space-between;gap:12px"><span style="font-size:9px;color:var(--text3)">Limpios</span><span style="font-size:9px;font-weight:600;color:'+(_cp>=70?'var(--green)':_cp>=50?'var(--amber)':'var(--red)')+'">'+_cp+'%</span></div>'
+      + (_te?'<div style="display:flex;justify-content:space-between;gap:12px"><span style="font-size:9px;color:var(--text3)">Emoción</span><span style="font-size:9px">'+(_ee[_te]||'')+' '+_te+'</span></div>':'')
+      + '<div style="display:flex;justify-content:space-between;gap:12px"><span style="font-size:9px;color:var(--text3)">Trades</span><span style="font-size:9px;font-weight:600;color:var(--text)">'+_tw+'</span></div>'
+      + '</div></div>';
+  })() +
+  '</div>' +
 
   // ── ROW 1: Mind · Disciplina · Ejecución ──
   '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">' +
@@ -3677,7 +3715,7 @@ function getTabEl(tabId) {
 
 // TRADE LOG VIEW
 async function renderTradeLog() {
-  var el=getTabEl('trades-tab-content');
+  var el = document.getElementById('trades-tab-content');
   if (!el) { setTimeout(renderTradeLog, 50); return; } // DOM not ready yet, retry
 
   // If trades already loaded for THIS account, render instantly (no spinner)
@@ -3705,7 +3743,8 @@ async function renderTradeLog() {
 }
 
 function renderTradeLogTable(trades) {
-  var el=getTabEl('trades-tab-content');
+  // Use ONLY the specific tab container — never fall back to main-content (would wipe tab bar)
+  var el = document.getElementById('trades-tab-content');
   if (!el) return;
   // Sort newest first so page 1 = most recent trades
   var sorted = (trades||[]).slice().sort(function(a,b){
