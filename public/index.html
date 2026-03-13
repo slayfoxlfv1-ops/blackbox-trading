@@ -3663,12 +3663,11 @@ function renderTagPills(selectedTags, onChange) {
   }).join('');
 }
 
-// ── TRADES VIEW (wrapper: Trade Log + Calendar tabs) ──────────────────────
+// ── TRADES VIEW ──────────────────────────────────────────────────────────────
 var _tradesActiveTab = 'log'; // 'log' | 'calendar'
 
 function renderTradesView() {
   var el = document.getElementById('main-content');
-  // Tab bar
   var tabs = [
     { id: 'log',      label: '&#8801; Trade Log' },
     { id: 'calendar', label: '&#8862; Calendar'  },
@@ -3683,9 +3682,21 @@ function renderTradesView() {
           + '">' + t.label + '</div>';
       }).join('')
     + '</div>';
-  el.innerHTML = tabBar + '<div id="trades-tab-content"></div>';
-  // Use setTimeout(0) so the DOM updates before sub-render tries to find #trades-tab-content
-  setTimeout(_renderTradesTabContent, 0);
+
+  var trades = currentTrades || [];
+
+  if (_tradesActiveTab === 'log') {
+    el.innerHTML = tabBar + renderTradeLogHTML(trades);
+    // attach note click delegation
+    var tbl = el.querySelector('.table-scroll table');
+    if (tbl) tbl.addEventListener('click', function(e) {
+      var nc = e.target.closest('.note-cell[data-tid]');
+      if (nc) openNoteModal(nc.getAttribute('data-tid'));
+    });
+  } else {
+    el.innerHTML = tabBar + '<div id="trades-tab-content"></div>';
+    renderCalendarFull(new Date().getFullYear(), new Date().getMonth(), trades);
+  }
 }
 
 function switchTradesTab(tab) {
@@ -3693,62 +3704,48 @@ function switchTradesTab(tab) {
   renderTradesView();
 }
 
-function _renderTradesTabContent() {
-  if (_tradesActiveTab === 'log')      renderTradeLog();
-  else if (_tradesActiveTab === 'calendar') renderCalendarView();
-}
-
-// Helper: when inside a tab wrapper, write to the tab content div
+// Helper kept for calendar and other uses
 function getTabEl(tabId) {
   return document.getElementById(tabId) || document.getElementById('main-content');
 }
 
-// TRADE LOG VIEW
-// Exactly like renderCalendarView: synchronous, uses currentTrades already loaded by loadAccountData
 function renderTradeLog() {
-  var el = document.getElementById('trades-tab-content');
-  if (!el) return;
-  renderTradeLogTable(currentTrades || []);
+  renderTradesView();
 }
 
 function renderTradeLogTable(trades) {
-  // Use ONLY the specific tab container — never fall back to main-content (would wipe tab bar)
-  var el = document.getElementById('trades-tab-content');
-  if (!el) return;
-  // Sort newest first so page 1 = most recent trades
+  // Called from pagination buttons etc — just re-render the whole view
+  renderTradesView();
+}
+
+function renderTradeLogHTML(trades) {
+  var tagMap = {clean:'clean',moved_sl:'moved sl',scaled_in:'scale in',impulse:'impulse',no_confirmation:'no confirm',overtrading:'overtrading',fomo:'fomo'};
+  // Sort newest first
   var sorted = (trades||[]).slice().sort(function(a,b){
     return new Date(b.entry_time||0) - new Date(a.entry_time||0);
   });
-  var filtered=sorted.filter(function(t) {
+  var filtered = sorted.filter(function(t) {
     if (tlFilters.date && !(t.entry_time||'').startsWith(tlFilters.date)) return false;
     if (tlFilters.ticker && !(t.ticker||'').toLowerCase().includes(tlFilters.ticker.toLowerCase())) return false;
     if (tlFilters.result==='win' && (t.pnl||0)<=0) return false;
     if (tlFilters.result==='loss' && (t.pnl||0)>=0) return false;
     return true;
   });
-  var tagMap={clean:'clean',moved_sl:'moved sl',scaled_in:'scale in',impulse:'impulse',no_confirmation:'no confirm',overtrading:'overtrading',fomo:'fomo'};
-  // Pagination: 15 trades per page. Reset to page 1 when filters change.
-  var PAGE_SIZE = 15;
-  var totalFiltered = filtered.length;
-  var totalPages = Math.max(1, Math.ceil(totalFiltered / PAGE_SIZE));
-  if (tlPage > totalPages) tlPage = totalPages;
-  var pageStart = (tlPage - 1) * PAGE_SIZE;
-  var paginated = filtered.slice(pageStart, pageStart + PAGE_SIZE);
 
-  var rows=paginated.map(function(t) {
-    var pnl=t.pnl||0;
-    var pnlDisp=(pnl>=0?'+':'-')+'$'+Math.abs(pnl).toLocaleString();
-    var pnlCls=pnl>=0?'pos':'neg';
-    var rr=(t.rr_planned!=null&&t.rr_achieved!=null)?t.rr_planned+':'+t.rr_achieved:'--';
-    var rrCls=(t.rr_achieved!=null&&t.rr_planned!=null)?(t.rr_achieved>=t.rr_planned?'pos':'neg'):'';
-    var time='--';
+  var rows = filtered.map(function(t) {
+    var pnl = t.pnl||0;
+    var pnlDisp = (pnl>=0?'+':'-')+'$'+Math.abs(pnl).toLocaleString();
+    var pnlCls  = pnl>=0?'pos':'neg';
+    var rr = (t.rr_planned!=null&&t.rr_achieved!=null)?t.rr_planned+':'+t.rr_achieved:'--';
+    var rrCls = (t.rr_achieved!=null&&t.rr_planned!=null)?(t.rr_achieved>=t.rr_planned?'pos':'neg'):'';
+    var time = '--';
     if (t.entry_time) {
-      var _dt2=new Date(t.entry_time);
-      time=String(_dt2.getDate()).padStart(2,'0')+'/'+String(_dt2.getMonth()+1).padStart(2,'0')+'/'+_dt2.getFullYear()+' '+String(_dt2.getHours()).padStart(2,'0')+':'+String(_dt2.getMinutes()).padStart(2,'0');
+      var _d = new Date(t.entry_time);
+      time = String(_d.getDate()).padStart(2,'0')+'/'+String(_d.getMonth()+1).padStart(2,'0')+'/'+_d.getFullYear()+' '+String(_d.getHours()).padStart(2,'0')+':'+String(_d.getMinutes()).padStart(2,'0');
     }
-    var dtag=t.discipline_tag||(t.moved_sl?'moved_sl':t.scaled_in_loss?'scaled_in':'clean');
-    var tagLabel=tagMap[dtag]||'clean';
-    var tagCls=dtag==='clean'?'clean':(dtag==='moved_sl'||dtag==='no_confirmation'?'sl':'scale');
+    var dtag = t.discipline_tag||(t.moved_sl?'moved_sl':t.scaled_in_loss?'scaled_in':'clean');
+    var tagLabel = tagMap[dtag]||'clean';
+    var tagCls = dtag==='clean'?'clean':(dtag==='moved_sl'||dtag==='no_confirmation'?'sl':'scale');
     var _sc = getTradeScreenshot(t.id) || t.screenshot_url || null;
     var screenshot = _sc
       ? '<div class="sc-thumb-wrap" onclick="openLightbox(this.getAttribute(\'data-url\'))" data-url="'+_sc+'">'
@@ -3757,12 +3754,17 @@ function renderTradeLogTable(trades) {
         + '<div class="sc-hover-preview"><img src="'+_sc+'" data-sc-url="'+_sc+'" onerror="this.style.opacity=0.3" style="max-width:520px;max-height:360px;border-radius:5px;display:block"></div>'
         + '</div>'
       : '<span style="color:var(--text3);font-size:11px">--</span>';
-    var noteText = t.notes || '';
-    var noteTrunc = noteText.length > 40 ? noteText.slice(0,40)+'...' : noteText;
-    var hasNote = noteText.length > 0;
-    var emojiMap2 = {'calm':'😌','confident':'💪','anxious':'😰','fear':'😨','greedy':'🤑','bored':'😐','frustrated':'😤','neutral':'😶'};
-    var emoIcon = t.emotion && emojiMap2[t.emotion] ? '<span style="font-size:11px;margin-right:3px" title="'+t.emotion+'">'+emojiMap2[t.emotion]+'</span>' : '';
-    var notesHtml = '<div class="note-cell" data-tid="' + t.id + '" style="cursor:pointer">'      + emoIcon      + (_sc ? '<span style="font-size:12px;margin-right:3px">📷</span>' : '')      + (hasNote ? '<span class="note-short">' + noteTrunc.replace(/'/g, "&#39;") + '</span>' : '')      + (!_sc && !hasNote && !t.emotion ? '<span style="color:var(--text3);font-size:11px">--</span>' : '')      + '</div>';
+    var noteText = t.notes||'';
+    var noteTrunc = noteText.length>40 ? noteText.slice(0,40)+'...' : noteText;
+    var hasNote = noteText.length>0;
+    var emojiMap2 = {calm:'😌',confident:'💪',anxious:'😰',fear:'😨',greedy:'🤑',bored:'😐',frustrated:'😤',neutral:'😶'};
+    var emoIcon = t.emotion&&emojiMap2[t.emotion] ? '<span style="font-size:11px;margin-right:3px" title="'+t.emotion+'">'+emojiMap2[t.emotion]+'</span>' : '';
+    var notesHtml = '<div class="note-cell" data-tid="'+t.id+'" style="cursor:pointer">'
+      + emoIcon
+      + (_sc?'<span style="font-size:12px;margin-right:3px">📷</span>':'')
+      + (hasNote?'<span class="note-short">'+noteTrunc.replace(/'/g,"&#39;")+'</span>':'')
+      + (!_sc&&!hasNote&&!t.emotion?'<span style="color:var(--text3);font-size:11px">--</span>':'')
+      + '</div>';
     return '<tr class="'+(pnl<0?'flagged':'')+'">'+
       '<td><span class="ticker">'+(t.ticker||'--')+'</span></td>'+
       '<td><span class="side-badge '+(t.side||'long')+'">'+(t.side||'').toUpperCase()+'</span></td>'+
@@ -3777,43 +3779,23 @@ function renderTradeLogTable(trades) {
       '<td><span class="edit-btn" onclick="openEditTrade(\''+t.id+'\')" title="Edit">e</span> <span class="edit-btn del-btn" onclick="confirmDeleteTrade(\''+t.id+'\')" title="Delete">x</span></td>'+
       '</tr>';
   }).join('');
-  // Build pagination controls
-  var paginationHtml = '';
-  if (totalPages > 1) {
-    var btns = '';
-    btns += '<button onclick="tlPage=Math.max(1,tlPage-1);renderTradeLogTable(currentTrades)" style="padding:4px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text3);font-size:11px;cursor:pointer'+(tlPage===1?';opacity:.4;cursor:default':'')+'">‹</button>';
-    // show window of pages
-    var pStart = Math.max(1, tlPage-2); var pEnd = Math.min(totalPages, tlPage+2);
-    for (var _p = pStart; _p <= pEnd; _p++) {
-      var isActive = _p === tlPage;
-      btns += '<button onclick="tlPage='+_p+';renderTradeLogTable(currentTrades)" style="padding:4px 10px;background:'+(isActive?'var(--green)':'var(--surface2)')+';border:1px solid '+(isActive?'var(--green)':'var(--border)')+';border-radius:5px;color:'+(isActive?'#fff':'var(--text3)')+';font-size:11px;cursor:pointer">'+_p+'</button>';
-    }
-    btns += '<button onclick="tlPage=Math.min(totalPages,tlPage+1);renderTradeLogTable(currentTrades)" style="padding:4px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text3);font-size:11px;cursor:pointer'+(tlPage===totalPages?';opacity:.4;cursor:default':'')+'">›</button>';
-    paginationHtml = '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 18px;border-top:1px solid var(--border)">'      + '<span style="font-size:10px;color:var(--text3)">'+pageStart+1+' – '+Math.min(pageStart+PAGE_SIZE, totalFiltered)+' de '+totalFiltered+' trades</span>'      + '<div style="display:flex;gap:4px">'+btns+'</div>'      + '</span></div>';
-  }
 
-  el.innerHTML='<div class="panel fade-in">'+
-    '<div class="panel-head"><span class="panel-title">Trade Log</span><span class="panel-cap">'+filtered.length+' of '+trades.length+' trades</span></div>'+
+  return '<div class="panel fade-in">'+
+    '<div class="panel-head"><span class="panel-title">Trade Log</span><span class="panel-cap">'+filtered.length+' trades</span></div>'+
     '<div style="display:flex;gap:8px;padding:12px 18px;border-bottom:1px solid var(--border);flex-wrap:wrap">'+
-    '<input class="form-input" style="width:130px;padding:6px 10px" type="date" value="'+tlFilters.date+'" onchange="tlFilters.date=this.value;tlPage=1;renderTradeLogTable(currentTrades)">'+
-    '<input class="form-input" style="width:120px;padding:6px 10px" type="text" placeholder="Ticker..." value="'+tlFilters.ticker+'" oninput="tlFilters.ticker=this.value;tlPage=1;renderTradeLogTable(currentTrades)">'+
-    '<select class="form-select" style="width:120px;padding:6px 10px" onchange="tlFilters.result=this.value;tlPage=1;renderTradeLogTable(currentTrades)">'+
+    '<input class="form-input" style="width:130px;padding:6px 10px" type="date" value="'+tlFilters.date+'" onchange="tlFilters.date=this.value;renderTradesView()">'+
+    '<input class="form-input" style="width:120px;padding:6px 10px" type="text" placeholder="Ticker..." value="'+tlFilters.ticker+'" oninput="tlFilters.ticker=this.value;renderTradesView()">'+
+    '<select class="form-select" style="width:120px;padding:6px 10px" onchange="tlFilters.result=this.value;renderTradesView()">'+
     '<option value="all"'+(tlFilters.result==='all'?' selected':'')+'>All trades</option>'+
     '<option value="win"'+(tlFilters.result==='win'?' selected':'')+'>Winners</option>'+
     '<option value="loss"'+(tlFilters.result==='loss'?' selected':'')+'>Losers</option>'+
     '</select>'+
-    '<button class="btn btn-ghost" style="font-size:11px" onclick="tlFilters={date:\'\',ticker:\'\',result:\'all\'};renderTradeLogTable(currentTrades)">Clear</button>'+
+    '<button class="btn btn-ghost" style="font-size:11px" onclick="tlFilters={date:\'\',ticker:\'\',result:\'all\'};renderTradesView()">Clear</button>'+
     '</div>'+
     '<div class="table-scroll"><table>'+
     '<thead><tr><th>Ticker</th><th>Side</th><th>Entry</th><th>Exit</th><th>Qty</th><th>P&L</th><th>R:R</th><th>Discipline</th><th>Notes</th><th>Time</th><th></th></tr></thead>'+
-    '<tbody>'+(rows||'<tr><td colspan="12" style="text-align:center;padding:24px;color:var(--text3);font-size:11px">No trades found</td></tr>')+'</tbody>'+
-    '</table></div>'+paginationHtml+'</div>';
-  // Click delegation for note cells
-  var tbl = el.querySelector('.table-scroll table');
-  if (tbl) tbl.addEventListener('click', function(e) {
-    var nc = e.target.closest('.note-cell[data-tid]');
-    if (nc) { openNoteModal(nc.getAttribute('data-tid')); }
-  });
+    '<tbody>'+(rows||'<tr><td colspan="11" style="text-align:center;padding:24px;color:var(--text3);font-size:11px">No hay trades registrados</td></tr>')+'</tbody>'+
+    '</table></div></div>';
 }
 
 // CALENDAR VIEW
