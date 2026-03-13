@@ -1625,19 +1625,15 @@ async function loadAccountData(id, silent) {
   var dayEmoji   = moodLevel3==='green'?'🟢':moodLevel3==='yellow'?'🟡':moodLevel3==='red'?'🔴':'⚪';
   var dayLabel   = moodLevel3==='green'?'GREEN DAY':moodLevel3==='yellow'?'YELLOW DAY':moodLevel3==='red'?'RED DAY':'SIN MOOD CHECK';
 
-  // Checklist status
-  // Check Supabase sessions first, fall back to bbStore (local) which is always current
-  var clToday = (currentChecklistSessions||[]).find(function(s){ return s.session_date===today; });
-  if (!clToday) {
-    // bbStore fallback: if user checked anything today, consider checklist started
-    try {
-      var _clLocalKey = 'checks_'+currentAccountId+'_'+today;
-      var _clLocal = JSON.parse(bbStore.get(_clLocalKey)||'{}');
-      if (Object.values(_clLocal).some(Boolean)) {
-        clToday = { session_date: today, score_pct: 1, verdict: 'caution' }; // minimal object
-      }
-    } catch(e) {}
-  }
+  // Checklist status — same logic as Reglas: read directly from bbStore (always current)
+  var _clItems = []; try { _clItems = JSON.parse(bbStore.get('checklist_'+currentAccountId)||'[]'); } catch(e) {}
+  var _clChecks = {}; try { _clChecks = JSON.parse(bbStore.get('checks_'+currentAccountId+'_'+today)||'{}'); } catch(e) {}
+  var _clDoneCount = Object.values(_clChecks).filter(Boolean).length;
+  var _clHasItems  = _clItems.length > 0;
+  // clToday = true only if items exist AND at least 1 is checked today
+  var clToday = _clHasItems && _clDoneCount > 0 ? { session_date: today, score_pct: Math.round(_clDoneCount/_clItems.length*100), verdict: 'caution' } : null;
+  var _clLabel = !_clHasItems ? 'Sin config' : clToday ? '✓ Hecho' : '✗ Pendiente';
+  var _clColor = !_clHasItems ? 'var(--amber)' : clToday ? 'var(--green)' : 'var(--red)';
   var rulesObj2  = getPersonalRules(currentAccountId||'');
   var hasRules   = Object.keys(rulesObj2).some(function(k){ return rulesObj2[k]&&rulesObj2[k].active; });
 
@@ -1697,7 +1693,7 @@ async function loadAccountData(id, silent) {
   '<div style="display:flex;gap:10px;flex-shrink:0">' +
   '<div style="text-align:center;padding:10px 14px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">' +
   '<div style="font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px">Checklist</div>' +
-  '<div style="font-size:11px;font-weight:700;color:'+(clToday?'var(--green)':'var(--red)')+'">'+( clToday?'✓ Hecho':'✗ Pendiente')+'</div></div>' +
+  '<div style="font-size:11px;font-weight:700;color:'+_clColor+'">'+_clLabel+'</div></div>' +
   '<div style="text-align:center;padding:10px 14px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">' +
   '<div style="font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px">Reglas</div>' +
   '<div style="font-size:11px;font-weight:700;color:'+(hasRules?'var(--green)':'var(--amber)')+'">'+( hasRules?'✓ Activas':'Sin reglas')+'</div></div>' +
@@ -1791,7 +1787,7 @@ async function loadAccountData(id, silent) {
   }).join('') +
   '</div>' +
   '<div style="flex-shrink:0;display:flex;flex-direction:column;gap:6px;text-align:right">' +
-  '<div style="font-size:9px;color:var(--text3)">Checklist <span style="color:'+(clToday?'var(--green)':'var(--red)')+'">'+( clToday?'✓':'✗')+'</span></div>' +
+  '<div style="font-size:9px;color:var(--text3)">Checklist <span style="color:'+_clColor+'">'+(_clHasItems?(_clDoneCount>0?'✓':'✗'):'—')+'</span></div>' +
   '<div style="font-size:9px;color:var(--text3)">Mood check <span style="color:'+(moodLevel3?'var(--green)':'var(--red)')+'">'+( moodLevel3?'✓':'✗')+'</span></div>' +
   '<div style="font-size:9px;color:var(--text3)">Reglas <span style="color:'+(hasRules?'var(--green)':'var(--amber)')+'">'+( hasRules?'✓':'Sin config')+'</span></div>' +
   '</div></div>' +
@@ -3716,30 +3712,16 @@ function getTabEl(tabId) {
 // TRADE LOG VIEW
 async function renderTradeLog() {
   var el = document.getElementById('trades-tab-content');
-  if (!el) { setTimeout(renderTradeLog, 50); return; } // DOM not ready yet, retry
-
-  // If trades already loaded for THIS account, render instantly (no spinner)
-  if (_tradesLoadedForAccount === currentAccountId && currentTrades !== null) {
-    renderTradeLogTable(currentTrades);
-    // Background refresh to catch any new trades added elsewhere
-    sb.from('trades').select('*').eq('account_id',currentAccountId).order('entry_time',{ascending:false}).then(function(res) {
-      if (res.data) {
-        var changed = res.data.length !== (currentTrades||[]).length;
-        currentTrades = res.data;
-        if (changed) {
-          var el2 = getTabEl('trades-tab-content');
-          if (el2) renderTradeLogTable(currentTrades);
-        }
-      }
-    });
-    return;
-  }
-  // Not yet loaded — show spinner, fetch, then render
-  el.innerHTML='<div class="loading"><div class="spinner"></div></div>';
-  var res=await sb.from('trades').select('*').eq('account_id',currentAccountId).order('entry_time',{ascending:false});
-  currentTrades=res.data||[];
-  _tradesLoadedForAccount = currentAccountId;
-  renderTradeLogTable(currentTrades);
+  if (!el) { setTimeout(renderTradeLog, 50); return; }
+  // Always fetch fresh from Supabase — simple and reliable, no cache issues
+  el.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  var res = await sb.from('trades').select('*').eq('account_id', currentAccountId).order('entry_time', {ascending: false});
+  var data = res.data || [];
+  currentTrades = data;
+  // Re-get el in case DOM changed while awaiting
+  el = document.getElementById('trades-tab-content');
+  if (!el) return;
+  renderTradeLogTable(data);
 }
 
 function renderTradeLogTable(trades) {
