@@ -3704,24 +3704,11 @@ function getTabEl(tabId) {
 }
 
 // TRADE LOG VIEW
-async function renderTradeLog() {
+// Exactly like renderCalendarView: synchronous, uses currentTrades already loaded by loadAccountData
+function renderTradeLog() {
   var el = document.getElementById('trades-tab-content');
-  if (!el) { setTimeout(renderTradeLog, 50); return; }
-
-  // If currentTrades was already loaded for this account (by loadAccountData), use it instantly
-  if (_tradesLoadedForAccount === currentAccountId && currentTrades !== null) {
-    renderTradeLogTable(currentTrades);
-    return;
-  }
-
-  // Otherwise fetch from Supabase (e.g. first visit before dashboard loaded)
-  el.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
-  var res = await sb.from('trades').select('*').eq('account_id', currentAccountId).order('entry_time', {ascending: false});
-  currentTrades = res.data || [];
-  _tradesLoadedForAccount = currentAccountId;
-  el = document.getElementById('trades-tab-content');
   if (!el) return;
-  renderTradeLogTable(currentTrades);
+  renderTradeLogTable(currentTrades || []);
 }
 
 function renderTradeLogTable(trades) {
