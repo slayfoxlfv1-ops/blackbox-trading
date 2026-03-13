@@ -608,7 +608,8 @@ const SUPABASE_URL = 'https://qljuusxpzsiqxnpfpdgg.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFsanV1c3hwenNpcXhucGZwZGdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1OTQ5NzUsImV4cCI6MjA4ODE3MDk3NX0.rUEwuG4zFE_EpAM4s3hWqVF81xiW9q_MSwQKKXYZmlk';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let currentUser = null, accounts = [], currentAccountId = null, currentTrades = [], currentChecklistSessions = [], currentMoodSessions = [], currentView = 'dashboard', authTab = 'login', editingTradeId = null;
+let currentUser = null, accounts = [], currentAccountId = null, currentTrades = null, currentChecklistSessions = [], currentMoodSessions = [], currentView = 'dashboard', authTab = 'login', editingTradeId = null;
+let _tradesLoadedForAccount = null; // tracks which account trades are loaded for
 let tlFilters = { date:'', ticker:'', result:'all' };
 let repFilters = { period:'month', result:'all', ticker:'', dateFrom:'', dateTo:'' };
 let coachAnalysis = null, coachLoading = false;
@@ -1155,6 +1156,7 @@ async function loadAccountData(id, silent) {
   var res = await sb.from('trades').select('*').eq('account_id', id).order('entry_time', { ascending: true });
   var trades = res.data || [];
   currentTrades = trades;
+  _tradesLoadedForAccount = id; // mark trades as loaded for this account
   // Load checklist sessions for this account
   var clRes = await sb.from('checklist_sessions')
     .select('session_date,items,score_pct,verdict')
@@ -3678,29 +3680,38 @@ async function renderTradeLog() {
   var el=getTabEl('trades-tab-content');
   if (!el) { setTimeout(renderTradeLog, 50); return; } // DOM not ready yet, retry
 
-  // If trades already fetched (including empty array), render instantly
-  if (currentTrades !== null && currentTrades !== undefined) {
+  // If trades already loaded for THIS account, render instantly (no spinner)
+  if (_tradesLoadedForAccount === currentAccountId && currentTrades !== null) {
     renderTradeLogTable(currentTrades);
-    // Silently refresh in background — only re-render if count changed
+    // Background refresh to catch any new trades added elsewhere
     sb.from('trades').select('*').eq('account_id',currentAccountId).order('entry_time',{ascending:false}).then(function(res) {
       if (res.data) {
+        var changed = res.data.length !== (currentTrades||[]).length;
         currentTrades = res.data;
-        var el2 = getTabEl('trades-tab-content');
-        if (el2) renderTradeLogTable(currentTrades);
+        if (changed) {
+          var el2 = getTabEl('trades-tab-content');
+          if (el2) renderTradeLogTable(currentTrades);
+        }
       }
     });
     return;
   }
-  // First ever load for this account — show spinner then fetch
+  // Not yet loaded — show spinner, fetch, then render
   el.innerHTML='<div class="loading"><div class="spinner"></div></div>';
   var res=await sb.from('trades').select('*').eq('account_id',currentAccountId).order('entry_time',{ascending:false});
   currentTrades=res.data||[];
+  _tradesLoadedForAccount = currentAccountId;
   renderTradeLogTable(currentTrades);
 }
 
 function renderTradeLogTable(trades) {
   var el=getTabEl('trades-tab-content');
-  var filtered=trades.filter(function(t) {
+  if (!el) return;
+  // Sort newest first so page 1 = most recent trades
+  var sorted = (trades||[]).slice().sort(function(a,b){
+    return new Date(b.entry_time||0) - new Date(a.entry_time||0);
+  });
+  var filtered=sorted.filter(function(t) {
     if (tlFilters.date && !(t.entry_time||'').startsWith(tlFilters.date)) return false;
     if (tlFilters.ticker && !(t.ticker||'').toLowerCase().includes(tlFilters.ticker.toLowerCase())) return false;
     if (tlFilters.result==='win' && (t.pnl||0)<=0) return false;
@@ -3855,13 +3866,23 @@ function renderCalendarFull(year, month, trades) {
     var cnt=(dayTrades[dateStr]||[]).length;
     var cntStr=cnt>0?'<div class="cal-lg-cnt">'+cnt+' trade'+(cnt>1?'s':'')+'</div>':'';
     // Discipline bar inside cell
-    var discBar='';
+    // Discipline bar + dashboard-style tooltip on hover
+    var discBar=''; var calTip='';
     if (cnt>0) {
       var dsc=calcDiscipline(dayTrades[dateStr]);
       var dcol=dsc.score>=80?'var(--green)':dsc.score>=50?'var(--amber)':'var(--red)';
       discBar='<div class="cal-lg-disc"><div class="cal-lg-disc-fill" style="width:'+dsc.score+'%;background:'+dcol+'"></div></div>';
+      var tipRows=(dayTrades[dateStr]||[]).map(function(t){
+        var tm=t.entry_time?new Date(t.entry_time).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false}):'';
+        var tp=(t.pnl||0)>=0?'+$'+(t.pnl||0):'-$'+Math.abs(t.pnl||0);
+        var rr=(t.rr_planned!=null&&t.rr_achieved!=null)?t.rr_planned+':'+t.rr_achieved:'';
+        return '<div class="cal-tip-row"><span class="cal-tip-time">'+tm+'</span><span class="cal-tip-tk">'+(t.ticker||'')+'</span><span class="cal-tip-pnl '+((t.pnl||0)>=0?'pos':'neg')+'">'+tp+'</span>'+(rr?'<span class="cal-tip-rr">'+rr+'</span>':'')+'</div>';
+      }).join('');
+      calTip=tipRows+'<div class="cal-tip-disc"><div class="cal-tip-disc-bar" style="width:'+dsc.score+'%"></div></div><div class="cal-tip-disc-lbl">Discipline '+dsc.score+'%</div>';
     }
-    cells+='<div class="cal-cell-lg '+cls+todayCls+'" style="'+dimStyle+'" onclick="showDayTrades(\''+dateStr+'\',\''+monthNames[month]+' '+d+'\')">' +
+    var calTipAttr=calTip?'data-tip="'+calTip.replace(/"/g,'&quot;')+'"':'';
+    var calHoverAttr=calTip?'onmouseenter="showCalTooltip(event,this)" onmouseleave="hideCalTooltip()"':'';
+    cells+='<div class="cal-cell-lg '+cls+todayCls+'" style="'+dimStyle+'" '+calTipAttr+' '+calHoverAttr+' onclick="showDayTrades(\''+dateStr+'\',\''+monthNames[month]+' '+d+'\')">' +
       '<div class="cal-lg-day">'+d+'</div>'+pnlStr+cntStr+discBar+'</div>';
   }
   var prevMonth=month===0?11:month-1;
@@ -4548,6 +4569,11 @@ async function toggleCheck(idx) {
     verdict: verdict,
     updated_at: new Date().toISOString()
   }, { onConflict: 'account_id,session_date' });
+  // Update in-memory cache so dashboard reflects checklist immediately
+  var existing = (currentChecklistSessions||[]).findIndex(function(s){ return s.session_date === today3; });
+  var newSession = { session_date: today3, items: checks, score_pct: pct, verdict: verdict };
+  if (existing >= 0) currentChecklistSessions[existing] = newSession;
+  else currentChecklistSessions.unshift(newSession);
   switchDiscTab('checklist');
 }
 
@@ -4920,7 +4946,11 @@ function buildMindView(trades) {
 
   // Revenge trading detector
   var revengeTrades = [];
+  // sortedTrades = ALL trades for stats (streaks, calibration, etc.)
   var sortedTrades  = trades.slice().sort(function(a,b){ return new Date(a.entry_time)-new Date(b.entry_time); });
+  // todaySortedTrades = today only, for behavior score display
+  var _todayKeyMind = new Date().toISOString().slice(0,10);
+  var todaySortedTrades = sortedTrades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(_todayKeyMind); });
   for (var i=1; i<sortedTrades.length; i++) {
     var prev = sortedTrades[i-1], cur = sortedTrades[i];
     if ((prev.pnl||0) < 0) {
@@ -5286,18 +5316,37 @@ function buildMindView(trades) {
 
   // ── ROW 4: Revenge trade list ──
   if (revengeTrades.length) {
+    // Newest first, paginate 5 per page
+    var revSorted = revengeTrades.slice().sort(function(a,b){ return new Date(b.cur.entry_time||0)-new Date(a.cur.entry_time||0); });
+    var REV_PG = 5;
+    var revTP  = Math.max(1, Math.ceil(revSorted.length / REV_PG));
+    if (!window._revPage || window._revPage > revTP) window._revPage = 1;
+    var revS   = (window._revPage - 1) * REV_PG;
+    var revSlice = revSorted.slice(revS, revS + REV_PG);
     html += '<div class="panel" style="padding:20px">'
-      + '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px">Revenge Trades detectados</div>'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">'
+      + '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Revenge Trades detectados</div>'
+      + '<span style="font-size:10px;color:var(--red);background:var(--red-bg);border:1px solid var(--red-bd);padding:2px 8px;border-radius:10px">'+revSorted.length+' total</span>'
+      + '</div>'
       + '<div style="display:flex;flex-direction:column;gap:6px">';
-    revengeTrades.slice(0,8).forEach(function(r) {
+    revSlice.forEach(function(r) {
       var dt = r.cur.entry_time ? new Date(r.cur.entry_time) : null;
       var ts = dt ? (String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0')+' '+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0')) : '';
       html += '<div style="display:flex;align-items:center;gap:12px;padding:8px 12px;background:var(--surface2);border-radius:7px;border-left:3px solid var(--red)">'
         + '<div style="font-size:10px;color:var(--text3);width:80px">'+ts+'</div>'
-        + '<div style="font-size:11px;color:var(--text2)">Pérdida <strong style="color:var(--red)">'+(r.prev.pnl>=0?'+':'')+'$'+Math.round(r.prev.pnl)+'</strong> → siguiente trade en <strong>'+r.gap+'min</strong></div>'
-        + '<div style="margin-left:auto;font-size:11px;font-weight:700;color:'+(r.cur.pnl>=0?'var(--green)':'var(--red)')+'">'+( r.cur.pnl>=0?'+':'')+'$'+Math.round(r.cur.pnl)+'</div>'
+        + '<div style="font-size:11px;color:var(--text2)">Pérdida <strong style="color:var(--red)">'+(r.prev.pnl>=0?'+':'')+'$'+Math.round(r.prev.pnl)+'</strong> → siguiente en <strong>'+r.gap+'min</strong></div>'
+        + '<div style="margin-left:auto;font-size:11px;font-weight:700;color:'+(r.cur.pnl>=0?'var(--green)':'var(--red)')+'">'+(r.cur.pnl>=0?'+':'')+'$'+Math.round(r.cur.pnl)+'</div>'
         + '</div>';
     });
+    if (revTP > 1) {
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid var(--border);margin-top:4px">';
+      html += '<span style="font-size:10px;color:var(--text3)">'+(revS+1)+' – '+Math.min(revS+REV_PG,revSorted.length)+' de '+revSorted.length+'</span>';
+      html += '<div style="display:flex;gap:4px">';
+      html += '<button onclick="window._revPage=Math.max(1,(window._revPage||1)-1);buildMindView(currentTrades||[])" style="padding:3px 9px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text3);font-size:11px;cursor:pointer">‹</button>';
+      for (var _rp=1;_rp<=revTP;_rp++){var _ra=(_rp===(window._revPage||1));var _rbg=_ra?'var(--green)':'var(--surface2)';var _rbd=_ra?'var(--green)':'var(--border)';var _rc=_ra?'#fff':'var(--text3)';html+='<button onclick="window._revPage='+_rp+';buildMindView(currentTrades||[])" style="padding:3px 9px;background:'+_rbg+';border:1px solid '+_rbd+';border-radius:5px;color:'+_rc+';font-size:11px;cursor:pointer">'+_rp+'</button>';}
+      html += '<button onclick="window._revPage=Math.min('+revTP+',(window._revPage||1)+1);buildMindView(currentTrades||[])" style="padding:3px 9px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text3);font-size:11px;cursor:pointer">›</button>';
+      html += '</div></div>';
+    }
     html += '</div></div>';
   }
 
