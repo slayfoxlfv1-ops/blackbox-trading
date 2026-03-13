@@ -584,6 +584,21 @@ tr:hover td { background:var(--hover); }
       <div id="t-setup-tags-wrap" style="display:flex;flex-wrap:wrap;gap:6px;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;min-height:36px"></div>
       <input type="hidden" id="t-setup-tags" value="">
     </div>
+    <div class="form-group" id="t-checklist-wrap" style="background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:12px 14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <label class="form-label" style="margin:0">✓ Checklist cumplido <span style="font-size:9px;color:var(--text3);font-weight:400">— ¿cuánto de tu checklist hiciste hoy?</span></label>
+        <span id="t-checklist-pct-display" style="font-size:14px;font-weight:800;color:var(--green)">100%</span>
+      </div>
+      <input type="range" id="t-checklist-pct" min="0" max="100" step="10" value="100"
+        style="width:100%;accent-color:var(--green);cursor:pointer"
+        oninput="document.getElementById('t-checklist-pct-display').textContent=this.value+'%';document.getElementById('t-checklist-pct-display').style.color=this.value>=80?'var(--green)':this.value>=50?'var(--amber)':'var(--red)'">
+      <div style="display:flex;justify-content:space-between;margin-top:4px">
+        <span style="font-size:9px;color:var(--text3)">0%</span>
+        <span style="font-size:9px;color:var(--text3)">50%</span>
+        <span style="font-size:9px;color:var(--text3)">100%</span>
+      </div>
+      <div id="t-checklist-note" style="font-size:9px;color:var(--text3);margin-top:6px;text-align:center">Solo se guarda si no tienes checklist registrado hoy</div>
+    </div>
     <div class="form-group">
       <label class="form-label">Notes</label>
       <textarea class="form-input" id="t-notes" rows="2" placeholder="What happened? What did you learn?" style="resize:vertical;line-height:1.5"></textarea>
@@ -915,6 +930,27 @@ function openLogModal() {
   if (titleEl) titleEl.textContent = 'Log Trade';
   document.getElementById('save-trade-btn').textContent = 'Save Trade';
   document.getElementById('log-overlay').classList.add('open');
+  // Checklist slider: show existing value if already saved today, else allow input
+  var _clSlider = document.getElementById('t-checklist-pct');
+  var _clDisp   = document.getElementById('t-checklist-pct-display');
+  var _clNote   = document.getElementById('t-checklist-note');
+  if (_clSlider) {
+    var _today0  = new Date().toISOString().slice(0,10);
+    var _todayCl = (currentChecklistSessions||[]).find(function(s){ return s.session_date===_today0; });
+    if (_todayCl) {
+      _clSlider.value    = _todayCl.score_pct;
+      _clSlider.disabled = true;
+      _clSlider.style.opacity = '0.5';
+      if (_clDisp) { _clDisp.textContent = _todayCl.score_pct+'%'; _clDisp.style.color = _todayCl.score_pct>=80?'var(--green)':_todayCl.score_pct>=50?'var(--amber)':'var(--red)'; }
+      if (_clNote) _clNote.textContent = '✓ Checklist del día ya registrado (' + _todayCl.score_pct + '%) — no se modificará';
+    } else {
+      _clSlider.value    = 100;
+      _clSlider.disabled = false;
+      _clSlider.style.opacity = '1';
+      if (_clDisp) { _clDisp.textContent = '100%'; _clDisp.style.color = 'var(--green)'; }
+      if (_clNote) _clNote.textContent = 'Se guardará como checklist del día junto con el trade';
+    }
+  }
 }
 
 function closeLogModal() {
@@ -1020,6 +1056,33 @@ async function saveTrade() {
 
   btn.textContent = 'Save Trade';
   screenshotDataUrl = null;
+
+  // ── Save checklist % from slider (only if no real checklist exists for today) ──
+  var _clSliderSave = document.getElementById('t-checklist-pct');
+  if (_clSliderSave && !_clSliderSave.disabled && currentAccountId) {
+    var _clPct   = parseInt(_clSliderSave.value) || 0;
+    var _clDate  = new Date().toISOString().slice(0,10);
+    // Only save if no session already exists for today
+    var _existing = (currentChecklistSessions||[]).find(function(s){ return s.session_date===_clDate; });
+    if (!_existing) {
+      var _clVerdict = _clPct >= 80 ? 'ready' : _clPct >= 50 ? 'caution' : 'not_ready';
+      var _clPayload = {
+        account_id:   currentAccountId,
+        session_date: _clDate,
+        items:        [],
+        score_pct:    _clPct,
+        verdict:      _clVerdict,
+        source:       'manual_trade'   // mark as coming from log trade, not checklist tab
+      };
+      try {
+        await sb.from('checklist_sessions').upsert(_clPayload, { onConflict: 'account_id,session_date' });
+        // Also update in-memory cache so scores update immediately
+        currentChecklistSessions = currentChecklistSessions.filter(function(s){ return s.session_date!==_clDate; });
+        currentChecklistSessions.unshift({ session_date:_clDate, score_pct:_clPct, verdict:_clVerdict, items:[] });
+      } catch(e) { console.warn('Checklist save error:', e); }
+    }
+  }
+
   closeLogModal();
   // Silent reload — don't change view or show spinner
   await loadAccountData(currentAccountId, true);
@@ -1072,10 +1135,21 @@ function openEditTrade(id) {
   document.getElementById('save-trade-btn').textContent = 'Save Changes';
   editingTradeId = id;
   document.getElementById('log-overlay').classList.add('open');
+  // On edit: show checklist for that trade's day, read-only
+  var _clSliderE = document.getElementById('t-checklist-pct');
+  if (_clSliderE) {
+    var _entryEl   = document.getElementById('t-entry-time');
+    var _tradeDayK = _entryEl && _entryEl.value ? _entryEl.value.slice(0,10) : new Date().toISOString().slice(0,10);
+    var _clForDay  = (currentChecklistSessions||[]).find(function(s){ return s.session_date===_tradeDayK; });
+    _clSliderE.value    = _clForDay ? _clForDay.score_pct : 100;
+    _clSliderE.disabled = true;
+    _clSliderE.style.opacity = '0.5';
+    var _clDispE = document.getElementById('t-checklist-pct-display');
+    var _clNoteE = document.getElementById('t-checklist-note');
+    if (_clDispE) _clDispE.textContent = (_clForDay ? _clForDay.score_pct : '--')+'%';
+    if (_clNoteE) _clNoteE.textContent = _clForDay ? ('Checklist del día: ' + _clForDay.score_pct + '%') : 'Sin checklist para este día';
+  }
 }
-
-
-
 
 
 
