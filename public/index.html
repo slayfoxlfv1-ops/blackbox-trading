@@ -932,19 +932,13 @@ function openLogModal() {
   if (_clSlider) {
     var _today0  = new Date().toISOString().slice(0,10);
     var _todayCl = (currentChecklistSessions||[]).find(function(s){ return s.session_date===_today0; });
-    if (_todayCl) {
-      _clSlider.value    = _todayCl.score_pct;
-      _clSlider.disabled = true;
-      _clSlider.style.opacity = '0.5';
-      if (_clDisp) { _clDisp.textContent = _todayCl.score_pct+'%'; _clDisp.style.color = _todayCl.score_pct>=80?'var(--green)':_todayCl.score_pct>=50?'var(--amber)':'var(--red)'; }
-      if (_clNote) _clNote.textContent = '✓ Checklist del día ya registrado (' + _todayCl.score_pct + '%) — no se modificará';
-    } else {
-      _clSlider.value    = 100;
-      _clSlider.disabled = false;
-      _clSlider.style.opacity = '1';
-      if (_clDisp) { _clDisp.textContent = '100%'; _clDisp.style.color = 'var(--green)'; }
-      if (_clNote) _clNote.textContent = 'Se guardará como checklist del día junto con el trade';
-    }
+    // Always editable — pre-fill with existing value if any, otherwise 100%
+    var _prefill = _todayCl ? _todayCl.score_pct : 100;
+    _clSlider.value    = _prefill;
+    _clSlider.disabled = false;
+    _clSlider.style.opacity = '1';
+    if (_clDisp) { _clDisp.textContent = _prefill+'%'; _clDisp.style.color = _prefill>=80?'var(--green)':_prefill>=50?'var(--amber)':'var(--red)'; }
+    if (_clNote) _clNote.textContent = _todayCl ? 'Valor actual del día: '+_todayCl.score_pct+'% — puedes ajustarlo' : 'Se guardará como checklist del día';
   }
 }
 
@@ -1052,14 +1046,12 @@ async function saveTrade() {
   btn.textContent = 'Save Trade';
   screenshotDataUrl = null;
 
-  // ── Save checklist % from slider (only if no real checklist exists for today) ──
+  // ── Save checklist % from slider — always upsert, latest value wins ──
   var _clSliderSave = document.getElementById('t-checklist-pct');
-  if (_clSliderSave && !_clSliderSave.disabled && currentAccountId) {
-    var _clPct   = parseInt(_clSliderSave.value) || 0;
-    var _clDate  = new Date().toISOString().slice(0,10);
-    // Only save if no session already exists for today
-    var _existing = (currentChecklistSessions||[]).find(function(s){ return s.session_date===_clDate; });
-    if (!_existing) {
+  if (_clSliderSave && currentAccountId) {
+    var _clPct    = parseInt(_clSliderSave.value);
+    if (!isNaN(_clPct)) {
+      var _clDate    = new Date().toISOString().slice(0,10);
       var _clVerdict = _clPct >= 80 ? 'ready' : _clPct >= 50 ? 'caution' : 'not_ready';
       var _clPayload = {
         account_id:   currentAccountId,
@@ -1067,11 +1059,10 @@ async function saveTrade() {
         items:        [],
         score_pct:    _clPct,
         verdict:      _clVerdict,
-        source:       'manual_trade'   // mark as coming from log trade, not checklist tab
+        source:       'manual_trade'
       };
       try {
         await sb.from('checklist_sessions').upsert(_clPayload, { onConflict: 'account_id,session_date' });
-        // Also update in-memory cache so scores update immediately
         currentChecklistSessions = currentChecklistSessions.filter(function(s){ return s.session_date!==_clDate; });
         currentChecklistSessions.unshift({ session_date:_clDate, score_pct:_clPct, verdict:_clVerdict, items:[] });
       } catch(e) { console.warn('Checklist save error:', e); }
@@ -1136,13 +1127,14 @@ function openEditTrade(id) {
     var _entryEl   = document.getElementById('t-entry-time');
     var _tradeDayK = _entryEl && _entryEl.value ? _entryEl.value.slice(0,10) : new Date().toISOString().slice(0,10);
     var _clForDay  = (currentChecklistSessions||[]).find(function(s){ return s.session_date===_tradeDayK; });
-    _clSliderE.value    = _clForDay ? _clForDay.score_pct : 100;
-    _clSliderE.disabled = true;
-    _clSliderE.style.opacity = '0.5';
+    var _prefillE  = _clForDay ? _clForDay.score_pct : 100;
+    _clSliderE.value    = _prefillE;
+    _clSliderE.disabled = false;
+    _clSliderE.style.opacity = '1';
     var _clDispE = document.getElementById('t-checklist-pct-display');
     var _clNoteE = document.getElementById('t-checklist-note');
-    if (_clDispE) _clDispE.textContent = (_clForDay ? _clForDay.score_pct : '--')+'%';
-    if (_clNoteE) _clNoteE.textContent = _clForDay ? ('Checklist del día: ' + _clForDay.score_pct + '%') : 'Sin checklist para este día';
+    if (_clDispE) { _clDispE.textContent = _prefillE+'%'; _clDispE.style.color = _prefillE>=80?'var(--green)':_prefillE>=50?'var(--amber)':'var(--red)'; }
+    if (_clNoteE) _clNoteE.textContent = _clForDay ? 'Valor del día: '+_clForDay.score_pct+'% — puedes ajustarlo' : 'Sin checklist para este día';
   }
 }
 
