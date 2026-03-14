@@ -1781,6 +1781,150 @@ async function loadAccountData(id, silent) {
   })() +
   '</div>' +
 
+  // ── ROW 0b: Insights automáticos ──
+  (function(){
+    if (!trades.length) return;
+
+    var insights = [];
+    var tagCounts = {};
+    ['clean','moved_sl','scaled_in','impulse','no_confirmation','overtrading','fomo'].forEach(function(k){ tagCounts[k]=0; });
+    trades.forEach(function(t){
+      var tag = (t.discipline_tag||'clean');
+      if (tagCounts[tag] !== undefined) tagCounts[tag]++;
+    });
+
+    // ── 1. Mayor error (disciplina) ──
+    var errorTags = ['moved_sl','impulse','no_confirmation','overtrading','fomo','scaled_in'];
+    var worstTag  = null; var worstN = 0;
+    errorTags.forEach(function(k){ if(tagCounts[k]>worstN){ worstN=tagCounts[k]; worstTag=k; } });
+    var tagLabels = { moved_sl:'mover el stop loss', impulse:'trades impulsivos', no_confirmation:'entrar sin confirmación', overtrading:'overtrading', fomo:'FOMO', scaled_in:'escalar en pérdidas' };
+    if (worstTag && worstN >= 2) {
+      var tagTrades  = trades.filter(function(t){ return t.discipline_tag===worstTag; });
+      var tagPnl     = tagTrades.reduce(function(s,t){ return s+(t.pnl||0); }, 0);
+      var tagPnlStr  = (tagPnl>=0?'+':'')+tagPnl.toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0});
+      var allAvg     = trades.length ? trades.reduce(function(s,t){return s+(t.pnl||0);},0)/trades.length : 0;
+      var tagAvg     = tagTrades.length ? tagTrades.reduce(function(s,t){return s+(t.pnl||0);},0)/tagTrades.length : 0;
+      var pctWorse   = allAvg !== 0 ? Math.round(Math.abs((tagAvg-allAvg)/Math.abs(allAvg))*100) : 0;
+      insights.push({
+        icon: '⚠',
+        color: 'var(--red)',
+        bg: 'rgba(158,90,90,0.1)',
+        border: 'rgba(158,90,90,0.35)',
+        label: 'Error más frecuente',
+        text: 'Tu mayor error es <strong>' + tagLabels[worstTag] + '</strong> — ' + worstN + ' trades' + (tagPnl < 0 ? ', <strong style="color:var(--red)">' + tagPnlStr + '</strong> de impacto total' : '') + (pctWorse > 10 && allAvg !== 0 ? '. Tu P&L promedio en esos trades es <strong>' + Math.round(pctWorse) + '% peor</strong> que tu promedio general' : '') + '.'
+      });
+    }
+
+    // ── 2. Patrón de horario ──
+    var hourPnl = {}, hourCount = {};
+    trades.forEach(function(t){
+      if (!t.entry_time) return;
+      var h = new Date(t.entry_time).getHours();
+      hourPnl[h]   = (hourPnl[h]||0)+(t.pnl||0);
+      hourCount[h] = (hourCount[h]||0)+1;
+    });
+    var hours = Object.keys(hourPnl).filter(function(h){ return hourCount[h]>=3; });
+    if (hours.length >= 2) {
+      var bestH  = hours.reduce(function(a,b){ return (hourPnl[a]/hourCount[a]) > (hourPnl[b]/hourCount[b]) ? a : b; });
+      var worstH = hours.reduce(function(a,b){ return (hourPnl[a]/hourCount[a]) < (hourPnl[b]/hourCount[b]) ? a : b; });
+      if (bestH !== worstH) {
+        var fmt12 = function(h){ var hh=parseInt(h); return (hh%12||12)+(hh>=12?'pm':'am'); };
+        var bestAvg  = Math.round(hourPnl[bestH]/hourCount[bestH]);
+        var worstAvg = Math.round(hourPnl[worstH]/hourCount[worstH]);
+        insights.push({
+          icon: '◷',
+          color: 'var(--amber)',
+          bg: 'rgba(158,128,80,0.1)',
+          border: 'rgba(158,128,80,0.35)',
+          label: 'Patrón de horario',
+          text: 'Tu mejor hora es <strong>' + fmt12(bestH) + '</strong> (promedio <strong style="color:var(--green)">' + (bestAvg>=0?'+':'') + '$' + Math.abs(bestAvg) + '</strong>). ' +
+                'Evita operar a las <strong>' + fmt12(worstH) + '</strong> — promedio <strong style="color:var(--red)">' + (worstAvg>=0?'+':'') + '$' + worstAvg + '</strong> por trade.'
+        });
+      }
+    }
+
+    // ── 3. Emoción más costosa ──
+    var emoPnl = {}, emoCount = {};
+    trades.forEach(function(t){
+      if (!t.emotion) return;
+      emoPnl[t.emotion]   = (emoPnl[t.emotion]||0)+(t.pnl||0);
+      emoCount[t.emotion] = (emoCount[t.emotion]||0)+1;
+    });
+    var badEmos = ['anxious','fear','greedy','frustrated'];
+    var costlyEmo = null; var costlyPnl = 0;
+    badEmos.forEach(function(e){
+      if (emoCount[e] >= 2 && (emoPnl[e]||0) < costlyPnl) {
+        costlyPnl = emoPnl[e]; costlyEmo = e;
+      }
+    });
+    var emoLabels = { anxious:'ansioso', fear:'con miedo', greedy:'codicioso', frustrated:'frustrado' };
+    if (costlyEmo) {
+      var ceCount = emoCount[costlyEmo];
+      var ceAvg   = Math.round(emoPnl[costlyEmo]/ceCount);
+      insights.push({
+        icon: '◈',
+        color: '#5a9e9e',
+        bg: 'rgba(90,158,158,0.08)',
+        border: 'rgba(90,158,158,0.3)',
+        label: 'Emoción más costosa',
+        text: 'Cuando operas <strong>' + emoLabels[costlyEmo] + '</strong> tu promedio es <strong style="color:var(--red)">$' + ceAvg + '</strong> por trade (' + ceCount + ' trades). ' +
+              'Considera pausar cuando notes esa emoción.'
+      });
+    }
+
+    // ── 4. Racha actual ──
+    var sorted2 = trades.slice().sort(function(a,b){ return new Date(a.entry_time)-new Date(b.entry_time); });
+    var streak2 = 0; var streakDir = null;
+    for (var si = sorted2.length-1; si >= 0; si--) {
+      var sp = sorted2[si].pnl||0;
+      if (streakDir === null) { streakDir = sp >= 0 ? 'win' : 'loss'; streak2 = 1; }
+      else if ((streakDir==='win' && sp>=0)||(streakDir==='loss' && sp<0)) streak2++;
+      else break;
+    }
+    if (streak2 >= 3) {
+      if (streakDir === 'win') {
+        insights.push({
+          icon: '↑',
+          color: 'var(--green)',
+          bg: 'rgba(90,158,114,0.1)',
+          border: 'rgba(90,158,114,0.3)',
+          label: 'Racha ganadora',
+          text: 'Llevas <strong>' + streak2 + ' trades ganadores consecutivos.</strong> Momento de alta confianza — mantén la disciplina y no sobredimensiones posiciones.'
+        });
+      } else {
+        insights.push({
+          icon: '↓',
+          color: 'var(--red)',
+          bg: 'rgba(158,90,90,0.1)',
+          border: 'rgba(158,90,90,0.35)',
+          label: 'Racha perdedora',
+          text: 'Llevas <strong>' + streak2 + ' pérdidas consecutivas.</strong> La estadística muestra que los revenge trades empeoran el resultado. Considera tomar un descanso.'
+        });
+      }
+    }
+
+    if (!insights.length) return;
+
+    html += '<div class="panel" style="padding:0;overflow:hidden">';
+    html += '<div style="padding:12px 18px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">';
+    html += '<span style="font-size:10px;font-weight:700;color:var(--text);letter-spacing:.3px">◈ Insights — Lo que dicen tus datos</span>';
+    html += '<span style="font-size:9px;color:var(--text3)">'+trades.length+' trades analizados</span>';
+    html += '</div>';
+    html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:0">';
+    insights.forEach(function(ins, idx2) {
+      var borderR = idx2 < insights.length-1 ? 'border-right:1px solid var(--border);' : '';
+      html += '<div style="padding:14px 18px;' + borderR + 'background:' + ins.bg + ';border-bottom:1px solid var(--border)">';
+      html += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">';
+      html += '<span style="font-size:12px;color:' + ins.color + ';font-weight:700">' + ins.icon + '</span>';
+      html += '<span style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px">' + ins.label + '</span>';
+      html += '</div>';
+      html += '<div style="font-size:11px;color:var(--text2);line-height:1.65">' + ins.text + '</div>';
+      html += '</div>';
+    });
+    html += '</div></div>';
+  })();
+
+
   // ── ROW 1: Mind · Disciplina · Ejecución ──
   '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">' +
 
