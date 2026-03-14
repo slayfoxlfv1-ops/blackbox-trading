@@ -1519,22 +1519,25 @@ async function loadAccountData(id, silent) {
   var discProg    = calcDisciplineProgress(trades);
   var badges      = calcBadges(trades, currentChecklistSessions);
 
-  // ── Achievement unlock toast ──
-  (function() {
-    if (!badges.earned.length) return;
-    var _achKey = 'seen_ach_' + currentAccountId;
-    var _seenRaw = bbStore.get(_achKey);
-    var _seen = _seenRaw ? JSON.parse(_seenRaw) : [];
-    var _newUnlocks = badges.earned.filter(function(b){ return _seen.indexOf(b.id) < 0; });
-    if (!_newUnlocks.length) return;
-    // Save newly seen
-    var _allSeen = _seen.concat(_newUnlocks.map(function(b){ return b.id; }));
-    bbStore.set(_achKey, JSON.stringify(_allSeen));
-    // Show toast for each new unlock (staggered)
-    _newUnlocks.slice(0,3).forEach(function(b, i) {
-      setTimeout(function() { showAchievementToast(b); }, 800 + i * 1800);
-    });
-  })();
+  // ── Achievement unlock toast — only for genuinely new unlocks, shown once per session ──
+  if (!silent) {
+    (function() {
+      if (!badges.earned.length) return;
+      var _achKey  = 'seen_ach_' + currentAccountId;
+      var _seenRaw = bbStore.get(_achKey);
+      var _seen    = [];
+      try { _seen = _seenRaw ? JSON.parse(_seenRaw) : []; } catch(e) {}
+      var _newUnlocks = badges.earned.filter(function(b){ return _seen.indexOf(b.id) < 0; });
+      if (!_newUnlocks.length) return;
+      // Persist all earned IDs immediately so subsequent loads don't re-show
+      var _allIds = badges.earned.map(function(b){ return b.id; });
+      bbStore.set(_achKey, JSON.stringify(_allIds));
+      // Only toast the truly new ones (not already in _seen)
+      _newUnlocks.slice(0, 3).forEach(function(b, i) {
+        setTimeout(function() { showAchievementToast(b); }, 1000 + i * 2000);
+      });
+    })();
+  }
   var tilt2       = detectTilt(trades);
   var moodBg2     = todayMood?(todayMood.level==='green'?'var(--green-bg)':todayMood.level==='yellow'?'var(--amber-bg)':'var(--red-bg)'):'var(--surface2)';
   var moodBd2     = todayMood?(todayMood.level==='green'?'var(--green-bd)':todayMood.level==='yellow'?'#3d3020':'var(--red-bd)'):'var(--border)';
@@ -1547,17 +1550,17 @@ async function loadAccountData(id, silent) {
   var mindData  = calcDailyMindScore(today);
   var execData  = calcDailyExecutionScore(today);
   var discData  = calcDailyDisciplineScore(today);
-  var msYest    = prevDay ? calcMentalScore(prevDay) : null;
 
-  // Previous trading day (up to 4 days back)
+  // Previous TRADING day (up to 7 days back, skip weekends without trades)
   var prevDay = null;
-  for (var pd = 1; pd <= 4; pd++) {
+  for (var pd = 1; pd <= 7; pd++) {
     var d2 = new Date(); d2.setDate(d2.getDate() - pd);
     var d2s = d2.toISOString().slice(0,10);
     if (trades.some(function(t){ return t.entry_time && t.entry_time.startsWith(d2s); })) {
       prevDay = d2s; break;
     }
   }
+  var msYest = prevDay ? calcMentalScore(prevDay) : null;
 
   var todayTrades = trades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(today); });
   var prevTrades  = prevDay ? trades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(prevDay); }) : [];
@@ -1779,7 +1782,39 @@ async function loadAccountData(id, silent) {
   trades.forEach(function(t){ var tg=t.discipline_tag||'clean'; if(discCounts2[tg]!==undefined) discCounts2[tg]++; });
   var totalTagged2 = trades.length || 1;
 
+  // ── Progress banner (shows until 30 trades) ──
+  var _progressBanner = '';
+  if (trades.length < 30) {
+    var _tc = trades.length;
+    var _milestones = [
+      { at:1,  label:'Primer trade',       unlock:'Diario activo' },
+      { at:5,  label:'5 trades',           unlock:'Emoción dominante visible' },
+      { at:10, label:'10 trades',          unlock:'Coach IA detecta tu error principal' },
+      { at:20, label:'20 trades',          unlock:'Análisis psicológico completo' },
+      { at:30, label:'30 trades',          unlock:'Perfil de trader + patrón de horario' },
+    ];
+    var _reached  = _milestones.filter(function(m){ return _tc >= m.at; });
+    var _next     = _milestones.find(function(m){ return _tc < m.at; });
+    var _pct      = _next ? Math.round(_tc / _next.at * 100) : 100;
+    var _lastDone = _reached.length ? _reached[_reached.length-1] : null;
+
+    _progressBanner = '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 16px">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+      + '<span style="font-size:10px;font-weight:700;color:var(--text)">&#9672; Tu progreso de insights</span>'
+      + '<span style="font-size:10px;font-weight:800;color:var(--amber)">' + _tc + ' / 30 trades</span>'
+      + '</div>'
+      + '<div style="height:5px;background:var(--surface);border-radius:3px;overflow:hidden;margin-bottom:8px">'
+      + '<div style="height:100%;width:' + Math.round(_tc/30*100) + '%;background:var(--amber);border-radius:3px;transition:width .5s"></div>'
+      + '</div>'
+      + '<div style="display:flex;align-items:center;justify-content:space-between">'
+      + (_lastDone ? '<span style="font-size:9px;color:var(--green)">&#10003; ' + _lastDone.unlock + '</span>' : '<span style="font-size:9px;color:var(--text3)">Registra tu primer trade</span>')
+      + (_next ? '<span style="font-size:9px;color:var(--text3)">Siguiente: <strong style="color:var(--amber)">' + _next.label + '</strong> — ' + _next.unlock + '</span>' : '<span style="font-size:9px;color:var(--green)">&#10003; Todos los insights desbloqueados</span>')
+      + '</div>'
+      + '</div>';
+  }
+
   el.innerHTML = '<div class="fade-in" style="padding:16px;display:flex;flex-direction:column;gap:12px">' +
+  _progressBanner +
 
   // ── ROW 0: Mental Score banner ──
   '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px 24px;display:flex;align-items:center;gap:24px">' +
