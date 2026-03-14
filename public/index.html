@@ -213,7 +213,7 @@ body {
   transition: border-color .15s, transform .15s;
 }
 .metric:hover { border-color: var(--border2); transform: translateY(-1px); }
-.m-label { font-family: 'Geist Mono', monospace; font-size: 9px; color: var(--text3); letter-spacing: .5px; margin-bottom: 6px; text-transform: uppercase; }
+.m-label { font-family: 'Geist Mono', monospace; font-size: 9px; color: var(--text); font-weight: 700; letter-spacing: .5px; margin-bottom: 6px; text-transform: uppercase; }
 .m-val { font-size: 20px; font-weight: 700; line-height: 1; }
 .m-val.pos { color: var(--green); } .m-val.neg { color: var(--red); } .m-val.neutral { color: var(--text); } .m-val.amber { color: var(--amber); }
 .m-note { font-family: 'Geist Mono', monospace; font-size: 9px; color: var(--text3); margin-top: 4px; }
@@ -253,7 +253,7 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
 /* ── CALENDAR ── */
 .cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 3px; padding: 14px; overflow: visible; }
 .cal-hdr { display: grid; grid-template-columns: repeat(7,1fr); gap: 3px; padding: 10px 14px 0; }
-.cal-hdr-day { font-family: 'Geist Mono', monospace; font-size: 8px; color: var(--text3); text-align: center; letter-spacing: .5px; }
+.cal-hdr-day { font-family: 'Geist Mono', monospace; font-size: 8px; color: var(--text); font-weight: 700; text-align: center; letter-spacing: .5px; }
 .cal-cell { aspect-ratio: 1; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: all .15s; border: 1px solid transparent; position: relative; overflow: visible; }
 .cal-cell:hover { filter: brightness(1.2); transform: scale(1.06); z-index: 2; box-shadow: 0 4px 12px rgba(0,0,0,.4); }
 .cal-cell.win  { background: var(--green-bg); border-color: var(--green-bd); }
@@ -2027,7 +2027,7 @@ async function loadAccountData(id, silent) {
     var _pt = _wr>=60&&_cp>=70?'Disciplinado':_wr>=60&&_cp<70?'Alta WR, baja disciplina':_wr<40&&_cp>=70?'Disciplinado, baja WR':'En desarrollo';
     var _pc = _wr>=60&&_cp>=70?'var(--green)':_wr>=40?'var(--amber)':'var(--red)';
     return '<div style="flex-shrink:0;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;min-width:160px">'
-      + '<div style="font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px">Perfil</div>'
+      + '<div style="font-size:8px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px">Perfil</div>'
       + '<div style="font-size:11px;font-weight:700;color:'+_pc+';margin-bottom:8px">'+_pt+'</div>'
       + '<div style="display:flex;flex-direction:column;gap:3px">'
       + '<div style="display:flex;justify-content:space-between;gap:12px"><span style="font-size:9px;color:var(--text3)">Win Rate</span><span style="font-size:9px;font-weight:600;color:'+(_wr>=60?'var(--green)':_wr>=40?'var(--amber)':'var(--red)')+'">'+_wr+'%</span></div>'
@@ -4415,7 +4415,7 @@ function renderCalendarFull(year, month, trades) {
     '</div></div>'+
     '<div style="padding:16px">'+
     '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px">'+
-    ['MON','TUE','WED','THU','FRI','SAT','SUN'].map(function(d){return '<div style="font-family:Geist Mono,monospace;font-size:9px;color:var(--text3);text-align:center">'+d+'</div>';}).join('')+
+    ['MON','TUE','WED','THU','FRI','SAT','SUN'].map(function(d){return '<div style="font-family:Geist Mono,monospace;font-size:9px;color:var(--text);font-weight:700;text-align:center">'+d+'</div>';}).join('')+
     '</div>'+
     '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">'+cells+'</div></div></div>'+
     '<div class="panel" id="day-trades-panel" style="margin-top:12px;display:none"></div>';
@@ -5626,7 +5626,7 @@ function buildMindView(trades) {
 
     function _mini(label, score, color, sub) {
       return '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:18px;text-align:center">'
-        + '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">'+label+'</div>'
+        + '<div style="font-size:9px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">'+label+'</div>'
         + '<div style="font-size:42px;font-weight:800;color:'+color+';line-height:1;letter-spacing:-1px">'+score+'</div>'
         + '<div style="font-size:9px;color:var(--text3);margin-top:8px">'+sub+'</div>'
         + '</div>';
@@ -7466,7 +7466,7 @@ function renderMentalScorePanel(allTrades, period) {
     }
 
     return '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:16px">'
-      +'<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">'+label+'</div>'
+      +'<div style="font-size:9px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">'+label+'</div>'
       +'<div style="display:flex;align-items:flex-end;gap:8px;margin-bottom:4px">'
       +'<div style="font-size:38px;font-weight:800;color:'+data.color+';line-height:1;letter-spacing:-2px">'+data.avg+'</div>'
       +'<div style="font-size:11px;color:'+trendColor+';font-weight:700;margin-bottom:6px">'+trendArrow+' '+(Math.abs(data.trend)||'—')+'</div>'
@@ -7512,7 +7512,7 @@ function renderPsychProfilePanel(trades) {
   var cleanCount = trades.filter(function(t){ return !t.discipline_tag || t.discipline_tag==='clean'; }).length;
   var cleanPct = Math.round(cleanCount/trades.length*100);
 
-  var tagBars = '<div style="font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Errores de disciplina</div>';
+  var tagBars = '<div style="font-size:8px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Errores de disciplina</div>';
   if (Object.keys(profile.tagBreakdown).length === 0) {
     tagBars += '<div style="font-size:10px;color:var(--green)">✓ Sin errores registrados</div>';
   } else {
@@ -7564,7 +7564,7 @@ function renderPsychProfilePanel(trades) {
     // Row 2: discipline + insights
     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
     +'<div>'+tagBars+'</div>'
-    +'<div><div style="font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Insights</div>'+insightHtml+'</div>'
+    +'<div><div style="font-size:8px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Insights</div>'+insightHtml+'</div>'
     +'</div>'
     +psychCoachBtn
     +psychAnalysisHtml
