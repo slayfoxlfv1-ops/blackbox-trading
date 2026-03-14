@@ -621,6 +621,8 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let currentUser = null, accounts = [], currentAccountId = null, currentTrades = null, currentChecklistSessions = [], currentMoodSessions = [], currentView = 'dashboard', authTab = 'login', editingTradeId = null;
 let _tradesLoadedForAccount = null; // tracks which account trades are loaded for
 let tlFilters = { date:'', ticker:'', result:'all' };
+let tlPage = 1;
+const TL_PAGE_SIZE = 15;
 let repFilters = { period:'month', result:'all', ticker:'', dateFrom:'', dateTo:'' };
 let coachAnalysis = null, coachLoading = false;
 
@@ -1315,10 +1317,21 @@ async function loadAccountData(id, silent) {
   try {
     var moodRaw = bbStore.get('mood_today_' + id);
     if (moodRaw) todayMood = JSON.parse(moodRaw);
-    // Only valid if from today
     var todayStr2 = new Date().toISOString().slice(0,10);
     if (todayMood && todayMood.date !== todayStr2) todayMood = null;
   } catch(e) {}
+  // ── Fallback Color Day for manual users: derive from today's P&L ──
+  if (!todayMood) {
+    var _todayKey2 = new Date().toISOString().slice(0,10);
+    var _todayTrades2 = trades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(_todayKey2); });
+    if (_todayTrades2.length >= 1) {
+      var _todayPnl2 = _todayTrades2.reduce(function(s,t){ return s+(t.pnl||0); }, 0);
+      var _avgWin2   = trades.filter(function(t){ return (t.pnl||0)>0; });
+      var _avgWinVal = _avgWin2.length ? _avgWin2.reduce(function(s,t){return s+(t.pnl||0);},0)/_avgWin2.length : 100;
+      var _syntheticLevel = _todayPnl2 > _avgWinVal*0.3 ? 'green' : _todayPnl2 >= -_avgWinVal*0.3 ? 'yellow' : 'red';
+      todayMood = { date: _todayKey2, level: _syntheticLevel, synthetic: true, score: _todayPnl2, answers: {} };
+    }
+  }
   var pnlSign = netPnl>=0 ? '+' : '-';
   var pnlCls  = netPnl>0?'pos':netPnl<0?'neg':'neutral';
 
@@ -1673,12 +1686,30 @@ async function loadAccountData(id, silent) {
       '⚡ Sin mood check activo, tu gestión emocional es ciega.'
     ]
   };
-  var recos = colorDayRecos[moodLevel3] || colorDayRecos[null];
+  var colorDayRecosSynthetic = {
+    green: [
+      '✅ Día rentable — vas bien, mantén la disciplina.',
+      '🎯 No sobreoperes por exceso de confianza al ir ganando.',
+      '⚡ Protege las ganancias — ajusta stops si es necesario.'
+    ],
+    yellow: [
+      '⚠️ Día en equilibrio — sé selectivo con los siguientes trades.',
+      '📋 Un trade sólido puede definir el día.',
+      '🛑 Si llegas a 2 pérdidas más, considera parar.'
+    ],
+    red: [
+      '🔴 Día en pérdidas — evalúa si seguir operando.',
+      '📵 Reduce el tamaño al mínimo para recuperar confianza.',
+      '🧘 Analiza qué salió mal antes de volver a entrar.'
+    ]
+  };
+  var recos = (_isSynthetic && moodLevel3 ? colorDayRecosSynthetic[moodLevel3] : null) || colorDayRecos[moodLevel3] || colorDayRecos[null];
   var dayColor   = moodLevel3==='green'?'var(--green)':moodLevel3==='yellow'?'var(--amber)':moodLevel3==='red'?'var(--red)':'var(--text3)';
   var dayBg      = moodLevel3==='green'?'rgba(90,158,114,0.08)':moodLevel3==='yellow'?'rgba(158,128,80,0.08)':moodLevel3==='red'?'rgba(158,90,90,0.08)':'var(--surface)';
   var dayBorder  = moodLevel3==='green'?'rgba(90,158,114,0.3)':moodLevel3==='yellow'?'rgba(158,128,80,0.3)':moodLevel3==='red'?'rgba(158,90,90,0.3)':'var(--border)';
   var dayEmoji   = moodLevel3==='green'?'🟢':moodLevel3==='yellow'?'🟡':moodLevel3==='red'?'🔴':'⚪';
-  var dayLabel   = moodLevel3==='green'?'GREEN DAY':moodLevel3==='yellow'?'YELLOW DAY':moodLevel3==='red'?'RED DAY':'SIN MOOD CHECK';
+  var _isSynthetic = todayMood && todayMood.synthetic;
+  var dayLabel   = moodLevel3==='green'?(_isSynthetic?'GREEN DAY ↑':'GREEN DAY'):moodLevel3==='yellow'?(_isSynthetic?'YELLOW DAY ~':'YELLOW DAY'):moodLevel3==='red'?(_isSynthetic?'RED DAY ↓':'RED DAY'):'SIN MOOD CHECK';
 
   // Checklist status — same logic as Reglas: read directly from bbStore (always current)
   var _clItems = []; try { _clItems = JSON.parse(bbStore.get('checklist_'+currentAccountId)||'[]'); } catch(e) {}
@@ -3886,6 +3917,7 @@ function renderTradesView() {
 
 function switchTradesTab(tab) {
   _tradesActiveTab = tab;
+  tlPage = 1;
   renderTradesView();
 }
 
@@ -3917,7 +3949,15 @@ function renderTradeLogHTML(trades) {
     return true;
   });
 
-  var rows = filtered.map(function(t) {
+  // Pagination
+  var totalFiltered = filtered.length;
+  var totalPages = Math.max(1, Math.ceil(totalFiltered / TL_PAGE_SIZE));
+  if (tlPage > totalPages) tlPage = totalPages;
+  if (tlPage < 1) tlPage = 1;
+  var pageStart = (tlPage - 1) * TL_PAGE_SIZE;
+  var paginated = filtered.slice(pageStart, pageStart + TL_PAGE_SIZE);
+
+  var rows = paginated.map(function(t) {
     var pnl = t.pnl||0;
     var pnlDisp = (pnl>=0?'+':'-')+'$'+Math.abs(pnl).toLocaleString();
     var pnlCls  = pnl>=0?'pos':'neg';
@@ -3965,22 +4005,44 @@ function renderTradeLogHTML(trades) {
       '</tr>';
   }).join('');
 
+  // Build pagination controls
+  var paginationHtml = '';
+  if (totalPages > 1) {
+    var btns = '';
+    // Prev
+    btns += '<button onclick="tlPage=Math.max(1,tlPage-1);renderTradesView()" style="padding:4px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text3);font-size:11px;cursor:pointer'+(tlPage===1?';opacity:.4;pointer-events:none':'')+'">&lsaquo;</button>';
+    // Page numbers (show max 5 centered around current)
+    var pStart = Math.max(1, tlPage-2);
+    var pEnd   = Math.min(totalPages, pStart+4);
+    if (pEnd-pStart < 4) pStart = Math.max(1, pEnd-4);
+    for (var _p=pStart; _p<=pEnd; _p++) {
+      var isActive = _p === tlPage;
+      btns += '<button onclick="tlPage='+_p+';renderTradesView()" style="padding:4px 10px;background:'+(isActive?'var(--green)':'var(--surface2)')+';border:1px solid '+(isActive?'var(--green)':'var(--border)')+';border-radius:5px;color:'+(isActive?'#fff':'var(--text3)')+';font-size:11px;cursor:pointer">'+_p+'</button>';
+    }
+    // Next
+    btns += '<button onclick="tlPage=Math.min(totalPages,tlPage+1);renderTradesView()" style="padding:4px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text3);font-size:11px;cursor:pointer'+(tlPage===totalPages?';opacity:.4;pointer-events:none':'')+'">&rsaquo;</button>';
+    paginationHtml = '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 18px;border-top:1px solid var(--border)">'
+      + '<span style="font-size:10px;color:var(--text3)">'+(pageStart+1)+' – '+Math.min(pageStart+TL_PAGE_SIZE, totalFiltered)+' de '+totalFiltered+' trades</span>'
+      + '<div style="display:flex;gap:4px">'+btns+'</div>'
+      + '</div>';
+  }
+
   return '<div class="panel fade-in">'+
-    '<div class="panel-head"><span class="panel-title">Trade Log</span><span class="panel-cap">'+filtered.length+' trades</span></div>'+
+    '<div class="panel-head"><span class="panel-title">Trade Log</span><span class="panel-cap">'+totalFiltered+' trades</span></div>'+
     '<div style="display:flex;gap:8px;padding:12px 18px;border-bottom:1px solid var(--border);flex-wrap:wrap">'+
-    '<input class="form-input" style="width:130px;padding:6px 10px" type="date" value="'+tlFilters.date+'" onchange="tlFilters.date=this.value;renderTradesView()">'+
-    '<input class="form-input" style="width:120px;padding:6px 10px" type="text" placeholder="Ticker..." value="'+tlFilters.ticker+'" oninput="tlFilters.ticker=this.value;renderTradesView()">'+
-    '<select class="form-select" style="width:120px;padding:6px 10px" onchange="tlFilters.result=this.value;renderTradesView()">'+
+    '<input class="form-input" style="width:130px;padding:6px 10px" type="date" value="'+tlFilters.date+'" onchange="tlFilters={date:this.value,ticker:tlFilters.ticker,result:tlFilters.result};tlPage=1;renderTradesView()">'+
+    '<input class="form-input" style="width:120px;padding:6px 10px" type="text" placeholder="Ticker..." value="'+tlFilters.ticker+'" oninput="tlFilters={date:tlFilters.date,ticker:this.value,result:tlFilters.result};tlPage=1;renderTradesView()">'+
+    '<select class="form-select" style="width:120px;padding:6px 10px" onchange="tlFilters={date:tlFilters.date,ticker:tlFilters.ticker,result:this.value};tlPage=1;renderTradesView()">'+
     '<option value="all"'+(tlFilters.result==='all'?' selected':'')+'>All trades</option>'+
     '<option value="win"'+(tlFilters.result==='win'?' selected':'')+'>Winners</option>'+
     '<option value="loss"'+(tlFilters.result==='loss'?' selected':'')+'>Losers</option>'+
     '</select>'+
-    '<button class="btn btn-ghost" style="font-size:11px" onclick="tlFilters={date:\'\',ticker:\'\',result:\'all\'};renderTradesView()">Clear</button>'+
+    '<button class="btn btn-ghost" style="font-size:11px" onclick="tlFilters={date:\'\',ticker:\'\',result:\'all\'};tlPage=1;renderTradesView()">Clear</button>'+
     '</div>'+
     '<div class="table-scroll"><table>'+
     '<thead><tr><th>Ticker</th><th>Side</th><th>Entry</th><th>Exit</th><th>Qty</th><th>P&L</th><th>R:R</th><th>Discipline</th><th>Notes</th><th>Time</th><th></th></tr></thead>'+
-    '<tbody>'+(rows||'<tr><td colspan="11" style="text-align:center;padding:24px;color:var(--text3);font-size:11px">No hay trades registrados</td></tr>')+'</tbody>'+
-    '</table></div></div>';
+    '<tbody>'+(rows.length?rows:'<tr><td colspan="11" style="text-align:center;padding:24px;color:var(--text3);font-size:11px">No hay trades registrados</td></tr>')+'</tbody>'+
+    '</table></div>'+paginationHtml+'</div>';
 }
 
 // CALENDAR VIEW
