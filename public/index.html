@@ -2170,16 +2170,31 @@ function calcReadinessScore(todayMood, clSessions, trades) {
   var factors = [];
   var today = new Date().toISOString().slice(0,10);
 
-  // Mood (40%)
-  if (todayMood && todayMood.date === today) {
-    var moodPts = todayMood.level==='green'?40:todayMood.level==='yellow'?20:0;
-    score += moodPts - 20; // relative to base
-    var moodCol = todayMood.level==='green'?'#5a9e72':todayMood.level==='yellow'?'#9e8050':'#9e5a5a';
-    var moodBg  = todayMood.level==='green'?'var(--green-bg)':todayMood.level==='yellow'?'var(--amber-bg)':'var(--red-bg)';
-    var moodBd  = todayMood.level==='green'?'var(--green-bd)':'#3d3020';
-    factors.push({label: todayMood.level==='green'?'😴 Buen descanso':todayMood.level==='yellow'?'😐 Descanso regular':'😫 Mal descanso', color:moodCol, bg:moodBg, border:moodBd});
+  // Mood (40%) — use real check, synthetic fallback, or emotion-derived
+  var _readMoodLevel = (todayMood && (todayMood.date === today || todayMood.synthetic)) ? todayMood.level : null;
+  if (!_readMoodLevel) {
+    // Derive from today's trade emotions
+    var _rTrades = (trades||[]).filter(function(t){ return t.entry_time && t.entry_time.startsWith(today) && t.emotion; });
+    if (_rTrades.length >= 1) {
+      var _rAvg = _rTrades.reduce(function(s,t){ return s+(EMOTION_PTS[t.emotion]||50); },0)/_rTrades.length;
+      _readMoodLevel = _rAvg >= 70 ? 'green' : _rAvg >= 45 ? 'yellow' : 'red';
+    }
+  }
+  if (_readMoodLevel) {
+    var moodPts2 = _readMoodLevel==='green'?40:_readMoodLevel==='yellow'?20:0;
+    score += moodPts2 - 20;
+    var moodCol = _readMoodLevel==='green'?'#5a9e72':_readMoodLevel==='yellow'?'#9e8050':'#9e5a5a';
+    var moodBg  = _readMoodLevel==='green'?'var(--green-bg)':_readMoodLevel==='yellow'?'var(--amber-bg)':'var(--red-bg)';
+    var moodBd  = _readMoodLevel==='green'?'var(--green-bd)':'#3d3020';
+    var _isSyn  = todayMood && todayMood.synthetic;
+    var moodLbl = _readMoodLevel==='green'
+      ? (_isSyn ? '📈 Día rentable' : '😴 Buen descanso')
+      : _readMoodLevel==='yellow'
+        ? (_isSyn ? '↔ Día en equilibrio' : '😐 Descanso regular')
+        : (_isSyn ? '📉 Día en pérdidas' : '😫 Mal descanso');
+    factors.push({label: moodLbl, color:moodCol, bg:moodBg, border:moodBd});
   } else {
-    factors.push({label:'❓ Sin mood check', color:'var(--text3)', bg:'var(--surface2)', border:'var(--border)'});
+    factors.push({label:'❓ Sin datos de hoy', color:'var(--text3)', bg:'var(--surface2)', border:'var(--border)'});
   }
 
   // Checklist (25%) — did user complete checklist today?
@@ -3055,7 +3070,7 @@ function checkRuleViolations(rulesObj, trades) {
 
   // ── Rule 7: No trade on Red Day ──
   if (r.redday && r.redday.active) {
-    var todayMoodSess = (currentMoodSessions||[]).find(function(s){ return s.date === todayStr; });
+    var todayMoodSess = (currentMoodSessions||[]).find(function(s){ return (s.session_date||s.date) === todayStr; });
     if (todayTrades.length > 0 && todayMoodSess && todayMoodSess.level === 'red') {
       violations.push({ rule:{id:'redday', label:'No operar en Red Day'}, detail: 'Operaste siendo un Red Day (mood check rojo)' });
     }
@@ -3217,15 +3232,31 @@ function calcDailyMindScore(dateStr) {
   var today      = dateStr || new Date().toISOString().slice(0,10);
   var allTrades  = currentTrades || [];
   var dayTrades  = allTrades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(today); });
-  var moodSess   = (currentMoodSessions || []).find(function(s){ return s.date === today; });
+  var moodSess   = (currentMoodSessions || []).find(function(s){ return (s.session_date||s.date) === today; });
 
   // ── Sub 1: Mood check (40pts) ──
   var moodPts;
   var moodLevel = moodSess ? moodSess.level : null;
-  if      (moodLevel === 'green')  moodPts = 40;
+  if (moodLevel === 'green')       moodPts = 40;
   else if (moodLevel === 'yellow') moodPts = 25;
   else if (moodLevel === 'red')    moodPts = 10;
-  else                             moodPts = 20; // no check = neutral
+  else {
+    // No real mood check — derive from trade emotions of that day
+    // Positive emotions (calm, confident) → high pts; negative → low; none → neutral
+    var _emoTrades = dayTrades.filter(function(t){ return t.emotion; });
+    if (_emoTrades.length >= 1) {
+      var _avgEmoPts = _emoTrades.reduce(function(s,t){
+        return s + (EMOTION_PTS[t.emotion] !== undefined ? EMOTION_PTS[t.emotion] : 50);
+      }, 0) / _emoTrades.length;
+      // Map 0-100 emotion scale to 0-40 mood pts
+      // calm(95)→38, confident(65)→26, neutral(85)→34, anxious(45)→18, frustrated(30)→12
+      moodPts = Math.round(_avgEmoPts / 100 * 40);
+    } else {
+      moodPts = 20; // no data = neutral
+    }
+    // Synthetic mood level for display
+    moodLevel = moodPts >= 32 ? 'green' : moodPts >= 18 ? 'yellow' : 'red';
+  }
 
   // ── Sub 2: Emotion average (40pts) ──
   var emotionPts;
@@ -3617,7 +3648,7 @@ function renderRulesView() {
 
   // ── Rule 7: No Red Day ──
   var r7 = rules.redday || {};
-  var tMd = (currentMoodSessions||[]).find(function(s){return s.date===today;});
+  var tMd = (currentMoodSessions||[]).find(function(s){return (s.session_date||s.date)===today;});
   var rdClr = tMd?(tMd.level==='green'?'var(--green)':tMd.level==='yellow'?'var(--amber)':'var(--red)'):'var(--text3)';
   var rdTxt = tMd?(tMd.level==='green'?'Green Day — puedes operar':tMd.level==='yellow'?'Yellow Day — opera con cuidado':'Red Day — NO deberias operar'):'Sin mood check hoy';
   var rd7 = '<div style="display:flex;align-items:center;gap:8px">'
@@ -4586,7 +4617,7 @@ function renderRulesTab(el) {
 
   // Rule 7
   var r7 = rules.redday || {};
-  var tMd = (currentMoodSessions||[]).find(function(s){return s.date===today;});
+  var tMd = (currentMoodSessions||[]).find(function(s){return (s.session_date||s.date)===today;});
   var rdClr = tMd?(tMd.level==='green'?'var(--green)':tMd.level==='yellow'?'var(--amber)':'var(--red)'):'var(--text3)';
   var rdTxt = tMd?(tMd.level==='green'?'Green Day — puedes operar':tMd.level==='yellow'?'Yellow Day — opera con cuidado':'Red Day — NO deberias operar'):'Sin mood check hoy';
   var rd7 = '<div style="display:flex;align-items:center;gap:8px">'
