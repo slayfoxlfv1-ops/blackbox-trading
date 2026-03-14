@@ -5268,37 +5268,91 @@ function renderOperativaTab(el) {
 var _insightsActiveTab = 'psico'; // 'psico' | 'coach'
 
 function renderInsightsView(subTabIntent) {
-  if (subTabIntent === 'coach') _insightsActiveTab = 'coach';
   var el = document.getElementById('main-content');
-  var tabs = [
-    { id: 'psico', label: '◈ Psico Score' },
-    { id: 'coach', label: '✦ Coach IA'    },
-  ];
-  var tabBar = '<div style="display:flex;gap:2px;padding:14px 16px 0;border-bottom:1px solid var(--border);background:var(--surface);margin-bottom:0">'
-    + tabs.map(function(t) {
-        var active = _insightsActiveTab === t.id;
-        return '<div onclick="switchInsightsTab(\''+t.id+'\')" style="padding:7px 16px;font-size:11px;font-weight:600;cursor:pointer;border-radius:6px 6px 0 0;letter-spacing:.3px;transition:all .15s;'
-          + (active
-              ? 'color:var(--text);background:var(--surface2);border:1px solid var(--border);border-bottom:1px solid var(--surface2);margin-bottom:-1px'
-              : 'color:var(--text3);background:transparent;border:1px solid transparent')
-          + '">' + t.label + '</div>';
-      }).join('')
-    + '</div>';
-  el.innerHTML = tabBar + '<div id="insights-tab-content"></div>';
-  _renderInsightsTabContent();
+  el.innerHTML = '<div id="insights-tab-content"></div>';
+  renderRendimientoView();
 }
 
 function switchInsightsTab(tab) {
-  _insightsActiveTab = tab;
   renderInsightsView();
 }
 
 function _renderInsightsTabContent() {
-  if (_insightsActiveTab === 'psico') renderReports();
-  else if (_insightsActiveTab === 'coach') renderCoachView();
+  renderRendimientoView();
 }
 
-// COACH TAB
+function renderRendimientoView() {
+  var el = getTabEl('insights-tab-content');
+  var trades = currentTrades || [];
+  var out = '<div style="padding:20px;display:flex;flex-direction:column;gap:12px">';
+
+  // ── Weekly summary stats ──
+  var now = new Date();
+  var weekStart = new Date(); weekStart.setDate(weekStart.getDate()-weekStart.getDay()+(weekStart.getDay()===0?-6:1)); weekStart.setHours(0,0,0,0);
+  var monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  var weekTrades  = trades.filter(function(t){ return t.entry_time && new Date(t.entry_time)>=weekStart; });
+  var monthTrades = trades.filter(function(t){ return t.entry_time && new Date(t.entry_time)>=monthStart; });
+
+  var weekPnl   = weekTrades.reduce(function(s,t){ return s+(t.pnl||0); }, 0);
+  var monthPnl  = monthTrades.reduce(function(s,t){ return s+(t.pnl||0); }, 0);
+  var weekWins  = weekTrades.filter(function(t){ return (t.pnl||0)>0; }).length;
+  var monthWins = monthTrades.filter(function(t){ return (t.pnl||0)>0; }).length;
+  var weekWR    = weekTrades.length  ? Math.round(weekWins/weekTrades.length*100)   : null;
+  var monthWR   = monthTrades.length ? Math.round(monthWins/monthTrades.length*100) : null;
+  var weekClean = weekTrades.length  ? Math.round(weekTrades.filter(function(t){ return (t.discipline_tag||'clean')==='clean'; }).length/weekTrades.length*100) : null;
+
+  function fmt(n) { return (n>=0?'+':'')+n.toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}); }
+  function pnlColor(n) { return n>0?'var(--green)':n<0?'var(--red)':'var(--text3)'; }
+
+  // Header metrics grid
+  out += '<div class="panel" style="padding:0;overflow:hidden">';
+  out += '<div class="panel-head"><span class="panel-title">◈ Rendimiento</span><span class="panel-cap">Semana actual · ' + now.toLocaleDateString('es',{month:'long',year:'numeric'}) + '</span></div>';
+  out += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0">';
+  var metrics2 = [
+    { label:'P&L Semana',   val: weekTrades.length  ? fmt(weekPnl)  : '--', color: weekTrades.length  ? pnlColor(weekPnl)  : 'var(--text3)', sub: (weekTrades.length||'0') + ' trades' },
+    { label:'P&L Mes',      val: monthTrades.length ? fmt(monthPnl) : '--', color: monthTrades.length ? pnlColor(monthPnl) : 'var(--text3)', sub: (monthTrades.length||'0') + ' trades' },
+    { label:'Win Rate Semana', val: weekWR!==null ? weekWR+'%' : '--', color: weekWR>=60?'var(--green)':weekWR>=40?'var(--amber)':'var(--red)', sub: weekWR!==null?'':'Sin trades' },
+    { label:'Win Rate Mes',    val: monthWR!==null ? monthWR+'%' : '--', color: monthWR>=60?'var(--green)':monthWR>=40?'var(--amber)':'var(--red)', sub: monthWR!==null?'':'Sin trades' },
+    { label:'Limpios Semana',  val: weekClean!==null ? weekClean+'%' : '--', color: weekClean>=70?'var(--green)':weekClean>=50?'var(--amber)':'var(--red)', sub: 'trades clean' },
+    { label:'Total Trades',    val: trades.length, color: 'var(--text)', sub: 'histórico' },
+  ];
+  metrics2.forEach(function(m, i) {
+    var borderR = (i%3 < 2) ? 'border-right:1px solid var(--border);' : '';
+    var borderB = i < 3 ? 'border-bottom:1px solid var(--border);' : '';
+    out += '<div style="padding:16px 18px;' + borderR + borderB + '">';
+    out += '<div style="font-size:9px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">' + m.label + '</div>';
+    out += '<div style="font-size:24px;font-weight:800;color:' + m.color + ';line-height:1;letter-spacing:-1px">' + m.val + '</div>';
+    out += '<div style="font-size:9px;color:var(--text3);margin-top:4px">' + m.sub + '</div>';
+    out += '</div>';
+  });
+  out += '</div></div>';
+
+  // ── Weekly Coach ──
+  out += '<div class="panel" style="padding:0;overflow:hidden">';
+  out += '<div class="panel-head"><span class="panel-title">✦ Coach Semanal</span><span class="panel-cap" style="color:var(--amber)">Análisis de rendimiento · powered by Claude</span></div>';
+  out += '<div style="padding:18px" id="insights-coach-wrap">';
+  var isFriday = now.getDay() === 5;
+  if (!isFriday) {
+    out += '<div style="background:var(--amber-bg);border:1px solid var(--amber-bd);border-radius:8px;padding:10px 14px;font-size:11px;color:var(--text2);margin-bottom:14px">El Coach semanal se genera automáticamente cada <strong>viernes</strong>. Puedes solicitarlo manualmente abajo.</div>';
+  }
+  out += '<div id="coach-output" style="min-height:60px">';
+  out += coachAnalysis
+    ? '<div style="font-size:12px;color:var(--text2);line-height:1.8;white-space:pre-wrap">'+coachAnalysis+'</div>'
+    : '<div style="font-size:11px;color:var(--text3);text-align:center;padding:20px 0">Sin análisis aún. Haz clic para generar el análisis de la semana.</div>';
+  out += '</div>';
+  out += '<div style="margin-top:14px;display:flex;gap:8px">';
+  out += '<button class="btn btn-solid" id="coach-btn" onclick="generateCoachAnalysis()">' + (coachLoading?'Analizando...':'⚡ Analizar semana') + '</button>';
+  if (coachAnalysis) out += '<button class="btn btn-ghost" onclick="coachAnalysis=null;renderRendimientoView()">Limpiar</button>';
+  out += '</div></div></div>';
+
+  // ── Achievements ──
+  out += renderAchievementsHtml();
+
+  out += '</div>';
+  el.innerHTML = out;
+}
+
+
 function renderCoachView() {
   var el = getTabEl('insights-tab-content');
   el.innerHTML = '<div id="disc-tab-content"></div>';
@@ -5614,37 +5668,29 @@ function buildMindView(trades) {
   html += '</div></div>';
 
   
-  // ── 2: Mind Score Hoy | Semana | Mes ──
-  (function() {
-    var _now = new Date();
-    var _ws = new Date(); _ws.setDate(_ws.getDate()-_ws.getDay()+(_ws.getDay()===0?-6:1)); _ws.setHours(0,0,0,0);
-    var _ms = new Date(_now.getFullYear(), _now.getMonth(), 1);
-    var _wt = trades.filter(function(t){ return t.entry_time && new Date(t.entry_time)>=_ws; });
-    var _mt = trades.filter(function(t){ return t.entry_time && new Date(t.entry_time)>=_ms; });
-    var _wp = calcPeriodMentalScore(_wt);
-    var _mp = calcPeriodMentalScore(_mt);
+  // ── 2: Mind Score Hoy (card rico) + Mental Score Semana/Mes (panel completo) ──
+  html += '<div class="panel" style="padding:20px">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">'
+    + '<div style="font-size:10px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px">Mind Score Hoy</div>'
+    + '<div style="font-size:9px;color:var(--text3)">' + (mindData.hasTrades ? mindData.tradeCount + ' trade' + (mindData.tradeCount!==1?'s':'') + ' hoy' : 'Sin trades hoy') + '</div>'
+    + '</div>'
+    + '<div style="display:flex;align-items:center;gap:20px">'
+    + '<div style="text-align:center;flex-shrink:0">'
+    + '<div style="font-size:52px;font-weight:800;color:'+scoreColor(mindScore)+';line-height:1;letter-spacing:-2px">'+mindScore+'</div>'
+    + '<div style="font-size:10px;color:var(--text3);margin-top:4px">/100</div>'
+    + '</div>'
+    + '<div style="flex:1">'
+    + '<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px">'+mindData.label+'</div>'
+    + '<div style="display:flex;flex-direction:column;gap:7px">'
+    + '<div><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:9px;color:var(--text3)">Mood</span><span style="font-size:9px;color:var(--text2);font-weight:600">'+mindData.moodPts+' / 40</span></div><div style="height:4px;background:var(--surface3);border-radius:2px;overflow:hidden"><div style="height:100%;width:'+Math.round(mindData.moodPts/40*100)+'%;background:'+(mindData.moodPts>=32?'var(--green)':mindData.moodPts>=20?'var(--amber)':'var(--red)')+';border-radius:2px"></div></div></div>'
+    + '<div><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:9px;color:var(--text3)">Emoción trades</span><span style="font-size:9px;color:var(--text2);font-weight:600">'+(mindData.emotionPts!==null?mindData.emotionPts+' / 40':'— / 40')+'</span></div><div style="height:4px;background:var(--surface3);border-radius:2px;overflow:hidden"><div style="height:100%;width:'+(mindData.emotionPts!==null?Math.round(mindData.emotionPts/40*100):0)+'%;background:'+(mindData.emotionPts===null?'var(--border)':mindData.emotionPts>=32?'var(--green)':mindData.emotionPts>=20?'var(--amber)':'var(--red)')+';border-radius:2px"></div></div></div>'
+    + '<div><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:9px;color:var(--text3)">Comportamiento</span><span style="font-size:9px;color:var(--text2);font-weight:600">'+mindData.behaviorPts+' / 20</span></div><div style="height:4px;background:var(--surface3);border-radius:2px;overflow:hidden"><div style="height:100%;width:'+Math.round(mindData.behaviorPts/20*100)+'%;background:'+(mindData.behaviorPts>=16?'var(--green)':mindData.behaviorPts>=10?'var(--amber)':'var(--red)')+';border-radius:2px"></div></div></div>'
+    + '</div></div></div></div>';
 
-    function _mini(label, score, color, sub) {
-      return '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:18px;text-align:center">'
-        + '<div style="font-size:9px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">'+label+'</div>'
-        + '<div style="font-size:42px;font-weight:800;color:'+color+';line-height:1;letter-spacing:-1px">'+score+'</div>'
-        + '<div style="font-size:9px;color:var(--text3);margin-top:8px">'+sub+'</div>'
-        + '</div>';
-    }
+  // Panel rico: Mental Score Semana + Mes (con sparklines, tendencia, mejor/peor día)
+  html += renderMentalScorePanel(trades);
 
-    var _ws2 = _wp ? _wp.avg : '--';
-    var _ms2 = _mp ? _mp.avg : '--';
-    var _wc  = _wp ? scoreColor(_wp.avg) : 'var(--text3)';
-    var _mc  = _mp ? scoreColor(_mp.avg) : 'var(--text3)';
-
-    html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">';
-    html += _mini('Mind Score Hoy',    mindScore, scoreColor(mindScore), mindData.label);
-    html += _mini('Mind Score Semana', _ws2, _wc, _wp ? _wp.label : 'Sin datos suficientes');
-    html += _mini('Mind Score Mes',    _ms2, _mc, _mp ? _mp.label : 'Sin datos suficientes');
-    html += '</div>';
-  })();
-
-  // ── 3: Perfil Psicológico ──
+    // ── 3: Perfil Psicológico ──
   html += renderPsychProfilePanel(trades);
 
   // ── 4: Disciplina | P&L por tipo | Patrones autosabotaje ──
