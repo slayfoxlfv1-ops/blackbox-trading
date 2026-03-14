@@ -624,6 +624,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let currentUser = null, accounts = [], currentAccountId = null, currentTrades = null, currentChecklistSessions = [], currentMoodSessions = [], currentView = 'dashboard', authTab = 'login', editingTradeId = null;
 let _tradesLoadedForAccount = null; // tracks which account trades are loaded for
 let tlFilters = { date:'', ticker:'', result:'all' };
+var _achToastedThisSession = {}; // tracks badge IDs toasted in current page session
 let tlPage = 1;
 const TL_PAGE_SIZE = 15;
 let repFilters = { period:'month', result:'all', ticker:'', dateFrom:'', dateTo:'' };
@@ -1519,22 +1520,32 @@ async function loadAccountData(id, silent) {
   var discProg    = calcDisciplineProgress(trades);
   var badges      = calcBadges(trades, currentChecklistSessions);
 
-  // ── Achievement unlock toast — only for genuinely new unlocks, shown once per session ──
-  if (!silent) {
+  // ── Achievement unlock toast ──
+  // Rule: show toast only if badge ID is not in localStorage AND not in session var
+  // This prevents: (a) re-showing after page refresh, (b) re-showing while navigating tabs
+  if (!silent && badges.earned.length) {
     (function() {
-      if (!badges.earned.length) return;
-      var _achKey  = 'seen_ach_' + currentAccountId;
-      var _seenRaw = bbStore.get(_achKey);
-      var _seen    = [];
-      try { _seen = _seenRaw ? JSON.parse(_seenRaw) : []; } catch(e) {}
-      var _newUnlocks = badges.earned.filter(function(b){ return _seen.indexOf(b.id) < 0; });
-      if (!_newUnlocks.length) return;
-      // Persist all earned IDs immediately so subsequent loads don't re-show
+      var _achKey = 'seen_ach_' + id; // use local `id` param, not global
+      var _seen   = [];
+      try { _seen = JSON.parse(bbStore.get(_achKey) || '[]'); } catch(e) {}
+
+      // New = not in localStorage AND not already toasted this session
+      var _toShow = badges.earned.filter(function(b) {
+        return _seen.indexOf(b.id) < 0 && !_achToastedThisSession[id + ':' + b.id];
+      });
+
+      if (!_toShow.length) return;
+
+      // Mark ALL earned badges as seen in localStorage immediately
       var _allIds = badges.earned.map(function(b){ return b.id; });
       bbStore.set(_achKey, JSON.stringify(_allIds));
-      // Only toast the truly new ones (not already in _seen)
-      _newUnlocks.slice(0, 3).forEach(function(b, i) {
-        setTimeout(function() { showAchievementToast(b); }, 1000 + i * 2000);
+
+      // Mark the new ones as toasted in session var
+      _toShow.forEach(function(b) { _achToastedThisSession[id + ':' + b.id] = true; });
+
+      // Show toasts
+      _toShow.slice(0, 3).forEach(function(b, i) {
+        setTimeout(function() { showAchievementToast(b); }, 1000 + i * 2200);
       });
     })();
   }
