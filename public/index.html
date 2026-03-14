@@ -2064,7 +2064,7 @@ async function loadAccountData(id, silent) {
       var tagAvg    = tagTrades.reduce(function(s,t){return s+(t.pnl||0);},0)/tagTrades.length;
       var pctWorse  = allAvg !== 0 ? Math.round(Math.abs((tagAvg-allAvg)/Math.abs(allAvg))*100) : 0;
       insights.push({
-        icon:'⚠', color:'var(--red)', bg:'rgba(158,90,90,0.1)', border:'rgba(158,90,90,0.3)',
+        icon:'⚠', color:'var(--red)', bg:'rgba(224,85,85,0.07)', border:'rgba(224,85,85,0.2)',
         label:'Error más frecuente',
         text:'Tu mayor error es <strong>'+tagLabels[worstTag]+'</strong> — '+worstN+' trades'
           +(tagPnl<0?', <strong style="color:var(--red)">'+tagPnlStr+'</strong> de impacto total':'')
@@ -2089,7 +2089,7 @@ async function loadAccountData(id, silent) {
         var bestAvg  = Math.round(hourPnl[bestH]/hourCount[bestH]);
         var worstAvg = Math.round(hourPnl[worstH]/hourCount[worstH]);
         insights.push({
-          icon:'◷', color:'var(--amber)', bg:'rgba(158,128,80,0.1)', border:'rgba(158,128,80,0.3)',
+          icon:'◷', color:'var(--amber)', bg:'rgba(224,152,64,0.07)', border:'rgba(224,152,64,0.2)',
           label:'Patrón de horario',
           text:'Tu mejor hora es <strong>'+fmt12(bestH)+'</strong> (promedio <strong style="color:var(--green)">'+(bestAvg>=0?'+':'')+'$'+Math.abs(bestAvg)+'</strong>). '
             +'Evita operar a las <strong>'+fmt12(worstH)+'</strong> — promedio <strong style="color:var(--red)">'+(worstAvg>=0?'+':'')+'$'+worstAvg+'</strong> por trade.'
@@ -2113,7 +2113,7 @@ async function loadAccountData(id, silent) {
     if (costlyEmo) {
       var ceAvg = Math.round(emoPnl[costlyEmo]/emoCount[costlyEmo]);
       insights.push({
-        icon:'◈', color:'#5a9e9e', bg:'rgba(90,158,158,0.08)', border:'rgba(90,158,158,0.3)',
+        icon:'◈', color:'var(--teal)', bg:'rgba(62,207,207,0.07)', border:'rgba(62,207,207,0.2)',
         label:'Emoción más costosa',
         text:'Cuando operas <strong>'+emoLabels[costlyEmo]+'</strong> tu promedio es <strong style="color:var(--red)">$'+ceAvg+'</strong> por trade ('+emoCount[costlyEmo]+' trades). Considera pausar cuando notes esa emoción.'
       });
@@ -2130,11 +2130,11 @@ async function loadAccountData(id, silent) {
     }
     if (streak2 >= 3) {
       insights.push(streakDir==='win' ? {
-        icon:'↑', color:'var(--green)', bg:'rgba(90,158,114,0.1)', border:'rgba(90,158,114,0.3)',
+        icon:'↑', color:'var(--green)', bg:'rgba(61,186,114,0.07)', border:'rgba(61,186,114,0.2)',
         label:'Racha ganadora',
         text:'Llevas <strong>'+streak2+' trades ganadores consecutivos.</strong> Momento de alta confianza — mantén la disciplina y no sobredimensiones posiciones.'
       } : {
-        icon:'↓', color:'var(--red)', bg:'rgba(158,90,90,0.1)', border:'rgba(158,90,90,0.3)',
+        icon:'↓', color:'var(--red)', bg:'rgba(224,85,85,0.07)', border:'rgba(224,85,85,0.2)',
         label:'Racha perdedora',
         text:'Llevas <strong>'+streak2+' pérdidas consecutivas.</strong> La estadística muestra que los revenge trades empeoran el resultado. Considera tomar un descanso.'
       });
@@ -2144,18 +2144,20 @@ async function loadAccountData(id, silent) {
 
     var out = '<div class="panel fade-in" style="padding:0;overflow:hidden">';
     out += '<div style="padding:12px 18px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">';
-    out += '<span style="font-size:10px;font-weight:700;color:var(--text);letter-spacing:.3px">&#9672; Insights — Lo que dicen tus datos</span>';
+    out += '<span style="font-size:10px;font-weight:700;color:var(--teal);letter-spacing:.3px">&#9672; Insights — Lo que dicen tus datos</span>';
     out += '<span style="font-size:9px;color:var(--text3)">'+trades.length+' trades analizados</span>';
     out += '</div>';
     out += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">';
     insights.forEach(function(ins, i2){
       var borderR = i2 < insights.length-1 ? 'border-right:1px solid var(--border);' : '';
-      out += '<div style="padding:14px 18px;'+borderR+'background:'+ins.bg+';border-bottom:1px solid var(--border)">';
-      out += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">';
-      out += '<span style="font-size:11px;color:'+ins.color+';font-weight:700">'+ins.icon+'</span>';
-      out += '<span style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px">'+ins.label+'</span>';
+      // Replace generic <strong> (white/bold) with colored ones matching ins.color
+      var coloredText = ins.text.replace(/<strong>/g, '<strong style="color:'+ins.color+'">');
+      out += '<div style="padding:14px 18px;'+borderR+'background:'+ins.bg+';border-bottom:1px solid var(--border);border-left:3px solid '+ins.color+'">';
+      out += '<div style="display:flex;align-items:center;gap:7px;margin-bottom:7px">';
+      out += '<span style="font-size:12px;color:'+ins.color+';font-weight:800">'+ins.icon+'</span>';
+      out += '<span style="font-size:9px;color:'+ins.color+';text-transform:uppercase;letter-spacing:.9px;font-weight:700;opacity:.85">'+ins.label+'</span>';
       out += '</div>';
-      out += '<div style="font-size:11px;color:var(--text2);line-height:1.65">'+ins.text+'</div>';
+      out += '<div style="font-size:11px;color:var(--text2);line-height:1.7">'+coloredText+'</div>';
       out += '</div>';
     });
     out += '</div></div>';
