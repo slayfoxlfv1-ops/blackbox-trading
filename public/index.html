@@ -492,11 +492,11 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
 <!-- APP -->
 <div class="layout" id="app" style="display:none">
   <aside class="sidebar">
-    <div class="logo" style="display:flex;align-items:center;gap:10px;padding:16px 16px 12px">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="28" height="28" style="flex-shrink:0"><rect width="120" height="120" rx="26" fill="#0d1117"/><text x="60" y="95" text-anchor="middle" font-family="Georgia,serif" font-size="82" font-weight="700" fill="#ffffff">P</text><circle cx="103" cy="14" r="12" fill="#3ecfcf"/></svg>
-      <div>
-        <div class="logo-name">pattro</div>
-        <div class="logo-tag">TRADING JOURNAL</div>
+    <div class="logo" onclick="navigateTo('dashboard')" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:14px 16px 12px;transition:opacity .15s" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="32" height="32" style="flex-shrink:0"><text x="60" y="95" text-anchor="middle" font-family="Georgia,serif" font-size="82" font-weight="700" fill="#eeeef0">P</text><circle cx="103" cy="14" r="12" fill="#3ecfcf"/></svg>
+      <div style="display:flex;flex-direction:column;gap:1px">
+        <div class="logo-name" style="font-size:15px;font-weight:700;letter-spacing:-.3px;color:var(--text);line-height:1.2">pattro</div>
+        <div class="logo-tag" style="font-size:8px;color:var(--teal);letter-spacing:1.8px;opacity:.7;line-height:1.2">TRADING JOURNAL</div>
       </div>
     </div>
     <div class="section">
