@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BlackBoss - Trading Journal</title>
+<title>Pattro — Trading Journal</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230d1117'/><text x='16' y='25' text-anchor='middle' font-family='Georgia,serif' font-size='22' font-weight='700' fill='white'>P</text><circle cx='27' cy='4' r='4' fill='%233ecfcf'/></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -463,7 +464,7 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
 <!-- AUTH -->
 <div id="auth-screen" class="auth-screen">
   <div class="auth-box">
-    <div class="auth-logo">BlackBoss</div>
+    <div class="auth-logo" style="display:flex;align-items:center;gap:10px;margin-bottom:4px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="28" height="28" style="flex-shrink:0"><rect width="120" height="120" rx="26" fill="#0d1117"/><text x="60" y="95" text-anchor="middle" font-family="Georgia,serif" font-size="82" font-weight="700" fill="#ffffff">P</text><circle cx="103" cy="14" r="12" fill="#3ecfcf"/></svg><span>pattro</span></div>
     <div class="auth-sub">TRADING JOURNAL</div>
     <div class="auth-tabs">
       <button class="auth-tab active" onclick="setTab('login')">Sign In</button>
@@ -491,9 +492,12 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
 <!-- APP -->
 <div class="layout" id="app" style="display:none">
   <aside class="sidebar">
-    <div class="logo">
-      <div class="logo-name">BlackBoss</div>
-      <div class="logo-tag">TRADING JOURNAL</div>
+    <div class="logo" style="display:flex;align-items:center;gap:10px;padding:16px 16px 12px">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="28" height="28" style="flex-shrink:0"><rect width="120" height="120" rx="26" fill="#0d1117"/><text x="60" y="95" text-anchor="middle" font-family="Georgia,serif" font-size="82" font-weight="700" fill="#ffffff">P</text><circle cx="103" cy="14" r="12" fill="#3ecfcf"/></svg>
+      <div>
+        <div class="logo-name">pattro</div>
+        <div class="logo-tag">TRADING JOURNAL</div>
+      </div>
     </div>
     <div class="section">
       <div class="section-title">Accounts</div>
@@ -529,7 +533,7 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
     <div class="content" id="main-content">
       <div class="empty-state">
         <div class="empty-icon">&#9672;</div>
-        <div class="empty-title">Welcome to BlackBoss</div>
+        <div class="empty-title">Welcome to Pattro</div>
         <div class="empty-msg">Add your first trading account to get started.</div>
         <button class="btn btn-solid" onclick="openModal()">+ Add account</button>
       </div>
@@ -2920,7 +2924,7 @@ function buildOnboardingScreen(acc) {
     + '<div style="text-align:center;margin-bottom:28px">'
     + '<div style="font-size:38px;margin-bottom:12px;letter-spacing:-2px;color:var(--text3)">&#9672;</div>'
     + '<div style="font-size:20px;font-weight:800;color:var(--text);margin-bottom:8px;letter-spacing:-.3px">Empieza a construir tu ventaja</div>'
-    + '<div style="font-size:12px;color:var(--text3);line-height:1.8;max-width:400px;margin:0 auto">La mayoria de traders saben <em>que</em> hacen mal.<br>BlackBoss te muestra <strong style="color:var(--text)">cuando, como y por que</strong> lo hacen.</div>'
+    + '<div style="font-size:12px;color:var(--text3);line-height:1.8;max-width:400px;margin:0 auto">La mayoria de traders saben <em>que</em> hacen mal.<br>Pattro te muestra <strong style="color:var(--text)">cuando, como y por que</strong> lo hacen.</div>'
     + '</div>'
     + '<div class="panel" style="padding:20px;margin-bottom:16px">'
     + '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px">Tu camino hacia los insights</div>'
@@ -5434,7 +5438,7 @@ async function generateCoachAnalysis() {
     var text = await callCoach(prompt, 1000);
     coachAnalysis = text || "No se pudo generar.";
   } catch(e) {
-    coachAnalysis = 'Error conectando con el coach. Asegúrate de abrir BlackBoss desde tu URL de Vercel.';
+    coachAnalysis = 'Error conectando con el coach. Asegúrate de abrir Pattro desde tu URL de Vercel.';
   }
   coachLoading = false;
   var tabEl2 = document.getElementById("disc-tab-content");
@@ -6490,23 +6494,23 @@ function showOnboardingGuide() {
   var steps = [
     {
       icon: '👋',
-      title: 'Bienvenido a BlackBoss',
+      title: 'Bienvenido a Pattro',
       subtitle: 'Tu Trading Psychology Engine',
-      content: 'BlackBoss no es un journal normal. Su objetivo es ayudarte a entender <strong>por qué tomas malas decisiones</strong> — no solo registrar cuánto ganaste o perdiste.<br><br>Mide tu psicología, detecta patrones de error, calcula tu estado mental diario y te da feedback real sobre tu disciplina como trader.<br><br>Esta guía toma unos minutos y cubre todo lo que necesitas saber.',
+      content: 'Pattro no es un journal normal. Su objetivo es ayudarte a entender <strong>por qué tomas malas decisiones</strong> — no solo registrar cuánto ganaste o perdiste.<br><br>Mide tu psicología, detecta patrones de error, calcula tu estado mental diario y te da feedback real sobre tu disciplina como trader.<br><br>Esta guía toma unos minutos y cubre todo lo que necesitas saber.',
       tip: null
     },
     {
       icon: '🏦',
       title: 'Paso 1 — Crea tu cuenta de trading',
       subtitle: 'Una cuenta = una cuenta de trading real',
-      content: 'Una <strong>cuenta</strong> en BlackBoss representa tu cuenta de trading real (ej: "Funded Account #1", "Paper Trading"). Puedes tener varias y cambiar entre ellas desde el menú lateral.<br><br>Haz clic en <strong>"+ Add account"</strong> en la barra lateral para empezar. Cada cuenta tiene sus propios trades, reglas, checklist y configuración.',
+      content: 'Una <strong>cuenta</strong> en Pattro representa tu cuenta de trading real (ej: "Funded Account #1", "Paper Trading"). Puedes tener varias y cambiar entre ellas desde el menú lateral.<br><br>Haz clic en <strong>"+ Add account"</strong> en la barra lateral para empezar. Cada cuenta tiene sus propios trades, reglas, checklist y configuración.',
       tip: '💡 Si tienes varias cuentas de fondeo activas, crea una por cada una — así los datos no se mezclan.'
     },
     {
       icon: '🔌',
       title: 'Paso 2A — Extensión de Chrome (recomendado)',
       subtitle: 'Captura automática desde TopstepX',
-      content: 'Si operas en <strong>TopstepX</strong>, instala la extensión BlackBoss para Chrome. Una vez conectada:<br><br>• Los trades se detectan y guardan <strong>automáticamente</strong> al cerrarse<br>• Al detectar un trade aparece un popup para registrar tu emoción, disciplina y notas<br>• Si rompes una regla, la extensión te <strong>bloquea la pantalla 15 minutos</strong> para que te resetees<br>• Muestra el P&L de la sesión en pantalla en tiempo real',
+      content: 'Si operas en <strong>TopstepX</strong>, instala la extensión Pattro para Chrome. Una vez conectada:<br><br>• Los trades se detectan y guardan <strong>automáticamente</strong> al cerrarse<br>• Al detectar un trade aparece un popup para registrar tu emoción, disciplina y notas<br>• Si rompes una regla, la extensión te <strong>bloquea la pantalla 15 minutos</strong> para que te resetees<br>• Muestra el P&L de la sesión en pantalla en tiempo real',
       tip: '💡 Descarga la extensión desde Settings → Extensión. Después instálala en Chrome como extensión descomprimida.'
     },
     {
@@ -6520,14 +6524,14 @@ function showOnboardingGuide() {
       icon: '📋',
       title: 'Paso 3 — Tu checklist y tus reglas',
       subtitle: 'Sin esto, el análisis no es completo',
-      content: 'En <strong>Discipline → Checklist</strong> creas tu lista de verificación pre-trade. Ejemplos: "SL definido antes de entrar", "R:R mínimo 1.5", "No operar en la primera media hora".<br><br>En <strong>Rules</strong> defines tus límites: horario permitido, máximo de trades por día, pérdidas consecutivas permitidas, etc.<br><br>BlackBoss usa estas reglas para calcular tu disciplina diaria y avisarte cuando las rompes.',
+      content: 'En <strong>Discipline → Checklist</strong> creas tu lista de verificación pre-trade. Ejemplos: "SL definido antes de entrar", "R:R mínimo 1.5", "No operar en la primera media hora".<br><br>En <strong>Rules</strong> defines tus límites: horario permitido, máximo de trades por día, pérdidas consecutivas permitidas, etc.<br><br>Pattro usa estas reglas para calcular tu disciplina diaria y avisarte cuando las rompes.',
       tip: '💡 El sistema detecta automáticamente si operas fuera de tus horarios, si superas el límite de pérdidas o si saltaste el checklist.'
     },
     {
       icon: '🧠',
       title: 'Paso 4 — Check mental diario',
       subtitle: 'Tu estado interno afecta tus resultados',
-      content: 'Cada mañana antes de operar, BlackBoss te hace un check de 4 preguntas: calidad del sueño, nivel de estrés, concentración y presión económica.<br><br>Con el tiempo el sistema detecta si tus peores días de trading coinciden con poco sueño o alta presión. Esto aparece en la vista <strong>Mind</strong>.<br><br>Puedes responderlo desde el dashboard o desde la extensión.',
+      content: 'Cada mañana antes de operar, Pattro te hace un check de 4 preguntas: calidad del sueño, nivel de estrés, concentración y presión económica.<br><br>Con el tiempo el sistema detecta si tus peores días de trading coinciden con poco sueño o alta presión. Esto aparece en la vista <strong>Mind</strong>.<br><br>Puedes responderlo desde el dashboard o desde la extensión.',
       tip: '💡 Con 2 semanas de datos ya ves correlaciones claras entre tu estado mental y tu P&L.'
     },
     {
@@ -6590,7 +6594,7 @@ function showOnboardingGuide() {
       + '<div style="display:grid;grid-template-columns:' + (isFirst ? '1fr' : '1fr 2fr') + ';gap:8px">'
       + (isFirst ? '' : '<button id="ob-back" style="padding:11px;border:1px solid var(--border);border-radius:9px;background:none;color:var(--text3);font-size:11px;cursor:pointer;font-family:inherit">← Anterior</button>')
       + '<button id="ob-next" style="padding:11px;border:none;border-radius:9px;background:' + (isLast ? 'var(--green)' : '#5a9e9e') + ';color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">'
-      + (isLast ? '¡Empezar a usar BlackBoss! 🚀' : 'Siguiente →') + '</button>'
+      + (isLast ? '¡Empezar a usar Pattro! 🚀' : 'Siguiente →') + '</button>'
       + '</div>'
       + (!isLast ? '<div style="text-align:center;margin-top:10px"><button id="ob-skip" style="background:none;border:none;color:var(--text3);font-size:9px;cursor:pointer;font-family:inherit">Saltar guía</button></div>' : '')
       + '</div>';
@@ -7455,7 +7459,7 @@ async function generateMindCoach() {
     var text = await callCoach(prompt, 1000);
     mindCoachAnalysis = text || 'No se pudo generar el análisis.';
   } catch(e) {
-    mindCoachAnalysis = 'Error al conectar. Abre BlackBoss desde tu URL de Vercel.';
+    mindCoachAnalysis = 'Error al conectar. Abre Pattro desde tu URL de Vercel.';
   }
 
   mindCoachLoading = false;
@@ -7845,7 +7849,7 @@ function exportReportPDF() {
   hdr.innerHTML = [
     '<div style="display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #111;padding-bottom:10px;margin-bottom:16px">',
       '<div>',
-        '<div style="font-size:22px;font-weight:800;letter-spacing:-1px">BlackBoss</div>',
+        '<div style="font-size:22px;font-weight:800;letter-spacing:-1px">Pattro</div>',
         '<div style="font-size:11px;color:#555;margin-top:2px">Trading Performance Report</div>',
       '</div>',
       '<div style="text-align:right">',
@@ -7924,7 +7928,7 @@ function exportReportPDF() {
 
     // Footer
     '<div style="margin-top:16px;padding-top:10px;border-top:1px solid #ddd;font-size:8px;color:#aaa;display:flex;justify-content:space-between">',
-      '<span>BlackBoss Trading Journal</span>',
+      '<span>Pattro Trading Journal</span>',
       '<span>Este reporte es confidencial y solo para uso personal</span>',
     '</div>'
   ].join('');
@@ -8047,11 +8051,11 @@ function renderSettings() {
     '<button onclick="openLegalModal(\'tos\')" style="background:none;border:none;text-align:left;font-size:12px;color:#5a9e9e;cursor:pointer;font-family:inherit;padding:2px 0">📄 Términos de Servicio</button>'+
     '<button onclick="openLegalModal(\'privacy\')" style="background:none;border:none;text-align:left;font-size:12px;color:#5a9e9e;cursor:pointer;font-family:inherit;padding:2px 0">🔒 Política de Privacidad</button>'+
     '<button onclick="openLegalModal(\'risk\')" style="background:none;border:none;text-align:left;font-size:12px;color:#5a9e9e;cursor:pointer;font-family:inherit;padding:2px 0">⚠️ Aviso de Riesgo</button>'+
-    '<div style="font-size:9px;color:var(--text3);margin-top:4px">BlackBoss Journal v0.5 · 2026</div>'+
+    '<div style="font-size:9px;color:var(--text3);margin-top:4px">Pattro v0.5 · 2026</div>'+
     '</div></div>'+
     '<div class="panel" style="margin-bottom:12px"><div class="panel-head"><span class="panel-title">Ayuda</span></div>'+
     '<div style="padding:18px;display:flex;flex-direction:column;gap:10px">'+
-    '<div style="font-size:11px;color:var(--text2)">¿Primera vez usando BlackBoss o necesitas repasar cómo funciona?</div>'+
+    '<div style="font-size:11px;color:var(--text2)">¿Primera vez usando Pattro o necesitas repasar cómo funciona?</div>'+
     '<button onclick="resetOnboardingGuide()" style="padding:10px 18px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left">📖 Ver guía de uso paso a paso</button>'+
     '</div></div>'+
     '<div class="panel"><div class="panel-head"><span class="panel-title">Contact & Support</span></div>'+
@@ -8640,24 +8644,24 @@ var LEGAL_CONTENT = {
     icon: '📄',
     sections: [
       {
-        heading: 'Sobre BlackBoss',
-        body: 'BlackBoss es una herramienta de journaling y análisis psicológico para traders. Su función es registrar operaciones, medir disciplina y analizar patrones de comportamiento. No es un servicio de asesoría financiera, ni de señales de trading, ni de gestión de inversiones.'
+        heading: 'Sobre Pattro',
+        body: 'Pattro es una herramienta de journaling y análisis psicológico para traders. Su función es registrar operaciones, medir disciplina y analizar patrones de comportamiento. No es un servicio de asesoría financiera, ni de señales de trading, ni de gestión de inversiones.'
       },
       {
         heading: 'Sin relación con plataformas de trading',
-        body: 'BlackBoss no tiene ninguna relación comercial, societaria ni de afiliación con TopstepX, Apex, Tradovate, NinjaTrader ni con ninguna otra plataforma o empresa de fondeo. La integración con TopstepX es técnica y unilateral — únicamente lee datos de pantalla para facilitar el registro de trades.'
+        body: 'Pattro no tiene ninguna relación comercial, societaria ni de afiliación con TopstepX, Apex, Tradovate, NinjaTrader ni con ninguna otra plataforma o empresa de fondeo. La integración con TopstepX es técnica y unilateral — únicamente lee datos de pantalla para facilitar el registro de trades.'
       },
       {
         heading: 'Uso adecuado',
-        body: 'El usuario se compromete a usar BlackBoss únicamente para el registro y análisis de sus propias operaciones. Queda prohibido el uso del servicio para actividades ilegales, la reventa del acceso, o cualquier uso que interfiera con el funcionamiento normal de la plataforma.'
+        body: 'El usuario se compromete a usar Pattro únicamente para el registro y análisis de sus propias operaciones. Queda prohibido el uso del servicio para actividades ilegales, la reventa del acceso, o cualquier uso que interfiera con el funcionamiento normal de la plataforma.'
       },
       {
         heading: 'Disponibilidad del servicio',
-        body: 'BlackBoss se ofrece "tal como está". No garantizamos disponibilidad ininterrumpida ni ausencia de errores. Podemos modificar, suspender o discontinuar funciones en cualquier momento, avisando con la mayor anticipación posible.'
+        body: 'Pattro se ofrece "tal como está". No garantizamos disponibilidad ininterrumpida ni ausencia de errores. Podemos modificar, suspender o discontinuar funciones en cualquier momento, avisando con la mayor anticipación posible.'
       },
       {
         heading: 'Propiedad intelectual',
-        body: 'Todo el código, diseño, textos y metodología de BlackBoss son propiedad de BlackBoss. El usuario obtiene una licencia de uso personal e intransferible. No está permitido copiar, modificar ni redistribuir ninguna parte de la plataforma.'
+        body: 'Todo el código, diseño, textos y metodología de Pattro son propiedad de Pattro. El usuario obtiene una licencia de uso personal e intransferible. No está permitido copiar, modificar ni redistribuir ninguna parte de la plataforma.'
       }
     ]
   },
@@ -8696,8 +8700,8 @@ var LEGAL_CONTENT = {
     icon: '⚠️',
     sections: [
       {
-        heading: 'BlackBoss no es asesoría financiera',
-        body: 'Nada de lo que aparece en BlackBoss — incluyendo el Coach IA, el Mental Score, los análisis de disciplina o cualquier otra funcionalidad — constituye asesoría financiera, recomendación de inversión ni señal de trading. BlackBoss es una herramienta de autoconocimiento y journaling.'
+        heading: 'Pattro no es asesoría financiera',
+        body: 'Nada de lo que aparece en Pattro — incluyendo el Coach IA, el Mental Score, los análisis de disciplina o cualquier otra funcionalidad — constituye asesoría financiera, recomendación de inversión ni señal de trading. Pattro es una herramienta de autoconocimiento y journaling.'
       },
       {
         heading: 'El trading implica riesgo de pérdida',
@@ -8705,15 +8709,15 @@ var LEGAL_CONTENT = {
       },
       {
         heading: 'Sin garantía de resultados',
-        body: 'BlackBoss no garantiza que el uso de la plataforma mejore tus resultados de trading ni que evite pérdidas. Los análisis y métricas son informativos y basados en los datos que tú introduces — su precisión depende de la calidad de ese registro.'
+        body: 'Pattro no garantiza que el uso de la plataforma mejore tus resultados de trading ni que evite pérdidas. Los análisis y métricas son informativos y basados en los datos que tú introduces — su precisión depende de la calidad de ese registro.'
       },
       {
         heading: 'Sin responsabilidad por pérdidas',
-        body: 'BlackBoss y sus creadores no se hacen responsables de ninguna pérdida económica, directa o indirecta, derivada del uso de la plataforma, de sus análisis, de las recomendaciones del Coach IA, ni del comportamiento de la extensión de Chrome durante sesiones de trading.'
+        body: 'Pattro y sus creadores no se hacen responsables de ninguna pérdida económica, directa o indirecta, derivada del uso de la plataforma, de sus análisis, de las recomendaciones del Coach IA, ni del comportamiento de la extensión de Chrome durante sesiones de trading.'
       },
       {
         heading: 'Sin relación con plataformas externas',
-        body: 'BlackBoss no tiene ninguna responsabilidad sobre las decisiones de negocio de TopstepX, Apex u otras plataformas de fondeo. Cualquier cambio en esas plataformas que afecte la captura automática de trades es ajeno a BlackBoss.'
+        body: 'Pattro no tiene ninguna responsabilidad sobre las decisiones de negocio de TopstepX, Apex u otras plataformas de fondeo. Cualquier cambio en esas plataformas que afecte la captura automática de trades es ajeno a Pattro.'
       }
     ]
   }
@@ -8745,7 +8749,7 @@ function openLegalModal(type) {
     + '<span style="font-size:20px">' + data.icon + '</span>'
     + '<div>'
     + '<div style="font-size:14px;font-weight:700;color:var(--text)">' + data.title + '</div>'
-    + '<div style="font-size:9px;color:var(--text3);margin-top:1px">BlackBoss · 2026</div>'
+    + '<div style="font-size:9px;color:var(--text3);margin-top:1px">Pattro · 2026</div>'
     + '</div>'
     + '</div>'
     + '<button id="bb-legal-close" style="background:var(--surface2);border:1px solid var(--border);border-radius:7px;width:28px;height:28px;cursor:pointer;color:var(--text3);font-size:16px;display:flex;align-items:center;justify-content:center;line-height:1">×</button>'
