@@ -492,11 +492,14 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
 <!-- APP -->
 <div class="layout" id="app" style="display:none">
   <aside class="sidebar">
-    <div class="logo" onclick="navigateTo('dashboard')" style="cursor:pointer;display:flex;align-items:center;gap:9px;padding:14px 16px 12px;transition:opacity .15s;border-bottom:1px solid var(--border)" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 44" width="36" height="36" style="flex-shrink:0"><text x="4" y="38" font-family="Georgia,serif" font-size="40" font-weight="700" fill="#eeeef0">P</text><circle cx="38" cy="6" r="6" fill="#3ecfcf"/></svg>
-      <div style="display:flex;flex-direction:column;gap:2px;min-width:0">
-        <div style="font-size:15px;font-weight:700;letter-spacing:-.3px;color:var(--text);line-height:1;font-family:'Geist',sans-serif">pattro</div>
-        <div style="font-size:8px;color:var(--teal);letter-spacing:1.8px;opacity:.7;line-height:1;font-family:'Geist Mono',monospace">TRADING JOURNAL</div>
+    <div class="logo" onclick="navigateTo('dashboard')" style="cursor:pointer;display:flex;align-items:center;gap:12px;padding:16px 16px 14px;transition:opacity .15s;border-bottom:1px solid var(--border)" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
+      <div style="position:relative;flex-shrink:0;width:40px;height:40px">
+        <span style="font-family:Georgia,serif;font-size:38px;font-weight:700;color:#eeeef0;line-height:1;position:absolute;left:0;bottom:0">P</span>
+        <span style="position:absolute;top:0;right:0;width:10px;height:10px;border-radius:50%;background:#3ecfcf;display:block"></span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:3px">
+        <span style="font-size:15px;font-weight:700;letter-spacing:-.3px;color:var(--text);line-height:1;font-family:'Geist',sans-serif">pattro</span>
+        <span style="font-size:8px;color:var(--teal);letter-spacing:1.8px;line-height:1;font-family:'Geist Mono',monospace">TRADING JOURNAL</span>
       </div>
     </div>
     <div class="section">
