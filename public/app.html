@@ -162,6 +162,59 @@ body {
 .signout-btn { font-size: 10px; color: var(--text3); cursor: pointer; font-family: 'Geist Mono', monospace; }
 .signout-btn:hover { color: var(--red); }
 
+/* ── User dropdown ── */
+.user-dropdown-wrap { position: relative; }
+.user-dropdown-menu {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0; right: 0;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 -8px 24px rgba(0,0,0,.5);
+  z-index: 500;
+}
+.user-dropdown-menu.open { display: block; }
+.udm-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 14px;
+  font-size: 12px;
+  color: var(--text2);
+  cursor: pointer;
+  transition: background .1s;
+  border-bottom: 1px solid var(--border);
+  font-family: 'Geist', sans-serif;
+}
+.udm-item:last-child { border-bottom: none; }
+.udm-item:hover { background: var(--surface3); color: var(--text); }
+.udm-item.danger:hover { color: var(--red); background: var(--red-bg); }
+.udm-icon { font-size: 13px; width: 16px; text-align: center; flex-shrink: 0; }
+
+/* ── Bug notification toast ── */
+.bug-toast {
+  position: fixed;
+  bottom: 24px; right: 24px;
+  width: 300px;
+  background: var(--surface);
+  border: 1px solid var(--teal-bd);
+  border-left: 3px solid var(--teal);
+  border-radius: 10px;
+  padding: 14px 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.5);
+  z-index: 9999;
+  animation: toastIn .4s ease;
+}
+.bug-toast-title { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom:5px; }
+.bug-toast-msg { font-size: 11px; color: var(--text2); line-height: 1.6; }
+.bug-toast-close { position: absolute; top: 8px; right: 10px; cursor: pointer; color: var(--text3); font-size: 14px; }
+.bug-toast-close:hover { color: var(--text); }
+.bug-toast-btn { margin-top: 10px; padding: 5px 12px; background: var(--teal-bg); border: 1px solid var(--teal-bd); border-radius: 6px; font-size: 10px; color: var(--teal); cursor: pointer; font-family: 'Geist Mono', monospace; font-weight: 700; }
+.bug-toast-btn:hover { background: var(--teal); color: #0a0a0b; }
+
 /* ── MAIN AREA ── */
 .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 .topbar {
@@ -517,10 +570,28 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
       <div class="nav-item" data-view="insights"><span class="nav-icon">◈</span> Insights</div>
       <div class="nav-item" data-view="settings"><span class="nav-icon">&#9711;</span> Settings</div>
     </div>
-    <div class="sidebar-footer">
-      <div class="user-avatar" id="user-avatar">?</div>
-      <div class="user-name" id="user-name">...</div>
-      <span class="signout-btn" onclick="signOut()">out</span>
+    <div class="sidebar-footer user-dropdown-wrap" id="user-dropdown-wrap">
+      <!-- Dropdown menu (opens upward) -->
+      <div class="user-dropdown-menu" id="user-dropdown-menu">
+        <div class="udm-item" onclick="navigateTo('settings');toggleUserDropdown()">
+          <span class="udm-icon">⚙</span>
+          <span data-i18n-app="menu_settings">Settings</span>
+        </div>
+        <div class="udm-item" onclick="openContactSupport()">
+          <span class="udm-icon">💬</span>
+          <span data-i18n-app="menu_support">Contact Support</span>
+        </div>
+        <div class="udm-item danger" onclick="signOut()">
+          <span class="udm-icon">→</span>
+          <span data-i18n-app="menu_signout">Sign Out</span>
+        </div>
+      </div>
+      <!-- User row — click to toggle dropdown -->
+      <div style="display:flex;align-items:center;gap:8px;flex:1;cursor:pointer;padding:2px 0" onclick="toggleUserDropdown()">
+        <div class="user-avatar" id="user-avatar">?</div>
+        <div class="user-name" id="user-name">...</div>
+        <span style="font-size:9px;color:var(--text3);flex-shrink:0" id="user-dropdown-arrow">▴</span>
+      </div>
     </div>
   </aside>
 
@@ -856,7 +927,132 @@ async function authSubmit() {
   }
 }
 
-async function signOut() { await sb.auth.signOut(); }
+async function signOut() {
+  await sb.auth.signOut();
+  window.location.href = '/login';
+}
+
+function toggleUserDropdown() {
+  var menu  = document.getElementById('user-dropdown-menu');
+  var arrow = document.getElementById('user-dropdown-arrow');
+  if (!menu) return;
+  var isOpen = menu.classList.toggle('open');
+  if (arrow) arrow.textContent = isOpen ? '▾' : '▴';
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(e) {
+  var wrap = document.getElementById('user-dropdown-wrap');
+  if (wrap && !wrap.contains(e.target)) {
+    var menu  = document.getElementById('user-dropdown-menu');
+    var arrow = document.getElementById('user-dropdown-arrow');
+    if (menu) menu.classList.remove('open');
+    if (arrow) arrow.textContent = '▴';
+  }
+});
+
+// ── Contact Support ──
+function openContactSupport() {
+  toggleUserDropdown();
+  var name  = (currentUser && currentUser.user_metadata && currentUser.user_metadata.full_name) || (currentUser && currentUser.email) || '';
+  var email = (currentUser && currentUser.email) || '';
+  var html = '<div style="position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:600;display:flex;align-items:center;justify-content:center;padding:16px" id="support-overlay" onclick="if(event.target===this)this.remove()">'+
+    '<div style="background:var(--surface);border:1px solid var(--border2);border-top:2px solid var(--teal);border-radius:14px;width:min(500px,94vw);box-shadow:0 24px 80px rgba(0,0,0,.6)">'+
+    '<div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">'+
+    '<span style="font-size:14px;font-weight:700;color:var(--text)">Contact Support</span>'+
+    '<span onclick="document.getElementById(\'support-overlay\').remove()" style="cursor:pointer;color:var(--text3);font-size:18px;padding:2px 6px;border-radius:4px">×</span>'+
+    '</div>'+
+    '<div style="padding:20px">'+
+    '<div class="form-group" style="margin-bottom:12px"><label class="form-label">Your name</label><input class="form-input" id="sup-name" type="text" value="' + name + '"></div>'+
+    '<div class="form-group" style="margin-bottom:12px"><label class="form-label">Subject</label><input class="form-input" id="sup-subject" type="text" placeholder="Bug report, question, suggestion..."></div>'+
+    '<div class="form-group" style="margin-bottom:12px"><label class="form-label">Message</label><textarea class="form-input" id="sup-msg" rows="5" placeholder="Describe your issue or suggestion in detail..." style="resize:vertical"></textarea></div>'+
+    '<div id="sup-status" style="font-size:11px;min-height:16px;margin-bottom:10px"></div>'+
+    '<div style="display:flex;gap:8px;justify-content:flex-end">'+
+    '<button class="btn btn-ghost" style="width:auto;padding:8px 16px" onclick="document.getElementById(\'support-overlay\').remove()">Cancel</button>'+
+    '<button class="btn btn-solid" id="sup-send-btn" style="width:auto;padding:8px 20px" onclick="sendSupportMessage()">Send Message</button>'+
+    '</div></div></div></div>';
+  document.body.insertAdjacentHTML('beforeend', html);
+}
+
+async function sendSupportMessage() {
+  var name    = (document.getElementById('sup-name')    || {}).value || '';
+  var subject = (document.getElementById('sup-subject') || {}).value || '';
+  var msg     = (document.getElementById('sup-msg')     || {}).value || '';
+  var status  = document.getElementById('sup-status');
+  var btn     = document.getElementById('sup-send-btn');
+
+  if (!subject || !msg) {
+    status.style.color = 'var(--red)';
+    status.textContent = 'Please fill in subject and message.';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+  status.textContent = '';
+
+  try {
+    // Send via Supabase edge function or direct email API
+    // We use a hidden endpoint so the destination email is never exposed to the client
+    var resp = await fetch('/api/support', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from_name:  name,
+        from_email: currentUser ? currentUser.email : '',
+        subject:    subject,
+        message:    msg
+      })
+    });
+
+    if (resp.ok) {
+      status.style.color = 'var(--green)';
+      status.textContent = '✓ Message sent! We will get back to you soon.';
+      btn.textContent = 'Sent!';
+      setTimeout(function() {
+        var ov = document.getElementById('support-overlay');
+        if (ov) ov.remove();
+      }, 2000);
+    } else {
+      throw new Error('Server error');
+    }
+  } catch(e) {
+    // Fallback: open mailto (email hidden from UI but visible in source — acceptable tradeoff)
+    var body = encodeURIComponent('From: ' + name + '\nEmail: ' + (currentUser ? currentUser.email : '') + '\n\n' + msg);
+    var subj = encodeURIComponent('[Pattro Support] ' + subject);
+    window.open('mailto:blackbosstrad@gmail.com?subject=' + subj + '&body=' + body);
+    status.style.color = 'var(--green)';
+    status.textContent = '✓ Opening your email client...';
+    btn.textContent = 'Sent!';
+  }
+}
+
+// ── Bug notification toast ──
+function showBugToast() {
+  var key = 'pattro_bug_toast_seen';
+  if (localStorage.getItem(key)) return;
+
+  // Only show on Monday (1) or Friday (5)
+  var day = new Date().getDay();
+  if (day !== 1 && day !== 5) return;
+
+  var html = '<div class="bug-toast" id="bug-toast">'+
+    '<span class="bug-toast-close" onclick="closeBugToast()">×</span>'+
+    '<div class="bug-toast-title">💙 ¿Encontraste algo raro?</div>'+
+    '<div class="bug-toast-msg">Si encuentras algún bug o tienes una recomendación, por favor envíanosla. Tu feedback nos ayuda a crecer. ¡Gracias!</div>'+
+    '<button class="bug-toast-btn" onclick="closeBugToast();openContactSupport()">Enviar feedback →</button>'+
+    '</div>';
+  document.body.insertAdjacentHTML('beforeend', html);
+}
+
+function closeBugToast() {
+  var t = document.getElementById('bug-toast');
+  if (t) {
+    t.style.animation = 'toastOut .3s ease forwards';
+    setTimeout(function() { if (t) t.remove(); }, 300);
+  }
+  localStorage.setItem('pattro_bug_toast_seen', '1');
+}
 
 sb.auth.onAuthStateChange(function(event, session) {
   if (session && session.user) {
@@ -910,6 +1106,8 @@ function showApp() {
   document.getElementById('user-name').textContent = name;
   document.getElementById('user-avatar').textContent = name.charAt(0).toUpperCase();
   loadAccounts();
+  // Show bug notification on Mon/Fri (once)
+  setTimeout(showBugToast, 8000);
 }
 
 // ACCOUNTS
