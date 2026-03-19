@@ -1111,25 +1111,31 @@ async function checkPlanAndShow() {
   
   var hasAccess = false;
   if (profile) {
-    if (profile.plan === 'lifetime' || profile.plan === 'pro' || profile.plan === 'free') {
+    if (profile.plan === 'lifetime') {
+      // F&F promo code — always has access
       hasAccess = true;
-    } else if (profile.plan_expires_at) {
-      hasAccess = new Date(profile.plan_expires_at) > new Date();
-    } else if (profile.plan === 'pending_payment') {
-      // TODO: redirect to payment when Paddle is integrated
-      hasAccess = true; // temporarily allow during beta
+    } else if (profile.plan === 'pro') {
+      // Pro plan — check expiry
+      if (!profile.plan_expires_at) {
+        hasAccess = true; // no expiry set = active
+      } else {
+        hasAccess = new Date(profile.plan_expires_at) > new Date();
+      }
+    } else {
+      // free plan — no access, redirect to payment
+      hasAccess = false;
     }
   } else {
-    hasAccess = true; // no profile yet = new user during beta
+    // No profile yet — send to register
+    hasAccess = false;
   }
   
   if (hasAccess) {
     showApp();
   } else {
-    // Plan expired — show paywall
-    document.getElementById('auth-screen').style.display = 'flex';
-    document.getElementById('app').style.display = 'none';
-    document.getElementById('auth-error').textContent = 'Your subscription has expired. Please renew at pattro.com/register';
+    // No active plan — redirect to register/payment
+    await sb.auth.signOut();
+    window.location.href = '/register?paywall=1';
   }
 }
 

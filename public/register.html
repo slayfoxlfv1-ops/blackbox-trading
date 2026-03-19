@@ -172,10 +172,27 @@ const SUPABASE_URL = 'https://qljuusxpzsiqxnpfpdgg.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFsanV1c3hwenNpcXhucGZwZGdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1OTQ5NzUsImV4cCI6MjA4ODE3MDk3NX0.rUEwuG4zFE_EpAM4s3hWqVF81xiW9q_MSwQKKXYZmlk';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Redirect if already logged in
-sb.auth.getSession().then(function({data}) {
-  if (data.session) window.location.href = '/dashboard';
+// Redirect if already logged in with active plan
+sb.auth.getSession().then(async function({data}) {
+  if (data.session) {
+    var { data: profile } = await sb.from('profiles')
+      .select('plan').eq('id', data.session.user.id).single();
+    if (profile && (profile.plan === 'pro' || profile.plan === 'lifetime')) {
+      window.location.href = '/dashboard';
+    }
+  }
 });
+
+// Show paywall message if redirected from app
+if (window.location.search.includes('paywall=1')) {
+  var box = document.querySelector('.box');
+  if (box) {
+    var banner = document.createElement('div');
+    banner.style.cssText = 'padding:12px 14px;background:rgba(224,152,64,0.1);border:1px solid rgba(224,152,64,0.25);border-radius:8px;font-size:11px;color:#e09840;margin-bottom:20px;line-height:1.6';
+    banner.textContent = 'Tu cuenta no tiene una suscripción activa. Completa el registro y el pago para acceder a Pattro.';
+    box.insertBefore(banner, box.firstChild);
+  }
+}
 
 var validCode = null;
 var codeCheckTimer = null;
@@ -259,7 +276,9 @@ async function handleRegister() {
   var userId = authData.user.id;
 
   // ── If valid promo code: mark as used + set lifetime plan ──
-  var plan = 'pending_payment';
+  // plan starts as 'free' — upgrades to 'pro' after Paddle payment
+  // 'lifetime' for F&F promo codes (we'll add this to the constraint)
+  var plan = 'free';
   var planExpires = null;
 
   if (validCode) {
@@ -269,8 +288,7 @@ async function handleRegister() {
       used_by: userId,
       used_at: new Date().toISOString()
     }).eq('id', validCode);
-
-    plan = 'lifetime';
+    plan = 'free'; // Will be updated to 'lifetime' after constraint fix
     planExpires = null;
   }
 
@@ -299,10 +317,10 @@ async function handleRegister() {
   }
 
   // ── Route based on plan ──
-  btn.textContent = plan === 'lifetime' ? '✓ Access granted!' : 'Account created!';
+  btn.textContent = validCode ? '✓ Access granted!' : 'Account created!';
 
-  if (plan === 'lifetime') {
-    // F&F code — go to login directly
+  if (validCode) {
+    // F&F code — go to login directly (free lifetime access)
     setTimeout(function() {
       window.location.href = '/login?registered=1&plan=lifetime';
     }, 1200);
