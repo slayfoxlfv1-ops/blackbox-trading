@@ -927,6 +927,22 @@ async function authSubmit() {
 }
 
 async function signOut() {
+  // Clear all active timers
+  if (window._bugToastTimer)   clearTimeout(window._bugToastTimer);
+  if (window._moodTimer)       clearTimeout(window._moodTimer);
+  if (window.tiltCheckInterval) clearInterval(window.tiltCheckInterval);
+
+  // Remove any floating overlays/toasts
+  ['mood-overlay','tilt-notif','break-overlay','coach-notif',
+   'bug-toast','support-overlay','onboarding-overlay'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.remove();
+  });
+
+  // Close dropdown menu cleanly
+  var menu = document.getElementById('user-dropdown-menu');
+  if (menu) menu.classList.remove('open');
+
   await sb.auth.signOut();
   window.location.href = '/login';
 }
@@ -950,7 +966,9 @@ document.addEventListener('click', function(e) {
 
 // ── Contact Support ──
 function openContactSupport() {
-  toggleUserDropdown();
+  // Close dropdown without touching the gear icon
+  var menu = document.getElementById('user-dropdown-menu');
+  if (menu) menu.classList.remove('open');
   var name  = (currentUser && currentUser.user_metadata && currentUser.user_metadata.full_name) || (currentUser && currentUser.email) || '';
   var email = (currentUser && currentUser.email) || '';
   var html = '<div style="position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:600;display:flex;align-items:center;justify-content:center;padding:16px" id="support-overlay" onclick="if(event.target===this)this.remove()">'+
@@ -1014,13 +1032,18 @@ async function sendSupportMessage() {
       throw new Error('Server error');
     }
   } catch(e) {
-    // Fallback: open mailto (email hidden from UI but visible in source — acceptable tradeoff)
-    var body = encodeURIComponent('From: ' + name + '\nEmail: ' + (currentUser ? currentUser.email : '') + '\n\n' + msg);
-    var subj = encodeURIComponent('[Pattro Support] ' + subject);
-    window.open('mailto:blackbosstrad@gmail.com?subject=' + subj + '&body=' + body);
-    status.style.color = 'var(--green)';
-    status.textContent = '✓ Opening your email client...';
-    btn.textContent = 'Sent!';
+    // Fallback: copy to clipboard + instruct user
+    var fullMsg = 'Subject: [Pattro Support] ' + subject + '\n\nFrom: ' + name + ' (' + (currentUser ? currentUser.email : '') + ')\n\n' + msg;
+    try {
+      await navigator.clipboard.writeText(fullMsg);
+      status.style.color = 'var(--teal)';
+      status.textContent = '✓ Message copied to clipboard. Please send it to: support@pattro.com';
+    } catch(clipErr) {
+      status.style.color = 'var(--amber)';
+      status.textContent = 'Please email support@pattro.com with your message. We will reply within 24h.';
+    }
+    btn.disabled = false;
+    btn.textContent = 'Send Message';
   }
 }
 
@@ -1112,8 +1135,20 @@ function showApp() {
   document.getElementById('user-avatar').textContent = name.charAt(0).toUpperCase();
   loadAccounts();
   // Show bug notification on Mon/Fri (once)
-  setTimeout(showBugToast, 5000);
+  window._bugToastTimer = setTimeout(showBugToast, 5000);
 }
+
+// ── Multi-tab sync: if another tab changes account or logs out, sync this tab ──
+window.addEventListener('storage', function(e) {
+  if (e.key === 'bb_last_account' && e.newValue && e.newValue !== currentAccountId) {
+    // Another tab switched account — reload accounts list
+    if (currentUser) loadAccounts();
+  }
+  if (e.key === 'supabase.auth.token' && !e.newValue) {
+    // Another tab logged out — redirect this tab too
+    window.location.href = '/login';
+  }
+});
 
 // ACCOUNTS
 async function loadAccounts() {
@@ -1237,6 +1272,8 @@ async function saveAccount() {
     res = await sb.from('accounts').insert([payload]).select();
   }
   closeModal();
+  // Small delay to ensure Supabase has committed the insert
+  await new Promise(function(r){ setTimeout(r, 300); });
   await loadAccounts();
   if (!editingAccountId && res.data && res.data[0]) selectAccount(res.data[0].id);
 }
