@@ -1111,7 +1111,7 @@ async function checkPlanAndShow() {
   
   var hasAccess = false;
   if (profile) {
-    if (profile.plan === 'lifetime' || profile.plan === 'active') {
+    if (profile.plan === 'lifetime' || profile.plan === 'pro' || profile.plan === 'free') {
       hasAccess = true;
     } else if (profile.plan_expires_at) {
       hasAccess = new Date(profile.plan_expires_at) > new Date();
@@ -1269,7 +1269,7 @@ async function saveAccount() {
       id:         currentUser.id,
       email:      currentUser.email,
       full_name:  (currentUser.user_metadata && currentUser.user_metadata.full_name) || '',
-      plan:       'active'
+      plan:       'free'
     });
   }
 
