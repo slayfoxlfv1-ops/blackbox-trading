@@ -294,16 +294,12 @@ async function handleRegister() {
     return;
   }
 
-  // ── Route based on plan ──
-  if (plan === 'lifetime') {
-    // Free lifetime — go straight to dashboard
-    window.location.href = '/dashboard';
-  } else {
-    // Needs payment — redirect to Paddle checkout
-    // TODO: replace with real Paddle checkout URL
-    window.location.href = '/dashboard';
-    // window.location.href = 'https://checkout.paddle.com/...?email=' + encodeURIComponent(email);
-  }
+  // ── Always redirect to /login after successful registration ──
+  btn.textContent = 'Account created!';
+  // Small delay so user sees confirmation before redirect
+  setTimeout(function() {
+    window.location.href = '/login?registered=1';
+  }, 1200);
 }
 
 function openTerms() {

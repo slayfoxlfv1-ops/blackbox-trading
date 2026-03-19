@@ -1036,6 +1036,14 @@ function showBugToast() {
   var day = new Date().getDay();
   if (day !== 1 && day !== 5) return;
 
+  // Extra guard: only show once per week max
+  var lastShown = localStorage.getItem('pattro_bug_toast_last');
+  if (lastShown) {
+    var daysSince = (Date.now() - parseInt(lastShown)) / 86400000;
+    if (daysSince < 4) return;
+  }
+  localStorage.setItem('pattro_bug_toast_last', Date.now());
+
   var html = '<div class="bug-toast" id="bug-toast">'+
     '<span class="bug-toast-close" onclick="closeBugToast()">×</span>'+
     '<div class="bug-toast-title">💙 ¿Encontraste algo raro?</div>'+
@@ -1107,7 +1115,7 @@ function showApp() {
   document.getElementById('user-avatar').textContent = name.charAt(0).toUpperCase();
   loadAccounts();
   // Show bug notification on Mon/Fri (once)
-  setTimeout(showBugToast, 8000);
+  setTimeout(showBugToast, 5000);
 }
 
 // ACCOUNTS

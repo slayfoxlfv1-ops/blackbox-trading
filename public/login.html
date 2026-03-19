@@ -82,6 +82,13 @@ sb.auth.getSession().then(function({data}) {
   if (data.session) window.location.href = '/dashboard';
 });
 
+// Show success message if coming from register
+if (window.location.search.includes('registered=1')) {
+  var errEl = document.getElementById('error-msg');
+  errEl.style.color = 'var(--green)';
+  errEl.textContent = '✓ Account created! Sign in to continue.';
+}
+
 async function handleLogin() {
   var email    = document.getElementById('email').value.trim();
   var password = document.getElementById('password').value;
