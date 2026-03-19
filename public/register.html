@@ -298,12 +298,41 @@ async function handleRegister() {
     return;
   }
 
-  // ── Always redirect to /login after successful registration ──
-  btn.textContent = 'Account created!';
-  // Small delay so user sees confirmation before redirect
-  setTimeout(function() {
-    window.location.href = '/login?registered=1';
-  }, 1200);
+  // ── Route based on plan ──
+  btn.textContent = plan === 'lifetime' ? '✓ Access granted!' : 'Account created!';
+
+  if (plan === 'lifetime') {
+    // F&F code — go to login directly
+    setTimeout(function() {
+      window.location.href = '/login?registered=1&plan=lifetime';
+    }, 1200);
+  } else {
+    // Needs payment — create Paddle checkout
+    btn.textContent = 'Redirecting to payment...';
+    try {
+      var checkoutResp = await fetch('/api/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: email,
+          name:  first + ' ' + last
+        })
+      });
+      var checkoutData = await checkoutResp.json();
+      if (checkoutData.checkoutUrl) {
+        window.location.href = checkoutData.checkoutUrl;
+      } else {
+        throw new Error('No checkout URL');
+      }
+    } catch(checkoutErr) {
+      // Fallback: go to login and user can pay later
+      errEl.style.color = 'var(--amber)';
+      errEl.textContent = 'Account created. Please complete payment to access Pattro.';
+      setTimeout(function() {
+        window.location.href = '/login?registered=1';
+      }, 2000);
+    }
+  }
 }
 
 function openTerms() {
