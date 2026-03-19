@@ -568,7 +568,6 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
       <div class="nav-item" data-view="trades"><span class="nav-icon">&#8801;</span> Trades</div>
       <div class="nav-item" data-view="psychology"><span class="nav-icon">&#9679;</span> Psychology</div>
       <div class="nav-item" data-view="insights"><span class="nav-icon">◈</span> Insights</div>
-      <div class="nav-item" data-view="settings"><span class="nav-icon">&#9711;</span> Settings</div>
     </div>
     <div class="sidebar-footer user-dropdown-wrap" id="user-dropdown-wrap">
       <!-- Dropdown menu (opens upward) -->
@@ -578,7 +577,7 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
           <span data-i18n-app="menu_settings">Settings</span>
         </div>
         <div class="udm-item" onclick="openContactSupport()">
-          <span class="udm-icon">💬</span>
+          <span class="udm-icon" style="color:var(--teal)">◎</span>
           <span data-i18n-app="menu_support">Contact Support</span>
         </div>
         <div class="udm-item danger" onclick="signOut()">
@@ -590,7 +589,7 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
       <div style="display:flex;align-items:center;gap:8px;flex:1;cursor:pointer;padding:2px 0" onclick="toggleUserDropdown()">
         <div class="user-avatar" id="user-avatar">?</div>
         <div class="user-name" id="user-name">...</div>
-        <span style="font-size:9px;color:var(--text3);flex-shrink:0" id="user-dropdown-arrow">▴</span>
+        <span style="font-size:14px;color:var(--text3);flex-shrink:0;transition:color .15s" id="user-dropdown-arrow" onmouseover="this.style.color='var(--teal)'" onmouseout="this.style.color='var(--text3)'" title="Settings">⚙</span>
       </div>
     </div>
   </aside>
@@ -933,11 +932,9 @@ async function signOut() {
 }
 
 function toggleUserDropdown() {
-  var menu  = document.getElementById('user-dropdown-menu');
-  var arrow = document.getElementById('user-dropdown-arrow');
+  var menu = document.getElementById('user-dropdown-menu');
   if (!menu) return;
-  var isOpen = menu.classList.toggle('open');
-  if (arrow) arrow.textContent = isOpen ? '▾' : '▴';
+  menu.classList.toggle('open');
 }
 
 // Close dropdown when clicking outside
@@ -8454,12 +8451,6 @@ function renderSettings() {
     '<div style="padding:18px;display:flex;flex-direction:column;gap:10px">'+
     '<div style="font-size:11px;color:var(--text2)">¿Primera vez usando Pattro o necesitas repasar cómo funciona?</div>'+
     '<button onclick="resetOnboardingGuide()" style="padding:10px 18px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left">📖 Ver guía de uso paso a paso</button>'+
-    '</div></div>'+
-    '<div class="panel"><div class="panel-head"><span class="panel-title">Contact & Support</span></div>'+
-    '<div style="padding:18px">'+
-    '<div style="font-size:12px;color:var(--text2);margin-bottom:12px">Have a question or found a bug?</div>'+
-    '<div class="form-group"><label class="form-label">Message</label><textarea class="form-input" rows="3" placeholder="Describe your issue..." style="resize:vertical"></textarea></div>'+
-    '<button class="btn btn-solid" onclick="alert(\'Support form coming soon!\')">Send Message</button>'+
     '</div></div>'+
     '</div>';
   setTimeout(function(){ initSettingsTags(); initExtSettings(); }, 50);
