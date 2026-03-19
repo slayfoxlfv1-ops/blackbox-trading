@@ -1263,37 +1263,52 @@ function pickColor(el) {
 }
 
 async function saveAccount() {
+  var saveBtn = document.querySelector('#modal-overlay .btn-solid');
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving...'; }
+
   var payload = {
-    name: document.getElementById('m-name').value.trim() || 'New Account',
-    type: document.getElementById('m-type').value,
-    firm: document.getElementById('m-firm').value,
-    size: parseFloat(document.getElementById('m-size').value) || 0,
-    daily_loss_limit: parseFloat(document.getElementById('m-dll').value) || null,
-    max_drawdown: parseFloat(document.getElementById('m-dd').value) || null,
-    profit_target: parseFloat(document.getElementById('m-pt').value) || null,
-    max_contracts: parseInt(document.getElementById('m-max-contracts').value) || null,
-    is_active: document.getElementById('m-active').value === 'true',
-    color: selectedColor
+    name:              document.getElementById('m-name').value.trim() || 'New Account',
+    type:              document.getElementById('m-type').value,
+    firm:              document.getElementById('m-firm').value,
+    size:              parseFloat(document.getElementById('m-size').value) || 0,
+    daily_loss_limit:  parseFloat(document.getElementById('m-dll').value) || null,
+    max_drawdown:      parseFloat(document.getElementById('m-dd').value) || null,
+    profit_target:     parseFloat(document.getElementById('m-pt').value) || null,
+    max_contracts:     parseInt(document.getElementById('m-max-contracts').value) || null,
+    is_active:         document.getElementById('m-active').value === 'true',
+    color:             selectedColor,
+    user_id:           currentUser.id
   };
+
   var res;
   if (editingAccountId) {
-    res = await sb.from('accounts').update(payload).eq('id', editingAccountId);
+    res = await sb.from('accounts').update(payload).eq('id', editingAccountId).eq('user_id', currentUser.id);
   } else {
-    payload.user_id = currentUser.id;
     res = await sb.from('accounts').insert([payload]).select();
   }
+
+  if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save Account'; }
+
+  if (res.error) {
+    alert('Error saving account: ' + res.error.message);
+    return;
+  }
+
   closeModal();
-  // Reload accounts and select the new one
-  await new Promise(function(r){ setTimeout(r, 400); });
+
+  // Reload accounts from Supabase
+  await new Promise(function(r){ setTimeout(r, 500); });
   var res2 = await sb.from('accounts').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: true });
+  if (res2.error) { console.error('loadAccounts error:', res2.error); return; }
   accounts = res2.data || [];
   renderAccountsList();
+
   if (!editingAccountId && res.data && res.data[0]) {
-    // Select the newly created account
     selectAccount(res.data[0].id);
   } else if (editingAccountId) {
-    // Re-select the account being edited
     selectAccount(editingAccountId);
+  } else if (accounts.length > 0) {
+    selectAccount(accounts[accounts.length - 1].id);
   }
 }
 
@@ -1310,7 +1325,7 @@ async function deleteAccount() {
   await sb.from('trades').delete().eq('account_id', id);
   await sb.from('discipline_notes').delete().eq('account_id', id);
   await sb.from('daily_summaries').delete().eq('account_id', id);
-  var res = await sb.from('accounts').delete().eq('id', id);
+  var res = await sb.from('accounts').delete().eq('id', id).eq('user_id', currentUser.id);
   btn.textContent = 'Delete';
   if (!res.error) {
     accounts = accounts.filter(function(a) { return a.id!==id; });
@@ -1615,7 +1630,7 @@ function openEditTrade(id) {
 
 async function confirmDeleteTrade(id) {
   if (!confirm('Delete this trade?')) return;
-  await sb.from('trades').delete().eq('id', id);
+  await sb.from('trades').delete().eq('id', id).eq('account_id', currentAccountId);
   if (currentView==='trades') renderTradesView();
   else loadAccountData(currentAccountId);
 }
