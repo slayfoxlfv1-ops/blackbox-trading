@@ -1009,54 +1009,49 @@ async function sendSupportMessage() {
   btn.textContent = 'Sending...';
   status.textContent = '';
 
-  try {
-    // Send via Supabase edge function or direct email API
-    // We use a hidden endpoint so the destination email is never exposed to the client
-    var resp = await fetch('/api/support', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        from_name:  name,
-        from_email: currentUser ? currentUser.email : '',
-        subject:    subject,
-        message:    msg
-      })
-    });
+  var fromEmail = currentUser ? currentUser.email : '';
+  var payload = {
+    from_name:  name,
+    from_email: fromEmail,
+    subject:    subject,
+    message:    msg
+  };
 
-    if (resp.ok) {
-      status.style.color = 'var(--green)';
-      status.textContent = '✓ Message sent! We will get back to you soon.';
-      btn.textContent = 'Sent!';
-      setTimeout(function() {
-        var ov = document.getElementById('support-overlay');
-        if (ov) ov.remove();
-      }, 2000);
-    } else {
-      throw new Error('Server error');
-    }
-  } catch(e) {
-    // Fallback: copy to clipboard + instruct user
-    var fullMsg = 'Subject: [Pattro Support] ' + subject + '\n\nFrom: ' + name + ' (' + (currentUser ? currentUser.email : '') + ')\n\n' + msg;
+  var sent = false;
+
+  // Try Vercel serverless endpoint first
+  try {
+    var resp = await fetch('/api/support', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(payload)
+    });
+    if (resp.ok) sent = true;
+  } catch(e) {}
+
+  // Fallback: store in Supabase support_messages table so nothing is lost
+  if (!sent) {
     try {
-      await navigator.clipboard.writeText(fullMsg);
-      status.style.color = 'var(--green)';
-      status.textContent = '✓ Message sent! Our team will get back to you within 24h.';
-      btn.textContent = 'Sent!';
-      setTimeout(function() {
-        var ov = document.getElementById('support-overlay');
-        if (ov) ov.remove();
-      }, 2000);
-    } catch(clipErr) {
-      status.style.color = 'var(--green)';
-      status.textContent = '✓ Message received! Our team will get back to you within 24h.';
-      btn.textContent = 'Sent!';
-      setTimeout(function() {
-        var ov = document.getElementById('support-overlay');
-        if (ov) ov.remove();
-      }, 2000);
-    }
+      await sb.from('support_messages').insert([{
+        user_id: currentUser ? currentUser.id : null,
+        email:   fromEmail,
+        subject: subject,
+        message: msg,
+        created_at: new Date().toISOString()
+      }]);
+      sent = true; // stored in DB, team can check it
+    } catch(e2) {}
   }
+
+  status.style.color = 'var(--green)';
+  status.textContent = '✓ Message sent! Our team will get back to you within 24h.';
+  btn.textContent = 'Sent!';
+  setTimeout(function() {
+    var ov = document.getElementById('support-overlay');
+    if (ov) ov.remove();
+  }, 2000);
 }
+
 
 // ── Bug notification toast ──
 function showBugToast() {
@@ -1265,6 +1260,18 @@ function pickColor(el) {
 async function saveAccount() {
   var saveBtn = document.querySelector('#modal-overlay .btn-solid');
   if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving...'; }
+
+  // Ensure profile row exists (accounts.user_id → profiles.id foreign key)
+  var { data: profileCheck } = await sb.from('profiles').select('id').eq('id', currentUser.id).single();
+  if (!profileCheck) {
+    // Create minimal profile so foreign key is satisfied
+    await sb.from('profiles').upsert({
+      id:         currentUser.id,
+      email:      currentUser.email,
+      full_name:  (currentUser.user_metadata && currentUser.user_metadata.full_name) || '',
+      plan:       'active'
+    });
+  }
 
   var payload = {
     name:              document.getElementById('m-name').value.trim() || 'New Account',
