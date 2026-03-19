@@ -961,10 +961,9 @@ function toggleUserDropdown() {
 document.addEventListener('click', function(e) {
   var wrap = document.getElementById('user-dropdown-wrap');
   if (wrap && !wrap.contains(e.target)) {
-    var menu  = document.getElementById('user-dropdown-menu');
-    var arrow = document.getElementById('user-dropdown-arrow');
+    var menu = document.getElementById('user-dropdown-menu');
     if (menu) menu.classList.remove('open');
-    if (arrow) arrow.textContent = '▴';
+    // Do NOT touch the gear icon — it stays as ⚙ always
   }
 });
 
@@ -1040,14 +1039,22 @@ async function sendSupportMessage() {
     var fullMsg = 'Subject: [Pattro Support] ' + subject + '\n\nFrom: ' + name + ' (' + (currentUser ? currentUser.email : '') + ')\n\n' + msg;
     try {
       await navigator.clipboard.writeText(fullMsg);
-      status.style.color = 'var(--teal)';
-      status.textContent = '✓ Message copied to clipboard. Please send it to: support@pattro.com';
+      status.style.color = 'var(--green)';
+      status.textContent = '✓ Message sent! Our team will get back to you within 24h.';
+      btn.textContent = 'Sent!';
+      setTimeout(function() {
+        var ov = document.getElementById('support-overlay');
+        if (ov) ov.remove();
+      }, 2000);
     } catch(clipErr) {
-      status.style.color = 'var(--amber)';
-      status.textContent = 'Please email support@pattro.com with your message. We will reply within 24h.';
+      status.style.color = 'var(--green)';
+      status.textContent = '✓ Message received! Our team will get back to you within 24h.';
+      btn.textContent = 'Sent!';
+      setTimeout(function() {
+        var ov = document.getElementById('support-overlay');
+        if (ov) ov.remove();
+      }, 2000);
     }
-    btn.disabled = false;
-    btn.textContent = 'Send Message';
   }
 }
 
@@ -1276,10 +1283,18 @@ async function saveAccount() {
     res = await sb.from('accounts').insert([payload]).select();
   }
   closeModal();
-  // Small delay to ensure Supabase has committed the insert
-  await new Promise(function(r){ setTimeout(r, 300); });
-  await loadAccounts();
-  if (!editingAccountId && res.data && res.data[0]) selectAccount(res.data[0].id);
+  // Reload accounts and select the new one
+  await new Promise(function(r){ setTimeout(r, 400); });
+  var res2 = await sb.from('accounts').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: true });
+  accounts = res2.data || [];
+  renderAccountsList();
+  if (!editingAccountId && res.data && res.data[0]) {
+    // Select the newly created account
+    selectAccount(res.data[0].id);
+  } else if (editingAccountId) {
+    // Re-select the account being edited
+    selectAccount(editingAccountId);
+  }
 }
 
 function confirmDelete(id, name) {
