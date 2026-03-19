@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pattro — Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230d1117'/><text x='16' y='25' text-anchor='middle' font-family='Georgia,serif' font-size='22' font-weight='700' fill='white'>P</text><circle cx='27' cy='4' r='4' fill='%233ecfcf'/></svg>">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0b;--surface:#111113;--surface2:#18181b;--border:#26262e;--border2:#32323c;
+  --text:#eeeef0;--text2:#9898a6;--text3:#52525e;
+  --teal:#3ecfcf;--teal-bg:rgba(62,207,207,0.08);--teal-bd:rgba(62,207,207,0.22);
+  --red:#e05555;--green:#3dba72;
+}
+body{background:var(--bg);color:var(--text);font-family:'Geist Mono',monospace;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+.logo-link{text-decoration:none;display:flex;align-items:center;gap:10px;margin-bottom:32px}
+.logo-p{position:relative;width:36px;height:36px;flex-shrink:0}
+.logo-p span.p{font-family:Georgia,serif;font-size:34px;font-weight:700;color:#eeeef0;line-height:1;position:absolute;left:0;bottom:0}
+.logo-p span.dot{position:absolute;top:0;right:0;width:9px;height:9px;border-radius:50%;background:#3ecfcf}
+.logo-name{font-size:20px;font-weight:700;color:var(--text);letter-spacing:-.5px}
+.box{background:var(--surface);border:1px solid var(--border2);border-top:2px solid var(--teal);border-radius:14px;padding:36px 40px;width:100%;max-width:420px;box-shadow:0 24px 60px rgba(0,0,0,.5)}
+h1{font-size:20px;font-weight:700;color:var(--text);margin-bottom:6px;letter-spacing:-.3px}
+.sub{font-size:11px;color:var(--text3);margin-bottom:28px}
+.sub a{color:var(--teal);text-decoration:none}
+.sub a:hover{opacity:.8}
+.field{margin-bottom:16px}
+.label{font-size:10px;color:var(--text2);margin-bottom:5px;display:block;letter-spacing:.3px;text-transform:uppercase}
+.input{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 13px;color:var(--text);font-family:'Geist Mono',monospace;font-size:12px;outline:none;transition:border-color .15s,box-shadow .15s}
+.input:focus{border-color:var(--teal);box-shadow:0 0 0 2px var(--teal-bg)}
+.error{font-size:11px;color:var(--red);min-height:16px;margin-bottom:10px}
+.btn{width:100%;padding:11px;background:var(--teal);border:none;border-radius:8px;color:#0a0a0b;font-family:'Geist Mono',monospace;font-size:12px;font-weight:800;cursor:pointer;letter-spacing:.5px;text-transform:uppercase;transition:all .2s;margin-top:4px}
+.btn:hover{opacity:.88;transform:translateY(-1px)}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--text3);font-size:10px}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.signup-link{text-align:center;font-size:11px;color:var(--text3);margin-top:20px}
+.signup-link a{color:var(--teal);text-decoration:none;font-weight:600}
+.signup-link a:hover{opacity:.8}
+.forgot{font-size:10px;color:var(--text3);text-align:right;margin-top:-10px;margin-bottom:14px;cursor:pointer}
+.forgot:hover{color:var(--text2)}
+</style>
+</head>
+<body>
+
+<a href="https://pattro.com" class="logo-link">
+  <div class="logo-p">
+    <span class="p">P</span>
+    <span class="dot"></span>
+  </div>
+  <span class="logo-name">pattro</span>
+</a>
+
+<div class="box">
+  <h1>Welcome back</h1>
+  <p class="sub">Don't have an account? <a href="/register">Sign up</a></p>
+
+  <div class="field">
+    <label class="label">Email</label>
+    <input class="input" id="email" type="email" placeholder="you@email.com" autocomplete="email">
+  </div>
+  <div class="field">
+    <label class="label">Password</label>
+    <input class="input" id="password" type="password" placeholder="••••••••" autocomplete="current-password">
+  </div>
+  <div class="forgot" onclick="handleForgot()">Forgot password?</div>
+  <div class="error" id="error-msg"></div>
+  <button class="btn" id="login-btn" onclick="handleLogin()">Sign In</button>
+
+  <div class="signup-link">
+    New to Pattro? <a href="/register">Create an account →</a>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const sb = supabase.createClient('https://qljuusxpzsiqxnpfpdgg.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFsanV1c3hwenNpcXhucGZwZGdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1OTQ5NzUsImV4cCI6MjA4ODE3MDk3NX0.rUEwuG4zFE_EpAM4s3hWqVF81xiW9q_MSwQKKXYZmlk');
+
+// Check if already logged in
+sb.auth.getSession().then(function({data}) {
+  if (data.session) window.location.href = '/dashboard';
+});
+
+async function handleLogin() {
+  var email    = document.getElementById('email').value.trim();
+  var password = document.getElementById('password').value;
+  var errEl    = document.getElementById('error-msg');
+  var btn      = document.getElementById('login-btn');
+
+  errEl.textContent = '';
+  if (!email || !password) { errEl.textContent = 'Please fill in all fields.'; return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Signing in...';
+
+  var { error } = await sb.auth.signInWithPassword({ email, password });
+
+  if (error) {
+    errEl.textContent = error.message === 'Invalid login credentials'
+      ? 'Incorrect email or password.'
+      : error.message;
+    btn.disabled = false;
+    btn.textContent = 'Sign In';
+  } else {
+    window.location.href = '/dashboard';
+  }
+}
+
+async function handleForgot() {
+  var email = document.getElementById('email').value.trim();
+  var errEl = document.getElementById('error-msg');
+  if (!email) { errEl.textContent = 'Enter your email first.'; return; }
+  await sb.auth.resetPasswordForEmail(email, { redirectTo: 'https://pattro.com/dashboard' });
+  errEl.style.color = 'var(--green)';
+  errEl.textContent = 'Password reset email sent. Check your inbox.';
+}
+
+document.getElementById('password').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') handleLogin();
+});
+document.getElementById('email').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') document.getElementById('password').focus();
+});
+</script>
+</body>
+</html>

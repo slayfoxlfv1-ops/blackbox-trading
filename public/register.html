@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pattro — Create Account</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230d1117'/><text x='16' y='25' text-anchor='middle' font-family='Georgia,serif' font-size='22' font-weight='700' fill='white'>P</text><circle cx='27' cy='4' r='4' fill='%233ecfcf'/></svg>">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0b;--surface:#111113;--surface2:#18181b;--border:#26262e;--border2:#32323c;
+  --text:#eeeef0;--text2:#9898a6;--text3:#52525e;
+  --teal:#3ecfcf;--teal-bg:rgba(62,207,207,0.08);--teal-bd:rgba(62,207,207,0.22);
+  --red:#e05555;--red-bg:rgba(224,85,85,0.08);
+  --green:#3dba72;--green-bg:rgba(61,186,114,0.08);--amber:#e09840;
+}
+body{background:var(--bg);color:var(--text);font-family:'Geist Mono',monospace;min-height:100vh;padding:40px 20px}
+.page{max-width:560px;margin:0 auto}
+.logo-link{text-decoration:none;display:flex;align-items:center;gap:10px;margin-bottom:32px}
+.logo-p{position:relative;width:34px;height:34px;flex-shrink:0}
+.logo-p span.p{font-family:Georgia,serif;font-size:32px;font-weight:700;color:#eeeef0;line-height:1;position:absolute;left:0;bottom:0}
+.logo-p span.dot{position:absolute;top:0;right:0;width:9px;height:9px;border-radius:50%;background:#3ecfcf}
+.logo-name{font-size:18px;font-weight:700;color:var(--text);letter-spacing:-.5px}
+.box{background:var(--surface);border:1px solid var(--border2);border-top:2px solid var(--teal);border-radius:14px;padding:36px 40px;box-shadow:0 24px 60px rgba(0,0,0,.5)}
+h1{font-size:22px;font-weight:700;color:var(--text);margin-bottom:6px;letter-spacing:-.3px}
+.sub{font-size:11px;color:var(--text3);margin-bottom:28px}
+.sub a{color:var(--teal);text-decoration:none}
+.section-title{font-size:9px;color:var(--teal);text-transform:uppercase;letter-spacing:2px;margin:24px 0 14px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.field{margin-bottom:14px}
+.label{font-size:10px;color:var(--text2);margin-bottom:5px;display:block;letter-spacing:.3px;text-transform:uppercase}
+.label span{color:var(--text3);font-size:9px}
+.input{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 13px;color:var(--text);font-family:'Geist Mono',monospace;font-size:12px;outline:none;transition:border-color .15s,box-shadow .15s}
+.input:focus{border-color:var(--teal);box-shadow:0 0 0 2px var(--teal-bg)}
+.input.error{border-color:var(--red)}
+.input.ok{border-color:var(--green)}
+select.input{cursor:pointer}
+.field-error{font-size:10px;color:var(--red);margin-top:4px;min-height:14px}
+.code-box{background:var(--teal-bg);border:1px solid var(--teal-bd);border-radius:10px;padding:16px;margin:20px 0}
+.code-box .label{color:var(--teal)}
+.code-box .code-note{font-size:10px;color:var(--text3);margin-top:6px;line-height:1.6}
+.code-badge{display:none;padding:6px 12px;border-radius:6px;font-size:11px;font-weight:700;margin-top:8px;text-align:center}
+.code-badge.valid{background:var(--green-bg);color:var(--green);border:1px solid rgba(61,186,114,.3);display:block}
+.code-badge.invalid{background:var(--red-bg);color:var(--red);border:1px solid rgba(224,85,85,.3);display:block}
+.terms{font-size:10px;color:var(--text3);line-height:1.7;margin:20px 0;padding:14px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)}
+.terms a{color:var(--teal);text-decoration:none}
+.terms a:hover{opacity:.8}
+.btn{width:100%;padding:13px;background:var(--teal);border:none;border-radius:9px;color:#0a0a0b;font-family:'Geist Mono',monospace;font-size:13px;font-weight:800;cursor:pointer;letter-spacing:.5px;text-transform:uppercase;transition:all .2s;margin-top:4px}
+.btn:hover{opacity:.88;transform:translateY(-1px)}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.global-error{font-size:11px;color:var(--red);min-height:16px;margin-bottom:10px;text-align:center}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <a href="https://pattro.com" class="logo-link">
+    <div class="logo-p"><span class="p">P</span><span class="dot"></span></div>
+    <span class="logo-name">pattro</span>
+  </a>
+
+  <div class="box">
+    <h1>Set up your account</h1>
+    <p class="sub">Already a Pattro user? <a href="/login">Login</a></p>
+
+    <!-- ── Account credentials ── -->
+    <div class="section-title">Account</div>
+    <div class="field">
+      <label class="label">Email</label>
+      <input class="input" id="r-email" type="email" placeholder="Enter email address" autocomplete="email">
+      <div class="field-error" id="err-email"></div>
+    </div>
+    <div class="field">
+      <label class="label">Password <span>(min 8 characters)</span></label>
+      <input class="input" id="r-password" type="password" placeholder="Create a password" autocomplete="new-password">
+      <div class="field-error" id="err-password"></div>
+    </div>
+    <div class="field">
+      <label class="label">Username</label>
+      <input class="input" id="r-username" type="text" placeholder="Username is required" autocomplete="username">
+      <div class="field-error" id="err-username"></div>
+    </div>
+
+    <!-- ── Personal info ── -->
+    <div class="section-title">Tell us about yourself</div>
+    <p style="font-size:10px;color:var(--text3);margin-bottom:14px;line-height:1.6">Use the legal name on your IDs (i.e., Driver's License, Passport).</p>
+    <div class="row">
+      <div class="field">
+        <label class="label">Legal First Name</label>
+        <input class="input" id="r-first" type="text" placeholder="First name" autocomplete="given-name">
+        <div class="field-error" id="err-first"></div>
+      </div>
+      <div class="field">
+        <label class="label">Legal Last Name</label>
+        <input class="input" id="r-last" type="text" placeholder="Last name" autocomplete="family-name">
+        <div class="field-error" id="err-last"></div>
+      </div>
+    </div>
+    <div class="field">
+      <label class="label">Country</label>
+      <select class="input" id="r-country">
+        <option value="">Select country</option>
+        <option>United States</option><option>Colombia</option><option>Mexico</option>
+        <option>Argentina</option><option>Brazil</option><option>Chile</option>
+        <option>Peru</option><option>Venezuela</option><option>Ecuador</option>
+        <option>Canada</option><option>Spain</option><option>United Kingdom</option>
+        <option>Germany</option><option>France</option><option>Australia</option>
+        <option>Other</option>
+      </select>
+      <div class="field-error" id="err-country"></div>
+    </div>
+    <div class="field">
+      <label class="label">Street Address</label>
+      <input class="input" id="r-address" type="text" placeholder="Street address" autocomplete="street-address">
+    </div>
+    <div class="row">
+      <div class="field">
+        <label class="label">City</label>
+        <input class="input" id="r-city" type="text" placeholder="City" autocomplete="address-level2">
+      </div>
+      <div class="field">
+        <label class="label">Zip Code</label>
+        <input class="input" id="r-zip" type="text" placeholder="Zip code" autocomplete="postal-code">
+      </div>
+    </div>
+    <div class="field">
+      <label class="label">State / Region</label>
+      <input class="input" id="r-state" type="text" placeholder="Enter state / region" autocomplete="address-level1">
+    </div>
+
+    <!-- ── Pattro Code ── -->
+    <div class="code-box">
+      <label class="label">Pattro Code <span style="text-transform:none;letter-spacing:0">(optional)</span></label>
+      <input class="input" id="r-code" type="text" placeholder="Enter your code if you have one" style="text-transform:uppercase;letter-spacing:2px" oninput="this.value=this.value.toUpperCase();checkCode(this.value)">
+      <div class="code-badge" id="code-badge"></div>
+      <p class="code-note">If you received a Pattro Code from us, enter it here for free lifetime access. No payment required.</p>
+    </div>
+
+    <!-- ── Terms ── -->
+    <div class="terms">
+      By signing up, you agree to our <a href="#" onclick="openTerms()">Terms of Use</a> and <a href="#" onclick="openPrivacy()">Privacy Policy</a>.<br><br>
+      <strong style="color:var(--text2)">Important:</strong> All sales are final — no refunds. If you have any issues, please contact our support team. Your information may be used by Pattro to send you product updates, tips, and important account notifications.
+    </div>
+
+    <div class="global-error" id="global-error"></div>
+    <button class="btn" id="continue-btn" onclick="handleRegister()">Continue</button>
+  </div>
+</div>
+
+<!-- Terms modal -->
+<div id="terms-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:999;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)this.style.display='none'">
+  <div style="background:#111113;border:1px solid #32323c;border-top:2px solid #3ecfcf;border-radius:14px;width:min(580px,94vw);max-height:85vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.7)">
+    <div style="padding:18px 24px;border-bottom:1px solid #26262e;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:14px;font-weight:700;color:#eeeef0" id="modal-legal-title">Terms of Use</span>
+      <button onclick="document.getElementById('terms-overlay').style.display='none'" style="background:#18181b;border:1px solid #32323c;border-radius:50%;width:28px;height:28px;color:#9898a6;cursor:pointer;font-size:16px;font-family:inherit">×</button>
+    </div>
+    <div style="padding:24px;overflow-y:auto;font-size:11px;color:#9898a6;line-height:1.8" id="modal-legal-body"></div>
+    <div style="padding:14px 24px;border-top:1px solid #26262e;text-align:right">
+      <button onclick="document.getElementById('terms-overlay').style.display='none'" style="padding:8px 20px;background:#3ecfcf;border:none;border-radius:7px;color:#0a0a0b;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Got it</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = 'https://qljuusxpzsiqxnpfpdgg.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFsanV1c3hwenNpcXhucGZwZGdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1OTQ5NzUsImV4cCI6MjA4ODE3MDk3NX0.rUEwuG4zFE_EpAM4s3hWqVF81xiW9q_MSwQKKXYZmlk';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// Redirect if already logged in
+sb.auth.getSession().then(function({data}) {
+  if (data.session) window.location.href = '/dashboard';
+});
+
+var validCode = null;
+var codeCheckTimer = null;
+
+async function checkCode(val) {
+  var badge = document.getElementById('code-badge');
+  if (!val || val.length < 3) { badge.className = 'code-badge'; badge.textContent = ''; validCode = null; return; }
+
+  clearTimeout(codeCheckTimer);
+  codeCheckTimer = setTimeout(async function() {
+    var { data, error } = await sb.from('promo_codes')
+      .select('id, code, used')
+      .eq('code', val.toUpperCase())
+      .single();
+
+    if (error || !data) {
+      badge.className = 'code-badge invalid';
+      badge.textContent = '✗ Invalid code';
+      validCode = null;
+    } else if (data.used) {
+      badge.className = 'code-badge invalid';
+      badge.textContent = '✗ This code has already been used';
+      validCode = null;
+    } else {
+      badge.className = 'code-badge valid';
+      badge.textContent = '✓ Valid code — Free lifetime access!';
+      validCode = data.id;
+    }
+  }, 600);
+}
+
+function validate() {
+  var ok = true;
+  var fields = [
+    { id: 'r-email',    err: 'err-email',    msg: 'Email is required',    check: function(v){ return v && v.includes('@'); }, emsg: 'Enter a valid email' },
+    { id: 'r-password', err: 'err-password', msg: 'Password is required', check: function(v){ return v && v.length >= 8; },   emsg: 'Password must be at least 8 characters' },
+    { id: 'r-username', err: 'err-username', msg: 'Username is required', check: function(v){ return v && v.length >= 3; },   emsg: 'Username must be at least 3 characters' },
+    { id: 'r-first',    err: 'err-first',    msg: 'First name is required', check: function(v){ return !!v; }, emsg: 'First name is required' },
+    { id: 'r-last',     err: 'err-last',     msg: 'Last name is required',  check: function(v){ return !!v; }, emsg: 'Last name is required' },
+    { id: 'r-country',  err: 'err-country',  msg: 'Please select a country', check: function(v){ return !!v; }, emsg: 'Please select a country' },
+  ];
+  fields.forEach(function(f) {
+    var val = document.getElementById(f.id).value.trim();
+    var errEl = document.getElementById(f.err);
+    if (!f.check(val)) { errEl.textContent = f.emsg; ok = false; }
+    else { errEl.textContent = ''; }
+  });
+  return ok;
+}
+
+async function handleRegister() {
+  var errEl = document.getElementById('global-error');
+  var btn   = document.getElementById('continue-btn');
+  errEl.textContent = '';
+
+  if (!validate()) return;
+
+  var email    = document.getElementById('r-email').value.trim();
+  var password = document.getElementById('r-password').value;
+  var username = document.getElementById('r-username').value.trim();
+  var first    = document.getElementById('r-first').value.trim();
+  var last     = document.getElementById('r-last').value.trim();
+  var country  = document.getElementById('r-country').value;
+  var address  = document.getElementById('r-address').value.trim();
+  var city     = document.getElementById('r-city').value.trim();
+  var zip      = document.getElementById('r-zip').value.trim();
+  var state    = document.getElementById('r-state').value.trim();
+  var code     = document.getElementById('r-code').value.trim().toUpperCase();
+
+  btn.disabled = true;
+  btn.textContent = 'Creating account...';
+
+  // ── Sign up with Supabase Auth ──
+  var { data: authData, error: authError } = await sb.auth.signUp({ email, password });
+  if (authError) {
+    errEl.textContent = authError.message;
+    btn.disabled = false; btn.textContent = 'Continue';
+    return;
+  }
+
+  var userId = authData.user.id;
+
+  // ── If valid promo code: mark as used + set lifetime plan ──
+  var plan = 'pending_payment';
+  var planExpires = null;
+
+  if (validCode) {
+    // Mark promo code as used
+    await sb.from('promo_codes').update({
+      used: true,
+      used_by: userId,
+      used_at: new Date().toISOString()
+    }).eq('id', validCode);
+
+    plan = 'lifetime';
+    planExpires = null;
+  }
+
+  // ── Save profile ──
+  var { error: profileError } = await sb.from('profiles').upsert({
+    id:               userId,
+    email:            email,
+    username:         username,
+    full_name:        first + ' ' + last,
+    legal_first_name: first,
+    legal_last_name:  last,
+    country:          country,
+    street_address:   address,
+    city:             city,
+    zip_code:         zip,
+    state_region:     state,
+    referral_code:    code || null,
+    plan:             plan,
+    plan_expires_at:  planExpires
+  });
+
+  if (profileError) {
+    errEl.textContent = 'Error saving profile: ' + profileError.message;
+    btn.disabled = false; btn.textContent = 'Continue';
+    return;
+  }
+
+  // ── Route based on plan ──
+  if (plan === 'lifetime') {
+    // Free lifetime — go straight to dashboard
+    window.location.href = '/dashboard';
+  } else {
+    // Needs payment — redirect to Paddle checkout
+    // TODO: replace with real Paddle checkout URL
+    window.location.href = '/dashboard';
+    // window.location.href = 'https://checkout.paddle.com/...?email=' + encodeURIComponent(email);
+  }
+}
+
+function openTerms() {
+  document.getElementById('modal-legal-title').textContent = 'Terms of Use';
+  document.getElementById('modal-legal-body').innerHTML = '<h4 style="color:#eeeef0;margin-bottom:10px">About Pattro</h4><p>Pattro is a journaling and psychological analysis tool for traders. It is not a financial advisory service, trading signal service, or investment management service.</p><br><h4 style="color:#eeeef0;margin-bottom:10px">No Refunds</h4><p>All sales are final. We do not offer refunds under any circumstances. If you experience any issues with your subscription, please contact our support team and we will work to resolve them.</p><br><h4 style="color:#eeeef0;margin-bottom:10px">Your Data</h4><p>Your information may be used by Pattro to send you product updates, tips, and important account notifications. We do not sell your data to third parties.</p><br><h4 style="color:#eeeef0;margin-bottom:10px">Appropriate Use</h4><p>You agree to use Pattro only for recording and analyzing your own trading operations. Resale of access or any use that interferes with normal platform operation is prohibited.</p>';
+  document.getElementById('terms-overlay').style.display = 'flex';
+}
+
+function openPrivacy() {
+  document.getElementById('modal-legal-title').textContent = 'Privacy Policy';
+  document.getElementById('modal-legal-body').innerHTML = '<h4 style="color:#eeeef0;margin-bottom:10px">What we collect</h4><p>We collect only the data you enter: trades, emotions, checklist responses, and account settings. We also store your email for authentication and communications.</p><br><h4 style="color:#eeeef0;margin-bottom:10px">How we use your data</h4><p>Your data is used exclusively to generate the analysis and metrics you see in your dashboard. Your personal information (name, address, country) is stored securely and may be used by Pattro for internal purposes including sending account notifications and product updates.</p><br><h4 style="color:#eeeef0;margin-bottom:10px">Your data is yours</h4><p>We do not sell or share your trading data or personal data with third parties. You can request deletion of your account and all associated data at any time by contacting support.</p>';
+  document.getElementById('terms-overlay').style.display = 'flex';
+}
+</script>
+</body>
+</html>
