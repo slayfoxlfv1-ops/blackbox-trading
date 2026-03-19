@@ -5595,7 +5595,7 @@ async function generateCoachAnalysis() {
     var text = await callCoach(prompt, 1000);
     coachAnalysis = text || "No se pudo generar.";
   } catch(e) {
-    coachAnalysis = 'Error conectando con el coach. Asegúrate de abrir Pattro desde tu URL de Vercel.';
+    coachAnalysis = 'Error conectando con el coach. Asegúrate de abrir Pattro desde pattro.com.';
   }
   coachLoading = false;
   var tabEl2 = document.getElementById("disc-tab-content");
@@ -7616,7 +7616,7 @@ async function generateMindCoach() {
     var text = await callCoach(prompt, 1000);
     mindCoachAnalysis = text || 'No se pudo generar el análisis.';
   } catch(e) {
-    mindCoachAnalysis = 'Error al conectar. Abre Pattro desde tu URL de Vercel.';
+    mindCoachAnalysis = 'Error al conectar. Abre Pattro desde pattro.com.';
   }
 
   mindCoachLoading = false;
