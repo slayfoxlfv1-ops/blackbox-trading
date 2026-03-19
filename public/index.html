@@ -724,6 +724,9 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
       </div>
       <div class="form-group">
         <label class="form-label">Emotion</label>
+        <div id="historical-trade-note" style="display:none;margin-bottom:6px;padding:8px 10px;background:rgba(224,152,64,0.08);border:1px solid rgba(224,152,64,0.2);border-radius:6px;font-size:10px;color:var(--amber);line-height:1.55">
+          ⏱ Trade histórico — si no recuerdas tu emoción exacta, deja <strong>Neutral</strong>. Pattro inferirá el estado emocional por tu comportamiento.
+        </div>
         <select class="form-select" id="t-emotion">
           <option value="neutral" selected>😶 Neutral</option>
           <option value="calm">😌 Tranquilo</option>
@@ -1087,6 +1090,21 @@ function openLogModal() {
   if (titleEl) titleEl.textContent = 'Log Trade';
   document.getElementById('save-trade-btn').textContent = 'Save Trade';
   document.getElementById('log-overlay').classList.add('open');
+  // Wire entry-time to show historical note
+  var _entryTimeEl2 = document.getElementById('t-entry-time');
+  var _histNote     = document.getElementById('historical-trade-note');
+  function _checkHistorical() {
+    if (!_entryTimeEl2 || !_histNote) return;
+    var val = _entryTimeEl2.value;
+    if (!val) { _histNote.style.display = 'none'; return; }
+    var diff = (Date.now() - new Date(val).getTime()) / 3600000;
+    _histNote.style.display = diff > 24 ? 'block' : 'none';
+  }
+  if (_entryTimeEl2) {
+    _entryTimeEl2.removeEventListener('change', _checkHistorical);
+    _entryTimeEl2.addEventListener('change', _checkHistorical);
+    _checkHistorical();
+  }
   // Checklist slider: show existing value if already saved today, else allow input
   var _clSlider = document.getElementById('t-checklist-pct');
   var _clDisp   = document.getElementById('t-checklist-pct-display');
@@ -1715,6 +1733,13 @@ async function loadAccountData(id, silent) {
   var today     = new Date().toISOString().slice(0,10);
   var ms        = calcMentalScore(today);
   var mindData  = calcDailyMindScore(today);
+  var _dq       = mindData.dataQuality;
+  var _dqBadge  = dataQualityBadge(_dq);
+  var _dqNote   = _dq === 'inferred'
+    ? '~ Emoción inferida por comportamiento'
+    : _dq === 'partial'
+    ? '◑ Algunos datos faltaron — el análisis es parcial'
+    : '';
   var execData  = calcDailyExecutionScore(today);
   var discData  = calcDailyDisciplineScore(today);
 
@@ -1993,7 +2018,8 @@ async function loadAccountData(id, silent) {
   '<div style="flex:1;min-width:0">' +
   '<div style="height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-bottom:10px">' +
   '<div style="height:100%;width:'+ms.total+'%;background:'+ms.color+';border-radius:3px;transition:width .6s"></div></div>' +
-  '<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px">'+ms.label+'</div>' +
+  '<div style="display:flex;align-items:center;gap:0;margin-bottom:6px"><span style="font-size:13px;font-weight:700;color:var(--text)">'+ms.label+'</span>'+_dqBadge+'</div>' +
+  (_dqNote ? '<div style="font-size:10px;color:var(--text3);margin-bottom:8px;font-style:italic">'+_dqNote+'</div>' : '') +
   '<div style="display:flex;gap:16px;flex-wrap:wrap">' +
   '<span style="font-size:11px;color:var(--text3)">Disciplina <b style="color:'+(ms.discScore>=75?'var(--green)':ms.discScore>=50?'var(--amber)':'var(--red)')+'">'+ms.discScore+'</b></span>' +
   '<span style="font-size:11px;color:var(--text3)">Mind <b style="color:'+(ms.mindScore>=75?'var(--green)':ms.mindScore>=50?'var(--amber)':'var(--red)')+'">'+ms.mindScore+'</b></span>' +
@@ -3478,6 +3504,107 @@ var EMOTION_PTS = {
   greedy:      15
 };
 
+// ── Infer emotion from trade behavior when no emotion registered ──
+function inferTradeEmotion(trade, allDayTrades) {
+  var sorted = allDayTrades.slice().sort(function(a,b){
+    return new Date(a.entry_time) - new Date(b.entry_time);
+  });
+  var idx = sorted.findIndex(function(t){ return t.id === trade.id; });
+  var pnl = trade.pnl || 0;
+
+  // Revenge: loss followed by trade < 5min later
+  if (idx > 0) {
+    var prev = sorted[idx - 1];
+    if ((prev.pnl || 0) < 0) {
+      var prevExit = prev.exit_time || prev.entry_time;
+      var gap = (new Date(trade.entry_time) - new Date(prevExit)) / 60000;
+      if (gap >= 0 && gap < 5) return { emotion: 'frustrated', inferred: true, reason: 'Revenge trade detectado' };
+    }
+  }
+
+  // Tilt: part of 3+ consecutive losses in < 1h
+  if (idx >= 2) {
+    var w = sorted.slice(Math.max(0, idx-2), idx+1);
+    var allLoss = w.every(function(t){ return (t.pnl||0) < 0; });
+    if (allLoss) {
+      var span = (new Date(w[w.length-1].entry_time) - new Date(w[0].entry_time)) / 60000;
+      if (span < 60) return { emotion: 'frustrated', inferred: true, reason: 'Tilt — 3+ pérdidas consecutivas' };
+    }
+  }
+
+  // FOMO: overtrading (day has 2x+ user's avg daily trades)
+  var allTrades = currentTrades || [];
+  var tradingDays = {};
+  allTrades.forEach(function(t){
+    if (t.entry_time) {
+      var d = t.entry_time.slice(0,10);
+      tradingDays[d] = (tradingDays[d] || 0) + 1;
+    }
+  });
+  var dayKeys = Object.keys(tradingDays);
+  if (dayKeys.length >= 5) {
+    var avgPerDay = dayKeys.reduce(function(s,d){ return s + tradingDays[d]; }, 0) / dayKeys.length;
+    var thisDay = trade.entry_time ? trade.entry_time.slice(0,10) : null;
+    if (thisDay && tradingDays[thisDay] >= avgPerDay * 2) {
+      return { emotion: 'greedy', inferred: true, reason: 'Overtrading — 2x+ trades del promedio diario' };
+    }
+  }
+
+  // Infer from P&L result
+  if (pnl > 0) {
+    var allWins = allTrades.filter(function(t){ return (t.pnl||0) > 0; });
+    var avgWin = allWins.length ? allWins.reduce(function(s,t){ return s+(t.pnl||0); },0)/allWins.length : pnl;
+    if (pnl >= avgWin * 1.5) return { emotion: 'confident', inferred: true, reason: 'Win grande (≥1.5× promedio)' };
+    return { emotion: 'calm', inferred: true, reason: 'Trade ganador' };
+  } else if (pnl < 0) {
+    var allLosses = allTrades.filter(function(t){ return (t.pnl||0) < 0; });
+    var avgLoss = allLosses.length ? Math.abs(allLosses.reduce(function(s,t){ return s+(t.pnl||0); },0)/allLosses.length) : Math.abs(pnl);
+    if (Math.abs(pnl) >= avgLoss * 1.5) return { emotion: 'anxious', inferred: true, reason: 'Pérdida grande (≥1.5× promedio)' };
+    return { emotion: 'neutral', inferred: true, reason: 'Trade perdedor normal' };
+  }
+  return { emotion: 'neutral', inferred: true, reason: 'Sin datos suficientes' };
+}
+
+// ── Data quality score for a given day ──
+// Returns: 'complete' | 'partial' | 'inferred'
+function calcDataQuality(dateStr) {
+  var allTrades = currentTrades || [];
+  var dayTrades = allTrades.filter(function(t){
+    return t.entry_time && t.entry_time.startsWith(dateStr);
+  });
+  if (!dayTrades.length) return 'complete'; // no trades = no issue
+
+  var moodSess = (currentMoodSessions || []).find(function(s){
+    return (s.session_date || s.date) === dateStr;
+  });
+  var checkSess = (currentChecklistSessions || []).find(function(s){
+    return (s.session_date || s.date) === dateStr;
+  });
+
+  var hasRealMood      = !!moodSess;
+  var hasChecklist     = !!checkSess;
+  var tradesWithEmo    = dayTrades.filter(function(t){ return t.emotion; }).length;
+  var emoCompletePct   = dayTrades.length > 0 ? tradesWithEmo / dayTrades.length : 0;
+
+  // Complete: has mood check + all trades have emotion + checklist
+  if (hasRealMood && emoCompletePct >= 1 && hasChecklist) return 'complete';
+
+  // Partial: has some emotional data (mood or some trade emotions)
+  if (hasRealMood || emoCompletePct >= 0.5) return 'partial';
+
+  // Inferred: only P&L data, behavior inferred
+  return 'inferred';
+}
+
+// ── Data quality badge HTML ──
+function dataQualityBadge(quality) {
+  if (quality === 'complete') return '';
+  if (quality === 'partial') {
+    return '<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:rgba(224,152,64,0.1);border:1px solid rgba(224,152,64,0.25);border-radius:20px;font-size:9px;color:var(--amber);font-family:\'Geist Mono\',monospace;letter-spacing:.3px;margin-left:8px">◑ Parcial</span>';
+  }
+  return '<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:rgba(91,156,246,0.1);border:1px solid rgba(91,156,246,0.25);border-radius:20px;font-size:9px;color:var(--blue);font-family:\'Geist Mono\',monospace;letter-spacing:.3px;margin-left:8px">~ Inferido</span>';
+}
+
 function emotionToMindPts(emotionScore) {
   // Map 0-100 scale to 0-40
   return Math.round(emotionScore / 100 * 40);
@@ -3515,19 +3642,31 @@ function calcDailyMindScore(dateStr) {
     moodLevel = moodPts >= 32 ? 'green' : moodPts >= 18 ? 'yellow' : 'red';
   }
 
-  // ── Sub 2: Emotion average (40pts) ──
+  // ── Sub 2: Emotion average (40pts) — use real or inferred ──
   var emotionPts;
   var tradesWithEmotion = dayTrades.filter(function(t){ return t.emotion; });
-  if (!tradesWithEmotion.length) {
-    emotionPts = null; // no emotion data
-  } else {
+  var _usingInferredEmo = false;
+
+  if (!tradesWithEmotion.length && dayTrades.length > 0) {
+    // No real emotions — infer from behavior
+    _usingInferredEmo = true;
+    var inferredEmos = dayTrades.map(function(t){ return inferTradeEmotion(t, dayTrades); });
+    var totalEmoPts = inferredEmos.reduce(function(sum, inf) {
+      var pts = EMOTION_PTS[inf.emotion];
+      return sum + (pts !== undefined ? pts : 50);
+    }, 0);
+    var avgEmoPts = totalEmoPts / inferredEmos.length;
+    emotionPts = emotionToMindPts(avgEmoPts);
+  } else if (tradesWithEmotion.length > 0) {
     var totalEmoPts = tradesWithEmotion.reduce(function(sum, t) {
       var emo = (t.emotion || '').toLowerCase();
       var pts = EMOTION_PTS[emo];
-      return sum + (pts !== undefined ? pts : 50); // unknown = neutral 50
+      return sum + (pts !== undefined ? pts : 50);
     }, 0);
     var avgEmoPts = totalEmoPts / tradesWithEmotion.length;
-    emotionPts = emotionToMindPts(avgEmoPts); // 0–40
+    emotionPts = emotionToMindPts(avgEmoPts);
+  } else {
+    emotionPts = null;
   }
 
   // ── Sub 3: Behavior (20pts base, deductions) ──
@@ -3601,18 +3740,20 @@ function calcDailyMindScore(dateStr) {
             : 'Estado crítico 🔴';
 
   return {
-    total:          total,
-    label:          label,
-    moodPts:        moodPts,
-    moodLevel:      moodLevel,
-    emotionPts:     emotionPts,
-    behaviorPts:    behaviorPts,
-    behaviorDetails:behaviorDetails,
-    moodMax:        40,
-    emotionMax:     40,
-    behaviorMax:    20,
-    hasTrades:      dayTrades.length > 0,
-    tradeCount:     dayTrades.length
+    total:              total,
+    label:              label,
+    moodPts:            moodPts,
+    moodLevel:          moodLevel,
+    emotionPts:         emotionPts,
+    behaviorPts:        behaviorPts,
+    behaviorDetails:    behaviorDetails,
+    moodMax:            40,
+    emotionMax:         40,
+    behaviorMax:        20,
+    hasTrades:          dayTrades.length > 0,
+    tradeCount:         dayTrades.length,
+    usingInferredEmo:   _usingInferredEmo,
+    dataQuality:        calcDataQuality(today)
   };
 }
 
@@ -5426,17 +5567,29 @@ async function generateCoachAnalysis() {
     ? "Duracion promedio: "+avgDur+"min (min:"+minDur+", max:"+maxDur+"). Hora pico: "+peakHour+"h. Sesion: ~"+sessionSpan+"h"
     : "Sin datos de duracion";
 
+  // Data quality context for Coach
+  var _weekWithEmo   = wt.filter(function(t){ return t.emotion; }).length;
+  var _weekInferred  = wt.filter(function(t){ return !t.emotion; }).length;
+  var _moodDays      = 0;
+  var _weekStart2    = new Date(); _weekStart2.setDate(_weekStart2.getDate()-_weekStart2.getDay()+(_weekStart2.getDay()===0?-6:1)); _weekStart2.setHours(0,0,0,0);
+  (currentMoodSessions||[]).forEach(function(s){
+    var d = new Date(s.session_date||s.date);
+    if (d >= _weekStart2) _moodDays++;
+  });
+  var _dataCtxLine = "Calidad de datos: "+_weekWithEmo+" trades con emoción real, "+_weekInferred+" inferidos por comportamiento. Mood check: "+_moodDays+"/5 días. "+(_weekInferred>0?"Para los trades sin emoción usa el comportamiento (revenge, tilt, overtrading) como proxy psicológico, no afirmes emociones específicas.":"");
+
   var prompt = "Eres un coach de trading profesional. Analiza la semana en espanol, directo y constructivo.\n\n" +
     "DATOS:\n" +
     "- Trades: " + wt.length + "\n" +
     "- P&L: " + (ctx.weekPnl>=0?"+":"") + "$" + (ctx.weekPnl||0).toFixed(0) + "\n" +
     "- Disciplina: " + (ctx.weekDisc||0) + "/100\n" +
     "- Violaciones: " + (ctx.weekViolations||"ninguna") + "\n" +
-    "- Tiempo: " + durLine + "\n\n" +
+    "- Tiempo: " + durLine + "\n" +
+    "- " + _dataCtxLine + "\n\n" +
     "CHECKLIST (" + (ctx.checkItems||[]).length + " items):\n" +
     (ctx.checkSummary||"Sin datos") + "\n\n" +
     "NOTAS:\n" + (ctx.weekNotes||"Sin notas") + "\n\n" +
-    "Estructura: 1) Resumen semana 2) Error principal 3) Lo que hizo bien 4) Gestion del tiempo (duracion trades, horas en pantalla, si opera demasiado) 5) 2-3 acciones concretas 6) Frase motivadora. Max 350 palabras.";
+    "Estructura: 1) Resumen semana 2) Error principal 3) Lo que hizo bien 4) Gestion del tiempo (duracion trades, horas en pantalla, si opera demasiado) 5) 2-3 acciones concretas 6) Frase motivadora. Si hay datos incompletos, sé honesto sobre la limitación del análisis. Max 350 palabras.";
 
   try {
     var text = await callCoach(prompt, 1000);
