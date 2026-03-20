@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1773990378 -->
+<!-- v1773991438 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -2769,7 +2769,7 @@ async function loadAccountData(id, silent) {
   var _clHasItems  = _clItems.length > 0;
   // clToday = true only if items exist AND at least 1 is checked today
   var clToday = _clHasItems && _clDoneCount > 0 ? { session_date: today, score_pct: Math.round(_clDoneCount/_clItems.length*100), verdict: 'caution' } : null;
-  var _clLabel = !_clHasItems ? 'Sin config' : clToday ? '✓ Hecho' : '✗ Pendiente';
+  var _clLabel = !_clHasItems ? 'Not set' : clToday ? '✓ Done' : '✗ Pending';
   var _clColor = !_clHasItems ? 'var(--amber)' : clToday ? 'var(--green)' : 'var(--red)';
   var rulesObj2  = getPersonalRules(currentAccountId||'');
   var hasRules   = Object.keys(rulesObj2).some(function(k){ return rulesObj2[k]&&rulesObj2[k].active; });
@@ -2893,15 +2893,15 @@ async function loadAccountData(id, silent) {
     var _ec={}; trades.forEach(function(t){if(t.emotion)_ec[t.emotion]=(_ec[t.emotion]||0)+1;});
     var _ek=Object.keys(_ec); var _te=_ek.length?_ek.sort(function(a,b){return _ec[b]-_ec[a];})[0]:null;
     var _ee={calm:'😌',confident:'💪',anxious:'😰',fear:'😨',greedy:'🤑',bored:'😐',frustrated:'😤',neutral:'😶'};
-    var _pt = _wr>=60&&_cp>=70?'Disciplined':_wr>=60&&_cp<70?'High WR, low discipline':_wr<40&&_cp>=70?'Disciplined, low WR':'En desarrollo';
+    var _pt = _wr>=60&&_cp>=70?'Disciplined':_wr>=60&&_cp<70?'High WR, low discipline':_wr<40&&_cp>=70?'Disciplined, low WR':'Developing';
     var _pc = _wr>=60&&_cp>=70?'var(--green)':_wr>=40?'var(--amber)':'var(--red)';
     return '<div style="flex-shrink:0;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;min-width:160px">'
-      + '<div style="font-size:8px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px">Perfil</div>'
+      + '<div style="font-size:8px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px">Profile</div>'
       + '<div style="font-size:11px;font-weight:700;color:'+_pc+';margin-bottom:8px">'+_pt+'</div>'
       + '<div style="display:flex;flex-direction:column;gap:3px">'
       + '<div style="display:flex;justify-content:space-between;gap:12px"><span style="font-size:9px;color:var(--text3)">Win Rate</span><span style="font-size:9px;font-weight:600;color:'+(_wr>=60?'var(--green)':_wr>=40?'var(--amber)':'var(--red)')+'">'+_wr+'%</span></div>'
-      + '<div style="display:flex;justify-content:space-between;gap:12px"><span style="font-size:9px;color:var(--text3)">R:R real</span><span style="font-size:9px;font-weight:600;color:var(--text)">'+_rr+'</span></div>'
-      + '<div style="display:flex;justify-content:space-between;gap:12px"><span style="font-size:9px;color:var(--text3)">Limpios</span><span style="font-size:9px;font-weight:600;color:'+(_cp>=70?'var(--green)':_cp>=50?'var(--amber)':'var(--red)')+'">'+_cp+'%</span></div>'
+      + '<div style="display:flex;justify-content:space-between;gap:12px"><span style="font-size:9px;color:var(--text3)">R:R</span><span style="font-size:9px;font-weight:600;color:var(--text)">'+_rr+'</span></div>'
+      + '<div style="display:flex;justify-content:space-between;gap:12px"><span style="font-size:9px;color:var(--text3)">Clean</span><span style="font-size:9px;font-weight:600;color:'+(_cp>=70?'var(--green)':_cp>=50?'var(--amber)':'var(--red)')+'">'+_cp+'%</span></div>'
       + (_te?'<div style="display:flex;justify-content:space-between;gap:12px"><span style="font-size:9px;color:var(--text3)">Emotion</span><span style="font-size:9px">'+(_ee[_te]||'')+' '+_te+'</span></div>':'')
       + '<div style="display:flex;justify-content:space-between;gap:12px"><span style="font-size:9px;color:var(--text3)">Trades</span><span style="font-size:9px;font-weight:600;color:var(--text)">'+_tw+'</span></div>'
       + '</div></div>';
@@ -3097,7 +3097,7 @@ async function loadAccountData(id, silent) {
   '<div style="flex-shrink:0;display:flex;flex-direction:column;gap:6px;text-align:right">' +
   '<div style="font-size:9px;color:var(--text3)">Checklist <span style="color:'+_clColor+'">'+(_clHasItems?(_clDoneCount>0?'✓':'✗'):'—')+'</span></div>' +
   '<div style="font-size:9px;color:var(--text3)">Mood check <span style="color:'+(moodLevel3?'var(--green)':'var(--red)')+'">'+( moodLevel3?'✓':'✗')+'</span></div>' +
-  '<div style="font-size:9px;color:var(--text3)">Rules <span style="color:'+(hasRules?'var(--green)':'var(--amber)')+'">'+( hasRules?'✓':'Sin config')+'</span></div>' +
+  '<div style="font-size:9px;color:var(--text3)">Rules <span style="color:'+(hasRules?'var(--green)':'var(--amber)')+'">'+( hasRules?'✓':'Not set')+'</span></div>' +
   '</div></div>' +
 
   // ── ROW 3: Mistakes · Positivos · Performance ──
@@ -3449,7 +3449,7 @@ function calcPeriodMentalScore(tradesInPeriod) {
     ? (scores.slice(-3).reduce(function(s,x){return s+x.total;},0)/3) - (scores.slice(0,3).reduce(function(s,x){return s+x.total;},0)/3)
     : 0;
 
-  var label = avg >= 90 ? 'Elite trader 🏆' : avg >= 75 ? 'Solid performance ✅' : avg >= 60 ? 'En desarrollo ⚠️' : avg >= 40 ? 'Needs attention 🔶' : 'Critical state 🔴';
+  var label = avg >= 90 ? 'Elite trader 🏆' : avg >= 75 ? 'Solid performance ✅' : avg >= 60 ? 'In progress ⚠️' : avg >= 40 ? 'Needs attention 🔶' : 'Critical state 🔴';
   var color = avg >= 75 ? 'var(--green)' : avg >= 50 ? 'var(--amber)' : 'var(--red)';
 
   return { avg: avg, label: label, color: color, days: dayList.length, scores: scores, best: best.total, worst: worst.total, bestDay: bestDay, worstDay: worstDay, trend: Math.round(trend) };
@@ -4705,7 +4705,7 @@ function calcMentalScore(dateStr) {
 
   var label = total >= 90 ? 'Elite trader 🏆'
             : total >= 75 ? 'Solid performance ✅'
-            : total >= 60 ? 'En desarrollo ⚠️'
+            : total >= 60 ? 'In progress ⚠️'
             : total >= 40 ? 'Needs attention 🔶'
             : 'Critical state 🔴';
 
