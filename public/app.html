@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774024956 -->
+<!-- v1774025242 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -3602,14 +3602,14 @@ function calcAllAchievements(trades, clSessions, moodSessions) {
       type:'streak'
     },
     {
-      id:'streak_tilt', emoji:'⚡', name:'Sin Tilt',
+      id:'streak_tilt', emoji:'⚡', name:'No Tilt',
       desc:'Consecutive days without tilt alert',
       levels:[5,10,20],
       current: currentStreak(tDays, function(d){ return !hasTilt(d); }),
       type:'streak'
     },
     {
-      id:'streak_calibrado', emoji:'🎯', name:'Calibrado',
+      id:'streak_calibrado', emoji:'🎯', name:'Calibrated',
       desc:'Days with emotion logged and positive result or controlled loss',
       levels:[3,7],
       current: currentStreak(tDays, function(d){
@@ -3619,7 +3619,7 @@ function calcAllAchievements(trades, clSessions, moodSessions) {
       type:'streak'
     },
     {
-      id:'streak_journaling', emoji:'✍️', name:'Journaling Express',
+      id:'streak_journaling', emoji:'✍️', name:'Journaling Streak',
       desc:'Consecutive days with at least one trade logged',
       levels:[3,7,14],
       current: currentStreak(tDays, function(d){ return dayTrades(d).length > 0; }),
@@ -3680,12 +3680,12 @@ function calcAllAchievements(trades, clSessions, moodSessions) {
 
   var milestones = [
     {
-      id:'first_clean',   emoji:'✅', name:'Primer trade clean',
+      id:'first_clean',   emoji:'✅', name:'First clean trade',
       desc:'Your first trade with no discipline errors',
       total:1, current:Math.min(totalClean,1), unlocked:totalClean>=1
     },
     {
-      id:'clean_10',      emoji:'⚡', name:'Anti-emocional',
+      id:'clean_10',      emoji:'⚡', name:'Anti-emotional',
       desc:'10 consecutive trades without impulse/fomo/revenge',
       total:10, current:Math.min(noEmoConsec,10), unlocked:noEmoConsec>=10
     },
@@ -3695,7 +3695,7 @@ function calcAllAchievements(trades, clSessions, moodSessions) {
       total:21, current:Math.min(clAccum,21), unlocked:clAccum>=21
     },
     {
-      id:'mental_10',     emoji:'🧘', name:'Mente de acero',
+      id:'mental_10',     emoji:'🧘', name:'Iron mindset',
       desc:'10 cumulative days with Mental Score > 70',
       total:10, current:Math.min(mentalDays,10), unlocked:mentalDays>=10
     },
@@ -3710,12 +3710,12 @@ function calcAllAchievements(trades, clSessions, moodSessions) {
       total:20, current:Math.min(monthDays,20), unlocked:monthDays>=20
     },
     {
-      id:'30_days',       emoji:'🌱', name:'En camino',
+      id:'30_days',       emoji:'🌱', name:'On track',
       desc:'30 days using the platform',
       total:30, current:Math.min(tDays.length,30), unlocked:tDays.length>=30
     },
     {
-      id:'freno_mano',    emoji:'🛑', name:'Freno de mano',
+      id:'freno_mano',    emoji:'🛑', name:'Hand brake',
       desc:'Day with tilt detected and no more trades taken — total control',
       total:1, current:hasFrenoDeMano()?1:0, unlocked:hasFrenoDeMano()
     },
@@ -3730,13 +3730,13 @@ function calcAllAchievements(trades, clSessions, moodSessions) {
       total:1, current:cleanLossExists?1:0, unlocked:cleanLossExists
     },
     {
-      id:'alumno_coach',  emoji:'🤖', name:'Alumno del Coach',
-      desc:'5 consultas manuales al Coach IA',
+      id:'alumno_coach',  emoji:'🤖', name:'Coach student',
+      desc:'5 manual consultations with AI Coach',
       total:5, current:Math.min(consultCount,5), unlocked:consultCount>=5
     },
     {
       id:'ejecucion_sim', emoji:'⚖️', name:'Symmetric execution',
-      desc:'10 trades consecutivos con R:R logrado ≥ 90% del planeado',
+      desc:'10 consecutive trades with R:R achieved ≥ 90% of planned',
       total:10, current:Math.min(rrConsec,10), unlocked:rrConsec>=10
     }
   ];
@@ -7182,7 +7182,7 @@ function buildMindView(trades) {
         + '<div style="font-size:8px;color:var(--text3);margin-bottom:8px">'+s.desc+'</div>'
         + '<div style="height:3px;background:var(--border);border-radius:2px"><div style="height:100%;width:'+pct+'%;background:'+clr+';border-radius:2px"></div></div>'
         + (s.best ? '<div style="font-size:8px;color:var(--text3);margin-top:5px">Best streak: '+s.best+' days</div>' : '')
-        + (s.current >= s.goal ? '<div style="font-size:9px;color:var(--green);margin-top:5px;font-weight:600">🏆 Meta alcanzada!</div>' : '')
+        + (s.current >= s.goal ? '<div style="font-size:9px;color:var(--green);margin-top:5px;font-weight:600">🏆 Goal reached!</div>' : '')
         + '</div>';
     }).join('');
 
@@ -8670,7 +8670,7 @@ function renderAchievementsHtml() {
   }
 
   var html = '<div class="panel" style="margin-top:12px">'
-    + '<div class="panel-head"><span class="panel-title">🏆 Logros & Rachas</span></div>'
+    + '<div class="panel-head"><span class="panel-title">🏆 Achievements & Streaks</span></div>'
     + '<div style="padding:16px">';
 
   // ── RACHAS ──
@@ -8713,7 +8713,7 @@ function renderAchievementsHtml() {
   html += '</div>';
 
   // ── HITOS ──
-  html += '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:8px">Hitos</div>';
+  html += '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:8px">Milestones</div>';
   html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">';
 
   milestones.forEach(function(m) {
@@ -8730,13 +8730,13 @@ function renderAchievementsHtml() {
       + '<div style="font-size:9px;color:var(--text3);margin-bottom:8px;line-height:1.4">'+m.desc+'</div>';
 
     if (m.unlocked) {
-      html += '<div style="font-size:9px;color:var(--green);font-weight:600">Desbloqueado ✓</div>';
+      html += '<div style="font-size:9px;color:var(--green);font-weight:600">Unlocked ✓</div>';
     } else if (m.current > 0) {
       html += '<div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden">'
         +'<div style="height:100%;width:'+pct+'%;background:var(--amber);border-radius:2px;transition:width .4s"></div></div>'
         +'<div style="font-size:8px;color:var(--text3);margin-top:3px">'+m.current+' / '+m.total+' ('+pct+'%)</div>';
     } else {
-      html += '<div style="font-size:8px;color:var(--text3)">Bloqueado — 0 / '+m.total+'</div>';
+      html += '<div style="font-size:8px;color:var(--text3)">Locked — 0 / '+m.total+'</div>';
     }
     html += '</div>';
   });
