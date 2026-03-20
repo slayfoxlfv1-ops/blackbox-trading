@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1773978072 -->
+<!-- v1773984042 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -233,6 +233,7 @@ body {
 .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 .topbar {
   padding: 12px 24px;
+  padding-top: max(12px, env(safe-area-inset-top));
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
@@ -249,7 +250,7 @@ body {
 .btn-solid:hover { opacity: .88; transform: translateY(-1px); }
 .btn-ghost { background: var(--surface2); color: var(--text2); border: 1px solid var(--border2); }
 .btn-ghost:hover { background: var(--surface3); border-color: var(--border2); }
-.content { flex: 1; overflow-y: auto; padding: 20px 24px; }
+.content { flex: 1; overflow-y: auto; padding: 20px 24px; -webkit-overflow-scrolling: touch; }
 
 /* ── PANELS — layered depth, clear hierarchy ── */
 .panel {
@@ -524,6 +525,164 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
   @page { margin: 15mm; size: A4 portrait; }
 }
 .pdf-only { display: none; }
+
+/* ═══════════════════════════════════════════
+   MOBILE RESPONSIVE — breakpoint 768px
+   ═══════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+  /* ── Root layout ── */
+  #app {
+    flex-direction: column !important;
+  }
+
+  /* ── Sidebar → hidden on mobile ── */
+  .sidebar {
+    display: none !important;
+  }
+
+  /* ── Bottom nav bar ── */
+  #mobile-nav {
+    display: flex !important;
+  }
+
+  /* ── Main area fills screen ── */
+  .main {
+    height: 100vh;
+    padding-bottom: 64px; /* space for bottom nav */
+  }
+
+  /* ── Topbar ── */
+  .topbar {
+    padding: 10px 14px;
+    gap: 8px;
+  }
+  .topbar .page-title {
+    font-size: 14px !important;
+  }
+  .topbar .page-sub {
+    display: none;
+  }
+
+  /* ── Content area ── */
+  .content {
+    padding: 14px 12px;
+  }
+
+  /* ── Panels ── */
+  .panel {
+    border-radius: 10px;
+    margin-bottom: 10px;
+  }
+
+  /* ── Modals — full screen on mobile ── */
+  .modal-overlay {
+    padding: 0 !important;
+    align-items: flex-end !important;
+  }
+  .modal {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 16px 16px 0 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-bottom: none !important;
+    max-height: 92vh;
+    overflow-y: auto;
+    padding: 20px 16px !important;
+  }
+
+  /* ── Form grid — single column ── */
+  .form-grid-2 {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── Stats cards — 2 col on mobile ── */
+  .stats-row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .stat-card {
+    min-width: calc(50% - 4px) !important;
+    flex: 1 !important;
+  }
+
+  /* ── Trade table — scrollable ── */
+  .trade-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ── Hide non-essential columns on mobile ── */
+  .col-hide-mobile {
+    display: none !important;
+  }
+
+  /* ── Settings max-width ── */
+  .settings-wrap {
+    max-width: 100% !important;
+    padding: 0;
+  }
+
+  /* ── Calendar cells smaller ── */
+  .cal-cell {
+    min-height: 40px !important;
+    font-size: 9px !important;
+  }
+
+  /* ── Account cards ── */
+  .acc-card {
+    padding: 10px 12px !important;
+  }
+
+  /* ── Log trade button ── */
+  #log-btn {
+    font-size: 10px !important;
+    padding: 6px 12px !important;
+  }
+}
+
+/* ── Desktop only: hide mobile nav ── */
+@media (min-width: 769px) {
+  #mobile-nav {
+    display: none !important;
+  }
+}
+
+#mobile-nav {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 64px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  z-index: 200;
+  padding: 0 8px;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.mnav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  padding: 8px 4px;
+  border-radius: 8px;
+  transition: background .15s;
+  color: var(--text3);
+  font-size: 9px;
+  font-family: 'Geist Mono', monospace;
+  letter-spacing: .3px;
+  -webkit-tap-highlight-color: transparent;
+}
+.mnav-item:active { background: var(--hover); }
+.mnav-item.active { color: var(--teal); }
+.mnav-icon {
+  font-size: 18px;
+  line-height: 1;
+}
 </style>
 </head>
 <body>
@@ -558,7 +717,7 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
 </div>
 
 <!-- APP -->
-<div class="layout" id="app" style="display:none">
+<div class="layout" id="app" style="display:none;flex-direction:row;height:100vh;overflow:hidden">
   <aside class="sidebar">
     <div class="logo" onclick="navigateTo('dashboard')" style="cursor:pointer;display:flex;align-items:center;gap:12px;padding:16px 16px 14px;transition:opacity .15s;border-bottom:1px solid var(--border)" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
       <div style="position:relative;flex-shrink:0;width:40px;height:40px">
@@ -630,7 +789,7 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
 </div>
 
 <!-- ADD/EDIT ACCOUNT MODAL -->
-<div class="overlay" id="modal-overlay">
+<div class="overlay modal-overlay" id="modal-overlay">
   <div class="modal">
     <div class="modal-title" id="modal-title">Add Account</div>
     <div class="form-row">
@@ -710,7 +869,7 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
 </div>
 
 <!-- DELETE ACCOUNT MODAL -->
-<div class="overlay" id="del-overlay">
+<div class="overlay modal-overlay" id="del-overlay">
   <div class="modal" style="max-width:380px">
     <div class="modal-title" style="color:var(--red)">Delete Account</div>
     <p style="font-size:13px;color:var(--text2);margin-bottom:10px">Are you sure you want to delete <strong id="del-acc-name"></strong>?</p>
@@ -724,7 +883,7 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
 </div>
 
 <!-- LOG TRADE MODAL -->
-<div class="overlay" id="log-overlay">
+<div class="overlay modal-overlay" id="log-overlay">
   <div class="modal">
     <div class="modal-title">Log Trade</div>
     <div class="form-row">
@@ -1697,6 +1856,10 @@ function navigateTo(view) {
   document.querySelectorAll('.nav-item').forEach(function(i){i.classList.remove('active');});
   var navEl = document.querySelector('.nav-item[data-view="'+view+'"]');
   if (navEl) navEl.classList.add('active');
+  // Sync mobile bottom nav
+  document.querySelectorAll('.mnav-item').forEach(function(i){i.classList.remove('active');});
+  var mNavEl = document.querySelector('.mnav-item[data-view="'+view+'"]');
+  if (mNavEl) mNavEl.classList.add('active');
   var titles = { dashboard:'Dashboard', trades:'Trades', psychology:'Psychology', insights:'Insights', settings:'Settings' };
   var acc = accounts.find(function(a){return a.id===currentAccountId;});
   document.getElementById('page-title').textContent = acc ? acc.name : titles[view];
@@ -9512,6 +9675,31 @@ function openLegalModal(type) {
   <div class="lightbox-close" onclick="closeLightbox()">&#10005;</div>
   <img class="lightbox-img" id="lightbox-img" src="" alt="Trade screenshot">
 </div>
+
+<!-- MOBILE BOTTOM NAV -->
+<nav id="mobile-nav">
+  <div class="mnav-item active" id="mnav-dashboard" onclick="navigateTo('dashboard')" data-view="dashboard">
+    <span class="mnav-icon">&#9638;</span>
+    <span>Dashboard</span>
+  </div>
+  <div class="mnav-item" id="mnav-trades" onclick="navigateTo('trades')" data-view="trades">
+    <span class="mnav-icon">&#8801;</span>
+    <span>Trades</span>
+  </div>
+  <div class="mnav-item" id="mnav-psychology" onclick="navigateTo('psychology')" data-view="psychology">
+    <span class="mnav-icon">&#9679;</span>
+    <span>Psychology</span>
+  </div>
+  <div class="mnav-item" id="mnav-insights" onclick="navigateTo('insights')" data-view="insights">
+    <span class="mnav-icon">◈</span>
+    <span>Insights</span>
+  </div>
+  <div class="mnav-item" id="mnav-settings" onclick="navigateTo('settings')" data-view="settings">
+    <span class="mnav-icon">⚙</span>
+    <span>Settings</span>
+  </div>
+</nav>
+
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function() {
