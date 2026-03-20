@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1773994138 -->
+<!-- v1774024651 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -2632,7 +2632,7 @@ async function loadAccountData(id, silent) {
     var bdWR      = bestDayTrades.length ? Math.round(bdWins/bestDayTrades.length*100) : 0;
     var bdInsights = [];
     if (bdClean === bestDayTrades.length && bestDayTrades.length > 0) bdInsights.push('all your trades were clean');
-    else if (bdClean > 0) bdInsights.push(bdClean + ' de ' + bestDayTrades.length + ' trades fueron clean');
+    else if (bdClean > 0) bdInsights.push(bdClean + ' of ' + bestDayTrades.length + ' trades were clean');
     if (bdTopEmo === 'calm' || bdTopEmo === 'confident') bdInsights.push('operaste ' + (bdTopEmo === 'calm' ? 'tranquilo' : 'con confianza'));
     if (bdWR >= 70) bdInsights.push('tu win rate fue ' + bdWR + '%');
     bestDayInsight = bdInsights.length ? bdInsights.join(' · ') : 'day with good control and results';
@@ -2653,10 +2653,10 @@ async function loadAccountData(id, silent) {
     var wdTopEmo = wdEmo.length ? wdEmo.sort(function(a,b){ return wdEmo.filter(function(x){return x===b;}).length - wdEmo.filter(function(x){return x===a;}).length; })[0] : null;
     var wdInsights = [];
     var tagNames = { fomo:'FOMO', impulse:'trades impulsivos', moved_sl:'mover el stop', overtrading:'overtrading', no_confirmation:'entering without confirmation', scaled_in:'scaling into losses' };
-    if (wdTopTag) wdInsights.push('error principal: ' + (tagNames[wdTopTag]||wdTopTag));
+    if (wdTopTag) wdInsights.push('main error: ' + (tagNames[wdTopTag]||wdTopTag));
     if (wdTopEmo && (wdTopEmo==='frustrated'||wdTopEmo==='anxious'||wdTopEmo==='fear')) {
-      var emoSpanish = { frustrated:'frustration', anxious:'ansiedad', fear:'miedo' };
-      wdInsights.push('operaste con ' + emoSpanish[wdTopEmo]);
+      var emoSpanish = { frustrated:'frustration', anxious:'anxiety', fear:'fear' };
+      wdInsights.push('traded with ' + emoSpanish[wdTopEmo]);
     }
     if (wdErrors.length > 0 && worstDayTrades.length > 0) {
       var errRate = Math.round(wdErrors.length/worstDayTrades.length*100);
@@ -2695,9 +2695,9 @@ async function loadAccountData(id, silent) {
     var p = [];
     // A positive trade = winner (pnl > 0) AND clean discipline tag
     var truePositiveTs = ts.filter(function(t){ return (t.pnl||0) > 0 && (t.discipline_tag||'clean') === 'clean'; });
-    if (truePositiveTs.length) p.push({ icon:'✅', label: truePositiveTs.length + ' trade'+(truePositiveTs.length>1?'s':'')+' ganador'+(truePositiveTs.length>1?'es':'')+' y clean' });
+    if (truePositiveTs.length) p.push({ icon:'✅', label: truePositiveTs.length + ' winning clean trade'+(truePositiveTs.length>1?'s':'') });
     var winTs = ts.filter(function(t){ return (t.pnl||0)>0; });
-    if (winTs.length === ts.length && ts.length > 0) p.push({ icon:'🏆', label:'Dia 100% ganador' });
+    if (winTs.length === ts.length && ts.length > 0) p.push({ icon:'🏆', label:'100% winning day' });
     var wr2 = dayWR(ts);
     if (wr2 !== null && wr2 >= 70 && ts.length >= 3) p.push({ icon:'🎯', label:'Win rate '+wr2+'% today' });
     // No violations
@@ -2723,7 +2723,7 @@ async function loadAccountData(id, silent) {
     ],
     yellow: [
       '⚠️ Yellow day — trade with caution and reduced size.',
-      '📋 Revisa el checklist antes de cada trade.',
+      '📋 Review your checklist before each trade.',
       '🛑 If you hit 2 consecutive losses, stop for the day.'
     ],
     red: [
@@ -2935,7 +2935,7 @@ async function loadAccountData(id, silent) {
       insights.push({
         icon:'⚠', color:'var(--red)', bg:'rgba(224,85,85,0.07)', border:'rgba(224,85,85,0.2)',
         label:'Most frequent error',
-        text:'Tu mayor error es <strong>'+tagLabels[worstTag]+'</strong> — '+worstN+' trades'
+        text:'Your main error is <strong>'+tagLabels[worstTag]+'</strong> — '+worstN+' trades'
           +(tagPnl<0?', <strong style="color:var(--red)">'+tagPnlStr+'</strong> de impacto total':'')
           +(pctWorse>10&&allAvg!==0?'. P&amp;L avg on those trades is <strong>'+pctWorse+'% worse</strong> than your average':'')+'.'
       });
@@ -2961,7 +2961,7 @@ async function loadAccountData(id, silent) {
           icon:'◷', color:'var(--amber)', bg:'rgba(224,152,64,0.07)', border:'rgba(224,152,64,0.2)',
           label:'Time pattern (Pattro)',
           text:'Your best hour is <strong>'+fmt12(bestH)+'</strong> (avg <strong style="color:var(--green)">'+(bestAvg>=0?'+':'')+'$'+Math.abs(bestAvg)+'</strong>). '
-            +'Evita operar a las <strong>'+fmt12(worstH)+'</strong> — avg <strong style="color:var(--red)">'+(worstAvg>=0?'+':'')+'$'+worstAvg+'</strong> per trade.'
+            +'Avoid trading at <strong>'+fmt12(worstH)+'</strong> — avg <strong style="color:var(--red)">'+(worstAvg>=0?'+':'')+'$'+worstAvg+'</strong> per trade.'
         });
       }
     }
@@ -2984,7 +2984,7 @@ async function loadAccountData(id, silent) {
       insights.push({
         icon:'◈', color:'var(--teal)', bg:'rgba(62,207,207,0.07)', border:'rgba(62,207,207,0.2)',
         label:'Most costly emotion',
-        text:'Cuando operas <strong>'+emoLabels[costlyEmo]+'</strong> your avg is <strong style="color:var(--red)">$'+ceAvg+'</strong> per trade ('+emoCount[costlyEmo]+' trades). Consider pausing when you notice that emotion.'
+        text:'When trading <strong>'+emoLabels[costlyEmo]+'</strong> your avg is <strong style="color:var(--red)">$'+ceAvg+'</strong> per trade ('+emoCount[costlyEmo]+' trades). Consider pausing when you notice that emotion.'
       });
     }
 
@@ -3013,7 +3013,7 @@ async function loadAccountData(id, silent) {
 
     var out = '<div class="panel fade-in" style="padding:0;overflow:hidden">';
     out += '<div style="padding:12px 18px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">';
-    out += '<span style="font-size:10px;font-weight:700;color:var(--teal);letter-spacing:.3px">&#9672; Insights — Lo que dicen tus datos</span>';
+    out += '<span style="font-size:10px;font-weight:700;color:var(--teal);letter-spacing:.3px">&#9672; Insights — What your data says</span>';
     out += '<span style="font-size:9px;color:var(--text3)">'+trades.length+' trades analyzed</span>';
     out += '</div>';
     out += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">';
@@ -3047,7 +3047,7 @@ async function loadAccountData(id, silent) {
   '<div style="display:flex;flex-direction:column;gap:4px">' +
   '<div style="display:flex;justify-content:space-between"><span style="font-size:9px;color:var(--text3)">Mood</span><span style="font-size:9px;color:var(--text2)">'+mindData.moodPts+'/40</span></div>' +
   '<div style="display:flex;justify-content:space-between"><span style="font-size:9px;color:var(--text3)">Emotion</span><span style="font-size:9px;color:var(--text2)">'+(mindData.emotionPts!==null?mindData.emotionPts+'/40':'—')+'</span></div>' +
-  '<div style="display:flex;justify-content:space-between"><span style="font-size:9px;color:var(--text3)">Comportamiento</span><span style="font-size:9px;color:var(--text2)">'+mindData.behaviorPts+'/20</span></div>' +
+  '<div style="display:flex;justify-content:space-between"><span style="font-size:9px;color:var(--text3)">Behavior</span><span style="font-size:9px;color:var(--text2)">'+mindData.behaviorPts+'/20</span></div>' +
   '</div></div>' +
 
   // Discipline
@@ -3073,8 +3073,8 @@ async function loadAccountData(id, silent) {
     '<div style="font-size:10px;color:var(--text2);font-weight:600;margin-bottom:8px">'+execData.label+'</div>' +
     '<div style="display:flex;flex-direction:column;gap:4px">' +
     '<div style="display:flex;justify-content:space-between"><span style="font-size:9px;color:var(--text3)">R:R</span><span style="font-size:9px;color:var(--text2)">'+execData.rrPts+'/40</span></div>' +
-    '<div style="display:flex;justify-content:space-between"><span style="font-size:9px;color:var(--text3)">Entrada</span><span style="font-size:9px;color:var(--text2)">'+execData.entryPts+'/35</span></div>' +
-    '<div style="display:flex;justify-content:space-between"><span style="font-size:9px;color:var(--text3)">Resultado</span><span style="font-size:9px;color:var(--text2)">'+execData.resultPts+'/25</span></div>' +
+    '<div style="display:flex;justify-content:space-between"><span style="font-size:9px;color:var(--text3)">Entry</span><span style="font-size:9px;color:var(--text2)">'+execData.entryPts+'/35</span></div>' +
+    '<div style="display:flex;justify-content:space-between"><span style="font-size:9px;color:var(--text3)">Result</span><span style="font-size:9px;color:var(--text2)">'+execData.resultPts+'/25</span></div>' +
     '</div>'
     :
     '<div style="font-size:11px;color:var(--text3);padding:24px 0;text-align:center">No trades today</div>'
@@ -3100,7 +3100,7 @@ async function loadAccountData(id, silent) {
   '<div style="font-size:9px;color:var(--text3)">Rules <span style="color:'+(hasRules?'var(--green)':'var(--amber)')+'">'+( hasRules?'✓':'Not set')+'</span></div>' +
   '</div></div>' +
 
-  // ── ROW 3: Mistakes · Positivos · Performance ──
+  // ── ROW 3: Mistakes · Positives · Performance ──
   '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">' +
 
   // Mistakes
@@ -3121,9 +3121,9 @@ async function loadAccountData(id, silent) {
   })() +
   '</div>' +
 
-  // Positivos
+  // Positives
   '<div class="panel" style="padding:16px">' +
-  '<div style="font-size:9px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px"><span style="color:var(--green)">↗</span> Positivos</div>' +
+  '<div style="font-size:9px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px"><span style="color:var(--green)">↗</span> Positives</div>' +
   (function(){
     var html3 = '';
     function posRow(p, label) {
@@ -3159,7 +3159,7 @@ async function loadAccountData(id, silent) {
   '<span style="font-size:9px;color:var(--text3)">Net P&L total</span>' +
   '<span style="font-size:13px;font-weight:800;color:'+(netPnl>=0?'var(--green)':'var(--red)')+'">'+fmt(netPnl,true)+'</span></div>' +
   '<div style="display:flex;justify-content:space-between;align-items:center">' +
-  '<span style="font-size:9px;color:var(--text3)">Win rate global</span>' +
+  '<span style="font-size:9px;color:var(--text3)">Global win rate</span>' +
   '<span style="font-size:12px;font-weight:700;color:var(--text)">'+wr+'%</span></div>' +
   '</div>' +
 
@@ -3196,7 +3196,7 @@ async function loadAccountData(id, silent) {
   '<div class="metric"><div class="m-label">Avg. Win</div><div class="m-val pos">$'+avgWin+'</div></div>' +
   '<div class="metric"><div class="m-label">Avg. Loss</div><div class="m-val neg">-$'+avgLoss+'</div></div>' +
   '<div class="metric"><div class="m-label">P&L Week</div><div class="m-val '+(weekPnl>=0?'pos':'neg')+'">'+fmt(weekPnl,true)+'</div></div>' +
-  '<div class="metric"><div class="m-label">P&L Hoy</div><div class="m-val '+(todayPnl>=0?'pos':'neg')+'">'+fmt(todayPnl,true)+'</div></div>' +
+  '<div class="metric"><div class="m-label">P&L Today</div><div class="m-val '+(todayPnl>=0?'pos':'neg')+'">'+fmt(todayPnl,true)+'</div></div>' +
   '</div>' +
 
   '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
@@ -3686,7 +3686,7 @@ function calcAllAchievements(trades, clSessions, moodSessions) {
     },
     {
       id:'clean_10',      emoji:'⚡', name:'Anti-emocional',
-      desc:'10 trades consecutivos sin impulse/fomo/revenge',
+      desc:'10 consecutive trades without impulse/fomo/revenge',
       total:10, current:Math.min(noEmoConsec,10), unlocked:noEmoConsec>=10
     },
     {
@@ -3721,7 +3721,7 @@ function calcAllAchievements(trades, clSessions, moodSessions) {
     },
     {
       id:'fotografo',     emoji:'📸', name:'Market photographer',
-      desc:'50 trades con screenshot guardado',
+      desc:'50 trades with screenshot saved',
       total:50, current:Math.min(screenshotCount,50), unlocked:screenshotCount>=50
     },
     {
@@ -6680,7 +6680,7 @@ function buildMindView(trades) {
     + '<div style="display:flex;flex-direction:column;gap:7px">'
     + '<div><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:9px;color:var(--text3)">Mood</span><span style="font-size:9px;color:var(--text2);font-weight:600">'+mindData.moodPts+' / 40</span></div><div style="height:4px;background:var(--surface3);border-radius:2px;overflow:hidden"><div style="height:100%;width:'+Math.round(mindData.moodPts/40*100)+'%;background:'+(mindData.moodPts>=32?'var(--green)':mindData.moodPts>=20?'var(--amber)':'var(--red)')+';border-radius:2px"></div></div></div>'
     + '<div><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:9px;color:var(--text3)">Trade emotion</span><span style="font-size:9px;color:var(--text2);font-weight:600">'+(mindData.emotionPts!==null?mindData.emotionPts+' / 40':'— / 40')+'</span></div><div style="height:4px;background:var(--surface3);border-radius:2px;overflow:hidden"><div style="height:100%;width:'+(mindData.emotionPts!==null?Math.round(mindData.emotionPts/40*100):0)+'%;background:'+(mindData.emotionPts===null?'var(--border)':mindData.emotionPts>=32?'var(--green)':mindData.emotionPts>=20?'var(--amber)':'var(--red)')+';border-radius:2px"></div></div></div>'
-    + '<div><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:9px;color:var(--text3)">Comportamiento</span><span style="font-size:9px;color:var(--text2);font-weight:600">'+mindData.behaviorPts+' / 20</span></div><div style="height:4px;background:var(--surface3);border-radius:2px;overflow:hidden"><div style="height:100%;width:'+Math.round(mindData.behaviorPts/20*100)+'%;background:'+(mindData.behaviorPts>=16?'var(--green)':mindData.behaviorPts>=10?'var(--amber)':'var(--red)')+';border-radius:2px"></div></div></div>'
+    + '<div><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:9px;color:var(--text3)">Behavior</span><span style="font-size:9px;color:var(--text2);font-weight:600">'+mindData.behaviorPts+' / 20</span></div><div style="height:4px;background:var(--surface3);border-radius:2px;overflow:hidden"><div style="height:100%;width:'+Math.round(mindData.behaviorPts/20*100)+'%;background:'+(mindData.behaviorPts>=16?'var(--green)':mindData.behaviorPts>=10?'var(--amber)':'var(--red)')+';border-radius:2px"></div></div></div>'
     + '</div></div></div></div>';
 
   // Panel rico: Mental Score Semana + Mes (con sparklines, tendencia, mejor/peor d)
