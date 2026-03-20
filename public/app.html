@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1773991438 -->
+<!-- v1773994138 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -2480,7 +2480,7 @@ async function loadAccountData(id, silent) {
       alerts.push({
         type:   'warn',
         icon:   '⊘',
-        text:   'Regla incumplida: <strong>' + v.rule.label + '</strong> — ' + v.detail,
+        text:   'Rule violated: <strong>' + v.rule.label + '</strong> — ' + v.detail,
         action: 'psychology'
       });
     });
@@ -2507,7 +2507,7 @@ async function loadAccountData(id, silent) {
             + '<span style="font-size:14px;color:' + tc + ';flex-shrink:0;margin-top:1px;cursor:pointer" onclick="navigateTo(\'' + ac + '\')">' + a.icon + '</span>'
             + '<div style="flex:1;font-size:11px;color:var(--text2);line-height:1.5;cursor:pointer" onclick="navigateTo(\'' + ac + '\')">' + a.text + '</div>'
             + '<span style="font-size:9px;color:var(--text3);flex-shrink:0;margin-top:2px;letter-spacing:.5px;cursor:pointer" onclick="navigateTo(\'' + ac + '\')">VER →</span>'
-            + '<span onclick="dismissOverviewAlert(\'' + alertKey + '\')" style="font-size:14px;color:var(--text3);flex-shrink:0;cursor:pointer;margin-left:4px;line-height:1;padding:0 2px" title="Cerrar">×</span>'
+            + '<span onclick="dismissOverviewAlert(\'' + alertKey + '\')" style="font-size:14px;color:var(--text3);flex-shrink:0;cursor:pointer;margin-left:4px;line-height:1;padding:0 2px" title="Close">×</span>'
             + '</div>';
         }).filter(Boolean);
 
@@ -2631,7 +2631,7 @@ async function loadAccountData(id, silent) {
     var bdWins    = bestDayTrades.filter(function(t){ return (t.pnl||0)>0; }).length;
     var bdWR      = bestDayTrades.length ? Math.round(bdWins/bestDayTrades.length*100) : 0;
     var bdInsights = [];
-    if (bdClean === bestDayTrades.length && bestDayTrades.length > 0) bdInsights.push('ejecutaste todos tus trades de forma limpia');
+    if (bdClean === bestDayTrades.length && bestDayTrades.length > 0) bdInsights.push('all your trades were clean');
     else if (bdClean > 0) bdInsights.push(bdClean + ' de ' + bestDayTrades.length + ' trades fueron clean');
     if (bdTopEmo === 'calm' || bdTopEmo === 'confident') bdInsights.push('operaste ' + (bdTopEmo === 'calm' ? 'tranquilo' : 'con confianza'));
     if (bdWR >= 70) bdInsights.push('tu win rate fue ' + bdWR + '%');
@@ -2660,7 +2660,7 @@ async function loadAccountData(id, silent) {
     }
     if (wdErrors.length > 0 && worstDayTrades.length > 0) {
       var errRate = Math.round(wdErrors.length/worstDayTrades.length*100);
-      if (errRate >= 50) wdInsights.push(errRate + '% de trades con error');
+      if (errRate >= 50) wdInsights.push(errRate + '% trades with error');
     }
     worstDayInsight = wdInsights.length ? wdInsights.join(' · ') : 'day with losses and discipline errors';
   }
@@ -2779,7 +2779,7 @@ async function loadAccountData(id, silent) {
     var sorted3 = ts.slice().sort(function(a,b){ return new Date(a.entry_time)-new Date(b.entry_time); });
     var cum = 0; var pts = [0];
     sorted3.forEach(function(t){ cum += (t.pnl||0); pts.push(cum); });
-    if (pts.length < 2) return '<div style="font-size:10px;color:var(--text3);text-align:center;padding:20px 0">Sin datos</div>';
+    if (pts.length < 2) return '<div style="font-size:10px;color:var(--text3);text-align:center;padding:20px 0">No data</div>';
     var mn = Math.min.apply(null,pts), mx = Math.max.apply(null,pts);
     var range = mx - mn || 1;
     var W=240, H=60;
@@ -2827,7 +2827,7 @@ async function loadAccountData(id, silent) {
 
     _progressBanner = '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 16px">'
       + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
-      + '<span style="font-size:10px;font-weight:700;color:var(--text)">&#9672; Tu progreso de insights</span>'
+      + '<span style="font-size:10px;font-weight:700;color:var(--text)">&#9672; Your insights progress</span>'
       + '<span style="font-size:10px;font-weight:800;color:var(--amber)">' + _tc + ' / 30 trades</span>'
       + '</div>'
       + '<div style="height:5px;background:var(--surface);border-radius:3px;overflow:hidden;margin-bottom:8px">'
@@ -2937,7 +2937,7 @@ async function loadAccountData(id, silent) {
         label:'Most frequent error',
         text:'Tu mayor error es <strong>'+tagLabels[worstTag]+'</strong> — '+worstN+' trades'
           +(tagPnl<0?', <strong style="color:var(--red)">'+tagPnlStr+'</strong> de impacto total':'')
-          +(pctWorse>10&&allAvg!==0?'. P&amp;L promedio en esos trades es <strong>'+pctWorse+'% worse</strong> than your average':'')+'.'
+          +(pctWorse>10&&allAvg!==0?'. P&amp;L avg on those trades is <strong>'+pctWorse+'% worse</strong> than your average':'')+'.'
       });
     }
 
@@ -2960,8 +2960,8 @@ async function loadAccountData(id, silent) {
         insights.push({
           icon:'◷', color:'var(--amber)', bg:'rgba(224,152,64,0.07)', border:'rgba(224,152,64,0.2)',
           label:'Time pattern (Pattro)',
-          text:'Your best hour is <strong>'+fmt12(bestH)+'</strong> (promedio <strong style="color:var(--green)">'+(bestAvg>=0?'+':'')+'$'+Math.abs(bestAvg)+'</strong>). '
-            +'Evita operar a las <strong>'+fmt12(worstH)+'</strong> — promedio <strong style="color:var(--red)">'+(worstAvg>=0?'+':'')+'$'+worstAvg+'</strong> por trade.'
+          text:'Your best hour is <strong>'+fmt12(bestH)+'</strong> (avg <strong style="color:var(--green)">'+(bestAvg>=0?'+':'')+'$'+Math.abs(bestAvg)+'</strong>). '
+            +'Evita operar a las <strong>'+fmt12(worstH)+'</strong> — avg <strong style="color:var(--red)">'+(worstAvg>=0?'+':'')+'$'+worstAvg+'</strong> per trade.'
         });
       }
     }
@@ -2984,11 +2984,11 @@ async function loadAccountData(id, silent) {
       insights.push({
         icon:'◈', color:'var(--teal)', bg:'rgba(62,207,207,0.07)', border:'rgba(62,207,207,0.2)',
         label:'Most costly emotion',
-        text:'Cuando operas <strong>'+emoLabels[costlyEmo]+'</strong> tu promedio es <strong style="color:var(--red)">$'+ceAvg+'</strong> por trade ('+emoCount[costlyEmo]+' trades). Consider pausing when you notice that emotion.'
+        text:'Cuando operas <strong>'+emoLabels[costlyEmo]+'</strong> your avg is <strong style="color:var(--red)">$'+ceAvg+'</strong> per trade ('+emoCount[costlyEmo]+' trades). Consider pausing when you notice that emotion.'
       });
     }
 
-    // ── 4. Racha actual ──
+    // ── 4. Current streak ──
     var sorted2 = trades.slice().sort(function(a,b){ return new Date(a.entry_time)-new Date(b.entry_time); });
     var streak2 = 0, streakDir = null;
     for (var si=sorted2.length-1; si>=0; si--) {
@@ -3014,7 +3014,7 @@ async function loadAccountData(id, silent) {
     var out = '<div class="panel fade-in" style="padding:0;overflow:hidden">';
     out += '<div style="padding:12px 18px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">';
     out += '<span style="font-size:10px;font-weight:700;color:var(--teal);letter-spacing:.3px">&#9672; Insights — Lo que dicen tus datos</span>';
-    out += '<span style="font-size:9px;color:var(--text3)">'+trades.length+' trades analizados</span>';
+    out += '<span style="font-size:9px;color:var(--text3)">'+trades.length+' trades analyzed</span>';
     out += '</div>';
     out += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">';
     insights.forEach(function(ins, i2){
@@ -3034,7 +3034,7 @@ async function loadAccountData(id, silent) {
   })() +
 
 
-  // ── ROW 1: Mind · Disciplina · Execution ──
+  // ── ROW 1: Mind · Discipline · Execution ──
   '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">' +
 
   // Mind
@@ -3050,9 +3050,9 @@ async function loadAccountData(id, silent) {
   '<div style="display:flex;justify-content:space-between"><span style="font-size:9px;color:var(--text3)">Comportamiento</span><span style="font-size:9px;color:var(--text2)">'+mindData.behaviorPts+'/20</span></div>' +
   '</div></div>' +
 
-  // Disciplina
+  // Discipline
   '<div class="panel" style="padding:16px;cursor:pointer" onclick=\'navigateTo(\'psychology\')\'>' +
-  '<div style="font-size:9px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Disciplina</div>' +
+  '<div style="font-size:9px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Discipline</div>' +
   '<div style="display:flex;align-items:baseline;gap:4px;margin-bottom:8px">' +
   '<span style="font-size:36px;font-weight:800;color:'+(discData.total>=75?'var(--green)':discData.total>=50?'var(--amber)':'var(--red)')+'">'+discData.total+'</span>' +
   '<span style="font-size:10px;color:var(--text3)">/100</span></div>' +
@@ -3060,7 +3060,7 @@ async function loadAccountData(id, silent) {
   '<div style="display:flex;flex-direction:column;gap:4px">' +
   '<div style="display:flex;justify-content:space-between"><span style="font-size:9px;color:var(--text3)">Rules</span><span style="font-size:9px;color:var(--text2)">'+discData.rulesPts+'/35</span></div>' +
   '<div style="display:flex;justify-content:space-between"><span style="font-size:9px;color:var(--text3)">Checklist</span><span style="font-size:9px;color:var(--text2)">'+discData.checklistPts+'/35</span></div>' +
-  '<div style="display:flex;justify-content:space-between"><span style="font-size:9px;color:var(--text3)">Operativa</span><span style="font-size:9px;color:var(--text2)">'+(discData.tagPts!==null?discData.tagPts+'/30':'—')+'</span></div>' +
+  '<div style="display:flex;justify-content:space-between"><span style="font-size:9px;color:var(--text3)">Trading</span><span style="font-size:9px;color:var(--text2)">'+(discData.tagPts!==null?discData.tagPts+'/30':'—')+'</span></div>' +
   '</div></div>' +
 
   // Execution
@@ -3077,7 +3077,7 @@ async function loadAccountData(id, silent) {
     '<div style="display:flex;justify-content:space-between"><span style="font-size:9px;color:var(--text3)">Resultado</span><span style="font-size:9px;color:var(--text2)">'+execData.resultPts+'/25</span></div>' +
     '</div>'
     :
-    '<div style="font-size:11px;color:var(--text3);padding:24px 0;text-align:center">Sin trades hoy</div>'
+    '<div style="font-size:11px;color:var(--text3);padding:24px 0;text-align:center">No trades today</div>'
   ) +
   '</div>' +
 
@@ -3134,7 +3134,7 @@ async function loadAccountData(id, silent) {
     }
     todayPositives.slice(0,3).forEach(function(p){ html3 += posRow(p,'Today'); });
     prevPositives.slice(0,2).forEach(function(p){ html3 += posRow(p,'Yesterday'); });
-    if (!html3) html3 = '<div style="font-size:10px;color:var(--text3);padding:8px 0">Opera para ver tus puntos positivos</div>';
+    if (!html3) html3 = '<div style="font-size:10px;color:var(--text3);padding:8px 0">Trade to see your positives</div>';
     return html3;
   })() +
   '</div>' +
@@ -3143,14 +3143,14 @@ async function loadAccountData(id, silent) {
   '<div class="panel" style="padding:16px">' +
   '<div style="font-size:9px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Performance</div>' +
   '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">' +
-  // Hoy
+  // Today
   '<div style="background:var(--surface2);border-radius:7px;padding:10px">' +
-  '<div style="font-size:8px;color:var(--text3);text-transform:uppercase;margin-bottom:6px">Hoy</div>' +
+  '<div style="font-size:8px;color:var(--text3);text-transform:uppercase;margin-bottom:6px">Today</div>' +
   '<div style="font-size:20px;font-weight:800;color:'+(todayPnl>=0?'var(--green)':'var(--red)')+'">'+fmt(todayPnl,true)+'</div>' +
   '<div style="font-size:9px;color:var(--text3);margin-top:3px">'+(todayWR!==null?'WR '+todayWR+'%':'—')+' · '+todayTrades.length+' trades</div></div>' +
-  // Ayer
+  // Yesterday
   '<div style="background:var(--surface2);border-radius:7px;padding:10px">' +
-  '<div style="font-size:8px;color:var(--text3);text-transform:uppercase;margin-bottom:6px">'+(prevDay?'Yesterday':'Sin datos')+'</div>' +
+  '<div style="font-size:8px;color:var(--text3);text-transform:uppercase;margin-bottom:6px">'+(prevDay?'Yesterday':'No data')+'</div>' +
   '<div style="font-size:20px;font-weight:800;color:'+(prevPnl>=0?'var(--green)':'var(--red)')+'">'+( prevDay?fmt(prevPnl,true):'—')+'</div>' +
   '<div style="font-size:9px;color:var(--text3);margin-top:3px">'+(prevDay&&prevWR!==null?'WR '+prevWR+'%':'—')+' · '+prevTrades.length+' trades</div></div>' +
   '</div>' +
@@ -3362,7 +3362,7 @@ function calcBiggestMistakes(trades) {
   if (topErr && counts[topErr]>=2) {
     var errTrades = trades.filter(function(t){return t.discipline_tag===topErr;});
     var errPnl    = errTrades.reduce(function(s,t){return s+(t.pnl||0);},0);
-    mistakes.push({ label: errorLabels[topErr]||topErr, detail: counts[topErr]+' veces · P&L: '+(errPnl>=0?'+':'')+Math.round(errPnl) });
+    mistakes.push({ label: errorLabels[topErr]||topErr, detail: counts[topErr]+' times · P&L: '+(errPnl>=0?'+':'')+Math.round(errPnl) });
   }
 
   // 2. Worst hour
@@ -4397,7 +4397,7 @@ function inferTradeEmotion(trade, allDayTrades) {
     if (Math.abs(pnl) >= avgLoss * 1.5) return { emotion: 'anxious', inferred: true, reason: 'Large loss (≥1.5× average)' };
     return { emotion: 'neutral', inferred: true, reason: 'Trade perdedor normal' };
   }
-  return { emotion: 'neutral', inferred: true, reason: 'Sin datos suficientes' };
+  return { emotion: 'neutral', inferred: true, reason: 'No data suficientes' };
 }
 
 // ── Data quality score for a given day ──
@@ -4552,7 +4552,7 @@ function calcDailyMindScore(dateStr) {
     }
     if (activeLossStreak > 2) {
       behaviorPts -= 5;
-      behaviorDetails.push({ label: 'Racha activa de ' + activeLossStreak + ' losses', pts: -5, color: 'var(--amber)' });
+      behaviorDetails.push({ label: 'Active streak of ' + activeLossStreak + ' losses', pts: -5, color: 'var(--amber)' });
     }
   }
 
@@ -4682,7 +4682,7 @@ function calcDailyExecutionScore(dateStr) {
   };
 }
 
-// ── Mental Score (0–100) = Disciplina(40%) + Mind(35%) + Ejecucion(25%) ──
+// ── Mental Score (0–100) = Discipline(40%) + Mind(35%) + Execution(25%) ──
 function calcMentalScore(dateStr) {
   var today = dateStr || new Date().toISOString().slice(0,10);
   var disc  = calcDailyDisciplineScore(today);
@@ -4744,7 +4744,7 @@ function renderRulesView() {
   // ── Header ──
   html += '<div style="margin-bottom:16px">'
     + '<div style="font-size:18px;font-weight:700;color:var(--text);letter-spacing:-.3px">Mis Reglas de Sesion</div>'
-    + '<div style="font-size:11px;color:var(--text3);margin-top:3px">Activa el toggle de cada regla para incluirla en tu score de disciplina</div>'
+    + '<div style="font-size:11px;color:var(--text3);margin-top:3px">Toggle each rule to include it in your discipline score</div>'
     + '</div>';
 
   // ── Score panel ──
@@ -4758,7 +4758,7 @@ function renderRulesView() {
     + '<div style="height:100%;width:' + dscore.score + '%;background:' + dcolor + ';border-radius:3px"></div></div>'
     + '<div style="font-size:12px;color:var(--text2);font-weight:600">' + dlabel + '</div>'
     + '<div style="font-size:10px;color:var(--text3);margin-top:2px">'
-    + activeCount + ' regla' + (activeCount!==1?'s':'') + ' activa' + (activeCount!==1?'s':'')
+    + activeCount + ' rule' + (activeCount!==1?'s':'') + ' active'
     + (activeCount<3?' · <span style="color:var(--amber)">activa ' + (3-activeCount) + ' mas para score completo</span>':'')
     + ' · ' + violations.length + ' incumplida' + (violations.length!==1?'s':'') + ' hoy'
     + '</div></div></div>';
@@ -4853,7 +4853,7 @@ function renderRulesView() {
     + '<span style="font-size:10px;color:var(--text3)">Max</span>'
     + '<input type="number" min="1" max="10" value="' + (r4.value||2) + '" id="rule-input-maxlosses" onchange="updateRuleValue(\'maxlosses\',this.value)" style="width:48px;background:transparent;border:none;color:var(--text);font-size:14px;font-weight:700;font-family:inherit;text-align:center;outline:none">'
     + '<span style="font-size:10px;color:var(--text3)">perdidas seguidas</span></div>'
-    + '<div style="font-size:11px;color:var(--text3)">Racha max hoy: <span style="color:' + (ms4>=(parseInt(r4.value)||2)?'var(--red)':'var(--text)') + ';font-weight:600">' + ms4 + '</span></div>'
+    + '<div style="font-size:11px;color:var(--text3)">Max streak today: <span style="color:' + (ms4>=(parseInt(r4.value)||2)?'var(--red)':'var(--text)') + ';font-weight:600">' + ms4 + '</span></div>'
     + '</div>';
   html += rCard('maxlosses','🛑','Max consecutive losses','Stop trading when you chain this number of consecutive losses', ml4, !!r4.active, violations.some(function(v){return v.rule.id==='maxlosses';}));
 
@@ -4883,7 +4883,7 @@ function renderRulesView() {
   var r7 = rules.redday || {};
   var tMd = (currentMoodSessions||[]).find(function(s){return (s.session_date||s.date)===today;});
   var rdClr = tMd?(tMd.level==='green'?'var(--green)':tMd.level==='yellow'?'var(--amber)':'var(--red)'):'var(--text3)';
-  var rdTxt = tMd?(tMd.level==='green'?'Green Day — puedes operar':tMd.level==='yellow'?'Yellow Day — opera con cuidado':'Red Day — NO deberias operar'):'No mood check today';
+  var rdTxt = tMd?(tMd.level==='green'?'Green Day — puedes operar':tMd.level==='yellow'?'Yellow Day — trade carefully':'Red Day — NO deberias operar'):'No mood check today';
   var rd7 = '<div style="display:flex;align-items:center;gap:8px">'
     + '<div style="width:8px;height:8px;border-radius:50%;background:' + rdClr + '"></div>'
     + '<span style="font-size:11px;color:' + rdClr + ';font-weight:600">' + rdTxt + '</span></div>';
@@ -4929,7 +4929,7 @@ function renderRulesView() {
   el.innerHTML = html;
 }
 
-// ── Rules: temp state (only persisted on Guardar) ──
+// ── Rules: temp state (only persisted on Save) ──
 var _rulesTemp = null;
 
 function getRulesTempOrSaved() {
@@ -5055,7 +5055,7 @@ async function generateRulesCoach() {
       outEl.innerHTML = '<div style="font-size:11px;color:var(--red);text-align:center;padding:16px">Could not generate the analysis.</div>';
     }
   } catch(e) {
-    outEl.innerHTML = '<div style="font-size:11px;color:var(--red);text-align:center;padding:16px">Error al contactar el Coach.</div>';
+    outEl.innerHTML = '<div style="font-size:11px;color:var(--red);text-align:center;padding:16px">Could not reach the Coach.</div>';
   }
 }
 
@@ -5305,7 +5305,7 @@ function renderTradeLogHTML(trades) {
     '</div>'+
     '<div class="table-scroll"><table>'+
     '<thead><tr><th>Ticker</th><th>Side</th><th>Entry</th><th>Exit</th><th>Qty</th><th>P&L</th><th>R:R</th><th>Discipline</th><th>Notes</th><th>Time</th><th></th></tr></thead>'+
-    '<tbody>'+(rows.length?rows:'<tr><td colspan="11" style="text-align:center;padding:24px;color:var(--text3);font-size:11px">No hay trades registrados</td></tr>')+'</tbody>'+
+    '<tbody>'+(rows.length?rows:'<tr><td colspan="11" style="text-align:center;padding:24px;color:var(--text3);font-size:11px">No trades logged</td></tr>')+'</tbody>'+
     '</table></div>'+paginationHtml+'</div>';
 }
 
@@ -5535,7 +5535,7 @@ function renderReplay() {
     + '<div class="table-scroll"><table><thead><tr>'
     + '<th>Ticker</th><th>Side</th><th>P&L</th><th>Fecha / Hora</th><th>Screenshot</th><th></th>'
     + '</tr></thead><tbody>'
-    + (rows || '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text3);font-size:12px">No hay trades registrados</td></tr>')
+    + (rows || '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text3);font-size:12px">No trades logged</td></tr>')
     + '</tbody></table></div></div>';
 
   var tbody = el.querySelector("tbody");
@@ -5641,7 +5641,7 @@ function renderDisciplineView() {
   el.innerHTML='<div class="tab-bar fade-in">'+
     '<button class="tab-btn '+(activeTab==='rules'?'active':'')+'" onclick="switchDiscTab(\'rules\')">Rules</button>'+
     '<button class="tab-btn '+(activeTab==='checklist'?'active':'')+'" onclick="switchDiscTab(\'checklist\')">Checklist</button>'+
-    '<button class="tab-btn '+(activeTab==='operativa'?'active':'')+'" onclick="switchDiscTab(\'operativa\')">Operativa</button>'+
+    '<button class="tab-btn '+(activeTab==='operativa'?'active':'')+'" onclick="switchDiscTab(\'operativa\')">Trading</button>'+
     '</div><div id="disc-tab-content"></div>';
   switchDiscTab(activeTab);
 }
@@ -5714,7 +5714,7 @@ function renderRulesTab(el) {
     + '</div>'
     // Tag
     + '<div style="background:var(--surface2);border-radius:8px;padding:10px 12px">'
-    + '<div style="font-size:9px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">Operativa</div>'
+    + '<div style="font-size:9px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">Trading</div>'
     + '<div style="display:flex;align-items:baseline;gap:3px">'
     + '<span style="font-size:20px;font-weight:800;color:var(--text)">' + (daily.tagPts !== null ? daily.tagPts : '—') + '</span>'
     + '<span style="font-size:10px;color:var(--text3)">' + (daily.tagPts !== null ? '/ 30' : '') + '</span></div>'
@@ -5822,7 +5822,7 @@ function renderRulesTab(el) {
     + '<span style="font-size:10px;color:var(--text3)">Max</span>'
     + '<input id="rule-input-maxlosses" type="number" min="1" max="10" value="' + (r4.value||2) + '" style="width:48px;background:transparent;border:none;color:var(--text);font-size:14px;font-weight:700;font-family:inherit;text-align:center;outline:none">'
     + '<span style="font-size:10px;color:var(--text3)">perdidas seguidas</span></div>'
-    + '<div style="font-size:11px;color:var(--text3)">Racha hoy: <span style="color:' + (ms4>=(parseInt(r4.value)||2)?'var(--red)':'var(--text)') + ';font-weight:600">' + ms4 + '</span></div>'
+    + '<div style="font-size:11px;color:var(--text3)">Streak today: <span style="color:' + (ms4>=(parseInt(r4.value)||2)?'var(--red)':'var(--text)') + ';font-weight:600">' + ms4 + '</span></div>'
     + '</div>';
   html += rCard('maxlosses','🛑','Max consecutive losses','Stop trading when you chain this number of consecutive losses', ml4, !!r4.active, violations.some(function(v){return v.rule.id==='maxlosses';}));
 
@@ -5852,7 +5852,7 @@ function renderRulesTab(el) {
   var r7 = rules.redday || {};
   var tMd = (currentMoodSessions||[]).find(function(s){return (s.session_date||s.date)===today;});
   var rdClr = tMd?(tMd.level==='green'?'var(--green)':tMd.level==='yellow'?'var(--amber)':'var(--red)'):'var(--text3)';
-  var rdTxt = tMd?(tMd.level==='green'?'Green Day — puedes operar':tMd.level==='yellow'?'Yellow Day — opera con cuidado':'Red Day — NO deberias operar'):'No mood check today';
+  var rdTxt = tMd?(tMd.level==='green'?'Green Day — puedes operar':tMd.level==='yellow'?'Yellow Day — trade carefully':'Red Day — NO deberias operar'):'No mood check today';
   var rd7 = '<div style="display:flex;align-items:center;gap:8px">'
     + '<div style="width:8px;height:8px;border-radius:50%;background:' + rdClr + '"></div>'
     + '<span style="font-size:11px;color:' + rdClr + ';font-weight:600">' + rdTxt + '</span></div>';
@@ -6290,7 +6290,7 @@ function renderRendimientoView() {
 
   // Header metrics grid
   out += '<div class="panel" style="padding:0;overflow:hidden">';
-  out += '<div class="panel-head"><span class="panel-title">◈ Performance</span><span class="panel-cap">Semana actual · ' + now.toLocaleDateString('es',{month:'long',year:'numeric'}) + '</span></div>';
+  out += '<div class="panel-head"><span class="panel-title">◈ Performance</span><span class="panel-cap">This week · ' + now.toLocaleDateString('es',{month:'long',year:'numeric'}) + '</span></div>';
   out += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0">';
   var metrics2 = [
     { label:'P&L Week',   val: weekTrades.length  ? fmt(weekPnl)  : '--', color: weekTrades.length  ? pnlColor(weekPnl)  : 'var(--text3)', sub: (weekTrades.length||'0') + ' trades' },
@@ -6325,8 +6325,8 @@ function renderRendimientoView() {
     : '<div style="font-size:11px;color:var(--text3);text-align:center;padding:20px 0">No analysis yet. Click to generate the weekly analysis.</div>';
   out += '</div>';
   out += '<div style="margin-top:14px;display:flex;gap:8px">';
-  out += '<button class="btn btn-solid" id="coach-btn" onclick="generateCoachAnalysis()">' + (coachLoading?'Analizando...':'⚡ Analyze week') + '</button>';
-  if (coachAnalysis) out += '<button class="btn btn-ghost" onclick="coachAnalysis=null;renderRendimientoView()">Limpiar</button>';
+  out += '<button class="btn btn-solid" id="coach-btn" onclick="generateCoachAnalysis()">' + (coachLoading?'Analyzing...':'⚡ Analyze week') + '</button>';
+  if (coachAnalysis) out += '<button class="btn btn-ghost" onclick="coachAnalysis=null;renderRendimientoView()">Clear</button>';
   out += '</div></div></div>';
 
   // ── Achievements ──
@@ -6400,7 +6400,7 @@ async function generateCoachAnalysis() {
   var sessionSpan = tradingHours.length ? (Math.max.apply(null,tradingHours)-Math.min.apply(null,tradingHours)) : 0;
   var durLine = avgDur!==null
     ? "Duracion promedio: "+avgDur+"min (min:"+minDur+", max:"+maxDur+"). Hora pico: "+peakHour+"h. Sesion: ~"+sessionSpan+"h"
-    : "Sin datos de duracion";
+    : "No data de duracion";
 
   // Data quality context for Coach
   var _weekWithEmo   = wt.filter(function(t){ return t.emotion; }).length;
@@ -6428,7 +6428,7 @@ async function generateCoachAnalysis() {
 
   try {
     var text = await callCoach(prompt, 1000);
-    coachAnalysis = text || "No se pudo generar.";
+    coachAnalysis = text || "Could not generate.";
   } catch(e) {
     coachAnalysis = 'Error connecting to the coach. Make sure you open Pattro from pattro.com.';
   }
@@ -6594,7 +6594,7 @@ function buildMindView(trades) {
       + '<span style="font-size:24px">⚠️</span>'
       + '<div style="flex:1"><div style="font-weight:700;color:var(--red);font-size:13px">'+currentLossStreak+' losses consecutivas hoy</div>'
       + '<div style="font-size:11px;color:var(--text3);margin-top:3px">Considera tomarte un descanso. El revenge trading es el mayor destructor de cuentas.</div></div>'
-      + '<span onclick="dismissOverviewAlert(\'mind_loss_streak_'+currentAccountId+'_'+new Date().toISOString().slice(0,10)+'\')" style="font-size:18px;color:var(--text3);cursor:pointer;padding:0 4px;flex-shrink:0" title="Cerrar">×</span>'
+      + '<span onclick="dismissOverviewAlert(\'mind_loss_streak_'+currentAccountId+'_'+new Date().toISOString().slice(0,10)+'\')" style="font-size:18px;color:var(--text3);cursor:pointer;padding:0 4px;flex-shrink:0" title="Close">×</span>'
       + '</div>';
   }
 
@@ -6625,7 +6625,7 @@ function buildMindView(trades) {
     + '</div>'
     + (_coachReady
         ? '<button class="btn btn-solid" id="mind-coach-btn" style="white-space:nowrap;flex-shrink:0" onclick="generateMindCoach()">'
-          + (mindCoachLoading ? '<span class="spinner" style="width:12px;height:12px;margin-right:6px"></span>Analizando...' : '⚡ Analyze now')
+          + (mindCoachLoading ? '<span class="spinner" style="width:12px;height:12px;margin-right:6px"></span>Analyzing...' : '⚡ Analyze now')
           + '</button>'
         : '<div style="text-align:right">'
           + '<div style="font-size:10px;color:var(--text2);font-weight:600;margin-bottom:6px">Necesito <strong style="color:var(--amber)">' + _coachNeed + ' more trades</strong></div>'
@@ -6657,7 +6657,7 @@ function buildMindView(trades) {
 
   if (mindCoachAnalysis) {
     html += '<div style="font-size:13px;color:var(--text2);line-height:1.8;white-space:pre-wrap;background:var(--surface2);border-radius:8px;padding:16px">' + mindCoachAnalysis + '</div>'
-      + '<button class="btn btn-ghost" style="margin-top:10px;font-size:11px" onclick="mindCoachAnalysis=\'\';renderMindView()">Limpiar</button>';
+      + '<button class="btn btn-ghost" style="margin-top:10px;font-size:11px" onclick="mindCoachAnalysis=\'\';renderMindView()">Clear</button>';
   } else {
     html += '<div style="font-size:11px;color:var(--text3);text-align:center;padding:24px 0">Press "Analyze now" to receive a diagnosis based on your historical evolution.</div>';
   }
@@ -6695,7 +6695,7 @@ function buildMindView(trades) {
   var discColors = { clean:'#5ec26a', moved_sl:'#f0b429', scaled_loss:'#e05c5c', impulse:'#e05c5c', no_confirmation:'#f0b429', overtrading:'#e05c5c', fomo:'#e05c5c' };
   var discLabels = { clean:'Clean', moved_sl:'Moved SL', scaled_loss:'Scaled↓', impulse:'Impulse', no_confirmation:'No confirm', overtrading:'Overtrade', fomo:'FOMO' };
   html += '<div class="panel" style="padding:20px">'
-    + '<div style="font-size:10px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px">Disciplina</div>'
+    + '<div style="font-size:10px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px">Discipline</div>'
     + '<div style="display:flex;flex-direction:column;gap:7px">';
   Object.keys(discCounts).forEach(function(k) {
     var p = pct(discCounts[k], totalTagged);
@@ -6842,7 +6842,7 @@ function buildMindView(trades) {
           type: 'moved_sl',
           severity: 'high',
           title: 'You move the stop loss and lose more',
-          detail: 'Tus losses con SL movido tienen avg de $' + Math.round(Math.abs(avgMovedSLLoss)) + ' vs $' + Math.round(Math.abs(avgNL)) + ' en losses normales.',
+          detail: 'Tus losses con SL movido tienen avg de $' + Math.round(Math.abs(avgMovedSLLoss)) + ' vs $' + Math.round(Math.abs(avgNL)) + ' in normal losses.',
           fix: 'Trata el SL como inviolable. Cierra si el precio llega — sin excepciones.',
           sample: movedSL.length
         });
@@ -7235,8 +7235,8 @@ function buildMindView(trades) {
         + '</div>'
         + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">'
         + '<span style="font-size:18px;font-weight:800;color:'+barCol+'">-'+fmtP2(p.lossAmt)+'</span>'
-        + '<span style="font-size:10px;color:var(--text3)">en losses</span>'
-        + '<span style="font-size:11px;font-weight:700;color:'+barCol+';margin-left:auto">'+p.impactPct+'% de tus losses</span>'
+        + '<span style="font-size:10px;color:var(--text3)">in losses</span>'
+        + '<span style="font-size:11px;font-weight:700;color:'+barCol+';margin-left:auto">'+p.impactPct+'% of your losses</span>'
         + '</div>'
         + '<div style="background:var(--surface3);border-radius:3px;height:5px;margin-bottom:6px">'
         + '<div style="height:100%;width:'+barPct+'%;background:'+barCol+';border-radius:3px"></div></div>'
@@ -7366,7 +7366,7 @@ function buildMindView(trades) {
         + '</div>'
         + '<div style="font-size:11px;color:var(--text2);line-height:1.6">'+preview+'</div>'
         + (item.message&&item.message.length>180
-          ? '<button onclick="mindCoachAnalysis='+JSON.stringify(item.message)+';renderMindView()" style="margin-top:8px;background:none;border:1px solid var(--border2);border-radius:5px;color:var(--text3);font-size:10px;padding:3px 10px;cursor:pointer">Ver completo</button>'
+          ? '<button onclick="mindCoachAnalysis='+JSON.stringify(item.message)+';renderMindView()" style="margin-top:8px;background:none;border:1px solid var(--border2);border-radius:5px;color:var(--text3);font-size:10px;padding:3px 10px;cursor:pointer">View full</button>'
           : '')
         + '</div>';
     });
@@ -8356,7 +8356,7 @@ function showCoachNotification(message, type, errors) {
     '<div style="font-size:12px;color:var(--text2,#aaa);line-height:1.7;margin-bottom:14px;white-space:pre-wrap">'+preview+'</div>',
     '<div style="display:flex;gap:8px">',
       '<button id="coach-notif-full" style="flex:1;padding:8px;background:'+accentColor+';border:none;border-radius:7px;color:#fff;font-size:11px;font-weight:600;cursor:pointer">View full analysis</button>',
-      '<button id="coach-notif-dismiss" style="padding:8px 12px;background:#1a1a1e;border:1px solid #2e2e36;border-radius:7px;color:#666;font-size:11px;cursor:pointer">Cerrar</button>',
+      '<button id="coach-notif-dismiss" style="padding:8px 12px;background:#1a1a1e;border:1px solid #2e2e36;border-radius:7px;color:#666;font-size:11px;cursor:pointer">Close</button>',
     '</div>'
   ].join('');
 
@@ -8442,16 +8442,16 @@ async function generateMindCoach() {
     + '- Wins: '+wins.length+' | Losses: '+losses.length+'\n'
     + '- Revenge trades detectados: '+revengeCount+'\n\n'
     + 'DISCIPLINE (breakdown):\n'+JSON.stringify(discSummary,null,2)+'\n\n'
-    + 'EMOCIONES → RESULTADOS:\n'+(emoSummary||'Sin datos de emociones')+'\n\n'
+    + 'EMOCIONES → RESULTADOS:\n'+(emoSummary||'No data de emociones')+'\n\n'
     + 'MEJORES HORAS: '+hourSummary+'\n\n'
-    + 'LAST NOTES:\n'+(allNotes||'Sin notas')+'\n\n'
+    + 'LAST NOTES:\n'+(allNotes||'No notes')+'\n\n'
     + 'Por favor genera un analisis psicologico profundo con:\n1. DIAGNOSTICO: patron mental dominante\n2. PATRON DESTRUCTIVO: error principal\n3. FORTALEZA: lo que hace bien\n4. EMOCIONES: como afectan resultados\n5. TIEMPO: mejores y peores momentos\n6. PLAN: 3 acciones concretas esta semana\n7. MENSAJE PERSONAL: frase poderosa. Se directo con datos reales. Max 450 palabras.';
 
   try {
     var text = await callCoach(prompt, 1000);
     mindCoachAnalysis = text || 'Could not generate the analysis.';
   } catch(e) {
-    mindCoachAnalysis = 'Error al conectar. Abre Pattro desde pattro.com.';
+    mindCoachAnalysis = 'Connection error. Open Pattro from pattro.com.';
   }
 
   mindCoachLoading = false;
@@ -8489,7 +8489,7 @@ function renderMentalScorePanel(allTrades, period) {
   if (!weekly && !monthly) return '';
 
   function scoreCard(label, data, trades) {
-    if (!data) return '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:16px;text-align:center"><div style="font-size:10px;color:var(--text3)">'+label+'</div><div style="font-size:11px;color:var(--text3);margin-top:8px">Sin datos suficientes</div></div>';
+    if (!data) return '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:16px;text-align:center"><div style="font-size:10px;color:var(--text3)">'+label+'</div><div style="font-size:11px;color:var(--text3);margin-top:8px">No data suficientes</div></div>';
     var trendArrow = data.trend > 3 ? '↑' : data.trend < -3 ? '↓' : '→';
     var trendColor = data.trend > 3 ? 'var(--green)' : data.trend < -3 ? 'var(--red)' : 'var(--text3)';
 
@@ -8526,8 +8526,8 @@ function renderMentalScorePanel(allTrades, period) {
   return '<div class="panel" style="margin-bottom:12px">'
     +'<div class="panel-head"><span class="panel-title">◈ Mental Score</span><span class="panel-cap" style="font-size:9px;color:var(--text3)">Average of your active days</span></div>'
     +'<div style="padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px">'
-    +scoreCard('Esta semana', weekly, weekTrades)
-    +scoreCard('Este mes', monthly, monthTrades)
+    +scoreCard('This week', weekly, weekTrades)
+    +scoreCard('This month', monthly, monthTrades)
     +'</div></div>';
 }
 
@@ -8540,7 +8540,7 @@ function renderPsychProfilePanel(trades) {
 
   if (!profile) {
     return '<div class="panel" style="margin-bottom:12px"><div class="panel-head"><span class="panel-title">🔬 Psychological Profile</span></div>'
-      +'<div style="padding:16px;text-align:center;color:var(--text3);font-size:11px">Necesitas al menos 5 trades para generar tu perfil.</div></div>';
+      +'<div style="padding:16px;text-align:center;color:var(--text3);font-size:11px">You need at least 5 trades to generate your profile.</div></div>';
   }
 
   // Profile strength bars
@@ -8589,12 +8589,12 @@ function renderPsychProfilePanel(trades) {
     psychAnalysisHtml = '<div style="margin-top:12px;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px">'
       +'<div style="font-size:9px;color:#5a9e9e;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">🤖 AI Coach Analysis</div>'
       +'<div style="font-size:11px;color:var(--text2);line-height:1.7;white-space:pre-wrap">'+window._psychProfileAnalysis+'</div>'
-      +'<button class="btn btn-ghost" style="margin-top:8px;font-size:9px" onclick="window._psychProfileAnalysis=null;buildReports(currentTrades||[])">Limpiar</button>'
+      +'<button class="btn btn-ghost" style="margin-top:8px;font-size:9px" onclick="window._psychProfileAnalysis=null;buildReports(currentTrades||[])">Clear</button>'
       +'</div>';
   }
 
   return '<div class="panel" style="margin-bottom:12px">'
-    +'<div class="panel-head"><span class="panel-title">🔬 Psychological Profile</span><span class="panel-cap">'+trades.length+' trades analizados</span></div>'
+    +'<div class="panel-head"><span class="panel-title">🔬 Psychological Profile</span><span class="panel-cap">'+trades.length+' trades analyzed</span></div>'
     +'<div style="padding:16px">'
     // Row 1: key metrics
     +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">'
@@ -8616,7 +8616,7 @@ function renderPsychProfilePanel(trades) {
 async function generatePsychProfile() {
   incCoachConsultCount();
   var btn = event.target;
-  btn.disabled = true; btn.textContent = '🤖 Analizando...';
+  btn.disabled = true; btn.textContent = '🤖 Analyzing...';
 
   var trades = currentTrades || [];
   var profile = buildPsychProfile(trades);
@@ -8707,7 +8707,7 @@ function renderAchievementsHtml() {
     } else {
       html += '<div style="font-size:8px;color:var(--green);font-weight:700">✓ Maximum level reached</div>';
     }
-    html += '<div style="font-size:10px;font-weight:800;color:'+color+';margin-top:6px">Racha actual: '+s.current+' days</div>';
+    html += '<div style="font-size:10px;font-weight:800;color:'+color+';margin-top:6px">Current streak: '+s.current+' days</div>';
     html += '</div>';
   });
   html += '</div>';
@@ -8751,7 +8751,7 @@ function exportReportPDF() {
   var now    = new Date();
 
   // Period label
-  var periodMap = { week:'Esta semana', month:'Este mes', year:'This year', all:'Historial completo', range:'Custom period' };
+  var periodMap = { week:'This week', month:'This month', year:'This year', all:'All time', range:'Custom period' };
   var period    = periodMap[repFilters.period] || 'Period';
 
   // Filter trades same as buildReports
@@ -9992,7 +9992,7 @@ function openLegalModal(type) {
       <!-- Actions -->
       <div style="display:flex;gap:8px;padding-top:4px;border-top:1px solid var(--border)">
         <button class="btn btn-solid" onclick="saveNoteModal()" style="flex:1">Save note</button>
-        <button class="btn btn-ghost" onclick="closeNoteModal()">Cerrar</button>
+        <button class="btn btn-ghost" onclick="closeNoteModal()">Close</button>
       </div>
     </div>
   </div>
