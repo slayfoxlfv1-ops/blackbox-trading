@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1773948818 -->
+<!-- v1773969559 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -565,13 +565,13 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
     </div>
     <div class="acc-list" id="accounts-list"></div>
     <div style="padding:8px">
-      <button class="add-acc-btn" onclick="openModal()">+ Add account</button>
+      <button class="add-acc-btn" onclick="openModal()" data-i18n-app="nav_add_account">+ Add account</button>
     </div>
     <div class="nav" style="flex:1">
-      <div class="nav-item active" data-view="dashboard"><span class="nav-icon">&#9638;</span> Dashboard</div>
-      <div class="nav-item" data-view="trades"><span class="nav-icon">&#8801;</span> Trades</div>
-      <div class="nav-item" data-view="psychology"><span class="nav-icon">&#9679;</span> Psychology</div>
-      <div class="nav-item" data-view="insights"><span class="nav-icon">◈</span> Insights</div>
+      <div class="nav-item active" data-view="dashboard" data-i18n-app="nav_dashboard"><span class="nav-icon">&#9638;</span> Dashboard</div>
+      <div class="nav-item" data-view="trades" data-i18n-app="nav_trades"><span class="nav-icon">&#8801;</span> Trades</div>
+      <div class="nav-item" data-view="psychology" data-i18n-app="nav_psychology"><span class="nav-icon">&#9679;</span> Psychology</div>
+      <div class="nav-item" data-view="insights" data-i18n-app="nav_insights"><span class="nav-icon">◈</span> Insights</div>
     </div>
     <div class="sidebar-footer user-dropdown-wrap" id="user-dropdown-wrap">
       <!-- Dropdown menu (opens upward) -->
@@ -605,7 +605,8 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
         <div class="page-sub" id="page-sub">DASHBOARD</div>
       </div>
       <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
-        <button class="btn btn-solid" id="log-btn" style="display:none" onclick="openLogModal()">+ Log Trade</button>
+        <button id="app-lang-btn" onclick="setAppLang(appLang === 'en' ? 'es' : 'en')" style="padding:5px 10px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;font-size:10px;color:var(--text2);cursor:pointer;font-family:'Geist Mono',monospace;transition:all .15s;letter-spacing:.3px" title="Switch language">🇪🇸 ES</button>
+        <button class="btn btn-solid" id="log-btn" style="display:none" onclick="openLogModal()" data-i18n-app="log_trade_btn">+ Log Trade</button>
       </div>
     </div>
     <div class="content" id="main-content">
@@ -625,11 +626,11 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
     <div class="modal-title" id="modal-title">Add Account</div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Account Name</label>
+        <label class="form-label" data-i18n-app="lbl_acc_name">Account Name</label>
         <input class="form-input" id="m-name" type="text" placeholder="My Topstep Account">
       </div>
       <div class="form-group">
-        <label class="form-label">Type</label>
+        <label class="form-label" data-i18n-app="lbl_acc_type">Type</label>
         <select class="form-select" id="m-type">
           <option value="PROP">PROP</option>
           <option value="LIVE">LIVE</option>
@@ -639,44 +640,44 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Firm / Broker</label>
+        <label class="form-label" data-i18n-app="lbl_acc_firm">Firm / Broker</label>
         <input class="form-input" id="m-firm" type="text" placeholder="Topstep, Tradeify...">
       </div>
       <div class="form-group">
-        <label class="form-label">Account Size ($)</label>
+        <label class="form-label" data-i18n-app="lbl_acc_size">Account Size ($)</label>
         <input class="form-input" id="m-size" type="number" placeholder="50000">
       </div>
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Daily Loss Limit (negative)</label>
+        <label class="form-label" data-i18n-app="lbl_acc_dll">Daily Loss Limit (negative)</label>
         <input class="form-input" id="m-dll" type="number" placeholder="-1500">
       </div>
       <div class="form-group">
-        <label class="form-label">Max Drawdown (negative)</label>
+        <label class="form-label" data-i18n-app="lbl_acc_dd">Max Drawdown (negative)</label>
         <input class="form-input" id="m-dd" type="number" placeholder="-2000">
       </div>
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Profit Target ($)</label>
+        <label class="form-label" data-i18n-app="lbl_acc_pt">Profit Target ($)</label>
         <input class="form-input" id="m-pt" type="number" placeholder="9000">
       </div>
       <div class="form-group">
-        <label class="form-label">Max Contracts</label>
+        <label class="form-label" data-i18n-app="lbl_acc_maxc">Max Contracts</label>
         <input class="form-input" id="m-max-contracts" type="number" placeholder="12">
       </div>
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Status</label>
+        <label class="form-label" data-i18n-app="lbl_acc_status">Status</label>
         <select class="form-select" id="m-active">
           <option value="true">Active</option>
           <option value="false">Inactive</option>
         </select>
       </div>
       <div class="form-group">
-        <label class="form-label">Color</label>
+        <label class="form-label" data-i18n-app="lbl_acc_color">Color</label>
         <div class="color-swatches" id="color-swatches">
           <div class="cswatch selected" style="background:#5a9e72" data-color="#5a9e72" onclick="pickColor(this)"></div>
           <div class="cswatch" style="background:#9e5a5a" data-color="#9e5a5a" onclick="pickColor(this)"></div>
@@ -693,8 +694,8 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
       Note: Daily Loss Limit and Max Drawdown must be negative numbers e.g. -1500
     </div>
     <div class="modal-foot" style="margin-top:14px;padding-top:12px">
-      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-solid" onclick="saveAccount()">Save Account</button>
+      <button class="btn btn-ghost" onclick="closeModal()" data-i18n-app="cancel">Cancel</button>
+      <button class="btn btn-solid" onclick="saveAccount()" data-i18n-app="save_account">Save Account</button>
     </div>
   </div>
 </div>
@@ -719,14 +720,14 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
     <div class="modal-title">Log Trade</div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Ticker</label>
+        <label class="form-label" data-i18n-app="lbl_ticker">Ticker</label>
         <div style="display:flex;gap:6px">
           <input class="form-input" id="t-ticker" type="text" placeholder="NQ, ES, MNQ..." style="flex:1" oninput="filterTickerSuggestions(this.value)">
         </div>
         <div id="ticker-suggestions" style="display:none;position:absolute;z-index:300;background:var(--surface3);border:1px solid var(--border2);border-radius:8px;margin-top:4px;max-height:200px;overflow-y:auto;width:200px;box-shadow:0 8px 24px rgba(0,0,0,.5)"></div>
       </div>
       <div class="form-group">
-        <label class="form-label">Side</label>
+        <label class="form-label" data-i18n-app="lbl_side">Side</label>
         <select class="form-select" id="t-side">
           <option value="long">Long</option>
           <option value="short">Short</option>
@@ -735,37 +736,37 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Entry Price</label>
+        <label class="form-label" data-i18n-app="lbl_entry_price">Entry Price</label>
         <input class="form-input" id="t-entry" type="number" step="0.01" placeholder="21500.00">
       </div>
       <div class="form-group">
-        <label class="form-label">Exit Price</label>
+        <label class="form-label" data-i18n-app="lbl_exit_price">Exit Price</label>
         <input class="form-input" id="t-exit" type="number" step="0.01" placeholder="21550.00">
       </div>
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Quantity</label>
+        <label class="form-label" data-i18n-app="lbl_qty">Quantity</label>
         <input class="form-input" id="t-qty" type="number" placeholder="1" value="1">
       </div>
       <div class="form-group">
-        <label class="form-label">P&amp;L ($)</label>
+        <label class="form-label" data-i18n-app="lbl_pnl">P&amp;L ($)</label>
         <input class="form-input" id="t-pnl" type="number" placeholder="-560 or 800">
       </div>
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Entry Time</label>
+        <label class="form-label" data-i18n-app="lbl_entry_time">Entry Time</label>
         <input class="form-input" id="t-entry-time" type="datetime-local">
       </div>
       <div class="form-group">
-        <label class="form-label">Exit Time</label>
+        <label class="form-label" data-i18n-app="lbl_exit_time">Exit Time</label>
         <input class="form-input" id="t-exit-time" type="datetime-local">
       </div>
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">R:R Planned</label>
+        <label class="form-label" data-i18n-app="lbl_rr_planned">R:R Planned</label>
         <select class="form-select" id="t-rr-plan">
           <option value="0">0</option><option value="1">1</option><option value="2">2</option>
           <option value="3" selected>3</option><option value="4">4</option><option value="5">5</option>
@@ -774,7 +775,7 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
         </select>
       </div>
       <div class="form-group">
-        <label class="form-label">R:R Achieved</label>
+        <label class="form-label" data-i18n-app="lbl_rr_achieved">R:R Achieved</label>
         <select class="form-select" id="t-rr-achieved">
           <option value="0">0</option><option value="1" selected>1</option><option value="2">2</option>
           <option value="3">3</option><option value="4">4</option><option value="5">5</option>
@@ -785,31 +786,31 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Discipline</label>
+        <label class="form-label" data-i18n-app="lbl_discipline">Discipline</label>
         <select class="form-select" id="t-disc">
-          <option value="clean">Clean trade</option>
-          <option value="moved_sl">Moved SL</option>
-          <option value="scaled_in">Scaled into loss</option>
-          <option value="impulse">Impulse trade</option>
-          <option value="no_confirmation">No confirmation</option>
-          <option value="overtrading">Overtrading</option>
-          <option value="fomo">FOMO</option>
+          <option value="clean" data-i18n-app="disc_clean">Clean trade</option>
+          <option value="moved_sl" data-i18n-app="disc_moved_sl">Moved SL</option>
+          <option value="scaled_in" data-i18n-app="disc_scaled">Scaled into loss</option>
+          <option value="impulse" data-i18n-app="disc_impulse">Impulse trade</option>
+          <option value="no_confirmation" data-i18n-app="disc_no_conf">No confirmation</option>
+          <option value="overtrading" data-i18n-app="disc_overtrade">Overtrading</option>
+          <option value="fomo" data-i18n-app="disc_fomo">FOMO</option>
         </select>
       </div>
       <div class="form-group">
-        <label class="form-label">Emotion</label>
+        <label class="form-label" data-i18n-app="lbl_emotion">Emotion</label>
         <div id="historical-trade-note" style="display:none;margin-bottom:6px;padding:8px 10px;background:rgba(224,152,64,0.08);border:1px solid rgba(224,152,64,0.2);border-radius:6px;font-size:10px;color:var(--amber);line-height:1.55">
           ⏱ Trade histórico — si no recuerdas tu emoción exacta, deja <strong>Neutral</strong>. Pattro inferirá el estado emocional por tu comportamiento.
         </div>
         <select class="form-select" id="t-emotion">
-          <option value="neutral" selected>😶 Neutral</option>
-          <option value="calm">😌 Tranquilo</option>
-          <option value="confident">💪 Seguro</option>
-          <option value="anxious">😰 Ansioso</option>
-          <option value="fear">😨 Con miedo</option>
-          <option value="greedy">🤑 Codicioso</option>
-          <option value="bored">😐 Aburrido</option>
-          <option value="frustrated">😤 Frustrado</option>
+          <option value="neutral" selected data-i18n-app="emo_neutral">😶 Neutral</option>
+          <option value="calm" data-i18n-app="emo_calm">😌 Tranquilo</option>
+          <option value="confident" data-i18n-app="emo_confident">💪 Seguro</option>
+          <option value="anxious" data-i18n-app="emo_anxious">😰 Ansioso</option>
+          <option value="fear" data-i18n-app="emo_fear">😨 Con miedo</option>
+          <option value="greedy" data-i18n-app="emo_greedy">🤑 Codicioso</option>
+          <option value="bored" data-i18n-app="emo_bored">😐 Aburrido</option>
+          <option value="frustrated" data-i18n-app="emo_frustrated">😤 Frustrado</option>
         </select>
       </div>
     </div>
@@ -831,11 +832,11 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
       <div id="t-checklist-note" style="font-size:9px;color:var(--text3);margin-top:4px">Se guardará como checklist del día junto con el trade</div>
     </div>
     <div class="form-group">
-      <label class="form-label">Notes</label>
+      <label class="form-label" data-i18n-app="lbl_notes">Notes</label>
       <textarea class="form-input" id="t-notes" rows="2" placeholder="What happened? What did you learn?" style="resize:vertical;line-height:1.5"></textarea>
     </div>
     <div class="form-group">
-      <label class="form-label">Screenshot</label>
+      <label class="form-label" data-i18n-app="lbl_screenshot">Screenshot</label>
       <div id="screenshot-drop" onclick="document.getElementById('t-screenshot-file').click()" style="border:1px dashed var(--border2);border-radius:8px;padding:10px;text-align:center;cursor:pointer;background:var(--surface2);transition:all .15s" onmouseover="this.style.borderColor='var(--text3)'" onmouseout="this.style.borderColor='var(--border2)'">
         <div id="screenshot-preview" style="display:none;margin-bottom:8px"><img id="screenshot-img-preview" style="max-height:80px;border-radius:6px;border:1px solid var(--border)"></div>
         <div id="screenshot-label" style="font-size:11px;color:var(--text3)">Click to upload screenshot (PNG, JPG)</div>
@@ -977,17 +978,17 @@ function openContactSupport() {
   var html = '<div style="position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:600;display:flex;align-items:center;justify-content:center;padding:16px" id="support-overlay" onclick="if(event.target===this)this.remove()">'+
     '<div style="background:var(--surface);border:1px solid var(--border2);border-top:2px solid var(--teal);border-radius:14px;width:min(500px,94vw);box-shadow:0 24px 80px rgba(0,0,0,.6)">'+
     '<div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">'+
-    '<span style="font-size:14px;font-weight:700;color:var(--text)">Contact Support</span>'+
+    '<span style="font-size:14px;font-weight:700;color:var(--text)">'+t('sup_title')+'</span>'+
     '<span onclick="document.getElementById(\'support-overlay\').remove()" style="cursor:pointer;color:var(--text3);font-size:18px;padding:2px 6px;border-radius:4px">×</span>'+
     '</div>'+
     '<div style="padding:20px">'+
-    '<div class="form-group" style="margin-bottom:12px"><label class="form-label">Your name</label><input class="form-input" id="sup-name" type="text" value="' + name + '"></div>'+
-    '<div class="form-group" style="margin-bottom:12px"><label class="form-label">Subject</label><input class="form-input" id="sup-subject" type="text" placeholder="Bug report, question, suggestion..."></div>'+
-    '<div class="form-group" style="margin-bottom:12px"><label class="form-label">Message</label><textarea class="form-input" id="sup-msg" rows="5" placeholder="Describe your issue or suggestion in detail..." style="resize:vertical"></textarea></div>'+
+    '<div class="form-group" style="margin-bottom:12px"><label class="form-label">'+t('sup_name')+'</label><input class="form-input" id="sup-name" type="text" value="' + name + '"></div>'+
+    '<div class="form-group" style="margin-bottom:12px"><label class="form-label">'+t('sup_subject')+'</label><input class="form-input" id="sup-subject" type="text" placeholder="Bug report, question, suggestion..."></div>'+
+    '<div class="form-group" style="margin-bottom:12px"><label class="form-label">'+t('sup_message')+'</label><textarea class="form-input" id="sup-msg" rows="5" placeholder="Describe your issue or suggestion in detail..." style="resize:vertical"></textarea></div>'+
     '<div id="sup-status" style="font-size:11px;min-height:16px;margin-bottom:10px"></div>'+
     '<div style="display:flex;gap:8px;justify-content:flex-end">'+
     '<button class="btn btn-ghost" style="width:auto;padding:8px 16px" onclick="document.getElementById(\'support-overlay\').remove()">Cancel</button>'+
-    '<button class="btn btn-solid" id="sup-send-btn" style="width:auto;padding:8px 20px" onclick="sendSupportMessage()">Send Message</button>'+
+    '<button class="btn btn-solid" id="sup-send-btn" style="width:auto;padding:8px 20px" onclick="sendSupportMessage()">'+t('sup_send')+'</button>'+
     '</div></div></div></div>';
   document.body.insertAdjacentHTML('beforeend', html);
 }
@@ -1044,8 +1045,8 @@ async function sendSupportMessage() {
   }
 
   status.style.color = 'var(--green)';
-  status.textContent = '✓ Message sent! Our team will get back to you within 24h.';
-  btn.textContent = 'Sent!';
+  status.textContent = t('sup_success');
+  btn.textContent = t('sup_sent');
   setTimeout(function() {
     var ov = document.getElementById('support-overlay');
     if (ov) ov.remove();
@@ -1146,6 +1147,10 @@ function showApp() {
   document.getElementById('user-name').textContent = name;
   document.getElementById('user-avatar').textContent = name.charAt(0).toUpperCase();
   loadAccounts();
+  // Apply language
+  applyAppLang();
+  var langBtn = document.getElementById('app-lang-btn');
+  if (langBtn) langBtn.textContent = appLang === 'en' ? '🇪🇸 ES' : '🇺🇸 EN';
   // Show bug notification on Mon/Fri (once)
   window._bugToastTimer = setTimeout(showBugToast, 5000);
 
@@ -1362,7 +1367,7 @@ async function deleteAccount() {
       document.getElementById('log-btn').style.display = 'none';
       document.getElementById('page-title').textContent = 'Select an account';
       if (accounts.length > 0) selectAccount(accounts[0].id);
-      else document.getElementById('main-content').innerHTML = '<div class="empty-state"><div class="empty-icon">*</div><div class="empty-title">No accounts</div><div class="empty-msg">Add your first trading account.</div><button class="btn btn-solid" onclick="openModal()">+ Add account</button></div>';
+      else document.getElementById('main-content').innerHTML = '<div class="empty-state"><div class="empty-icon">*</div><div class="empty-title">'+t('empty_no_accounts')+'</div><div class="empty-msg">'+t('empty_add_first')+'</div><button class="btn btn-solid" onclick="openModal()">'+t('nav_add_account')+'</button></div>';
     }
   }
 }
@@ -1421,8 +1426,8 @@ function openLogModal() {
   if (exitT) exitT.value = '';
   // Reset modal title/button
   var titleEl = document.querySelector('#log-overlay .modal-title');
-  if (titleEl) titleEl.textContent = 'Log Trade';
-  document.getElementById('save-trade-btn').textContent = 'Save Trade';
+  if (titleEl) titleEl.textContent = t('modal_log_title');
+  document.getElementById('save-trade-btn').textContent = t('save_trade');
   document.getElementById('log-overlay').classList.add('open');
   // Wire entry-time to show historical note
   var _entryTimeEl2 = document.getElementById('t-entry-time');
@@ -1459,8 +1464,8 @@ function openLogModal() {
 function closeLogModal() {
   editingTradeId = null;
   var titleEl = document.querySelector('#log-overlay .modal-title');
-  if (titleEl) titleEl.textContent = 'Log Trade';
-  document.getElementById('save-trade-btn').textContent = 'Save Trade';
+  if (titleEl) titleEl.textContent = t('modal_log_title');
+  document.getElementById('save-trade-btn').textContent = t('save_trade');
   document.getElementById('log-overlay').classList.remove('open');
 }
 
@@ -4796,9 +4801,9 @@ function renderTradeLogHTML(trades) {
     '<input class="form-input" style="width:130px;padding:6px 10px" type="date" value="'+tlFilters.date+'" onchange="tlFilters={date:this.value,ticker:tlFilters.ticker,result:tlFilters.result};tlPage=1;renderTradesView()">'+
     '<input class="form-input" style="width:120px;padding:6px 10px" type="text" placeholder="Ticker..." value="'+tlFilters.ticker+'" oninput="tlFilters={date:tlFilters.date,ticker:this.value,result:tlFilters.result};tlPage=1;renderTradesView()">'+
     '<select class="form-select" style="width:120px;padding:6px 10px" onchange="tlFilters={date:tlFilters.date,ticker:tlFilters.ticker,result:this.value};tlPage=1;renderTradesView()">'+
-    '<option value="all"'+(tlFilters.result==='all'?' selected':'')+'>All trades</option>'+
-    '<option value="win"'+(tlFilters.result==='win'?' selected':'')+'>Winners</option>'+
-    '<option value="loss"'+(tlFilters.result==='loss'?' selected':'')+'>Losers</option>'+
+    '<option value="all"'+(tlFilters.result==='all'?' selected':'')+'>'+t('filter_all')+'</option>'+
+    '<option value="win"'+(tlFilters.result==='win'?' selected':'')+'>'+t('filter_winners')+'</option>'+
+    '<option value="loss"'+(tlFilters.result==='loss'?' selected':'')+'>'+t('filter_losers')+'</option>'+
     '</select>'+
     '<button class="btn btn-ghost" style="font-size:11px" onclick="tlFilters={date:\'\',ticker:\'\',result:\'all\'};tlPage=1;renderTradesView()">Clear</button>'+
     '</div>'+
@@ -9304,6 +9309,303 @@ function openLegalModal(type) {
   overlay.querySelector('#bb-legal-close').addEventListener('click', function() { overlay.remove(); });
   overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
 }
+// ══════════════════════════════════════════════
+// APP i18n SYSTEM
+// ══════════════════════════════════════════════
+var APP_LANG = {
+  en: {
+    // Nav
+    nav_dashboard:    'Dashboard',
+    nav_trades:       'Trades',
+    nav_psychology:   'Psychology',
+    nav_insights:     'Insights',
+    nav_accounts:     'Accounts',
+    nav_add_account:  '+ Add account',
+
+    // User dropdown
+    menu_settings:    'Settings',
+    menu_support:     'Contact Support',
+    menu_signout:     'Sign Out',
+
+    // Topbar
+    select_account:   'Select an account',
+    log_trade_btn:    '+ Log Trade',
+
+    // Trade modal
+    modal_log_title:  'Log Trade',
+    modal_edit_title: 'Edit Trade',
+    lbl_ticker:       'Ticker',
+    lbl_side:         'Side',
+    lbl_entry_price:  'Entry Price',
+    lbl_exit_price:   'Exit Price',
+    lbl_entry_time:   'Entry Time',
+    lbl_exit_time:    'Exit Time',
+    lbl_pnl:          'P&L ($)',
+    lbl_qty:          'Quantity',
+    lbl_rr_planned:   'R:R Planned',
+    lbl_rr_achieved:  'R:R Achieved',
+    lbl_emotion:      'Emotion',
+    lbl_discipline:   'Discipline',
+    lbl_notes:        'Notes',
+    lbl_screenshot:   'Screenshot',
+    lbl_checklist:    'Checklist %',
+    save_trade:       'Save Trade',
+    cancel:           'Cancel',
+    delete:           'Delete',
+
+    // Emotions
+    emo_neutral:      '😶 Neutral',
+    emo_calm:         '😌 Calm',
+    emo_confident:    '💪 Confident',
+    emo_bored:        '😐 Bored',
+    emo_anxious:      '😰 Anxious',
+    emo_frustrated:   '😤 Frustrated',
+    emo_fear:         '😨 Fear',
+    emo_greedy:       '🤑 Greedy',
+
+    // Discipline tags
+    disc_clean:       'Clean trade',
+    disc_no_conf:     'No confirmation',
+    disc_fomo:        'FOMO',
+    disc_impulse:     'Impulse trade',
+    disc_overtrade:   'Overtrading',
+    disc_scaled:      'Scaled into loss',
+    disc_moved_sl:    'Moved SL',
+
+    // Trade side
+    side_long:        'Long',
+    side_short:       'Short',
+
+    // Account modal
+    modal_add_account:  'Add Account',
+    modal_edit_account: 'Edit Account',
+    lbl_acc_name:     'Account Name',
+    lbl_acc_type:     'Type',
+    lbl_acc_firm:     'Firm / Broker',
+    lbl_acc_size:     'Account Size ($)',
+    lbl_acc_dll:      'Daily Loss Limit (negative)',
+    lbl_acc_dd:       'Max Drawdown (negative)',
+    lbl_acc_pt:       'Profit Target ($)',
+    lbl_acc_maxc:     'Max Contracts',
+    lbl_acc_status:   'Status',
+    lbl_acc_color:    'Color',
+    save_account:     'Save Account',
+
+    // Sections & panels
+    sec_trades:       'Trades',
+    sec_psychology:   'Psychology',
+    sec_performance:  'Performance',
+    panel_trade_log:  'Trade Log',
+    panel_calendar:   'P&L Calendar',
+    panel_score:      '◈ Mental Score',
+    panel_coach:      'AI Coach',
+    panel_profile:    'Profile',
+    panel_plan:       'Plan & Subscription',
+    panel_platforms:  'Connect Platforms',
+    panel_tags:       'Setup Tags',
+
+    // Filters
+    filter_all:       'All trades',
+    filter_winners:   'Winners',
+    filter_losers:    'Losers',
+
+    // Settings
+    lbl_display_name: 'Display Name',
+    lbl_email:        'Email',
+    lbl_new_password: 'New Password',
+    save_profile:     'Save Profile',
+
+    // Contact support
+    sup_title:        'Contact Support',
+    sup_name:         'Your name',
+    sup_subject:      'Subject',
+    sup_message:      'Message',
+    sup_send:         'Send Message',
+    sup_sending:      'Sending...',
+    sup_sent:         'Sent!',
+    sup_success:      '✓ Message sent! Our team will get back to you within 24h.',
+    sup_placeholder_subject: 'Bug report, question, suggestion...',
+    sup_placeholder_msg:     'Describe your issue or suggestion in detail...',
+
+    // Empty states
+    empty_no_accounts:   'No accounts',
+    empty_add_first:     'Add your first trading account.',
+    empty_no_trades:     'No trades yet',
+    empty_log_first:     'Log your first trade to start tracking.',
+
+    // General
+    loading:          'Loading...',
+    saving:           'Saving...',
+    saved:            'Saved',
+    error_generic:    'Something went wrong. Please try again.',
+    days_remaining:   'days remaining',
+    active:           'ACTIVE',
+    inactive:         'INACTIVE',
+  },
+
+  es: {
+    // Nav
+    nav_dashboard:    'Dashboard',
+    nav_trades:       'Trades',
+    nav_psychology:   'Psicología',
+    nav_insights:     'Rendimiento',
+    nav_accounts:     'Cuentas',
+    nav_add_account:  '+ Agregar cuenta',
+
+    // User dropdown
+    menu_settings:    'Configuración',
+    menu_support:     'Soporte',
+    menu_signout:     'Cerrar sesión',
+
+    // Topbar
+    select_account:   'Selecciona una cuenta',
+    log_trade_btn:    '+ Registrar trade',
+
+    // Trade modal
+    modal_log_title:  'Registrar Trade',
+    modal_edit_title: 'Editar Trade',
+    lbl_ticker:       'Ticker',
+    lbl_side:         'Dirección',
+    lbl_entry_price:  'Precio entrada',
+    lbl_exit_price:   'Precio salida',
+    lbl_entry_time:   'Hora entrada',
+    lbl_exit_time:    'Hora salida',
+    lbl_pnl:          'P&L ($)',
+    lbl_qty:          'Cantidad',
+    lbl_rr_planned:   'R:R Planeado',
+    lbl_rr_achieved:  'R:R Logrado',
+    lbl_emotion:      'Emoción',
+    lbl_discipline:   'Disciplina',
+    lbl_notes:        'Notas',
+    lbl_screenshot:   'Captura',
+    lbl_checklist:    'Checklist %',
+    save_trade:       'Guardar trade',
+    cancel:           'Cancelar',
+    delete:           'Eliminar',
+
+    // Emotions
+    emo_neutral:      '😶 Neutral',
+    emo_calm:         '😌 Tranquilo',
+    emo_confident:    '💪 Seguro',
+    emo_bored:        '😐 Aburrido',
+    emo_anxious:      '😰 Ansioso',
+    emo_frustrated:   '😤 Frustrado',
+    emo_fear:         '😨 Con miedo',
+    emo_greedy:       '🤑 Codicioso',
+
+    // Discipline tags
+    disc_clean:       'Trade limpio',
+    disc_no_conf:     'Sin confirmación',
+    disc_fomo:        'FOMO',
+    disc_impulse:     'Trade impulsivo',
+    disc_overtrade:   'Overtrading',
+    disc_scaled:      'Escalado en pérdida',
+    disc_moved_sl:    'SL movido',
+
+    // Trade side
+    side_long:        'Long',
+    side_short:       'Short',
+
+    // Account modal
+    modal_add_account:  'Agregar cuenta',
+    modal_edit_account: 'Editar cuenta',
+    lbl_acc_name:     'Nombre de cuenta',
+    lbl_acc_type:     'Tipo',
+    lbl_acc_firm:     'Firma / Broker',
+    lbl_acc_size:     'Tamaño de cuenta ($)',
+    lbl_acc_dll:      'Límite pérdida diaria (negativo)',
+    lbl_acc_dd:       'Drawdown máximo (negativo)',
+    lbl_acc_pt:       'Meta de ganancia ($)',
+    lbl_acc_maxc:     'Contratos máximos',
+    lbl_acc_status:   'Estado',
+    lbl_acc_color:    'Color',
+    save_account:     'Guardar cuenta',
+
+    // Sections & panels
+    sec_trades:       'Trades',
+    sec_psychology:   'Psicología',
+    sec_performance:  'Rendimiento',
+    panel_trade_log:  'Registro de Trades',
+    panel_calendar:   'Calendario P&L',
+    panel_score:      '◈ Mental Score',
+    panel_coach:      'Coach IA',
+    panel_profile:    'Perfil',
+    panel_plan:       'Plan & Suscripción',
+    panel_platforms:  'Conectar Plataformas',
+    panel_tags:       'Setup Tags',
+
+    // Filters
+    filter_all:       'Todos los trades',
+    filter_winners:   'Ganadores',
+    filter_losers:    'Perdedores',
+
+    // Settings
+    lbl_display_name: 'Nombre visible',
+    lbl_email:        'Correo',
+    lbl_new_password: 'Nueva contraseña',
+    save_profile:     'Guardar perfil',
+
+    // Contact support
+    sup_title:        'Soporte',
+    sup_name:         'Tu nombre',
+    sup_subject:      'Asunto',
+    sup_message:      'Mensaje',
+    sup_send:         'Enviar mensaje',
+    sup_sending:      'Enviando...',
+    sup_sent:         '¡Enviado!',
+    sup_success:      '✓ Mensaje enviado. Nuestro equipo responderá en menos de 24h.',
+    sup_placeholder_subject: 'Bug, pregunta, sugerencia...',
+    sup_placeholder_msg:     'Describe tu problema o sugerencia en detalle...',
+
+    // Empty states
+    empty_no_accounts:   'Sin cuentas',
+    empty_add_first:     'Agrega tu primera cuenta de trading.',
+    empty_no_trades:     'Sin trades aún',
+    empty_log_first:     'Registra tu primer trade para empezar.',
+
+    // General
+    loading:          'Cargando...',
+    saving:           'Guardando...',
+    saved:            'Guardado',
+    error_generic:    'Algo salió mal. Inténtalo de nuevo.',
+    days_remaining:   'días restantes',
+    active:           'ACTIVO',
+    inactive:         'INACTIVO',
+  }
+};
+
+var appLang = localStorage.getItem('pattro_app_lang') || 'en';
+
+// Translation helper
+function t(key) {
+  return (APP_LANG[appLang] && APP_LANG[appLang][key]) || (APP_LANG['en'] && APP_LANG['en'][key]) || key;
+}
+
+// Apply translations to all data-i18n-app elements
+function applyAppLang() {
+  document.querySelectorAll('[data-i18n-app]').forEach(function(el) {
+    var key = el.getAttribute('data-i18n-app');
+    var val = t(key);
+    if (val) el.textContent = val;
+  });
+}
+
+// Switch language
+function setAppLang(lang) {
+  appLang = lang;
+  localStorage.setItem('pattro_app_lang', lang);
+  applyAppLang();
+  // Re-render current view to apply translations
+  var activeNav = document.querySelector('.nav-item.active');
+  if (activeNav) {
+    var view = activeNav.getAttribute('data-view');
+    if (view) navigateTo(view);
+  }
+  // Update toggle button
+  var btn = document.getElementById('app-lang-btn');
+  if (btn) btn.textContent = lang === 'en' ? '🇪🇸 ES' : '🇺🇸 EN';
+}
+
 </script>
 <!-- NOTE MODAL -->
 <div class="note-modal-overlay" id="note-modal-overlay">
