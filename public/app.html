@@ -1,8 +1,18 @@
 <!DOCTYPE html>
-<!-- v1773976937 -->
+<!-- v1773978072 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Pattro">
+  <meta name="theme-color" content="#0a0a0b">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <!-- Apple touch icon (inline SVG fallback) -->
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='40' fill='%230d1117'/><text x='90' y='142' text-anchor='middle' font-family='Georgia,serif' font-size='120' font-weight='700' fill='white'>P</text><circle cx='152' cy='28' r='20' fill='%233ecfcf'/></svg>">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
@@ -9502,5 +9512,69 @@ function openLegalModal(type) {
   <div class="lightbox-close" onclick="closeLightbox()">&#10005;</div>
   <img class="lightbox-img" id="lightbox-img" src="" alt="Trade screenshot">
 </div>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then(function(reg) { console.log('[PWA] SW registered:', reg.scope); })
+          .catch(function(err) { console.log('[PWA] SW error:', err); });
+      });
+    }
+
+    // PWA install prompt — show after 30s if not already installed
+    var _pwaPrompt = null;
+    window.addEventListener('beforeinstallprompt', function(e) {
+      e.preventDefault();
+      _pwaPrompt = e;
+      // Show subtle install banner after user has been in app 30s
+      setTimeout(function() {
+        if (_pwaPrompt && !localStorage.getItem('pattro_pwa_installed')) {
+          showPwaInstallBanner();
+        }
+      }, 30000);
+    });
+
+    window.addEventListener('appinstalled', function() {
+      _pwaPrompt = null;
+      try { localStorage.setItem('pattro_pwa_installed', '1'); } catch(e) {}
+      var banner = document.getElementById('pwa-install-banner');
+      if (banner) banner.remove();
+    });
+
+    function showPwaInstallBanner() {
+      if (document.getElementById('pwa-install-banner')) return;
+      var banner = document.createElement('div');
+      banner.id = 'pwa-install-banner';
+      banner.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:9999;background:#111113;border:1px solid #3ecfcf;border-radius:12px;padding:12px 18px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,.6);font-family:Geist,sans-serif;max-width:340px;width:90vw';
+      banner.innerHTML =
+        '<div style="flex:1">' +
+        '<div style="font-size:12px;font-weight:700;color:#eeeef0">Install Pattro</div>' +
+        '<div style="font-size:10px;color:#9898a6;margin-top:2px">Add to your home screen for quick access</div>' +
+        '</div>' +
+        '<button onclick="installPwa()" style="padding:7px 14px;background:#3ecfcf;border:none;border-radius:7px;color:#0a0a0b;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap">Install</button>' +
+        '<button onclick="dismissPwaBanner()" style="background:none;border:none;color:#9898a6;font-size:16px;cursor:pointer;padding:0 2px;line-height:1">×</button>';
+      document.body.appendChild(banner);
+    }
+
+    function installPwa() {
+      if (!_pwaPrompt) return;
+      _pwaPrompt.prompt();
+      _pwaPrompt.userChoice.then(function(result) {
+        if (result.outcome === 'accepted') {
+          try { localStorage.setItem('pattro_pwa_installed', '1'); } catch(e) {}
+        }
+        _pwaPrompt = null;
+        var banner = document.getElementById('pwa-install-banner');
+        if (banner) banner.remove();
+      });
+    }
+
+    function dismissPwaBanner() {
+      var banner = document.getElementById('pwa-install-banner');
+      if (banner) banner.remove();
+      // Don't show again for 7 days
+      try { localStorage.setItem('pattro_pwa_dismissed', Date.now()); } catch(e) {}
+    }
+  </script>
 </body>
 </html>

@@ -1,13 +1,28 @@
 {
   "rewrites": [
-    { "source": "/login",     "destination": "/login.html"    },
-    { "source": "/register",  "destination": "/register.html" },
-    { "source": "/dashboard", "destination": "/app.html"      },
-    { "source": "/terms",     "destination": "/terms.html"    },
-    { "source": "/privacy",   "destination": "/privacy.html"  },
-    { "source": "/precios",   "destination": "/precios.html"  }
+    { "source": "/login",        "destination": "/login.html"    },
+    { "source": "/register",     "destination": "/register.html" },
+    { "source": "/dashboard",    "destination": "/app.html"      },
+    { "source": "/terms",        "destination": "/terms.html"    },
+    { "source": "/privacy",      "destination": "/privacy.html"  },
+    { "source": "/precios",      "destination": "/precios.html"  }
   ],
   "headers": [
+    {
+      "source": "/service-worker.js",
+      "headers": [
+        { "key": "Cache-Control",              "value": "no-cache, no-store, must-revalidate" },
+        { "key": "Service-Worker-Allowed",     "value": "/" },
+        { "key": "Content-Type",               "value": "application/javascript" }
+      ]
+    },
+    {
+      "source": "/manifest.json",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400" },
+        { "key": "Content-Type",  "value": "application/manifest+json" }
+      ]
+    },
     {
       "source": "/(.*)",
       "headers": [
