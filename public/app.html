@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1773988832 -->
+<!-- v1773989648 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -815,81 +815,108 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
 
 /* ── Modal fixes for mobile ── */
 @media (max-width: 640px) {
-  /* Overlays → align to bottom */
+  /* Overlays align to bottom */
   .overlay {
     align-items: flex-end !important;
     padding: 0 !important;
   }
 
-  /* Modal = bottom sheet with internal scroll */
+  /* Modal = bottom sheet */
   .modal {
-    width: 100% !important;
-    max-width: 100% !important;
-    max-height: 85vh !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    max-height: 88vh !important;
+    height: 88vh !important;
     border-radius: 20px 20px 0 0 !important;
     border-left: none !important;
     border-right: none !important;
     border-bottom: none !important;
     border-top: 2px solid var(--teal) !important;
-    /* KEY: remove top-level overflow so sticky footer works */
-    overflow: visible !important;
     display: flex !important;
     flex-direction: column !important;
+    overflow: hidden !important;
     padding: 0 !important;
   }
 
-  /* Drag handle */
-  .modal::before {
-    content: '';
-    display: block;
-    width: 36px;
-    height: 4px;
-    background: var(--border2);
-    border-radius: 2px;
-    margin: 12px auto 0;
-    flex-shrink: 0;
-  }
-
-  /* Title - fixed at top */
+  /* Title — fixed header */
   .modal-title {
-    padding: 12px 16px 10px !important;
+    flex-shrink: 0 !important;
+    padding: 16px !important;
     margin: 0 !important;
-    flex-shrink: 0;
     border-bottom: 1px solid var(--border);
     font-size: 14px;
   }
 
-  /* All inner content wrapper - this scrolls */
-  .modal > .form-row,
-  .modal > .form-group,
-  .modal > div:not(.modal-title):not(.modal-foot) {
-    /* These are inside the scroll container below */
-  }
-
-  /* Wrap all scrollable content */
+  /* Scrollable body */
   .modal-body-scroll {
-    flex: 1;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    padding: 12px 16px 8px;
-    min-height: 0;
+    flex: 1 !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding: 14px 16px 8px !important;
+    min-height: 0 !important;
   }
 
-  /* Footer ALWAYS visible - uses padding-bottom for safe area */
+  /* Footer — fixed at bottom, above nav bar */
   .modal-foot {
     flex-shrink: 0 !important;
-    position: relative !important;
     background: var(--surface) !important;
-    padding: 10px 16px !important;
+    border-top: 1px solid var(--border) !important;
+    padding: 12px 16px !important;
     padding-bottom: max(16px, env(safe-area-inset-bottom)) !important;
     margin: 0 !important;
-    border-top: 1px solid var(--border) !important;
-    border-radius: 0 !important;
+    display: flex !important;
+    gap: 8px !important;
   }
 
-  /* Full width buttons in footer */
-  .modal-foot .btn {
-    flex: 1;
+  .modal-foot .btn { flex: 1; }
+}
+
+/* ── Calendar mobile fixes ── */
+@media (max-width: 640px) {
+  /* Full calendar grid - smaller cells */
+  .cal-lg-grid {
+    gap: 2px !important;
+  }
+  .cal-cell-lg {
+    min-height: 46px !important;
+    padding: 4px 3px !important;
+    border-radius: 5px !important;
+  }
+  .cal-lg-day { font-size: 8px !important; }
+  .cal-lg-pnl { font-size: 8px !important; }
+  .cal-lg-cnt { display: none; }
+  .cal-lg-disc { display: none; }
+
+  /* Mini calendar on dashboard */
+  .cal-cell {
+    min-height: 34px !important;
+    font-size: 8px !important;
+    padding: 2px 1px !important;
+  }
+  .cal-p { font-size: 7px !important; }
+  .cal-cnt { display: none; }
+
+  /* Calendar container full width, horizontal scroll fallback */
+  .panel .cal-hdr,
+  .panel .cal-grid {
+    padding: 4px !important;
+  }
+
+  /* Panel containing calendar — no horizontal overflow */
+  .panel {
+    overflow: hidden;
+  }
+
+  /* Calendar header days */
+  .cal-hdr-day {
+    font-size: 8px !important;
+    text-align: center;
+  }
+
+  /* Day trade detail panel scrollable */
+  #day-trades-panel .table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 }
 </style>
@@ -2041,6 +2068,12 @@ document.querySelectorAll('.nav-item[data-view]').forEach(function(item) {
 });
 
 function navigateTo(view) {
+  // Close any open modals when navigating
+  var _lo = document.getElementById('log-overlay');
+  if (_lo && _lo.classList.contains('open')) closeLogModal();
+  var _mo = document.getElementById('modal-overlay');
+  if (_mo && _mo.classList.contains('open')) closeModal();
+
   // Map legacy view names to new names (backwards compat for any saved localStorage)
   var viewMap = {
     'overview':'dashboard', 'tradelog':'trades', 'calendar':'trades',
@@ -2407,34 +2440,34 @@ async function loadAccountData(id, silent) {
   var badges      = calcBadges(trades, currentChecklistSessions);
 
   // ── Achievement unlock toast ──
-  // Rule: show max once per day per badge. Uses date-stamped localStorage key.
+  // STRICT RULE: Only show on first account load of the day, never on navigation re-renders.
+  // Uses: (1) page-session flag per account, (2) localStorage day-scoped key
   if (!silent && badges.earned.length) {
     (function() {
-      var _today    = new Date().toISOString().slice(0,10);
-      var _achKey   = 'seen_ach_' + id + '_' + _today; // day-scoped key
-      var _seen     = [];
-      try { _seen = JSON.parse(bbStore.get(_achKey) || '[]'); } catch(e) {}
+      // Guard 1: Only once per account per page session
+      var _sessionKey = '_achChecked_' + id;
+      if (window[_sessionKey]) return; // already ran this session
+      window[_sessionKey] = true;
 
-      // Only show badges NOT yet shown today
+      // Guard 2: Only once per day per badge (persisted in localStorage)
+      var _today  = new Date().toISOString().slice(0,10);
+      var _lsKey  = 'ach_shown_' + id + '_' + _today;
+      var _seen   = [];
+      try { _seen = JSON.parse(localStorage.getItem(_lsKey) || '[]'); } catch(e) {}
+
       var _toShow = badges.earned.filter(function(b) {
-        return _seen.indexOf(b.id) < 0;
+        return b.id && _seen.indexOf(b.id) < 0;
       });
 
       if (!_toShow.length) return;
 
-      // Mark shown today immediately
-      var _newSeen = _seen.concat(_toShow.map(function(b){ return b.id; }));
-      bbStore.set(_achKey, JSON.stringify(_newSeen));
+      // Persist immediately before showing (prevents double-show on fast re-renders)
+      var _allShown = _seen.concat(_toShow.map(function(b){ return b.id; }));
+      try { localStorage.setItem(_lsKey, JSON.stringify(_allShown)); } catch(e) {}
 
-      // Clean up yesterday's key so storage doesn't grow
-      try {
-        var _yesterday = new Date(Date.now() - 86400000).toISOString().slice(0,10);
-        bbStore.set('seen_ach_' + id + '_' + _yesterday, null);
-      } catch(e) {}
-
-      // Show max 3 toasts, staggered
-      _toShow.slice(0, 3).forEach(function(b, i) {
-        setTimeout(function() { showAchievementToast(b); }, 1000 + i * 2200);
+      // Show max 2 toasts, staggered by 2.5s
+      _toShow.slice(0, 2).forEach(function(b, i) {
+        setTimeout(function() { showAchievementToast(b); }, 1500 + i * 2500);
       });
     })();
   }
@@ -5281,7 +5314,7 @@ function renderCalendarFull(year, month, trades) {
     '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px">'+
     ['MON','TUE','WED','THU','FRI','SAT','SUN'].map(function(d){return '<div style="font-family:Geist Mono,monospace;font-size:9px;color:var(--text);font-weight:700;text-align:center">'+d+'</div>';}).join('')+
     '</div>'+
-    '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">'+cells+'</div></div></div>'+
+    '<div class="cal-lg-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">'+cells+'</div></div></div>'+
     '<div class="panel" id="day-trades-panel" style="margin-top:12px;display:none"></div>';
 }
 
