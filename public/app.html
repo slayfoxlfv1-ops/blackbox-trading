@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1773969559 -->
+<!-- v1773969894 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -1365,7 +1365,7 @@ async function deleteAccount() {
     if (currentAccountId === id) {
       currentAccountId = null;
       document.getElementById('log-btn').style.display = 'none';
-      document.getElementById('page-title').textContent = 'Select an account';
+      document.getElementById('page-title').textContent = t('select_account');
       if (accounts.length > 0) selectAccount(accounts[0].id);
       else document.getElementById('main-content').innerHTML = '<div class="empty-state"><div class="empty-icon">*</div><div class="empty-title">'+t('empty_no_accounts')+'</div><div class="empty-msg">'+t('empty_add_first')+'</div><button class="btn btn-solid" onclick="openModal()">'+t('nav_add_account')+'</button></div>';
     }
@@ -9583,10 +9583,21 @@ function t(key) {
 
 // Apply translations to all data-i18n-app elements
 function applyAppLang() {
+  // Update toggle button label
+  var langBtn = document.getElementById('app-lang-btn');
+  if (langBtn) langBtn.textContent = appLang === 'en' ? '🇪🇸 ES' : '🇺🇸 EN';
   document.querySelectorAll('[data-i18n-app]').forEach(function(el) {
     var key = el.getAttribute('data-i18n-app');
     var val = t(key);
-    if (val) el.textContent = val;
+    if (!val) return;
+    // Nav items have an icon span child — preserve it
+    if (el.classList.contains('nav-item')) {
+      var icon = el.querySelector('.nav-icon');
+      var iconHtml = icon ? icon.outerHTML : '';
+      el.innerHTML = iconHtml + ' ' + val;
+    } else {
+      el.textContent = val;
+    }
   });
 }
 
