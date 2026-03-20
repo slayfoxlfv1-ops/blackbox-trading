@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774025242 -->
+<!-- v1774037144 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -1582,16 +1582,26 @@ function closeBugToast() {
 }
 
 sb.auth.onAuthStateChange(function(event, session) {
+  // TOKEN_REFRESHED fires silently every hour — ignore it to prevent page reset
+  // Only act on INITIAL_SESSION (page load) and SIGNED_IN (actual login)
+  if (event === 'TOKEN_REFRESHED') {
+    // Just update the user object silently, don't reload anything
+    if (session && session.user) currentUser = session.user;
+    return;
+  }
+
   if (session && session.user) {
     currentUser = session.user;
-    // Check plan before showing app
-    checkPlanAndShow();
+    // Only initialize app if not already showing (prevents re-render on tab focus)
+    if (document.getElementById('app').style.display === 'none' ||
+        document.getElementById('app').style.display === '') {
+      checkPlanAndShow();
+    }
   } else {
     currentUser = null;
-    // Redirect to login page
     if (window.location.pathname === '/dashboard' || window.location.pathname === '/app.html') {
       var _mn3 = document.getElementById('mobile-nav'); if (_mn3) _mn3.style.display = 'none';
-  window.location.href = '/login';
+      window.location.href = '/login';
     } else {
       document.getElementById('auth-screen').style.display = 'flex';
       var _mn = document.getElementById('mobile-nav'); if (_mn) _mn.style.display = 'none';
@@ -1623,8 +1633,12 @@ async function checkPlanAndShow() {
 }
 
 function showApp() {
+  // If app is already visible, don't reinitialize (prevents scroll reset on token refresh)
+  var appEl = document.getElementById('app');
+  if (appEl && appEl.style.display === 'flex') return;
+
   document.getElementById('auth-screen').style.display = 'none';
-  document.getElementById('app').style.display = 'flex';
+  appEl.style.display = 'flex';
   var mNav = document.getElementById('mobile-nav');
   if (mNav) mNav.style.display = '';
   var name = (currentUser.user_metadata && currentUser.user_metadata.full_name) || currentUser.email.split('@')[0] || '?';
