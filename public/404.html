@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <title>404 — Pattro</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230d1117'/><text x='16' y='26' text-anchor='middle' font-family='Georgia,serif' font-size='22' font-weight='700' fill='white'>P</text><circle cx='27' cy='5' r='5' fill='%233ecfcf'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      background:#0a0a0b;
+      color:#eeeef0;
+      font-family:'Geist Mono',monospace;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+    }
+    .container {
+      text-align:center;
+      max-width:420px;
+    }
+    .logo {
+      display:inline-flex;
+      align-items:center;
+      gap:12px;
+      margin-bottom:48px;
+      text-decoration:none;
+    }
+    .logo-mark {
+      position:relative;
+      width:44px;
+      height:44px;
+    }
+    .logo-p {
+      position:absolute;
+      bottom:0; left:0;
+      font-family:Georgia,serif;
+      font-size:36px;
+      font-weight:700;
+      color:#fff;
+      line-height:1;
+    }
+    .logo-dot {
+      position:absolute;
+      top:0; right:0;
+      width:12px; height:12px;
+      background:#3ecfcf;
+      border-radius:50%;
+    }
+    .logo-text {
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+    }
+    .logo-name {
+      font-family:Georgia,serif;
+      font-size:18px;
+      font-weight:700;
+      color:#eeeef0;
+      letter-spacing:-.3px;
+    }
+    .logo-sub {
+      font-size:8px;
+      color:#5a9e9e;
+      letter-spacing:2px;
+    }
+    .code {
+      font-size:96px;
+      font-weight:700;
+      color:#18181b;
+      line-height:1;
+      margin-bottom:16px;
+      position:relative;
+    }
+    .code span {
+      color:#3ecfcf;
+    }
+    .title {
+      font-size:18px;
+      font-weight:700;
+      color:#eeeef0;
+      margin-bottom:10px;
+    }
+    .msg {
+      font-size:12px;
+      color:#9898a6;
+      line-height:1.8;
+      margin-bottom:36px;
+    }
+    .btn {
+      display:inline-block;
+      padding:11px 28px;
+      background:#3ecfcf;
+      color:#0a0a0b;
+      font-family:'Geist Mono',monospace;
+      font-size:12px;
+      font-weight:700;
+      border-radius:8px;
+      text-decoration:none;
+      letter-spacing:.3px;
+      transition:opacity .15s;
+    }
+    .btn:hover { opacity:.85; }
+    .links {
+      margin-top:24px;
+      display:flex;
+      gap:20px;
+      justify-content:center;
+    }
+    .links a {
+      font-size:11px;
+      color:#5a9e9e;
+      text-decoration:none;
+    }
+    .links a:hover { color:#3ecfcf; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/" class="logo">
+      <div class="logo-mark">
+        <span class="logo-p">P</span>
+        <span class="logo-dot"></span>
+      </div>
+      <div class="logo-text">
+        <span class="logo-name">pattro</span>
+        <span class="logo-sub">TRADING JOURNAL</span>
+      </div>
+    </a>
+
+    <div class="code">4<span>0</span>4</div>
+    <div class="title">Page not found</div>
+    <div class="msg">
+      The page you're looking for doesn't exist<br>or has been moved.
+    </div>
+
+    <a href="/" class="btn">Go to homepage →</a>
+
+    <div class="links">
+      <a href="/dashboard">Dashboard</a>
+      <a href="/login">Sign In</a>
+      <a href="mailto:support@pattro.com">Support</a>
+    </div>
+  </div>
+</body>
+</html>

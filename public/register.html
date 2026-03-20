@@ -1,8 +1,13 @@
 <!DOCTYPE html>
-<!-- v1773967910 -->
+<!-- v1773980457 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta property="og:title"       content="Create Account — Pattro">
+  <meta property="og:url"         content="https://pattro.com/register">
+  <meta property="og:image"       content="https://pattro.com/og-image.png">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230d1117'/><text x='16' y='26' text-anchor='middle' font-family='Georgia,serif' font-size='22' font-weight='700' fill='white'>P</text><circle cx='27' cy='5' r='5' fill='%233ecfcf'/></svg>">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -178,7 +183,7 @@ if (window.location.search.includes('paywall=1')) {
   if (box) {
     var banner = document.createElement('div');
     banner.style.cssText = 'padding:12px 14px;background:rgba(224,152,64,0.1);border:1px solid rgba(224,152,64,0.25);border-radius:8px;font-size:11px;color:#e09840;margin-bottom:20px;line-height:1.6';
-    banner.textContent = 'Tu cuenta no tiene una suscripción activa. Completa el registro y el pago para acceder a Pattro.';
+    banner.textContent = 'Your account does not have an active subscription. Complete registration and payment to access Pattro.';
     box.insertBefore(banner, box.firstChild);
   }
 }
@@ -304,6 +309,15 @@ async function handleRegister() {
     btn.disabled = false; btn.textContent = 'Continue';
     return;
   }
+
+  // ── Send welcome email (fire and forget) ──
+  try {
+    fetch('/api/welcome-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email, name: fullName || email })
+    });
+  } catch(e) { /* non-critical */ }
 
   // ── Route based on plan ──
   btn.textContent = validCode ? '✓ Access granted!' : 'Account created!';
