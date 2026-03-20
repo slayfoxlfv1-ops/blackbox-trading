@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1773974510 -->
+<!-- v1773976937 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -4151,7 +4151,7 @@ function calcDailyExecutionScore(dateStr) {
   var dayTrades = allTrades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(today); });
 
   if (!dayTrades.length) {
-    return { total: null, label: 'Sin trades', rrPts: null, entryPts: null, resultPts: null, hasTrades: false, tradeCount: 0 };
+    return { total: null, label: 'No trades', rrPts: null, entryPts: null, resultPts: null, hasTrades: false, tradeCount: 0 };
   }
 
   var execResults = dayTrades.map(calcTradeExecution);
@@ -4161,11 +4161,11 @@ function calcDailyExecutionScore(dateStr) {
   var avgResult = Math.round(execResults.reduce(function(s,e){ return s+e.resultPts; },0)/ execResults.length);
   var total     = Math.min(100, avgRR + avgEntry + avgResult);
 
-  var label = total >= 90 ? 'Ejecucion perfecta 🎯'
-            : total >= 70 ? 'Buena ejecucion ✅'
-            : total >= 50 ? 'Ejecucion regular ⚠️'
+  var label = total >= 90 ? 'Perfect execution 🎯'
+            : total >= 70 ? 'Good execution ✅'
+            : total >= 50 ? 'Average execution ⚠️'
             : total >= 30 ? 'Needs improvement 🔶'
-            : 'Ejecucion deficiente 🔴';
+            : 'Poor execution 🔴';
 
   return {
     total:      total,
@@ -4221,7 +4221,7 @@ function calcMentalScore(dateStr) {
     execScore:  execScore,
     discLabel:  disc.label,
     mindLabel:  mind.label,
-    execLabel:  exec.label || 'Sin trades'
+    execLabel:  exec.label || 'No trades'
   };
 }
 
@@ -5794,8 +5794,8 @@ function renderRendimientoView() {
   var metrics2 = [
     { label:'P&L Week',   val: weekTrades.length  ? fmt(weekPnl)  : '--', color: weekTrades.length  ? pnlColor(weekPnl)  : 'var(--text3)', sub: (weekTrades.length||'0') + ' trades' },
     { label:'P&L Mes',      val: monthTrades.length ? fmt(monthPnl) : '--', color: monthTrades.length ? pnlColor(monthPnl) : 'var(--text3)', sub: (monthTrades.length||'0') + ' trades' },
-    { label:'Win Rate Week', val: weekWR!==null ? weekWR+'%' : '--', color: weekWR>=60?'var(--green)':weekWR>=40?'var(--amber)':'var(--red)', sub: weekWR!==null?'':'Sin trades' },
-    { label:'Win Rate Mes',    val: monthWR!==null ? monthWR+'%' : '--', color: monthWR>=60?'var(--green)':monthWR>=40?'var(--amber)':'var(--red)', sub: monthWR!==null?'':'Sin trades' },
+    { label:'Win Rate Week', val: weekWR!==null ? weekWR+'%' : '--', color: weekWR>=60?'var(--green)':weekWR>=40?'var(--amber)':'var(--red)', sub: weekWR!==null?'':'No trades' },
+    { label:'Win Rate Mes',    val: monthWR!==null ? monthWR+'%' : '--', color: monthWR>=60?'var(--green)':monthWR>=40?'var(--amber)':'var(--red)', sub: monthWR!==null?'':'No trades' },
     { label:'Clean Week',  val: weekClean!==null ? weekClean+'%' : '--', color: weekClean>=70?'var(--green)':weekClean>=50?'var(--amber)':'var(--red)', sub: 'trades clean' },
     { label:'Total Trades',    val: trades.length, color: 'var(--text)', sub: 'historical' },
   ];
@@ -5910,20 +5910,20 @@ async function generateCoachAnalysis() {
     var d = new Date(s.session_date||s.date);
     if (d >= _weekStart2) _moodDays++;
   });
-  var _dataCtxLine = "Calidad de datos: "+_weekWithEmo+" trades with real emotion, "+_weekInferred+" inferidos por comportamiento. Mood check: "+_moodDays+"/5 days. "+(_weekInferred>0?"For trades without emotion, use behavior (revenge, tilt, overtrading) as psychological proxy, don\'t assert specific emotions.":"");
+  var _dataCtxLine = "Data quality: "+_weekWithEmo+" trades with real emotion, "+_weekInferred+" inferred from behavior. Mood check: "+_moodDays+"/5 days. "+(_weekInferred>0?"For trades without emotion, use behavior patterns as psychological proxy, do not assert specific emotions.":"");
 
-  var prompt = "Eres un coach de trading profesional. Analyze the week in English, direct and constructive.\n\n" +
-    "DATOS:\n" +
+  var prompt = "You are a professional trading coach. Analyze the week in English, direct and constructive.\n\n" +
+    "DATA:\n" +
     "- Trades: " + wt.length + "\n" +
     "- P&L: " + (ctx.weekPnl>=0?"+":"") + "$" + (ctx.weekPnl||0).toFixed(0) + "\n" +
-    "- Disciplina: " + (ctx.weekDisc||0) + "/100\n" +
-    "- Violaciones: " + (ctx.weekViolations||"ninguna") + "\n" +
-    "- Tiempo: " + durLine + "\n" +
+    "- Discipline: " + (ctx.weekDisc||0) + "/100\n" +
+    "- Violations: " + (ctx.weekViolations||"none") + "\n" +
+    "- Time: " + durLine + "\n" +
     "- " + _dataCtxLine + "\n\n" +
     "CHECKLIST (" + (ctx.checkItems||[]).length + " items):\n" +
-    (ctx.checkSummary||"Sin datos") + "\n\n" +
-    "NOTAS:\n" + (ctx.weekNotes||"Sin notas") + "\n\n" +
-    "Structure: 1) Weekly summary 2) Main error 3) What they did well 4) Time managementn trades, horas en pantalla, si opera demasiado) 5) 2-3 concrete actions 6) Motivational phrase. If data is incomplete, be honest about limitations. Max 350 words.";
+    (ctx.checkSummary||"No data") + "\n\n" +
+    "NOTES:\n" + (ctx.weekNotes||"No notes") + "\n\n" +
+    "Structure: 1) Weekly summary 2) Main error 3) What they did well 4) Time management (trade duration, screen time, overtrading) 5) 2-3 concrete actions 6) Motivational phrase. If data is incomplete, be honest about limitations. Max 350 words.";
 
   try {
     var text = await callCoach(prompt, 1000);
