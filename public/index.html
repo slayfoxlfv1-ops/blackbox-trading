@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1773986042 -->
+<!-- v1773987742 -->
 <html lang="en" id="html-root">
 <head>
 <meta charset="UTF-8">
@@ -327,6 +327,43 @@ footer{border-top:1px solid var(--border);padding:22px 48px;display:flex;align-i
 
   /* ── Mock browser (hero) ── */
   .mock-browser { display: none; }
+}
+
+/* ── Additional landing mobile fixes ── */
+@media (max-width: 640px) {
+  /* Met strip: 4 cols → 2x2 grid */
+  .met-inner {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0;
+  }
+  .met {
+    border-right: 1px solid var(--border) !important;
+    border-bottom: 1px solid var(--border);
+  }
+  .met:nth-child(2n) { border-right: none !important; }
+  .met:nth-child(3),
+  .met:nth-child(4) { border-bottom: none; }
+  .met-strip { padding: 24px 20px; }
+  .met-val { font-size: 28px; }
+
+  /* Ins-grid: 2 cols → 1 col */
+  .ins-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .ins-card {
+    padding: 14px 16px;
+  }
+
+  /* Compare section */
+  .compare-grid, .cmp-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+  }
+
+  /* Proof band */
+  .proof-inner {
+    grid-template-columns: 1fr !important;
+  }
 }
 </style>
 </head>

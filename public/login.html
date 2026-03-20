@@ -1,8 +1,13 @@
 <!DOCTYPE html>
-<!-- v1773948818 -->
+<!-- v1773980356 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta property="og:title"       content="Sign In — Pattro">
+  <meta property="og:url"         content="https://pattro.com/login">
+  <meta property="og:image"       content="https://pattro.com/og-image.png">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230d1117'/><text x='16' y='26' text-anchor='middle' font-family='Georgia,serif' font-size='22' font-weight='700' fill='white'>P</text><circle cx='27' cy='5' r='5' fill='%233ecfcf'/></svg>">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -122,7 +127,7 @@ async function handleForgot() {
   var email = document.getElementById('email').value.trim();
   var errEl = document.getElementById('error-msg');
   if (!email) { errEl.textContent = 'Enter your email first.'; return; }
-  await sb.auth.resetPasswordForEmail(email, { redirectTo: 'https://pattro.com/dashboard' });
+  await sb.auth.resetPasswordForEmail(email, { redirectTo: 'https://pattro.com/reset-password' });
   errEl.style.color = 'var(--green)';
   errEl.textContent = 'Password reset email sent. Check your inbox.';
 }
