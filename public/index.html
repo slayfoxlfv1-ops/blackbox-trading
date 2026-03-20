@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1773985046 -->
+<!-- v1773986042 -->
 <html lang="en" id="html-root">
 <head>
 <meta charset="UTF-8">
@@ -268,69 +268,65 @@ footer{border-top:1px solid var(--border);padding:22px 48px;display:flex;align-i
 /* ═══════════════════════════════════════════
    LANDING MOBILE RESPONSIVE
    ═══════════════════════════════════════════ */
-@media (max-width: 768px) {
-  /* Nav */
-  nav { padding: 0 16px; height: 52px; }
-  .nav-links { display: none; }
-  .nav-r { gap: 8px; }
-  .nav-r .nav-link { display: none; }
-  .btn-cta { padding: 7px 14px; font-size: 10px; }
-  .lang-btn { padding: 4px 8px; font-size: 9px; }
+@media (max-width: 640px) {
 
-  /* Hero */
-  .hero { padding: 80px 20px 60px; min-height: auto; }
-  .hero-inner h1 { font-size: clamp(28px, 8vw, 44px) !important; }
-  .hero-sub { font-size: 13px; }
-  .hero-btns { flex-direction: column; align-items: flex-start; gap: 10px; }
-  .hero-btns a { width: 100%; text-align: center; }
+  /* ── Nav ── */
+  nav { padding: 0 16px; height: 54px; }
+  .nav-r { gap: 8px; }
+  .nav-r .nav-link { display: none; } /* hide How it works / Features / Pricing */
+  .nav-login { display: inline-flex !important; font-size: 11px; padding: 6px 12px; background: var(--surface2); border: 1px solid var(--border2); border-radius: 6px; color: var(--text2) !important; text-decoration: none; }
+  .lang-btn { padding: 4px 8px; font-size: 9px; }
+  .btn-cta { padding: 8px 14px; font-size: 11px; }
+
+  /* ── Hero ── */
+  .hero { padding: 72px 20px 48px; min-height: auto; }
+  .hero-inner { text-align: center; }
+  .hero-inner h1 { font-size: 32px !important; line-height: 1.2; }
+  .hero-badge { margin: 0 auto 18px; }
+  .hero-sub { font-size: 13px; margin: 0 auto 28px; }
+  .hero-btns { flex-direction: column; align-items: center; gap: 10px; }
+  .hero-btns a { width: 100%; text-align: center; max-width: 300px; }
+  .hero-glow { display: none; }
   .mockup-wrap { display: none; }
 
-  /* How it works steps */
-  .steps { grid-template-columns: 1fr 1fr !important; }
-
-  /* Features grid */
-  .feat-grid { grid-template-columns: 1fr !important; gap: 10px; }
-
-  /* Sections padding */
-  section, .features-band, .how-band, .pricing-band, .extension-band, .proof-band {
-    padding: 60px 20px !important;
+  /* ── Sections ── */
+  .features-band, .how-band, .pricing-band, .extension-band, .proof-band, .faq {
+    padding: 56px 20px !important;
   }
 
-  /* Pricing */
-  .pricing-inner { grid-template-columns: 1fr !important; gap: 32px; }
+  /* ── How it works ── */
+  .steps { grid-template-columns: 1fr !important; }
+  .how-head { text-align: center; }
+
+  /* ── Features ── */
+  .feat-grid { grid-template-columns: 1fr !important; gap: 10px; }
+  .features-head { text-align: center; }
+
+  /* ── Pricing ── */
+  .pricing-inner { grid-template-columns: 1fr !important; gap: 28px; }
   .pricing-card { padding: 24px; }
+  .pricing-left { text-align: center; }
 
-  /* Extension section */
-  .ext-grid { grid-template-columns: 1fr !important; }
+  /* ── Extension ── */
+  .ext-grid { grid-template-columns: 1fr !important; gap: 20px; }
 
-  /* Footer */
-  footer { flex-direction: column; gap: 16px; padding: 20px 16px; text-align: center; }
+  /* ── Footer ── */
+  footer { flex-direction: column; gap: 14px; padding: 20px 16px; text-align: center; }
+  footer > * { justify-content: center; }
   .footer-links { flex-wrap: wrap; justify-content: center; gap: 12px; }
 
-  /* FAQ */
-  .faq { padding: 40px 20px; }
+  /* ── Typography ── */
+  h2 { font-size: clamp(22px, 7vw, 30px) !important; }
+  .section-sub { font-size: 13px; }
 
-  /* Lang dropdown */
-  .lang-dropdown { right: 12px; top: 52px; }
+  /* ── Lang dropdown ── */
+  .lang-dropdown { right: 0; top: 54px; }
 
-  /* General sections max-width */
-  .section-inner, .features-inner, .how-inner, .pricing-inner, .ext-inner {
-    max-width: 100% !important;
-  }
+  /* ── Ticker ── */
+  .ticker { font-size: 10px; }
 
-  /* Proof / testimonials */
-  .proof-grid { grid-template-columns: 1fr !important; }
-
-  /* Hide decorative elements */
-  .hero-glow { display: none; }
-
-  /* Typography */
-  h2 { font-size: clamp(22px, 6vw, 32px) !important; }
-}
-
-@media (max-width: 480px) {
-  .steps { grid-template-columns: 1fr !important; }
-  .hero-inner h1 { font-size: 26px !important; }
+  /* ── Mock browser (hero) ── */
+  .mock-browser { display: none; }
 }
 </style>
 </head>
@@ -360,7 +356,7 @@ footer{border-top:1px solid var(--border);padding:22px 48px;display:flex;align-i
       </div>
     </div>
 
-    <a href="/login" class="nav-link" style="color:var(--text2)" data-i18n="nav_login">Login</a>
+    <a href="/login" class="nav-login" style="color:var(--text2)" data-i18n="nav_login">Login</a>
     <a href="/register" class="btn-cta" data-i18n="nav_cta">Regístrate →</a>
   </div>
 </nav>

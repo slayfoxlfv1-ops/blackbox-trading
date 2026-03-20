@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1773985058 -->
+<!-- v1773986062 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -51,17 +51,16 @@ footer{border-top:1px solid var(--border);padding:24px 40px;text-align:center;fo
 footer a{color:var(--teal);text-decoration:none}
 @media(max-width:600px){nav,.hero,.content{padding-left:20px;padding-right:20px}}
 
-@media (max-width: 768px) {
-  body { padding: 0 !important; }
-  .wrap, .container, main { padding: 16px !important; max-width: 100% !important; }
-  nav, .nav { padding: 0 16px !important; }
-  h1 { font-size: 24px !important; }
-  h2 { font-size: 18px !important; }
-  .pricing-cards, .plan-grid { flex-direction: column !important; }
-  .plan-card, .pricing-card { width: 100% !important; max-width: 100% !important; }
-  .faq-item { padding: 14px 0 !important; }
-  footer { flex-direction: column; gap: 12px; padding: 16px !important; text-align: center; }
-  .footer-links { flex-wrap: wrap; justify-content: center; }
+/* ── Mobile ── */
+@media (max-width: 640px) {
+  nav { padding: 0 16px; height: 52px; }
+  .nav-links { display: none; }
+  .hero { padding: 36px 16px 28px; }
+  h1 { font-size: 22px !important; }
+  .content { padding: 24px 16px 60px; }
+  .toc { padding: 16px; }
+  footer { flex-direction: column; gap: 10px; padding: 16px; text-align: center; }
+  footer > div { justify-content: center; flex-wrap: wrap; }
 }
 </style>
 </head>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1773985694 -->
+<!-- v1773985995 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -1278,46 +1278,25 @@ sb.auth.onAuthStateChange(function(event, session) {
 });
 
 async function checkPlanAndShow() {
+  // NOTE: Plan check temporarily open during beta while Paddle integration is pending
+  // All registered users get access — payment enforcement will be re-enabled with Paddle
   try {
-    var { data: profile, error: profileError } = await sb.from('profiles')
+    var { data: profile } = await sb.from('profiles')
       .select('plan, plan_expires_at')
       .eq('id', currentUser.id)
       .single();
 
-    // If Supabase query fails, give benefit of the doubt and show app
-    if (profileError) {
-      console.warn('[Pattro] Profile fetch error:', profileError.message);
-      showApp();
-      return;
-    }
-
-    var hasAccess = false;
+    // Update plan in memory for UI display
     if (profile) {
-      if (profile.plan === 'lifetime') {
-        hasAccess = true;
-      } else if (profile.plan === 'pro') {
-        hasAccess = !profile.plan_expires_at || new Date(profile.plan_expires_at) > new Date();
-      } else if (!profile.plan || profile.plan === 'free') {
-        // During beta/transition: if plan_expires_at is set and valid, allow access
-        hasAccess = profile.plan_expires_at && new Date(profile.plan_expires_at) > new Date();
-      }
-    } else {
-      // No profile at all — show app anyway, profile will be created
-      console.warn('[Pattro] No profile found, showing app');
-      hasAccess = true;
-    }
-
-    if (hasAccess) {
-      showApp();
-    } else {
-      await sb.auth.signOut();
-      window.location.href = '/register?paywall=1';
+      window._userPlan = profile.plan || 'free';
+      window._planExpires = profile.plan_expires_at || null;
     }
   } catch(e) {
-    // Network error or unexpected — don't lock user out, just show app
-    console.error('[Pattro] checkPlanAndShow error:', e.message);
-    showApp();
+    console.warn('[Pattro] Profile fetch error:', e.message);
   }
+
+  // Always show app — plan enforcement re-enabled when Paddle is live
+  showApp();
 }
 
 function showApp() {
