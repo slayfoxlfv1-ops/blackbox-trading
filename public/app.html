@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1773973159 -->
+<!-- v1773973703 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -7008,8 +7008,8 @@ function showOnboardingGuide() {
       icon: '✍️',
       title: 'Step 2B — Manual logging',
       subtitle: 'If you don\'t use TopstepX or prefer to do it yourself',
-      content: 'Use the <strong>"+ Log Trade"</strong> button in the top bar after each trade. You can log:<br><br>• Ticker, side (long/short), P&L<br>• R:R planned vs achieved<br>• Your emotion during the trade<br>• Discipline tag (clean, impulse, FOMO, etc.)<br>• Custom setup tags, notes and screenshot',
-      tip: '💡 You can combine both — the extension captures the objective data and you add the emotional context manually.'
+      content: 'Use the <strong>"+ Log Trade"</strong> button in the top bar after each trade. Here\'s what each field means:<br><br><strong>📐 R:R Planned</strong> — before entering, what was your risk/reward ratio? If you risked $100 to make $200, your planned R:R is 2.0. This reflects your intention.<br><br><strong>📐 R:R Achieved</strong> — what actually happened? If you closed at $150 profit, your achieved R:R is 1.5. The gap between planned and achieved reveals execution quality.<br><br><strong>😶 Emotion</strong> — how you felt when you took the trade. This is the most important field psychologically. Pattro correlates your emotional state with your results over time. Calm and neutral trades usually outperform anxious or greedy ones — the data will show you your own pattern (Pattro).<br><br><strong>⚡ Discipline tag</strong> — was it a clean trade or did something go wrong? Options: Clean, FOMO, Impulse, Overtrading, Scaled into loss, Moved SL, No confirmation. Be honest — this data builds your discipline score.<br><br><strong>🏷 Setup tags</strong> — your personal trade setup labels (e.g., "ICT BOS", "Supply zone"). Define them in Settings.',
+      tip: '💡 Even if you only fill in P&L and emotion, Pattro can already generate useful insights. The more fields you complete, the more accurate the analysis.'
     },
     {
       icon: '📋',
@@ -7034,10 +7034,10 @@ function showOnboardingGuide() {
     },
     {
       icon: '🔢',
-      title: 'How scores are calculated',
-      subtitle: 'No complex formulas — we explain it clearly',
-      content: '<strong>Mental Score (0–100)</strong> — combines three things: how disciplined you were (40%), your mental state (35%) and how well you executed your trades (25%). A day without trades only counts discipline and mind.<br><br><strong>Discipline Score</strong> — measures if you completed the checklist, respected your rules, and if your tags were "clean" instead of impulse or FOMO.<br><br><strong>Mind Score</strong> — comes from your daily mental check: sleep, stress, focus and financial pressure.<br><br><strong>Execution Score</strong> — analyzes your real vs planned R:R, win rate and consistency between trades.',
-      tip: '💡 A Mental Score of 75+ means you\'re trading professionally that day, regardless of P&L.'
+      title: 'How your scores are calculated',
+      subtitle: 'No black boxes — every number has a clear meaning',
+      content: '<strong>Mental Score (0–100)</strong> — your overall psychological performance for the day. It combines:<br>• <strong>Discipline (40%)</strong> — did you complete the checklist? Did you respect your rules? Were your trades tagged "clean"?<br>• <strong>Mind (35%)</strong> — how was your internal state? Comes from your daily mental check (sleep, stress, focus, financial pressure)<br>• <strong>Execution (25%)</strong> — how close was your achieved R:R to your planned R:R? Did you stick to your plan?<br><br><strong>Why 40% discipline?</strong> Because research shows discipline is the strongest predictor of long-term trading performance — more than strategy or market knowledge.<br><br><strong>What if I have no mood check?</strong> Pattro infers your mental state from your trade behavior — revenge trades, overtrading and tilt are detected automatically from timing and P&L patterns.<br><br><strong>Data quality badges</strong> — if your data is incomplete, your Mental Score shows a badge: ◑ Partial (some data missing) or ~ Inferred (estimated from behavior). A complete day shows no badge.',
+      tip: '💡 A Mental Score of 75+ means you\'re trading professionally that day, regardless of whether you made or lost money.'
     },
     {
       icon: '🏆',
