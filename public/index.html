@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1773967925 -->
+<!-- v1773968213 -->
 <html lang="en" id="html-root">
 <head>
 <meta charset="UTF-8">
@@ -729,6 +729,7 @@ var currentLang = 'en';
 
 function setLang(lang) {
   currentLang = lang;
+  try { localStorage.setItem('pattro_lang', lang); } catch(e) {}
   var dd = document.querySelector('.lang-dropdown');
   if (dd) dd.classList.remove('open');
   document.getElementById('html-root').lang = lang;
@@ -863,6 +864,13 @@ function renderLegalContent() {
 
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeLegal();
+});
+
+// ── Initialize language on load ──
+document.addEventListener('DOMContentLoaded', function() {
+  // Check if user had a preference saved, otherwise default to EN
+  var saved = localStorage.getItem('pattro_lang');
+  setLang(saved === 'es' ? 'es' : 'en');
 });
 
 </script>
