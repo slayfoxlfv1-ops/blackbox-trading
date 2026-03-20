@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1773948818 -->
+<!-- v1773967910 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -55,6 +55,7 @@ select.input{cursor:pointer}
 .btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
 .global-error{font-size:11px;color:var(--red);min-height:16px;margin-bottom:10px;text-align:center}
 </style>
+<script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
 </head>
 <body>
 <div class="page">
@@ -143,7 +144,7 @@ select.input{cursor:pointer}
 
     <!-- ── Terms ── -->
     <div class="terms">
-      By signing up, you agree to our <a href="#" onclick="openTerms()">Terms of Use</a> and <a href="#" onclick="openPrivacy()">Privacy Policy</a>.<br><br>
+      By signing up, you agree to our <a href="/terms" target="_blank">Terms of Use</a> and <a href="/privacy" target="_blank">Privacy Policy</a>.<br><br>
       <strong style="color:var(--text2)">Important:</strong> All sales are final — no refunds. If you have any issues, please contact our support team. Your information may be used by Pattro to send you product updates, tips, and important account notifications.
     </div>
 
@@ -152,19 +153,7 @@ select.input{cursor:pointer}
   </div>
 </div>
 
-<!-- Terms modal -->
-<div id="terms-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:999;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)this.style.display='none'">
-  <div style="background:#111113;border:1px solid #32323c;border-top:2px solid #3ecfcf;border-radius:14px;width:min(580px,94vw);max-height:85vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.7)">
-    <div style="padding:18px 24px;border-bottom:1px solid #26262e;display:flex;justify-content:space-between;align-items:center">
-      <span style="font-size:14px;font-weight:700;color:#eeeef0" id="modal-legal-title">Terms of Use</span>
-      <button onclick="document.getElementById('terms-overlay').style.display='none'" style="background:#18181b;border:1px solid #32323c;border-radius:50%;width:28px;height:28px;color:#9898a6;cursor:pointer;font-size:16px;font-family:inherit">×</button>
-    </div>
-    <div style="padding:24px;overflow-y:auto;font-size:11px;color:#9898a6;line-height:1.8" id="modal-legal-body"></div>
-    <div style="padding:14px 24px;border-top:1px solid #26262e;text-align:right">
-      <button onclick="document.getElementById('terms-overlay').style.display='none'" style="padding:8px 20px;background:#3ecfcf;border:none;border-radius:7px;color:#0a0a0b;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Got it</button>
-    </div>
-  </div>
-</div>
+
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -326,44 +315,43 @@ async function handleRegister() {
     }, 1200);
   } else {
     // Needs payment — create Paddle checkout
-    btn.textContent = 'Redirecting to payment...';
-    try {
-      var checkoutResp = await fetch('/api/create-checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: email,
-          name:  first + ' ' + last
-        })
-      });
-      var checkoutData = await checkoutResp.json();
-      if (checkoutData.checkoutUrl) {
-        window.location.href = checkoutData.checkoutUrl;
-      } else {
-        throw new Error('No checkout URL');
+    btn.textContent = 'Opening payment...';
+
+    // Initialize Paddle.js with live environment
+    Paddle.Initialize({
+      token: 'PADDLE_CLIENT_TOKEN_PLACEHOLDER',
+      eventCallback: function(data) {
+        if (data.name === 'checkout.completed') {
+          // Payment successful — redirect to dashboard
+          window.location.href = '/dashboard?payment=success';
+        }
       }
-    } catch(checkoutErr) {
-      // Fallback: go to login and user can pay later
-      errEl.style.color = 'var(--amber)';
-      errEl.textContent = 'Account created. Please complete payment to access Pattro.';
-      setTimeout(function() {
-        window.location.href = '/login?registered=1';
-      }, 2000);
-    }
+    });
+
+    // Open Paddle checkout overlay
+    Paddle.Checkout.open({
+      items: [{ priceId: 'PADDLE_PRICE_ID_PLACEHOLDER', quantity: 1 }],
+      customer: {
+        email: email
+      },
+      customData: {
+        email:   email,
+        user_id: userId
+      },
+      settings: {
+        successUrl: 'https://pattro.com/dashboard?payment=success',
+        displayMode: 'overlay',
+        theme: 'dark',
+        locale: 'es'
+      }
+    });
+
+    btn.disabled = false;
+    btn.textContent = 'Continue';
   }
 }
 
-function openTerms() {
-  document.getElementById('modal-legal-title').textContent = 'Terms of Use';
-  document.getElementById('modal-legal-body').innerHTML = '<h4 style="color:#eeeef0;margin-bottom:10px">About Pattro</h4><p>Pattro is a journaling and psychological analysis tool for traders. It is not a financial advisory service, trading signal service, or investment management service.</p><br><h4 style="color:#eeeef0;margin-bottom:10px">No Refunds</h4><p>All sales are final. We do not offer refunds under any circumstances. If you experience any issues with your subscription, please contact our support team and we will work to resolve them.</p><br><h4 style="color:#eeeef0;margin-bottom:10px">Your Data</h4><p>Your information may be used by Pattro to send you product updates, tips, and important account notifications. We do not sell your data to third parties.</p><br><h4 style="color:#eeeef0;margin-bottom:10px">Appropriate Use</h4><p>You agree to use Pattro only for recording and analyzing your own trading operations. Resale of access or any use that interferes with normal platform operation is prohibited.</p>';
-  document.getElementById('terms-overlay').style.display = 'flex';
-}
 
-function openPrivacy() {
-  document.getElementById('modal-legal-title').textContent = 'Privacy Policy';
-  document.getElementById('modal-legal-body').innerHTML = '<h4 style="color:#eeeef0;margin-bottom:10px">What we collect</h4><p>We collect only the data you enter: trades, emotions, checklist responses, and account settings. We also store your email for authentication and communications.</p><br><h4 style="color:#eeeef0;margin-bottom:10px">How we use your data</h4><p>Your data is used exclusively to generate the analysis and metrics you see in your dashboard. Your personal information (name, address, country) is stored securely and may be used by Pattro for internal purposes including sending account notifications and product updates.</p><br><h4 style="color:#eeeef0;margin-bottom:10px">Your data is yours</h4><p>We do not sell or share your trading data or personal data with third parties. You can request deletion of your account and all associated data at any time by contacting support.</p>';
-  document.getElementById('terms-overlay').style.display = 'flex';
-}
 </script>
 </body>
 </html>
