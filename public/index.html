@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1773948818 -->
+<!-- v1773967733 -->
 <html lang="es" id="html-root">
 <head>
 <meta charset="UTF-8">
@@ -251,7 +251,7 @@ footer{border-top:1px solid var(--border);padding:22px 48px;display:flex;align-i
   <div class="nav-r">
     <a href="#como-funciona" class="nav-link" data-i18n="nav_how">Cómo funciona</a>
     <a href="#features" class="nav-link" data-i18n="nav_features">Features</a>
-    <a href="#precios" class="nav-link" data-i18n="nav_pricing">Precios</a>
+    <a href="/precios" class="nav-link" data-i18n="nav_pricing">Precios</a>
 
     <!-- Language switcher -->
     <div class="lang-wrap">
@@ -734,7 +734,7 @@ function setLang(lang) {
   document.getElementById('html-root').lang = lang;
   document.getElementById('lang-label').textContent = lang.toUpperCase();
   // Update nav anchor for pricing
-  document.querySelector('a[href="#precios"]') && (document.querySelector('a[href="#precios"]').href = lang === 'en' ? '#pricing' : '#precios');
+  // pricing link handled by /precios page
 
   // Update all i18n elements
   document.querySelectorAll('[data-i18n]').forEach(function(el) {
