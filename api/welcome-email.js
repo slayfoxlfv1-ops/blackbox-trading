@@ -44,10 +44,11 @@ export default async function handler(req, res) {
     <div class="logo">pattro<span>.</span></div>
     <div class="sub">TRADING JOURNAL</div>
 
-    <h1>Welcome, ${firstName} 👋</h1>
+    <h1>Welcome, ${firstName} — thank you for trusting Pattro 👋</h1>
     <p>
-      You've just joined <span class="highlight">Pattro</span> — the trading psychology engine built to help you understand
-      <strong style="color:#eeeef0">why you make bad decisions</strong>, not just track your P&L.
+      You've just joined a community of traders who are serious about improving from the inside out.
+      Pattro is built to help you understand <strong style="color:#eeeef0">why you make bad decisions</strong> —
+      not just track how much you won or lost.
     </p>
 
     <div class="steps">
