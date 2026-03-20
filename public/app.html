@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1773986420 -->
+<!-- v1773986694 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -790,18 +790,18 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
       <button class="auth-tab active" onclick="setTab('login')">Sign In</button>
       <button class="auth-tab" onclick="setTab('register')">Sign Up</button>
     </div>
-    <form id="auth-form" autocomplete="on" onsubmit="authSubmit();return false;" style="display:contents">
+    <form id="auth-form" autocomplete="on" method="POST" action="#" onsubmit="authSubmit();return false;event.preventDefault();" style="display:contents">
     <div id="auth-register-name" class="form-group" style="display:none">
       <label class="form-label">Full Name</label>
-      <input class="form-input" id="auth-name" type="text" placeholder="Your name" autocomplete="name" name="name">
+      <input class="form-input" id="auth-name" type="text" placeholder="Your name" autocomplete="name">
     </div>
     <div class="form-group">
       <label class="form-label">Email</label>
-      <input class="form-input" id="auth-email" type="email" placeholder="you@email.com" autocomplete="email" name="email">
+      <input class="form-input" id="auth-email" type="email" placeholder="you@email.com" autocomplete="email">
     </div>
     <div class="form-group">
       <label class="form-label">Password</label>
-      <input class="form-input" id="auth-pass" type="password" placeholder="password" autocomplete="current-password" name="password">
+      <input class="form-input" id="auth-pass" type="password" placeholder="password" autocomplete="current-password">
     </div>
     <div class="auth-error" id="auth-error"></div>
     <button class="btn-primary" type="submit" id="auth-btn">Sign In</button>
