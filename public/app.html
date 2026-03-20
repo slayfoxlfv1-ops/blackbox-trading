@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1773985405 -->
+<!-- v1773985694 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -529,7 +529,7 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
 /* ═══════════════════════════════════════════
    MOBILE RESPONSIVE — breakpoint 768px
    ═══════════════════════════════════════════ */
-@media (max-width: 768px) {
+@media (max-width: 640px) {
 
   /* ── Root layout ── */
   #app {
@@ -643,7 +643,7 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
 }
 
 /* ── Desktop only: hide mobile nav ── */
-@media (min-width: 769px) {
+@media (min-width: 641px) {
   #mobile-nav {
     display: none !important;
   }
@@ -1278,36 +1278,45 @@ sb.auth.onAuthStateChange(function(event, session) {
 });
 
 async function checkPlanAndShow() {
-  // Load profile to check plan status
-  var { data: profile } = await sb.from('profiles').select('plan, plan_expires_at').eq('id', currentUser.id).single();
-  
-  var hasAccess = false;
-  if (profile) {
-    if (profile.plan === 'lifetime') {
-      // F&F promo code — always has access
-      hasAccess = true;
-    } else if (profile.plan === 'pro') {
-      // Pro plan — check expiry
-      if (!profile.plan_expires_at) {
-        hasAccess = true; // no expiry set = active
-      } else {
-        hasAccess = new Date(profile.plan_expires_at) > new Date();
+  try {
+    var { data: profile, error: profileError } = await sb.from('profiles')
+      .select('plan, plan_expires_at')
+      .eq('id', currentUser.id)
+      .single();
+
+    // If Supabase query fails, give benefit of the doubt and show app
+    if (profileError) {
+      console.warn('[Pattro] Profile fetch error:', profileError.message);
+      showApp();
+      return;
+    }
+
+    var hasAccess = false;
+    if (profile) {
+      if (profile.plan === 'lifetime') {
+        hasAccess = true;
+      } else if (profile.plan === 'pro') {
+        hasAccess = !profile.plan_expires_at || new Date(profile.plan_expires_at) > new Date();
+      } else if (!profile.plan || profile.plan === 'free') {
+        // During beta/transition: if plan_expires_at is set and valid, allow access
+        hasAccess = profile.plan_expires_at && new Date(profile.plan_expires_at) > new Date();
       }
     } else {
-      // free plan — no access, redirect to payment
-      hasAccess = false;
+      // No profile at all — show app anyway, profile will be created
+      console.warn('[Pattro] No profile found, showing app');
+      hasAccess = true;
     }
-  } else {
-    // No profile yet — send to register
-    hasAccess = false;
-  }
-  
-  if (hasAccess) {
+
+    if (hasAccess) {
+      showApp();
+    } else {
+      await sb.auth.signOut();
+      window.location.href = '/register?paywall=1';
+    }
+  } catch(e) {
+    // Network error or unexpected — don't lock user out, just show app
+    console.error('[Pattro] checkPlanAndShow error:', e.message);
     showApp();
-  } else {
-    // No active plan — redirect to register/payment
-    await sb.auth.signOut();
-    window.location.href = '/register?paywall=1';
   }
 }
 
@@ -8028,7 +8037,7 @@ function showCoachNotification(message, type, errors) {
   notif.innerHTML = [
     '<style>@keyframes slideInRight{from{transform:translateX(120%);opacity:0}to{transform:translateX(0);opacity:1}}
 /* ── Mobile grid overrides ── */
-@media (max-width: 768px) {
+@media (max-width: 640px) {
   /* Force single column on all inline grids inside content */
   .content [style*="grid-template-columns: 1fr 1fr 1fr 1fr"],
   .content [style*="grid-template-columns:1fr 1fr 1fr 1fr"] {
