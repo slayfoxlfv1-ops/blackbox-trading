@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1773985995 -->
+<!-- v1773986420 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -683,6 +683,99 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
   font-size: 18px;
   line-height: 1;
 }
+
+/* ── Mobile grid overrides ── */
+@media (max-width: 640px) {
+  /* Force single column on all inline grids inside content */
+  .content [style*="grid-template-columns: 1fr 1fr 1fr 1fr"],
+  .content [style*="grid-template-columns:1fr 1fr 1fr 1fr"] {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .content [style*="grid-template-columns: 1fr 1fr 1fr"],
+  .content [style*="grid-template-columns:1fr 1fr 1fr"],
+  .content [style*="grid-template-columns:repeat(3,1fr)"],
+  .content [style*="grid-template-columns: repeat(3, 1fr)"] {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .content [style*="grid-template-columns: 1fr 1fr"],
+  .content [style*="grid-template-columns:1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+  /* Discipline + Achievements row → stack */
+  .content [style*="grid-template-columns:1fr 1fr;gap:12px"] {
+    grid-template-columns: 1fr !important;
+  }
+  /* Metrics grid already uses auto-fill — OK */
+  /* Calendar stays 7 columns */
+  .cal-grid, .cal-hdr {
+    grid-template-columns: repeat(7,1fr) !important;
+  }
+  /* Streaks & achievements — prevent overflow */
+  .content [style*="grid-template-columns:1fr auto auto auto"] {
+    grid-template-columns: 1fr auto auto !important;
+    font-size: 10px;
+  }
+  /* Insights performance grids */
+  .content [style*="grid-template-columns:repeat(3,1fr);gap:12px"],
+  .content [style*="grid-template-columns: repeat(3,1fr);gap:12px"] {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  /* Score breakdown (3 cols) */
+  .content [style*="grid-template-columns:1fr 1fr;gap:10px"],
+  .content [style*="grid-template-columns: 1fr 1fr;gap:10px"] {
+    grid-template-columns: 1fr !important;
+  }
+  /* Overflow x for any remaining wide content */
+  .content > div {
+    min-width: 0;
+    overflow-x: hidden;
+  }
+  /* Panel heads with long titles */
+  .panel-head {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  /* Sub-tabs wrap on mobile */
+  .sub-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
+    padding-bottom: 4px;
+  }
+  /* Table horizontal scroll */
+  table {
+    min-width: 0;
+  }
+  .content table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+  }
+  /* Hide some table columns on small screens */
+  .content table td:nth-child(6),
+  .content table th:nth-child(6),
+  .content table td:nth-child(7),
+  .content table th:nth-child(7) {
+    display: none;
+  }
+  /* Auth screen */
+  .auth-box {
+    padding: 24px 16px !important;
+    margin: 16px !important;
+    width: calc(100vw - 32px) !important;
+    max-width: 100% !important;
+  }
+  /* Page title in topbar */
+  #page-title {
+    font-size: 14px !important;
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -7922,14 +8015,14 @@ async function generateAutoFullAnalysis(trades, accountId, day) {
   var emoRecent = {}; var emoOld = {};
   t7days.forEach(function(t){ if(t.emotion){emoRecent[t.emotion]=(emoRecent[t.emotion]||0)+1;} });
   tPrevWeek.forEach(function(t){ if(t.emotion){emoOld[t.emotion]=(emoOld[t.emotion]||0)+1;} });
-  var emoStr = 'Esta semana: ' + (Object.entries(emoRecent).map(function(e){return e[0]+':'+e[1];}).join(', ')||'sin datos')
-    + ' | Semana pasada: ' + (Object.entries(emoOld).map(function(e){return e[0]+':'+e[1];}).join(', ')||'sin datos');
+  var emoStr = 'This week: ' + (Object.entries(emoRecent).map(function(e){return e[0]+':'+e[1];}).join(', ')||'sin datos')
+    + ' | Last week: ' + (Object.entries(emoOld).map(function(e){return e[0]+':'+e[1];}).join(', ')||'sin datos');
 
   var mem = getCoachMemory(accountId);
-  var prevContext = mem.lastFullMessage ? ('Your previous analysis ('+mem.lastAnalysisDay+') decia: ' + mem.lastFullMessage.slice(0,200) + '...') : '';
+  var prevContext = mem.lastFullMessage ? ('Your previous analysis ('+mem.lastAnalysisDay+'): ' + mem.lastFullMessage.slice(0,200) + '...') : '';
 
-  var prompt = 'Eres el coach de psico-trading personal de este trader. Hoy es ' + day + '.'
-    + (prevContext ? ' ' + prevContext + ' Muestra evolucion respecto a eso.' : '')
+  var prompt = 'You are the personal trading psychology coach for this trader. Today is ' + day + '.'
+    + (prevContext ? ' ' + prevContext + ' Show evolution compared to that.' : '')
     + '\n\nDATOS POR PERIODO:\n' + periodSummary
     + '\n\nEMOCIONES: ' + emoStr
     + '\n\nAnaliza la EVOLUCION en el tiempo, no solo el momento actual. '
@@ -8014,99 +8107,7 @@ function showCoachNotification(message, type, errors) {
   var preview = message.length > 300 ? message.slice(0,300)+'...' : message;
 
   notif.innerHTML = [
-    '<style>@keyframes slideInRight{from{transform:translateX(120%);opacity:0}to{transform:translateX(0);opacity:1}}
-/* ── Mobile grid overrides ── */
-@media (max-width: 640px) {
-  /* Force single column on all inline grids inside content */
-  .content [style*="grid-template-columns: 1fr 1fr 1fr 1fr"],
-  .content [style*="grid-template-columns:1fr 1fr 1fr 1fr"] {
-    grid-template-columns: 1fr 1fr !important;
-  }
-  .content [style*="grid-template-columns: 1fr 1fr 1fr"],
-  .content [style*="grid-template-columns:1fr 1fr 1fr"],
-  .content [style*="grid-template-columns:repeat(3,1fr)"],
-  .content [style*="grid-template-columns: repeat(3, 1fr)"] {
-    grid-template-columns: 1fr 1fr !important;
-  }
-  .content [style*="grid-template-columns: 1fr 1fr"],
-  .content [style*="grid-template-columns:1fr 1fr"] {
-    grid-template-columns: 1fr !important;
-  }
-  /* Discipline + Achievements row → stack */
-  .content [style*="grid-template-columns:1fr 1fr;gap:12px"] {
-    grid-template-columns: 1fr !important;
-  }
-  /* Metrics grid already uses auto-fill — OK */
-  /* Calendar stays 7 columns */
-  .cal-grid, .cal-hdr {
-    grid-template-columns: repeat(7,1fr) !important;
-  }
-  /* Streaks & achievements — prevent overflow */
-  .content [style*="grid-template-columns:1fr auto auto auto"] {
-    grid-template-columns: 1fr auto auto !important;
-    font-size: 10px;
-  }
-  /* Insights performance grids */
-  .content [style*="grid-template-columns:repeat(3,1fr);gap:12px"],
-  .content [style*="grid-template-columns: repeat(3,1fr);gap:12px"] {
-    grid-template-columns: 1fr 1fr !important;
-  }
-  /* Score breakdown (3 cols) */
-  .content [style*="grid-template-columns:1fr 1fr;gap:10px"],
-  .content [style*="grid-template-columns: 1fr 1fr;gap:10px"] {
-    grid-template-columns: 1fr !important;
-  }
-  /* Overflow x for any remaining wide content */
-  .content > div {
-    min-width: 0;
-    overflow-x: hidden;
-  }
-  /* Panel heads with long titles */
-  .panel-head {
-    flex-wrap: wrap;
-    gap: 4px;
-  }
-  /* Sub-tabs wrap on mobile */
-  .sub-tabs {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    flex-wrap: nowrap;
-    padding-bottom: 4px;
-  }
-  /* Table horizontal scroll */
-  table {
-    min-width: 0;
-  }
-  .content table {
-    display: block;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    white-space: nowrap;
-  }
-  /* Hide some table columns on small screens */
-  .content table td:nth-child(6),
-  .content table th:nth-child(6),
-  .content table td:nth-child(7),
-  .content table th:nth-child(7) {
-    display: none;
-  }
-  /* Auth screen */
-  .auth-box {
-    padding: 24px 16px !important;
-    margin: 16px !important;
-    width: calc(100vw - 32px) !important;
-    max-width: 100% !important;
-  }
-  /* Page title in topbar */
-  #page-title {
-    font-size: 14px !important;
-    max-width: 160px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-}
-</style>',
+    '<style>@keyframes slideInRight{from{transform:translateX(120%);opacity:0}to{transform:translateX(0);opacity:1}}</style>',
     '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">',
       '<div style="font-size:12px;font-weight:700;color:#f0f0f0">'+title+'</div>',
       '<button id="coach-notif-close" style="background:none;border:none;color:#666;cursor:pointer;font-size:16px;padding:0;line-height:1">×</button>',
