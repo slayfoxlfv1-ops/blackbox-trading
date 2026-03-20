@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1773984042 -->
+<!-- v1773985017 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -549,7 +549,7 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
   /* ── Main area fills screen ── */
   .main {
     height: 100vh;
-    padding-bottom: 64px; /* space for bottom nav */
+    padding-bottom: 80px; /* space for bottom nav + extra */
   }
 
   /* ── Topbar ── */
@@ -7740,7 +7740,7 @@ function showTiltAlert(tilt) {
   var notif = document.createElement('div');
   notif.id  = 'tilt-notif';
   notif.style.cssText = [
-    'position:fixed', 'bottom:24px', 'right:24px', 'z-index:99999',
+    'position:fixed', 'bottom:80px', 'right:24px', 'z-index:99999',
     'background:' + bg,
     'border:1px solid ' + border,
     'border-left:4px solid ' + accent,
@@ -8020,7 +8020,99 @@ function showCoachNotification(message, type, errors) {
   var preview = message.length > 300 ? message.slice(0,300)+'...' : message;
 
   notif.innerHTML = [
-    '<style>@keyframes slideInRight{from{transform:translateX(120%);opacity:0}to{transform:translateX(0);opacity:1}}</style>',
+    '<style>@keyframes slideInRight{from{transform:translateX(120%);opacity:0}to{transform:translateX(0);opacity:1}}
+/* ── Mobile grid overrides ── */
+@media (max-width: 768px) {
+  /* Force single column on all inline grids inside content */
+  .content [style*="grid-template-columns: 1fr 1fr 1fr 1fr"],
+  .content [style*="grid-template-columns:1fr 1fr 1fr 1fr"] {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .content [style*="grid-template-columns: 1fr 1fr 1fr"],
+  .content [style*="grid-template-columns:1fr 1fr 1fr"],
+  .content [style*="grid-template-columns:repeat(3,1fr)"],
+  .content [style*="grid-template-columns: repeat(3, 1fr)"] {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .content [style*="grid-template-columns: 1fr 1fr"],
+  .content [style*="grid-template-columns:1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+  /* Discipline + Achievements row → stack */
+  .content [style*="grid-template-columns:1fr 1fr;gap:12px"] {
+    grid-template-columns: 1fr !important;
+  }
+  /* Metrics grid already uses auto-fill — OK */
+  /* Calendar stays 7 columns */
+  .cal-grid, .cal-hdr {
+    grid-template-columns: repeat(7,1fr) !important;
+  }
+  /* Streaks & achievements — prevent overflow */
+  .content [style*="grid-template-columns:1fr auto auto auto"] {
+    grid-template-columns: 1fr auto auto !important;
+    font-size: 10px;
+  }
+  /* Insights performance grids */
+  .content [style*="grid-template-columns:repeat(3,1fr);gap:12px"],
+  .content [style*="grid-template-columns: repeat(3,1fr);gap:12px"] {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  /* Score breakdown (3 cols) */
+  .content [style*="grid-template-columns:1fr 1fr;gap:10px"],
+  .content [style*="grid-template-columns: 1fr 1fr;gap:10px"] {
+    grid-template-columns: 1fr !important;
+  }
+  /* Overflow x for any remaining wide content */
+  .content > div {
+    min-width: 0;
+    overflow-x: hidden;
+  }
+  /* Panel heads with long titles */
+  .panel-head {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  /* Sub-tabs wrap on mobile */
+  .sub-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
+    padding-bottom: 4px;
+  }
+  /* Table horizontal scroll */
+  table {
+    min-width: 0;
+  }
+  .content table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+  }
+  /* Hide some table columns on small screens */
+  .content table td:nth-child(6),
+  .content table th:nth-child(6),
+  .content table td:nth-child(7),
+  .content table th:nth-child(7) {
+    display: none;
+  }
+  /* Auth screen */
+  .auth-box {
+    padding: 24px 16px !important;
+    margin: 16px !important;
+    width: calc(100vw - 32px) !important;
+    max-width: 100% !important;
+  }
+  /* Page title in topbar */
+  #page-title {
+    font-size: 14px !important;
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+</style>',
     '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">',
       '<div style="font-size:12px;font-weight:700;color:#f0f0f0">'+title+'</div>',
       '<button id="coach-notif-close" style="background:none;border:none;color:#666;cursor:pointer;font-size:16px;padding:0;line-height:1">×</button>',
@@ -9375,7 +9467,7 @@ function showAchievementToast(badge) {
   var toast = document.createElement('div');
   toast.id = 'ach-toast';
   toast.style.cssText = [
-    'position:fixed', 'bottom:24px', 'right:24px', 'z-index:9999',
+    'position:fixed', 'bottom:80px', 'right:24px', 'z-index:9999',
     'background:var(--surface)', 'border:1px solid var(--amber)',
     'border-left:4px solid var(--amber)', 'border-radius:12px',
     'padding:14px 18px', 'display:flex', 'align-items:center', 'gap:12px',

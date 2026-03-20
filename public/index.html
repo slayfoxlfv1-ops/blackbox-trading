@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1773980356 -->
+<!-- v1773985046 -->
 <html lang="en" id="html-root">
 <head>
 <meta charset="UTF-8">
@@ -264,6 +264,74 @@ footer{border-top:1px solid var(--border);padding:22px 48px;display:flex;align-i
 .legal-section p{font-size:11px;color:#9898a6;line-height:1.75}
 .legal-footer{padding:14px 24px;border-top:1px solid #26262e;flex-shrink:0;text-align:right}
 .legal-footer button{padding:8px 20px;background:var(--teal);border:none;border-radius:7px;color:#0a0a0b;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit}
+
+/* ═══════════════════════════════════════════
+   LANDING MOBILE RESPONSIVE
+   ═══════════════════════════════════════════ */
+@media (max-width: 768px) {
+  /* Nav */
+  nav { padding: 0 16px; height: 52px; }
+  .nav-links { display: none; }
+  .nav-r { gap: 8px; }
+  .nav-r .nav-link { display: none; }
+  .btn-cta { padding: 7px 14px; font-size: 10px; }
+  .lang-btn { padding: 4px 8px; font-size: 9px; }
+
+  /* Hero */
+  .hero { padding: 80px 20px 60px; min-height: auto; }
+  .hero-inner h1 { font-size: clamp(28px, 8vw, 44px) !important; }
+  .hero-sub { font-size: 13px; }
+  .hero-btns { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .hero-btns a { width: 100%; text-align: center; }
+  .mockup-wrap { display: none; }
+
+  /* How it works steps */
+  .steps { grid-template-columns: 1fr 1fr !important; }
+
+  /* Features grid */
+  .feat-grid { grid-template-columns: 1fr !important; gap: 10px; }
+
+  /* Sections padding */
+  section, .features-band, .how-band, .pricing-band, .extension-band, .proof-band {
+    padding: 60px 20px !important;
+  }
+
+  /* Pricing */
+  .pricing-inner { grid-template-columns: 1fr !important; gap: 32px; }
+  .pricing-card { padding: 24px; }
+
+  /* Extension section */
+  .ext-grid { grid-template-columns: 1fr !important; }
+
+  /* Footer */
+  footer { flex-direction: column; gap: 16px; padding: 20px 16px; text-align: center; }
+  .footer-links { flex-wrap: wrap; justify-content: center; gap: 12px; }
+
+  /* FAQ */
+  .faq { padding: 40px 20px; }
+
+  /* Lang dropdown */
+  .lang-dropdown { right: 12px; top: 52px; }
+
+  /* General sections max-width */
+  .section-inner, .features-inner, .how-inner, .pricing-inner, .ext-inner {
+    max-width: 100% !important;
+  }
+
+  /* Proof / testimonials */
+  .proof-grid { grid-template-columns: 1fr !important; }
+
+  /* Hide decorative elements */
+  .hero-glow { display: none; }
+
+  /* Typography */
+  h2 { font-size: clamp(22px, 6vw, 32px) !important; }
+}
+
+@media (max-width: 480px) {
+  .steps { grid-template-columns: 1fr !important; }
+  .hero-inner h1 { font-size: 26px !important; }
+}
 </style>
 </head>
 <body>

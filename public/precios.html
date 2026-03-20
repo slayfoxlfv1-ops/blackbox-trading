@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1773967733 -->
+<!-- v1773985058 -->
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -55,6 +55,19 @@ h1{font-size:30px;font-weight:800;color:var(--text);margin-bottom:10px;letter-sp
 .faq-a{font-size:11px;color:var(--text3);line-height:1.7}
 footer{border-top:1px solid var(--border);padding:20px 40px;text-align:center;font-size:10px;color:var(--text3)}
 footer a{color:var(--teal);text-decoration:none}
+
+@media (max-width: 768px) {
+  body { padding: 0 !important; }
+  .wrap, .container, main { padding: 16px !important; max-width: 100% !important; }
+  nav, .nav { padding: 0 16px !important; }
+  h1 { font-size: 24px !important; }
+  h2 { font-size: 18px !important; }
+  .pricing-cards, .plan-grid { flex-direction: column !important; }
+  .plan-card, .pricing-card { width: 100% !important; max-width: 100% !important; }
+  .faq-item { padding: 14px 0 !important; }
+  footer { flex-direction: column; gap: 12px; padding: 16px !important; text-align: center; }
+  .footer-links { flex-wrap: wrap; justify-content: center; }
+}
 </style>
 </head>
 <body>
