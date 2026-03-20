@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1773985017 -->
+<!-- v1773985405 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -99,7 +99,7 @@ body {
 .btn-primary:hover { opacity:.9; transform:translateY(-1px); }
 
 /* ── LAYOUT ── */
-.layout { display:flex; height:100vh; overflow:hidden; }
+.layout { height:100vh; overflow:hidden; }
 
 /* ── SIDEBAR — distinct identity, not just a darker panel ── */
 .sidebar {
@@ -717,7 +717,7 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
 </div>
 
 <!-- APP -->
-<div class="layout" id="app" style="display:none;flex-direction:row;height:100vh;overflow:hidden">
+<div class="layout" id="app" style="display:none;flex-direction:row">
   <aside class="sidebar">
     <div class="logo" onclick="navigateTo('dashboard')" style="cursor:pointer;display:flex;align-items:center;gap:12px;padding:16px 16px 14px;transition:opacity .15s;border-bottom:1px solid var(--border)" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
       <div style="position:relative;flex-shrink:0;width:40px;height:40px">
@@ -1117,6 +1117,7 @@ async function signOut() {
   if (menu) menu.classList.remove('open');
 
   await sb.auth.signOut();
+  var _mn3 = document.getElementById('mobile-nav'); if (_mn3) _mn3.style.display = 'none';
   window.location.href = '/login';
 }
 
@@ -1266,9 +1267,11 @@ sb.auth.onAuthStateChange(function(event, session) {
     currentUser = null;
     // Redirect to login page
     if (window.location.pathname === '/dashboard' || window.location.pathname === '/app.html') {
-      window.location.href = '/login';
+      var _mn3 = document.getElementById('mobile-nav'); if (_mn3) _mn3.style.display = 'none';
+  window.location.href = '/login';
     } else {
       document.getElementById('auth-screen').style.display = 'flex';
+      var _mn = document.getElementById('mobile-nav'); if (_mn) _mn.style.display = 'none';
       document.getElementById('app').style.display = 'none';
     }
   }
@@ -1311,6 +1314,8 @@ async function checkPlanAndShow() {
 function showApp() {
   document.getElementById('auth-screen').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
+  var mNav = document.getElementById('mobile-nav');
+  if (mNav) mNav.style.display = '';
   var name = (currentUser.user_metadata && currentUser.user_metadata.full_name) || currentUser.email.split('@')[0] || '?';
   document.getElementById('user-name').textContent = name;
   document.getElementById('user-avatar').textContent = name.charAt(0).toUpperCase();
@@ -1340,7 +1345,8 @@ window.addEventListener('storage', function(e) {
   }
   if (e.key === 'supabase.auth.token' && !e.newValue) {
     // Another tab logged out — redirect this tab too
-    window.location.href = '/login';
+    var _mn3 = document.getElementById('mobile-nav'); if (_mn3) _mn3.style.display = 'none';
+  window.location.href = '/login';
   }
 });
 
@@ -9769,7 +9775,7 @@ function openLegalModal(type) {
 </div>
 
 <!-- MOBILE BOTTOM NAV -->
-<nav id="mobile-nav">
+<nav id="mobile-nav" style="display:none">
   <div class="mnav-item active" id="mnav-dashboard" onclick="navigateTo('dashboard')" data-view="dashboard">
     <span class="mnav-icon">&#9638;</span>
     <span>Dashboard</span>
