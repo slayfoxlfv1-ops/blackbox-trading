@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1773974283 -->
+<!-- v1773974510 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -8492,6 +8492,82 @@ function deleteSetupTag(idx) {
   initSettingsTags();
 }
 
+function closeCancelModal() {
+  var m = document.getElementById('cancel-sub-modal');
+  if (m) m.remove();
+}
+
+function confirmCancelSubscription(subscriptionId) {
+  // Remove any existing modal
+  var existing = document.getElementById('cancel-sub-modal');
+  if (existing) existing.remove();
+
+  var html =
+    '<div id="cancel-sub-modal" style="position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:700;display:flex;align-items:center;justify-content:center;padding:16px" onclick="if(event.target===this)this.remove()">'
+    + '<div style="background:var(--surface);border:1px solid var(--border2);border-top:2px solid var(--red);border-radius:14px;width:min(420px,94vw);box-shadow:0 24px 80px rgba(0,0,0,.6);padding:28px">'
+    + '<div style="font-size:18px;margin-bottom:12px">⚠️</div>'
+    + '<div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px">Cancel your subscription?</div>'
+    + '<div style="font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:20px">'
+    + 'Your Pattro Pro access will continue until the end of your current billing period. '
+    + 'After that, your account will revert to the free plan and you will lose access to all Pro features.<br><br>'
+    + '<strong style="color:var(--amber)">This action cannot be undone.</strong>'
+    + '</div>'
+    + '<div id="cancel-sub-error" style="font-size:11px;color:var(--red);min-height:16px;margin-bottom:10px"></div>'
+    + '<div style="display:flex;gap:10px;justify-content:flex-end">'
+    + '<button onclick="closeCancelModal()" '
+    + 'style="padding:9px 18px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text2);font-size:11px;cursor:pointer;font-family:inherit">Keep subscription</button>'
+    + '<button id="confirm-cancel-btn" onclick="executeCancelSubscription(\'' + subscriptionId + '\')" '
+    + 'style="padding:9px 18px;background:var(--red-bg);border:1px solid var(--red-bd);border-radius:8px;color:var(--red);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Yes, cancel</button>'
+    + '</div>'
+    + '</div></div>';
+
+  document.body.insertAdjacentHTML('beforeend', html);
+}
+
+async function executeCancelSubscription(subscriptionId) {
+  var btn   = document.getElementById('confirm-cancel-btn');
+  var errEl = document.getElementById('cancel-sub-error');
+  if (!btn) return;
+
+  btn.disabled    = true;
+  btn.textContent = 'Cancelling...';
+  if (errEl) errEl.textContent = '';
+
+  try {
+    var resp = await fetch('/api/cancel-subscription', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({
+        subscription_id: subscriptionId,
+        user_id:         currentUser.id
+      })
+    });
+
+    var data = await resp.json();
+
+    if (resp.ok && data.ok) {
+      // Success — close modal and refresh plan panel
+      var modal = document.getElementById('cancel-sub-modal');
+      if (modal) modal.remove();
+      // Show success message and refresh
+      var planEl = document.getElementById('plan-panel-content');
+      if (planEl) {
+        planEl.innerHTML = '<div style="padding:12px;background:var(--green-bg);border:1px solid var(--green-bd);border-radius:8px;font-size:11px;color:var(--green)">'
+          + '✓ Subscription cancelled. Your access continues until the end of your current billing period.'
+          + '</div>';
+      }
+    } else {
+      if (errEl) errEl.textContent = data.error || 'Failed to cancel. Please contact support@pattro.com';
+      btn.disabled    = false;
+      btn.textContent = 'Yes, cancel';
+    }
+  } catch(e) {
+    if (errEl) errEl.textContent = 'Connection error. Please try again or contact support.';
+    btn.disabled    = false;
+    btn.textContent = 'Yes, cancel';
+  }
+}
+
 async function loadPlanPanel() {
   var el = document.getElementById('plan-panel-content');
   if (!el) return;
@@ -8564,13 +8640,27 @@ async function loadPlanPanel() {
     ? '<a href="/register" style="display:inline-flex;align-items:center;gap:6px;margin-top:14px;padding:10px 20px;background:var(--teal);color:#0a0a0b;border-radius:8px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;text-decoration:none;letter-spacing:.3px">Upgrade to Pattro Pro — $15/month →</a>'
     : '';
 
-  // Cancel info
-  var cancelHtml = (plan === 'pro')
-    ? '<div style="margin-top:12px;padding:10px 14px;background:var(--surface2);border-radius:8px;font-size:10px;color:var(--text3);line-height:1.6">'
-      + 'To cancel your subscription, contact us at <span style="color:var(--teal)">support@pattro.com</span>. '
-      + 'Your access continues until the end of your current billing period.'
+  // Cancel button + info
+  var cancelHtml = '';
+  if (plan === 'pro' && profile.paddle_subscription_id) {
+    cancelHtml =
+      '<div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">'
+      + '<div style="font-size:10px;color:var(--text3);margin-bottom:10px;line-height:1.6">'
+      + 'Your access continues until the end of your current billing period after cancellation.'
       + '</div>'
-    : '';
+      + '<button onclick="confirmCancelSubscription(\'' + profile.paddle_subscription_id + '\')" '
+      + 'style="padding:8px 16px;background:transparent;border:1px solid var(--red-bd);border-radius:8px;color:var(--red);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s" '
+      + 'onmouseover="this.style.background=\'var(--red-bg)\'" '
+      + 'onmouseout="this.style.background=\'transparent\'">'
+      + 'Cancel subscription'
+      + '</button>'
+      + '</div>';
+  } else if (plan === 'pro') {
+    cancelHtml =
+      '<div style="margin-top:12px;font-size:10px;color:var(--text3)">'
+      + 'To cancel, contact <span style="color:var(--teal)">support@pattro.com</span>'
+      + '</div>';
+  }
 
   // Price lock note for pro users
   var priceLock = (plan === 'pro')
