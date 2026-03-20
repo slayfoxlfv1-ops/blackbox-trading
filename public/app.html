@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1773972673 -->
+<!-- v1773972951 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -3609,7 +3609,7 @@ function checkRuleViolations(rulesObj, trades) {
         var s = NY_SESSIONS.find(function(x){ return x.id===sid; });
         return s ? s.name : sid;
       }).join(', ');
-      violations.push({ rule:{id:'session', label:'Horario permitido'}, detail: badTrades.length + ' trade(s) fuera de: ' + sessNames });
+      violations.push({ rule:{id:'session', label:'Allowed hours'}, detail: badTrades.length + ' trade(s) outside of: ' + sessNames });
     }
   }
 
@@ -3689,7 +3689,7 @@ function checkRuleViolations(rulesObj, trades) {
   if (r.redday && r.redday.active) {
     var todayMoodSess = (currentMoodSessions||[]).find(function(s){ return (s.session_date||s.date) === todayStr; });
     if (todayTrades.length > 0 && todayMoodSess && todayMoodSess.level === 'red') {
-      violations.push({ rule:{id:'redday', label:'No operar en Red Day'}, detail: 'You traded on a Red Day (red mood check)' });
+      violations.push({ rule:{id:'redday', label:'No trading on Red Day'}, detail: 'You traded on a Red Day (red mood check)' });
     }
   }
 
@@ -3805,7 +3805,7 @@ function calcDailyDisciplineScore(dateStr) {
 
   var label = total >= 90 ? 'Elite 🏆'
             : total >= 70 ? 'Disciplined ✅'
-            : total >= 50 ? 'En progreso ⚠️'
+            : total >= 50 ? 'In progress ⚠️'
             : total >= 30 ? 'Attention 🔶'
             : 'Chaotic 🔴';
 
@@ -4236,7 +4236,7 @@ function renderRulesView() {
   var todayTrades = trades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(today); });
   var dscore = calcRulesDisciplineScore(rules, trades);
   var dcolor = dscore.score>=80?'var(--green)':dscore.score>=50?'var(--amber)':'var(--red)';
-  var dlabel = dscore.score>=90?'Elite Discipline':dscore.score>=70?'Disciplined Trader':dscore.score>=50?'En progreso':dscore.score>=30?'Necesita atencion':'Sesion caotica';
+  var dlabel = dscore.score>=90?'Elite Discipline':dscore.score>=70?'Disciplined Trader':dscore.score>=50?'In progress':dscore.score>=30?'Needs attention':'Chaotic session';
 
   var html = '<div style="padding:20px 24px;max-width:760px">';
 
@@ -4317,7 +4317,7 @@ function renderRulesView() {
           + '</label>';
       }).join('') + '</div>'
     + (sel1.length===0 ? '<div style="font-size:10px;color:var(--amber);margin-top:6px">Select at least one session</div>' : '');
-  html += rCard('session','🕐','Horario permitido para operar','You can only trade during selected sessions', sessHtml, !!r1.active, violations.some(function(v){return v.rule.id==='session';}));
+  html += rCard('session','🕐','Allowed trading hours','You can only trade during selected sessions', sessHtml, !!r1.active, violations.some(function(v){return v.rule.id==='session';}));
 
   // ── Rule 2: No days ──
   var r2 = rules.nodays || {};
@@ -4330,7 +4330,7 @@ function renderRulesView() {
           + '<span style="font-size:12px;color:' + (on?'var(--red)':'var(--text3)') + ';font-weight:' + (on?'600':'400') + '">' + o.lbl + '</span>'
           + '</label>';
       }).join('') + '</div>';
-  html += rCard('nodays','📅','No operar lunes / viernes','Mark the days you are not allowed to trade', ndHtml, !!r2.active, violations.some(function(v){return v.rule.id==='nodays';}));
+  html += rCard('nodays','📅','No trading on selected days','Mark the days you are not allowed to trade', ndHtml, !!r2.active, violations.some(function(v){return v.rule.id==='nodays';}));
 
   // ── Rule 3: Max trades/day ──
   var r3 = rules.maxtrades || {};
@@ -4341,7 +4341,7 @@ function renderRulesView() {
     + '<span style="font-size:10px;color:var(--text3)">trades</span></div>'
     + '<div style="font-size:11px;color:var(--text3)">Hoy tomaste: <span style="color:' + (todayTrades.length>=(parseInt(r3.value)||3)?'var(--red)':'var(--text)') + ';font-weight:600">' + todayTrades.length + '</span></div>'
     + '</div>';
-  html += rCard('maxtrades','🔢','Maximo de trades por dia','Para de operar cuando alcanzes este numero de trades en la sesion', mt3, !!r3.active, violations.some(function(v){return v.rule.id==='maxtrades';}));
+  html += rCard('maxtrades','🔢','Max trades per day','Stop trading when you reach this number of trades per session', mt3, !!r3.active, violations.some(function(v){return v.rule.id==='maxtrades';}));
 
   // ── Rule 4: Max consecutive losses ──
   var r4 = rules.maxlosses || {};
@@ -4354,7 +4354,7 @@ function renderRulesView() {
     + '<span style="font-size:10px;color:var(--text3)">perdidas seguidas</span></div>'
     + '<div style="font-size:11px;color:var(--text3)">Racha max hoy: <span style="color:' + (ms4>=(parseInt(r4.value)||2)?'var(--red)':'var(--text)') + ';font-weight:600">' + ms4 + '</span></div>'
     + '</div>';
-  html += rCard('maxlosses','🛑','Max consecutive losses','Stop trading when you chain this number of losingdas seguidas', ml4, !!r4.active, violations.some(function(v){return v.rule.id==='maxlosses';}));
+  html += rCard('maxlosses','🛑','Max consecutive losses','Stop trading when you chain this number of consecutive losses', ml4, !!r4.active, violations.some(function(v){return v.rule.id==='maxlosses';}));
 
   // ── Rule 5: Max position size ──
   var r5 = rules.maxsize || {};
@@ -4367,7 +4367,7 @@ function renderRulesView() {
     + '</select></div>'
     + '<span style="font-size:10px;color:var(--text3)">ES/MES · NQ/MNQ · YM/MYM · GC/MGC · CL/MCL</span>'
     + '</div>';
-  html += rCard('maxsize','📊','Tamano maximo de posicion','Limite de contratos por trade. El sistema convierte entre micro y mini automaticamente', ms5, !!r5.active, violations.some(function(v){return v.rule.id==='maxsize';}));
+  html += rCard('maxsize','📊','Max position size','Contract limit per trade. System auto-converts between micro and mini contracts', ms5, !!r5.active, violations.some(function(v){return v.rule.id==='maxsize';}));
 
   // ── Rule 6: Checklist ──
   var r6 = rules.checklist || {};
@@ -4386,7 +4386,7 @@ function renderRulesView() {
   var rd7 = '<div style="display:flex;align-items:center;gap:8px">'
     + '<div style="width:8px;height:8px;border-radius:50%;background:' + rdClr + '"></div>'
     + '<span style="font-size:11px;color:' + rdClr + ';font-weight:600">' + rdTxt + '</span></div>';
-  html += rCard('redday','🧠','No operar en Red Day','If mood check is red, no trades that day', rd7, !!r7.active, violations.some(function(v){return v.rule.id==='redday';}));
+  html += rCard('redday','🧠','No trading on Red Day','If mood check is red, no trades that day', rd7, !!r7.active, violations.some(function(v){return v.rule.id==='redday';}));
 
   // ── Rule 8: Min time gap ──
   var r8 = rules.mintimegap || {};
@@ -4395,7 +4395,7 @@ function renderRulesView() {
     + '<input type="number" min="1" max="120" value="' + (r8.value||10) + '" id="rule-input-mintimegap" onchange="updateRuleValue(\'mintimegap\',this.value)" style="width:48px;background:transparent;border:none;color:var(--text);font-size:14px;font-weight:700;font-family:inherit;text-align:center;outline:none">'
     + '<span style="font-size:10px;color:var(--text3)">minutos entre trades</span></div>'
     + '</div>';
-  html += rCard('mintimegap','⏱','Minimo de minutos entre trades','Evita el overtrading y entradas impulsivas despues de cada trade', tg8, !!r8.active, violations.some(function(v){return v.rule.id==='mintimegap';}));
+  html += rCard('mintimegap','⏱','Minimum minutes between trades','Avoid overtrading and impulsive entries after each trade', tg8, !!r8.active, violations.some(function(v){return v.rule.id==='mintimegap';}));
 
   // ── Rule 9: Max daily loss ──
   var r9 = rules.maxdailyloss || {};
@@ -4407,7 +4407,7 @@ function renderRulesView() {
     + '</div>'
     + '<div style="font-size:11px;color:var(--text3)">P&L hoy: <span style="color:' + (pnl9>=0?'var(--green)':'var(--red)') + ';font-weight:700">' + (pnl9>=0?'+':'') + '$' + Math.abs(pnl9).toFixed(0) + '</span></div>'
     + '</div>';
-  html += rCard('maxdailyloss','💸','Perdida maxima personal del dia','Tu limite personal de perdida diaria, independiente del limite de la firma', mdl9, !!r9.active, violations.some(function(v){return v.rule.id==='maxdailyloss';}));
+  html += rCard('maxdailyloss','💸','Personal daily max loss','Your personal daily loss limit, independent of your firm\'s limit', mdl9, !!r9.active, violations.some(function(v){return v.rule.id==='maxdailyloss';}));
 
   // ── Save button ──
   html += '<div style="display:flex;justify-content:flex-end;margin:4px 0 16px 0">'
@@ -5168,7 +5168,7 @@ function renderRulesTab(el) {
   var todayTrades = trades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(today); });
   var dscore = calcRulesDisciplineScore(saved, trades);
   var dcolor = dscore.score>=80?'var(--green)':dscore.score>=50?'var(--amber)':'var(--red)';
-  var dlabel = dscore.score>=90?'Elite Discipline':dscore.score>=70?'Disciplined Trader':dscore.score>=50?'En progreso':dscore.score>=30?'Necesita atencion':'Sesion caotica';
+  var dlabel = dscore.score>=90?'Elite Discipline':dscore.score>=70?'Disciplined Trader':dscore.score>=50?'In progress':dscore.score>=30?'Needs attention':'Chaotic session';
 
   var html = '<div style="padding:20px 24px;max-width:760px">';
 
@@ -5181,7 +5181,7 @@ function renderRulesTab(el) {
     + '<div style="display:flex;align-items:center;gap:18px;margin-bottom:14px">'
     + '<div style="text-align:center;flex-shrink:0">'
     + '<div style="font-size:40px;font-weight:800;color:' + dcolor2 + ';line-height:1">' + daily.total + '</div>'
-    + '<div style="font-size:9px;color:var(--text3);margin-top:3px;text-transform:uppercase;letter-spacing:.8px">disciplina hoy</div>'
+    + '<div style="font-size:9px;color:var(--text3);margin-top:3px;text-transform:uppercase;letter-spacing:.8px">discipline today</div>'
     + '</div>'
     + '<div style="flex:1">'
     + '<div style="height:5px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-bottom:8px">'
@@ -5285,7 +5285,7 @@ function renderRulesTab(el) {
   });
   sessHtml += '</div>';
   if (!sel1.length) sessHtml += '<div style="font-size:10px;color:var(--amber);margin-top:6px">Select at least one session</div>';
-  html += rCard('session','🕐','Horario permitido para operar','You can only trade during selected sessions', sessHtml, !!r1.active, violations.some(function(v){return v.rule.id==='session';}));
+  html += rCard('session','🕐','Allowed trading hours','You can only trade during selected sessions', sessHtml, !!r1.active, violations.some(function(v){return v.rule.id==='session';}));
 
   // Rule 2: No days
   var r2 = rules.nodays || {};
@@ -5299,7 +5299,7 @@ function renderRulesTab(el) {
       + '</div>';
   });
   ndHtml += '</div>';
-  html += rCard('nodays','📅','No operar lunes / viernes','Mark the days you are not allowed to trade', ndHtml, !!r2.active, violations.some(function(v){return v.rule.id==='nodays';}));
+  html += rCard('nodays','📅','No trading on selected days','Mark the days you are not allowed to trade', ndHtml, !!r2.active, violations.some(function(v){return v.rule.id==='nodays';}));
 
   // Rule 3
   var r3 = rules.maxtrades || {};
@@ -5310,7 +5310,7 @@ function renderRulesTab(el) {
     + '<span style="font-size:10px;color:var(--text3)">trades</span></div>'
     + '<div style="font-size:11px;color:var(--text3)">Hoy: <span style="color:' + (todayTrades.length>=(parseInt(r3.value)||3)?'var(--red)':'var(--text)') + ';font-weight:600">' + todayTrades.length + '</span></div>'
     + '</div>';
-  html += rCard('maxtrades','🔢','Maximo de trades por dia','Para de operar cuando alcanzes este numero de trades', mt3, !!r3.active, violations.some(function(v){return v.rule.id==='maxtrades';}));
+  html += rCard('maxtrades','🔢','Max trades per day','Stop trading when you reach this number of trades', mt3, !!r3.active, violations.some(function(v){return v.rule.id==='maxtrades';}));
 
   // Rule 4
   var r4 = rules.maxlosses || {};
@@ -5323,7 +5323,7 @@ function renderRulesTab(el) {
     + '<span style="font-size:10px;color:var(--text3)">perdidas seguidas</span></div>'
     + '<div style="font-size:11px;color:var(--text3)">Racha hoy: <span style="color:' + (ms4>=(parseInt(r4.value)||2)?'var(--red)':'var(--text)') + ';font-weight:600">' + ms4 + '</span></div>'
     + '</div>';
-  html += rCard('maxlosses','🛑','Max consecutive losses','Stop trading when you chain this number of losingdas seguidas', ml4, !!r4.active, violations.some(function(v){return v.rule.id==='maxlosses';}));
+  html += rCard('maxlosses','🛑','Max consecutive losses','Stop trading when you chain this number of consecutive losses', ml4, !!r4.active, violations.some(function(v){return v.rule.id==='maxlosses';}));
 
   // Rule 5
   var r5 = rules.maxsize || {};
@@ -5336,7 +5336,7 @@ function renderRulesTab(el) {
     + '</select></div>'
     + '<span style="font-size:10px;color:var(--text3)">ES/MES · NQ/MNQ · YM/MYM · GC/MGC · CL/MCL</span>'
     + '</div>';
-  html += rCard('maxsize','📊','Tamano maximo de posicion','Limite de contratos por trade. Convierte entre micro y mini automaticamente', ms5, !!r5.active, violations.some(function(v){return v.rule.id==='maxsize';}));
+  html += rCard('maxsize','📊','Max position size','Contract limit per trade. Auto-converts between micro and mini contracts', ms5, !!r5.active, violations.some(function(v){return v.rule.id==='maxsize';}));
 
   // Rule 6
   var r6 = rules.checklist || {};
@@ -5355,7 +5355,7 @@ function renderRulesTab(el) {
   var rd7 = '<div style="display:flex;align-items:center;gap:8px">'
     + '<div style="width:8px;height:8px;border-radius:50%;background:' + rdClr + '"></div>'
     + '<span style="font-size:11px;color:' + rdClr + ';font-weight:600">' + rdTxt + '</span></div>';
-  html += rCard('redday','🧠','No operar en Red Day','If mood check is red, no trades that day', rd7, !!r7.active, violations.some(function(v){return v.rule.id==='redday';}));
+  html += rCard('redday','🧠','No trading on Red Day','If mood check is red, no trades that day', rd7, !!r7.active, violations.some(function(v){return v.rule.id==='redday';}));
 
   // Rule 8
   var r8 = rules.mintimegap || {};
@@ -5364,7 +5364,7 @@ function renderRulesTab(el) {
     + '<input id="rule-input-mintimegap" type="number" min="1" max="120" value="' + (r8.value||10) + '" style="width:48px;background:transparent;border:none;color:var(--text);font-size:14px;font-weight:700;font-family:inherit;text-align:center;outline:none">'
     + '<span style="font-size:10px;color:var(--text3)">minutos entre trades</span></div>'
     + '</div>';
-  html += rCard('mintimegap','⏱','Minimo de minutos entre trades','Evita el overtrading y entradas impulsivas despues de cada trade', tg8, !!r8.active, violations.some(function(v){return v.rule.id==='mintimegap';}));
+  html += rCard('mintimegap','⏱','Minimum minutes between trades','Avoid overtrading and impulsive entries after each trade', tg8, !!r8.active, violations.some(function(v){return v.rule.id==='mintimegap';}));
 
   // Rule 9
   var r9 = rules.maxdailyloss || {};
@@ -5376,7 +5376,7 @@ function renderRulesTab(el) {
     + '</div>'
     + '<div style="font-size:11px;color:var(--text3)">P&L hoy: <span style="color:' + (pnl9>=0?'var(--green)':'var(--red)') + ';font-weight:700">' + (pnl9>=0?'+':'') + '$' + Math.abs(pnl9).toFixed(0) + '</span></div>'
     + '</div>';
-  html += rCard('maxdailyloss','💸','Perdida maxima personal del dia','Tu limite personal de perdida diaria, independiente del limite de la firma', mdl9, !!r9.active, violations.some(function(v){return v.rule.id==='maxdailyloss';}));
+  html += rCard('maxdailyloss','💸','Personal daily max loss','Your personal daily loss limit, independent of your firm\'s limit', mdl9, !!r9.active, violations.some(function(v){return v.rule.id==='maxdailyloss';}));
 
   // Save button
   html += '<div style="display:flex;justify-content:flex-end;margin:8px 0 16px 0">'
