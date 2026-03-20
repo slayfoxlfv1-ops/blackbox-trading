@@ -1,6 +1,6 @@
 <!DOCTYPE html>
-<!-- v1773969894 -->
-<html lang="en">
+<!-- v1773971372 -->
+<html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -565,28 +565,28 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
     </div>
     <div class="acc-list" id="accounts-list"></div>
     <div style="padding:8px">
-      <button class="add-acc-btn" onclick="openModal()" data-i18n-app="nav_add_account">+ Add account</button>
+      <button class="add-acc-btn" onclick="openModal()">+ Add account</button>
     </div>
     <div class="nav" style="flex:1">
-      <div class="nav-item active" data-view="dashboard" data-i18n-app="nav_dashboard"><span class="nav-icon">&#9638;</span> Dashboard</div>
-      <div class="nav-item" data-view="trades" data-i18n-app="nav_trades"><span class="nav-icon">&#8801;</span> Trades</div>
-      <div class="nav-item" data-view="psychology" data-i18n-app="nav_psychology"><span class="nav-icon">&#9679;</span> Psychology</div>
-      <div class="nav-item" data-view="insights" data-i18n-app="nav_insights"><span class="nav-icon">◈</span> Insights</div>
+      <div class="nav-item active" data-view="dashboard"><span class="nav-icon">&#9638;</span> Dashboard</div>
+      <div class="nav-item" data-view="trades"><span class="nav-icon">&#8801;</span> Trades</div>
+      <div class="nav-item" data-view="psychology"><span class="nav-icon">&#9679;</span> Psychology</div>
+      <div class="nav-item" data-view="insights"><span class="nav-icon">◈</span> Insights</div>
     </div>
     <div class="sidebar-footer user-dropdown-wrap" id="user-dropdown-wrap">
       <!-- Dropdown menu (opens upward) -->
       <div class="user-dropdown-menu" id="user-dropdown-menu">
         <div class="udm-item" onclick="navigateTo('settings');toggleUserDropdown()">
           <span class="udm-icon">⚙</span>
-          <span data-i18n-app="menu_settings">Settings</span>
+          <span>Settings</span>
         </div>
         <div class="udm-item" onclick="openContactSupport()">
           <span class="udm-icon" style="color:var(--teal)">◎</span>
-          <span data-i18n-app="menu_support">Contact Support</span>
+          <span>Contact Support</span>
         </div>
         <div class="udm-item danger" onclick="signOut()">
           <span class="udm-icon">→</span>
-          <span data-i18n-app="menu_signout">Sign Out</span>
+          <span>Sign Out</span>
         </div>
       </div>
       <!-- User row — click to toggle dropdown -->
@@ -605,8 +605,7 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
         <div class="page-sub" id="page-sub">DASHBOARD</div>
       </div>
       <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
-        <button id="app-lang-btn" onclick="setAppLang(appLang === 'en' ? 'es' : 'en')" style="padding:5px 10px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;font-size:10px;color:var(--text2);cursor:pointer;font-family:'Geist Mono',monospace;transition:all .15s;letter-spacing:.3px" title="Switch language">🇪🇸 ES</button>
-        <button class="btn btn-solid" id="log-btn" style="display:none" onclick="openLogModal()" data-i18n-app="log_trade_btn">+ Log Trade</button>
+<button class="btn btn-solid" id="log-btn" style="display:none" onclick="openLogModal()">+ Log Trade</button>
       </div>
     </div>
     <div class="content" id="main-content">
@@ -626,11 +625,11 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
     <div class="modal-title" id="modal-title">Add Account</div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label" data-i18n-app="lbl_acc_name">Account Name</label>
+        <label class="form-label">Account Name</label>
         <input class="form-input" id="m-name" type="text" placeholder="My Topstep Account">
       </div>
       <div class="form-group">
-        <label class="form-label" data-i18n-app="lbl_acc_type">Type</label>
+        <label class="form-label">Type</label>
         <select class="form-select" id="m-type">
           <option value="PROP">PROP</option>
           <option value="LIVE">LIVE</option>
@@ -640,44 +639,44 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label" data-i18n-app="lbl_acc_firm">Firm / Broker</label>
+        <label class="form-label">Firm / Broker</label>
         <input class="form-input" id="m-firm" type="text" placeholder="Topstep, Tradeify...">
       </div>
       <div class="form-group">
-        <label class="form-label" data-i18n-app="lbl_acc_size">Account Size ($)</label>
+        <label class="form-label">Account Size ($)</label>
         <input class="form-input" id="m-size" type="number" placeholder="50000">
       </div>
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label" data-i18n-app="lbl_acc_dll">Daily Loss Limit (negative)</label>
+        <label class="form-label">Daily Loss Limit (negative)</label>
         <input class="form-input" id="m-dll" type="number" placeholder="-1500">
       </div>
       <div class="form-group">
-        <label class="form-label" data-i18n-app="lbl_acc_dd">Max Drawdown (negative)</label>
+        <label class="form-label">Max Drawdown (negative)</label>
         <input class="form-input" id="m-dd" type="number" placeholder="-2000">
       </div>
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label" data-i18n-app="lbl_acc_pt">Profit Target ($)</label>
+        <label class="form-label">Profit Target ($)</label>
         <input class="form-input" id="m-pt" type="number" placeholder="9000">
       </div>
       <div class="form-group">
-        <label class="form-label" data-i18n-app="lbl_acc_maxc">Max Contracts</label>
+        <label class="form-label">Max Contracts</label>
         <input class="form-input" id="m-max-contracts" type="number" placeholder="12">
       </div>
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label" data-i18n-app="lbl_acc_status">Status</label>
+        <label class="form-label">Status</label>
         <select class="form-select" id="m-active">
           <option value="true">Active</option>
           <option value="false">Inactive</option>
         </select>
       </div>
       <div class="form-group">
-        <label class="form-label" data-i18n-app="lbl_acc_color">Color</label>
+        <label class="form-label">Color</label>
         <div class="color-swatches" id="color-swatches">
           <div class="cswatch selected" style="background:#5a9e72" data-color="#5a9e72" onclick="pickColor(this)"></div>
           <div class="cswatch" style="background:#9e5a5a" data-color="#9e5a5a" onclick="pickColor(this)"></div>
@@ -694,8 +693,8 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
       Note: Daily Loss Limit and Max Drawdown must be negative numbers e.g. -1500
     </div>
     <div class="modal-foot" style="margin-top:14px;padding-top:12px">
-      <button class="btn btn-ghost" onclick="closeModal()" data-i18n-app="cancel">Cancel</button>
-      <button class="btn btn-solid" onclick="saveAccount()" data-i18n-app="save_account">Save Account</button>
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-solid" onclick="saveAccount()">Save Account</button>
     </div>
   </div>
 </div>
@@ -720,14 +719,14 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
     <div class="modal-title">Log Trade</div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label" data-i18n-app="lbl_ticker">Ticker</label>
+        <label class="form-label">Ticker</label>
         <div style="display:flex;gap:6px">
           <input class="form-input" id="t-ticker" type="text" placeholder="NQ, ES, MNQ..." style="flex:1" oninput="filterTickerSuggestions(this.value)">
         </div>
         <div id="ticker-suggestions" style="display:none;position:absolute;z-index:300;background:var(--surface3);border:1px solid var(--border2);border-radius:8px;margin-top:4px;max-height:200px;overflow-y:auto;width:200px;box-shadow:0 8px 24px rgba(0,0,0,.5)"></div>
       </div>
       <div class="form-group">
-        <label class="form-label" data-i18n-app="lbl_side">Side</label>
+        <label class="form-label">Side</label>
         <select class="form-select" id="t-side">
           <option value="long">Long</option>
           <option value="short">Short</option>
@@ -736,37 +735,37 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label" data-i18n-app="lbl_entry_price">Entry Price</label>
+        <label class="form-label">Entry Price</label>
         <input class="form-input" id="t-entry" type="number" step="0.01" placeholder="21500.00">
       </div>
       <div class="form-group">
-        <label class="form-label" data-i18n-app="lbl_exit_price">Exit Price</label>
+        <label class="form-label">Exit Price</label>
         <input class="form-input" id="t-exit" type="number" step="0.01" placeholder="21550.00">
       </div>
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label" data-i18n-app="lbl_qty">Quantity</label>
+        <label class="form-label">Quantity</label>
         <input class="form-input" id="t-qty" type="number" placeholder="1" value="1">
       </div>
       <div class="form-group">
-        <label class="form-label" data-i18n-app="lbl_pnl">P&amp;L ($)</label>
+        <label class="form-label">P&amp;L ($)</label>
         <input class="form-input" id="t-pnl" type="number" placeholder="-560 or 800">
       </div>
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label" data-i18n-app="lbl_entry_time">Entry Time</label>
+        <label class="form-label">Entry Time</label>
         <input class="form-input" id="t-entry-time" type="datetime-local">
       </div>
       <div class="form-group">
-        <label class="form-label" data-i18n-app="lbl_exit_time">Exit Time</label>
+        <label class="form-label">Exit Time</label>
         <input class="form-input" id="t-exit-time" type="datetime-local">
       </div>
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label" data-i18n-app="lbl_rr_planned">R:R Planned</label>
+        <label class="form-label">R:R Planned</label>
         <select class="form-select" id="t-rr-plan">
           <option value="0">0</option><option value="1">1</option><option value="2">2</option>
           <option value="3" selected>3</option><option value="4">4</option><option value="5">5</option>
@@ -775,7 +774,7 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
         </select>
       </div>
       <div class="form-group">
-        <label class="form-label" data-i18n-app="lbl_rr_achieved">R:R Achieved</label>
+        <label class="form-label">R:R Achieved</label>
         <select class="form-select" id="t-rr-achieved">
           <option value="0">0</option><option value="1" selected>1</option><option value="2">2</option>
           <option value="3">3</option><option value="4">4</option><option value="5">5</option>
@@ -786,57 +785,57 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label" data-i18n-app="lbl_discipline">Discipline</label>
+        <label class="form-label">Discipline</label>
         <select class="form-select" id="t-disc">
-          <option value="clean" data-i18n-app="disc_clean">Clean trade</option>
-          <option value="moved_sl" data-i18n-app="disc_moved_sl">Moved SL</option>
-          <option value="scaled_in" data-i18n-app="disc_scaled">Scaled into loss</option>
-          <option value="impulse" data-i18n-app="disc_impulse">Impulse trade</option>
-          <option value="no_confirmation" data-i18n-app="disc_no_conf">No confirmation</option>
-          <option value="overtrading" data-i18n-app="disc_overtrade">Overtrading</option>
-          <option value="fomo" data-i18n-app="disc_fomo">FOMO</option>
+          <option value="clean">Clean trade</option>
+          <option value="moved_sl">Moved SL</option>
+          <option value="scaled_in">Scaled into loss</option>
+          <option value="impulse">Impulse trade</option>
+          <option value="no_confirmation">No confirmation</option>
+          <option value="overtrading">Overtrading</option>
+          <option value="fomo">FOMO</option>
         </select>
       </div>
       <div class="form-group">
-        <label class="form-label" data-i18n-app="lbl_emotion">Emotion</label>
+        <label class="form-label">Emotion</label>
         <div id="historical-trade-note" style="display:none;margin-bottom:6px;padding:8px 10px;background:rgba(224,152,64,0.08);border:1px solid rgba(224,152,64,0.2);border-radius:6px;font-size:10px;color:var(--amber);line-height:1.55">
-          ⏱ Trade histórico — si no recuerdas tu emoción exacta, deja <strong>Neutral</strong>. Pattro inferirá el estado emocional por tu comportamiento.
+          ⏱ Historical trade — if you don't remember your exact emotion, leave <strong>Neutral</strong>. Pattro will infer the emotional state from your behavior.
         </div>
         <select class="form-select" id="t-emotion">
-          <option value="neutral" selected data-i18n-app="emo_neutral">😶 Neutral</option>
-          <option value="calm" data-i18n-app="emo_calm">😌 Tranquilo</option>
-          <option value="confident" data-i18n-app="emo_confident">💪 Seguro</option>
-          <option value="anxious" data-i18n-app="emo_anxious">😰 Ansioso</option>
-          <option value="fear" data-i18n-app="emo_fear">😨 Con miedo</option>
-          <option value="greedy" data-i18n-app="emo_greedy">🤑 Codicioso</option>
-          <option value="bored" data-i18n-app="emo_bored">😐 Aburrido</option>
-          <option value="frustrated" data-i18n-app="emo_frustrated">😤 Frustrado</option>
+          <option value="neutral" selected>😶 Neutral</option>
+          <option value="calm">😌 Tranquilo</option>
+          <option value="confident">💪 Seguro</option>
+          <option value="anxious">😰 Ansioso</option>
+          <option value="fear">😨 Con miedo</option>
+          <option value="greedy">🤑 Codicioso</option>
+          <option value="bored">😐 Aburrido</option>
+          <option value="frustrated">😤 Frustrado</option>
         </select>
       </div>
     </div>
     <div class="form-group">
     </div>
     <div class="form-group">
-      <label class="form-label">Setup Tags <span style="font-size:9px;color:var(--text3);font-weight:400">(selecciona uno o más)</span></label>
+      <label class="form-label">Setup Tags <span style="font-size:9px;color:var(--text3);font-weight:400">(select one or more)</span></label>
       <div id="t-setup-tags-wrap" style="display:flex;flex-wrap:wrap;gap:6px;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;min-height:36px"></div>
       <input type="hidden" id="t-setup-tags" value="">
     </div>
     <div class="form-group" id="t-checklist-wrap" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px">
       <div style="display:flex;align-items:center;gap:10px">
-        <label class="form-label" style="margin:0;flex:1;font-size:10px">✓ Checklist <span style="color:var(--text3);font-weight:400">¿cuánto cumpliste hoy?</span></label>
+        <label class="form-label" style="margin:0;flex:1;font-size:10px">✓ Checklist <span style="color:var(--text3);font-weight:400">how much did you follow today?</span></label>
         <span id="t-checklist-pct-display" style="font-size:13px;font-weight:800;color:var(--green);min-width:38px;text-align:right">100%</span>
       </div>
       <input type="range" id="t-checklist-pct" min="0" max="100" step="10" value="100"
         style="width:100%;accent-color:var(--green);cursor:pointer;margin-top:6px;display:block"
         oninput="updateChecklistDisplay(this.value)">
-      <div id="t-checklist-note" style="font-size:9px;color:var(--text3);margin-top:4px">Se guardará como checklist del día junto con el trade</div>
+      <div id="t-checklist-note" style="font-size:9px;color:var(--text3);margin-top:4px">Will be saved as the day's checklist along with this trade</div>
     </div>
     <div class="form-group">
-      <label class="form-label" data-i18n-app="lbl_notes">Notes</label>
+      <label class="form-label">Notes</label>
       <textarea class="form-input" id="t-notes" rows="2" placeholder="What happened? What did you learn?" style="resize:vertical;line-height:1.5"></textarea>
     </div>
     <div class="form-group">
-      <label class="form-label" data-i18n-app="lbl_screenshot">Screenshot</label>
+      <label class="form-label">Screenshot</label>
       <div id="screenshot-drop" onclick="document.getElementById('t-screenshot-file').click()" style="border:1px dashed var(--border2);border-radius:8px;padding:10px;text-align:center;cursor:pointer;background:var(--surface2);transition:all .15s" onmouseover="this.style.borderColor='var(--text3)'" onmouseout="this.style.borderColor='var(--border2)'">
         <div id="screenshot-preview" style="display:none;margin-bottom:8px"><img id="screenshot-img-preview" style="max-height:80px;border-radius:6px;border:1px solid var(--border)"></div>
         <div id="screenshot-label" style="font-size:11px;color:var(--text3)">Click to upload screenshot (PNG, JPG)</div>
@@ -978,17 +977,17 @@ function openContactSupport() {
   var html = '<div style="position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:600;display:flex;align-items:center;justify-content:center;padding:16px" id="support-overlay" onclick="if(event.target===this)this.remove()">'+
     '<div style="background:var(--surface);border:1px solid var(--border2);border-top:2px solid var(--teal);border-radius:14px;width:min(500px,94vw);box-shadow:0 24px 80px rgba(0,0,0,.6)">'+
     '<div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">'+
-    '<span style="font-size:14px;font-weight:700;color:var(--text)">'+t('sup_title')+'</span>'+
+    '<span style="font-size:14px;font-weight:700;color:var(--text)">'+'Contact Support'+'</span>'+
     '<span onclick="document.getElementById(\'support-overlay\').remove()" style="cursor:pointer;color:var(--text3);font-size:18px;padding:2px 6px;border-radius:4px">×</span>'+
     '</div>'+
     '<div style="padding:20px">'+
-    '<div class="form-group" style="margin-bottom:12px"><label class="form-label">'+t('sup_name')+'</label><input class="form-input" id="sup-name" type="text" value="' + name + '"></div>'+
-    '<div class="form-group" style="margin-bottom:12px"><label class="form-label">'+t('sup_subject')+'</label><input class="form-input" id="sup-subject" type="text" placeholder="Bug report, question, suggestion..."></div>'+
-    '<div class="form-group" style="margin-bottom:12px"><label class="form-label">'+t('sup_message')+'</label><textarea class="form-input" id="sup-msg" rows="5" placeholder="Describe your issue or suggestion in detail..." style="resize:vertical"></textarea></div>'+
+    '<div class="form-group" style="margin-bottom:12px"><label class="form-label">'+'Your name'+'</label><input class="form-input" id="sup-name" type="text" value="' + name + '"></div>'+
+    '<div class="form-group" style="margin-bottom:12px"><label class="form-label">'+'Subject'+'</label><input class="form-input" id="sup-subject" type="text" placeholder="Bug report, question, suggestion..."></div>'+
+    '<div class="form-group" style="margin-bottom:12px"><label class="form-label">'+'Message'+'</label><textarea class="form-input" id="sup-msg" rows="5" placeholder="Describe your issue or suggestion in detail..." style="resize:vertical"></textarea></div>'+
     '<div id="sup-status" style="font-size:11px;min-height:16px;margin-bottom:10px"></div>'+
     '<div style="display:flex;gap:8px;justify-content:flex-end">'+
     '<button class="btn btn-ghost" style="width:auto;padding:8px 16px" onclick="document.getElementById(\'support-overlay\').remove()">Cancel</button>'+
-    '<button class="btn btn-solid" id="sup-send-btn" style="width:auto;padding:8px 20px" onclick="sendSupportMessage()">'+t('sup_send')+'</button>'+
+    '<button class="btn btn-solid" id="sup-send-btn" style="width:auto;padding:8px 20px" onclick="sendSupportMessage()">'+'Send Message'+'</button>'+
     '</div></div></div></div>';
   document.body.insertAdjacentHTML('beforeend', html);
 }
@@ -1045,8 +1044,8 @@ async function sendSupportMessage() {
   }
 
   status.style.color = 'var(--green)';
-  status.textContent = t('sup_success');
-  btn.textContent = t('sup_sent');
+  status.textContent = '✓ Message sent! Our team will get back to you within 24h.';
+  btn.textContent = 'Sent!';
   setTimeout(function() {
     var ov = document.getElementById('support-overlay');
     if (ov) ov.remove();
@@ -1073,9 +1072,9 @@ function showBugToast() {
 
   var html = '<div class="bug-toast" id="bug-toast">'+
     '<span class="bug-toast-close" onclick="closeBugToast()">×</span>'+
-    '<div class="bug-toast-title">💙 ¿Encontraste algo raro?</div>'+
-    '<div class="bug-toast-msg">Si encuentras algún bug o tienes una recomendación, por favor envíanosla. Tu feedback nos ayuda a crecer. ¡Gracias!</div>'+
-    '<button class="bug-toast-btn" onclick="closeBugToast();openContactSupport()">Enviar feedback →</button>'+
+    '<div class="bug-toast-title">💙 Found something odd?</div>'+
+    '<div class="bug-toast-msg">If you find a bug or have a suggestion, please let us know. Your feedback helps us grow. Thank you!</div>'+
+    '<button class="bug-toast-btn" onclick="closeBugToast();openContactSupport()">Send feedback →</button>'+
     '</div>';
   document.body.insertAdjacentHTML('beforeend', html);
 }
@@ -1147,10 +1146,6 @@ function showApp() {
   document.getElementById('user-name').textContent = name;
   document.getElementById('user-avatar').textContent = name.charAt(0).toUpperCase();
   loadAccounts();
-  // Apply language
-  applyAppLang();
-  var langBtn = document.getElementById('app-lang-btn');
-  if (langBtn) langBtn.textContent = appLang === 'en' ? '🇪🇸 ES' : '🇺🇸 EN';
   // Show bug notification on Mon/Fri (once)
   window._bugToastTimer = setTimeout(showBugToast, 5000);
 
@@ -1159,7 +1154,7 @@ function showApp() {
     setTimeout(function() {
       var toast = document.createElement('div');
       toast.style.cssText = 'position:fixed;bottom:24px;right:24px;width:300px;background:var(--surface);border:1px solid var(--green-bd);border-left:3px solid var(--green);border-radius:10px;padding:14px 16px;box-shadow:0 8px 32px rgba(0,0,0,.5);z-index:9999;animation:toastIn .4s ease';
-      toast.innerHTML = '<div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:4px">🎉 ¡Bienvenido a Pattro Pro!</div><div style="font-size:11px;color:var(--text2);line-height:1.6">Tu suscripción está activa. Empieza registrando tu primer trade.</div>';
+      toast.innerHTML = '<div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:4px">🎉 Welcome to Pattro Pro!</div><div style="font-size:11px;color:var(--text2);line-height:1.6">Your subscription is active. Start by logging your first trade.</div>';
       document.body.appendChild(toast);
       setTimeout(function() { toast.style.animation = 'toastOut .3s ease forwards'; setTimeout(function(){ toast.remove(); }, 300); }, 6000);
     }, 1500);
@@ -1365,9 +1360,9 @@ async function deleteAccount() {
     if (currentAccountId === id) {
       currentAccountId = null;
       document.getElementById('log-btn').style.display = 'none';
-      document.getElementById('page-title').textContent = t('select_account');
+      document.getElementById('page-title').textContent = 'Select an account';
       if (accounts.length > 0) selectAccount(accounts[0].id);
-      else document.getElementById('main-content').innerHTML = '<div class="empty-state"><div class="empty-icon">*</div><div class="empty-title">'+t('empty_no_accounts')+'</div><div class="empty-msg">'+t('empty_add_first')+'</div><button class="btn btn-solid" onclick="openModal()">'+t('nav_add_account')+'</button></div>';
+      else document.getElementById('main-content').innerHTML = '<div class="empty-state"><div class="empty-icon">*</div><div class="empty-title">'+'No accounts'+'</div><div class="empty-msg">'+'Add your first trading account.'+'</div><button class="btn btn-solid" onclick="openModal()">'+'+ Add account'+'</button></div>';
     }
   }
 }
@@ -1426,8 +1421,8 @@ function openLogModal() {
   if (exitT) exitT.value = '';
   // Reset modal title/button
   var titleEl = document.querySelector('#log-overlay .modal-title');
-  if (titleEl) titleEl.textContent = t('modal_log_title');
-  document.getElementById('save-trade-btn').textContent = t('save_trade');
+  if (titleEl) titleEl.textContent = 'Log Trade';
+  document.getElementById('save-trade-btn').textContent = 'Save Trade';
   document.getElementById('log-overlay').classList.add('open');
   // Wire entry-time to show historical note
   var _entryTimeEl2 = document.getElementById('t-entry-time');
@@ -1457,15 +1452,15 @@ function openLogModal() {
     _clSlider.disabled = false;
     _clSlider.style.opacity = '1';
     if (_clDisp) { _clDisp.textContent = _prefill+'%'; _clDisp.style.color = _prefill>=80?'var(--green)':_prefill>=50?'var(--amber)':'var(--red)'; }
-    if (_clNote) _clNote.textContent = _todayCl ? 'Valor actual del día: '+_todayCl.score_pct+'% — puedes ajustarlo' : 'Se guardará como checklist del día';
+    if (_clNote) _clNote.textContent = _todayCl ? 'Current value for today: '+_todayCl.score_pct+"% — you can adjust it" : "Will be saved as the day's checklist";
   }
 }
 
 function closeLogModal() {
   editingTradeId = null;
   var titleEl = document.querySelector('#log-overlay .modal-title');
-  if (titleEl) titleEl.textContent = t('modal_log_title');
-  document.getElementById('save-trade-btn').textContent = t('save_trade');
+  if (titleEl) titleEl.textContent = 'Log Trade';
+  document.getElementById('save-trade-btn').textContent = 'Save Trade';
   document.getElementById('log-overlay').classList.remove('open');
 }
 
@@ -1589,7 +1584,7 @@ async function saveTrade() {
   }
 
   closeLogModal();
-  // Silent reload — don't change view or show spinner
+  // Silent reload — don\'t change view or show spinner
   await loadAccountData(currentAccountId, true);
   // Re-render current view
   if (currentView === 'trades') renderTradesView();
@@ -1653,7 +1648,7 @@ function openEditTrade(id) {
     var _clDispE = document.getElementById('t-checklist-pct-display');
     var _clNoteE = document.getElementById('t-checklist-note');
     if (_clDispE) { _clDispE.textContent = _prefillE+'%'; _clDispE.style.color = _prefillE>=80?'var(--green)':_prefillE>=50?'var(--amber)':'var(--red)'; }
-    if (_clNoteE) _clNoteE.textContent = _clForDay ? 'Valor del día: '+_clForDay.score_pct+'% — puedes ajustarlo' : 'Sin checklist para este día';
+    if (_clNoteE) _clNoteE.textContent = _clForDay ? 'Today\'s value: '+_clForDay.score_pct+'% — you can adjust it' : 'No checklist for this day';
   }
 }
 
@@ -1949,8 +1944,8 @@ async function loadAccountData(id, silent) {
       var streakTrades = sortedByExit.slice(0, lossStreak);
       var hasManual = streakTrades.every(function(t){ return t.source === 'manual' || !t.source; });
       var streakText = hasManual
-        ? 'Has registrado <strong>' + lossStreak + ' trades en pérdida</strong> hoy. Revisa tu sesión antes de continuar.'
-        : 'Llevas <strong>' + lossStreak + ' trades perdedores consecutivos</strong>. Considera tomar un break antes de operar de nuevo.';
+        ? 'Has registrado <strong>' + lossStreak + ' losing trades</strong> today. Review your session before continuing.'
+        : 'You have <strong>' + lossStreak + ' consecutive losing trades. Considerivos</strong>. Considera tomar un break antes de operar de nuevo.';
       alerts.push({
         type: 'danger',
         icon: '⚠',
@@ -1963,7 +1958,7 @@ async function loadAccountData(id, silent) {
       alerts.push({
         type: 'warn',
         icon: '↻',
-        text: 'Error repetido: <strong>' + (errorLabels[topError]||topError) + '</strong> aparece ' + topErrorCount + ' veces en tus últimos 10 trades.',
+        text: 'Error repetido: <strong>' + (errorLabels[topError]||topError) + '</strong> aparece ' + topErrorCount + ' times in your last 10 trades.',
         action: 'psychology'
       });
     }
@@ -2075,9 +2070,9 @@ async function loadAccountData(id, silent) {
   var _dq       = mindData.dataQuality;
   var _dqBadge  = dataQualityBadge(_dq);
   var _dqNote   = _dq === 'inferred'
-    ? '~ Emoción inferida por comportamiento'
+    ? '~ Emotion inferred from behavior'
     : _dq === 'partial'
-    ? '◑ Algunos datos faltaron — el análisis es parcial'
+    ? '◑ Some data missing — analysis is partial'
     : '';
   var execData  = calcDailyExecutionScore(today);
   var discData  = calcDailyDisciplineScore(today);
@@ -2139,7 +2134,7 @@ async function loadAccountData(id, silent) {
     else if (bdClean > 0) bdInsights.push(bdClean + ' de ' + bestDayTrades.length + ' trades fueron clean');
     if (bdTopEmo === 'calm' || bdTopEmo === 'confident') bdInsights.push('operaste ' + (bdTopEmo === 'calm' ? 'tranquilo' : 'con confianza'));
     if (bdWR >= 70) bdInsights.push('tu win rate fue ' + bdWR + '%');
-    bestDayInsight = bdInsights.length ? bdInsights.join(' · ') : 'día con buen control y resultados';
+    bestDayInsight = bdInsights.length ? bdInsights.join(' · ') : 'day with good control and results';
   }
 
   // Build psychological insight for worst day
@@ -2156,17 +2151,17 @@ async function loadAccountData(id, silent) {
     var wdEmo    = worstDayTrades.filter(function(t){ return t.emotion; }).map(function(t){ return t.emotion; });
     var wdTopEmo = wdEmo.length ? wdEmo.sort(function(a,b){ return wdEmo.filter(function(x){return x===b;}).length - wdEmo.filter(function(x){return x===a;}).length; })[0] : null;
     var wdInsights = [];
-    var tagNames = { fomo:'FOMO', impulse:'trades impulsivos', moved_sl:'mover el stop', overtrading:'overtrading', no_confirmation:'entrar sin confirmación', scaled_in:'escalar en pérdidas' };
+    var tagNames = { fomo:'FOMO', impulse:'trades impulsivos', moved_sl:'mover el stop', overtrading:'overtrading', no_confirmation:'entering without confirmation', scaled_in:'scaling into losses' };
     if (wdTopTag) wdInsights.push('error principal: ' + (tagNames[wdTopTag]||wdTopTag));
     if (wdTopEmo && (wdTopEmo==='frustrated'||wdTopEmo==='anxious'||wdTopEmo==='fear')) {
-      var emoSpanish = { frustrated:'frustración', anxious:'ansiedad', fear:'miedo' };
+      var emoSpanish = { frustrated:'frustration', anxious:'ansiedad', fear:'miedo' };
       wdInsights.push('operaste con ' + emoSpanish[wdTopEmo]);
     }
     if (wdErrors.length > 0 && worstDayTrades.length > 0) {
       var errRate = Math.round(wdErrors.length/worstDayTrades.length*100);
       if (errRate >= 50) wdInsights.push(errRate + '% de trades con error');
     }
-    worstDayInsight = wdInsights.length ? wdInsights.join(' · ') : 'día con pérdidas y errores de disciplina';
+    worstDayInsight = wdInsights.length ? wdInsights.join(' · ') : 'day with losses and discipline errors';
   }
 
   // Avg win / avg loss (all time)
@@ -2221,41 +2216,41 @@ async function loadAccountData(id, silent) {
   var moodLevel3 = todayMood ? todayMood.level : null;
   var colorDayRecos = {
     green: [
-      '✅ Estado mental óptimo — puedes operar con confianza.',
-      '🎯 Respeta tu plan y tus reglas, el día pinta bien.',
+      '✅ Optimal mental state — you can trade with confidence.',
+      '🎯 Respect your plan and rules, the day looks good.',
       '⚡ No sobreoperes por exceso de confianza.'
     ],
     yellow: [
-      '⚠️ Día amarillo — opera con precaución y tamaño reducido.',
+      '⚠️ Yellow day — trade with caution and reduced size.',
       '📋 Revisa el checklist antes de cada trade.',
-      '🛑 Si llegas a 2 pérdidas seguidas, para el día.'
+      '🛑 If you hit 2 consecutive losses, stop for the day.'
     ],
     red: [
       '🔴 Red Day — considera no operar hoy.',
-      '📵 Si operas, reduce el tamaño al mínimo posible.',
+      '📵 If you trade, reduce size to the minimum.',
       '🧘 Trabaja primero tu estado mental antes de entrar al mercado.'
     ],
     null: [
       '📋 No has hecho el mood check de hoy.',
-      '🧠 Completa el check antes de operar — 2 minutos que pueden salvarte el día.',
-      '⚡ Sin mood check activo, tu gestión emocional es ciega.'
+      '🧠 Complete the check before trading — 2 minutes that can save your day.',
+      '⚡ Without an active mood check, your emotional management is blind.'
     ]
   };
   var colorDayRecosSynthetic = {
     green: [
-      '✅ Día rentable — vas bien, mantén la disciplina.',
+      '✅ Profitable day — going well, maintain discipline.',
       '🎯 No sobreoperes por exceso de confianza al ir ganando.',
-      '⚡ Protege las ganancias — ajusta stops si es necesario.'
+      '⚡ Protect profits — adjust stops if necessary.'
     ],
     yellow: [
-      '⚠️ Día en equilibrio — sé selectivo con los siguientes trades.',
-      '📋 Un trade sólido puede definir el día.',
-      '🛑 Si llegas a 2 pérdidas más, considera parar.'
+      '⚠️ Breakeven day — be selective with upcoming trades.',
+      '📋 One solid trade can define the day.',
+      '🛑 If you hit 2 more losses, consider stopping.'
     ],
     red: [
-      '🔴 Día en pérdidas — evalúa si seguir operando.',
-      '📵 Reduce el tamaño al mínimo para recuperar confianza.',
-      '🧘 Analiza qué salió mal antes de volver a entrar.'
+      '🔴 Loss day — evaluate whether to keep trading.',
+      '📵 Reduce size to minimum to rebuild confidence.',
+      '🧘 Analyze what went wrong before re-entering.'
     ]
   };
   var recos = (_isSynthetic && moodLevel3 ? colorDayRecosSynthetic[moodLevel3] : null) || colorDayRecos[moodLevel3] || colorDayRecos[null];
@@ -2264,7 +2259,7 @@ async function loadAccountData(id, silent) {
   var dayBorder  = moodLevel3==='green'?'rgba(90,158,114,0.3)':moodLevel3==='yellow'?'rgba(158,128,80,0.3)':moodLevel3==='red'?'rgba(158,90,90,0.3)':'var(--border)';
   var dayEmoji   = moodLevel3==='green'?'🟢':moodLevel3==='yellow'?'🟡':moodLevel3==='red'?'🔴':'⚪';
   var _isSynthetic = todayMood && todayMood.synthetic;
-  var dayLabel   = moodLevel3==='green'?(_isSynthetic?'GREEN DAY ↑':'GREEN DAY'):moodLevel3==='yellow'?(_isSynthetic?'YELLOW DAY ~':'YELLOW DAY'):moodLevel3==='red'?(_isSynthetic?'RED DAY ↓':'RED DAY'):'SIN MOOD CHECK';
+  var dayLabel   = moodLevel3==='green'?(_isSynthetic?'GREEN DAY ↑':'GREEN DAY'):moodLevel3==='yellow'?(_isSynthetic?'YELLOW DAY ~':'YELLOW DAY'):moodLevel3==='red'?(_isSynthetic?'RED DAY ↓':'RED DAY'):'NO MOOD CHECK';
 
   // Checklist status — same logic as Reglas: read directly from bbStore (always current)
   var _clItems = []; try { _clItems = JSON.parse(bbStore.get('checklist_'+currentAccountId)||'[]'); } catch(e) {}
@@ -2319,10 +2314,10 @@ async function loadAccountData(id, silent) {
     var _tc = trades.length;
     var _milestones = [
       { at:1,  label:'Primer trade',       unlock:'Diario activo' },
-      { at:5,  label:'5 trades',           unlock:'Emoción dominante visible' },
+      { at:5,  label:'5 trades',           unlock:'Dominant emotion visible' },
       { at:10, label:'10 trades',          unlock:'Coach IA detecta tu error principal' },
-      { at:20, label:'20 trades',          unlock:'Análisis psicológico completo' },
-      { at:30, label:'30 trades',          unlock:'Perfil de trader + patrón de horario' },
+      { at:20, label:'20 trades',          unlock:'Full psychological analysis' },
+      { at:30, label:'30 trades',          unlock:'Trader profile + time pattern' },
     ];
     var _reached  = _milestones.filter(function(m){ return _tc >= m.at; });
     var _next     = _milestones.find(function(m){ return _tc < m.at; });
@@ -2339,7 +2334,7 @@ async function loadAccountData(id, silent) {
       + '</div>'
       + '<div style="display:flex;align-items:center;justify-content:space-between">'
       + (_lastDone ? '<span style="font-size:9px;color:var(--green)">&#10003; ' + _lastDone.unlock + '</span>' : '<span style="font-size:9px;color:var(--text3)">Registra tu primer trade</span>')
-      + (_next ? '<span style="font-size:9px;color:var(--text3)">Siguiente: <strong style="color:var(--amber)">' + _next.label + '</strong> — ' + _next.unlock + '</span>' : '<span style="font-size:9px;color:var(--green)">&#10003; Todos los insights desbloqueados</span>')
+      + (_next ? '<span style="font-size:9px;color:var(--text3)">Next: <strong style="color:var(--amber)">' + _next.label + '</strong> — ' + _next.unlock + '</span>' : '<span style="font-size:9px;color:var(--green)">&#10003; Todos los insights desbloqueados</span>')
       + '</div>'
       + '</div>';
   }
@@ -2362,7 +2357,7 @@ async function loadAccountData(id, silent) {
   '<div style="display:flex;gap:16px;flex-wrap:wrap">' +
   '<span style="font-size:11px;color:var(--text3)">Disciplina <b style="color:'+(ms.discScore>=75?'var(--green)':ms.discScore>=50?'var(--amber)':'var(--red)')+'">'+ms.discScore+'</b></span>' +
   '<span style="font-size:11px;color:var(--text3)">Mind <b style="color:'+(ms.mindScore>=75?'var(--green)':ms.mindScore>=50?'var(--amber)':'var(--red)')+'">'+ms.mindScore+'</b></span>' +
-  '<span style="font-size:11px;color:var(--text3)">Ejecución <b style="color:'+(ms.execScore!==null?(ms.execScore>=75?'var(--green)':ms.execScore>=50?'var(--amber)':'var(--red)'):'var(--text3)')+'">'+( ms.execScore!==null?ms.execScore:'—')+'</b></span>' +
+  '<span style="font-size:11px;color:var(--text3)">Execution <b style="color:'+(ms.execScore!==null?(ms.execScore>=75?'var(--green)':ms.execScore>=50?'var(--amber)':'var(--red)'):'var(--text3)')+'">'+( ms.execScore!==null?ms.execScore:'—')+'</b></span>' +
   '</div>' +
   (msYest ? (function(){
     var diff = ms.total - msYest.total;
@@ -2381,8 +2376,8 @@ async function loadAccountData(id, silent) {
   '<div style="font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px">Checklist</div>' +
   '<div style="font-size:11px;font-weight:700;color:'+_clColor+'">'+_clLabel+'</div></div>' +
   '<div style="text-align:center;padding:10px 14px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">' +
-  '<div style="font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px">Reglas</div>' +
-  '<div style="font-size:11px;font-weight:700;color:'+(hasRules?'var(--green)':'var(--amber)')+'">'+( hasRules?'✓ Activas':'Sin reglas')+'</div></div>' +
+  '<div style="font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px">Rules</div>' +
+  '<div style="font-size:11px;font-weight:700;color:'+(hasRules?'var(--green)':'var(--amber)')+'">'+( hasRules?'✓ Active':'No rules')+'</div></div>' +
   '</div>' +
   // ── Trader Profile square ──
   (function(){
@@ -2406,13 +2401,13 @@ async function loadAccountData(id, silent) {
       + '<div style="display:flex;justify-content:space-between;gap:12px"><span style="font-size:9px;color:var(--text3)">Win Rate</span><span style="font-size:9px;font-weight:600;color:'+(_wr>=60?'var(--green)':_wr>=40?'var(--amber)':'var(--red)')+'">'+_wr+'%</span></div>'
       + '<div style="display:flex;justify-content:space-between;gap:12px"><span style="font-size:9px;color:var(--text3)">R:R real</span><span style="font-size:9px;font-weight:600;color:var(--text)">'+_rr+'</span></div>'
       + '<div style="display:flex;justify-content:space-between;gap:12px"><span style="font-size:9px;color:var(--text3)">Limpios</span><span style="font-size:9px;font-weight:600;color:'+(_cp>=70?'var(--green)':_cp>=50?'var(--amber)':'var(--red)')+'">'+_cp+'%</span></div>'
-      + (_te?'<div style="display:flex;justify-content:space-between;gap:12px"><span style="font-size:9px;color:var(--text3)">Emoción</span><span style="font-size:9px">'+(_ee[_te]||'')+' '+_te+'</span></div>':'')
+      + (_te?'<div style="display:flex;justify-content:space-between;gap:12px"><span style="font-size:9px;color:var(--text3)">Emotion</span><span style="font-size:9px">'+(_ee[_te]||'')+' '+_te+'</span></div>':'')
       + '<div style="display:flex;justify-content:space-between;gap:12px"><span style="font-size:9px;color:var(--text3)">Trades</span><span style="font-size:9px;font-weight:600;color:var(--text)">'+_tw+'</span></div>'
       + '</div></div>';
   })() +
   '</div>' +
 
-  // ── ROW 0b: Insights automáticos ──
+  // ── ROW 0b: Auto Insights ──
   (function(){
     if (!trades.length) return '';
 
@@ -2428,7 +2423,7 @@ async function loadAccountData(id, silent) {
     var errorTags = ['moved_sl','impulse','no_confirmation','overtrading','fomo','scaled_in'];
     var worstTag = null, worstN = 0;
     errorTags.forEach(function(k){ if(tagCounts[k]>worstN){ worstN=tagCounts[k]; worstTag=k; } });
-    var tagLabels = { moved_sl:'mover el stop loss', impulse:'trades impulsivos', no_confirmation:'entrar sin confirmación', overtrading:'overtrading', fomo:'FOMO', scaled_in:'escalar en pérdidas' };
+    var tagLabels = { moved_sl:'mover el stop loss', impulse:'trades impulsivos', no_confirmation:'entering without confirmation', overtrading:'overtrading', fomo:'FOMO', scaled_in:'scaling into losses' };
     if (worstTag && worstN >= 2) {
       var tagTrades = trades.filter(function(t){ return t.discipline_tag===worstTag; });
       var tagPnl    = tagTrades.reduce(function(s,t){ return s+(t.pnl||0); }, 0);
@@ -2438,14 +2433,14 @@ async function loadAccountData(id, silent) {
       var pctWorse  = allAvg !== 0 ? Math.round(Math.abs((tagAvg-allAvg)/Math.abs(allAvg))*100) : 0;
       insights.push({
         icon:'⚠', color:'var(--red)', bg:'rgba(224,85,85,0.07)', border:'rgba(224,85,85,0.2)',
-        label:'Error más frecuente',
+        label:'Most frequent error',
         text:'Tu mayor error es <strong>'+tagLabels[worstTag]+'</strong> — '+worstN+' trades'
           +(tagPnl<0?', <strong style="color:var(--red)">'+tagPnlStr+'</strong> de impacto total':'')
           +(pctWorse>10&&allAvg!==0?'. P&amp;L promedio en esos trades es <strong>'+pctWorse+'% peor</strong> que tu media':'')+'.'
       });
     }
 
-    // ── 2. Patrón de horario ──
+    // ── 2. Time pattern (Pattro) ──
     var hourPnl = {}, hourCount = {};
     trades.forEach(function(t){
       if (!t.entry_time) return;
@@ -2463,14 +2458,14 @@ async function loadAccountData(id, silent) {
         var worstAvg = Math.round(hourPnl[worstH]/hourCount[worstH]);
         insights.push({
           icon:'◷', color:'var(--amber)', bg:'rgba(224,152,64,0.07)', border:'rgba(224,152,64,0.2)',
-          label:'Patrón de horario',
+          label:'Time pattern (Pattro)',
           text:'Tu mejor hora es <strong>'+fmt12(bestH)+'</strong> (promedio <strong style="color:var(--green)">'+(bestAvg>=0?'+':'')+'$'+Math.abs(bestAvg)+'</strong>). '
             +'Evita operar a las <strong>'+fmt12(worstH)+'</strong> — promedio <strong style="color:var(--red)">'+(worstAvg>=0?'+':'')+'$'+worstAvg+'</strong> por trade.'
         });
       }
     }
 
-    // ── 3. Emoción más costosa ──
+    // ── 3. Most costly emotion ──
     var emoPnl = {}, emoCount = {};
     trades.forEach(function(t){
       if (!t.emotion) return;
@@ -2487,8 +2482,8 @@ async function loadAccountData(id, silent) {
       var ceAvg = Math.round(emoPnl[costlyEmo]/emoCount[costlyEmo]);
       insights.push({
         icon:'◈', color:'var(--teal)', bg:'rgba(62,207,207,0.07)', border:'rgba(62,207,207,0.2)',
-        label:'Emoción más costosa',
-        text:'Cuando operas <strong>'+emoLabels[costlyEmo]+'</strong> tu promedio es <strong style="color:var(--red)">$'+ceAvg+'</strong> por trade ('+emoCount[costlyEmo]+' trades). Considera pausar cuando notes esa emoción.'
+        label:'Most costly emotion',
+        text:'Cuando operas <strong>'+emoLabels[costlyEmo]+'</strong> tu promedio es <strong style="color:var(--red)">$'+ceAvg+'</strong> por trade ('+emoCount[costlyEmo]+' trades). Consider pausing when you notice that emotion.'
       });
     }
 
@@ -2505,11 +2500,11 @@ async function loadAccountData(id, silent) {
       insights.push(streakDir==='win' ? {
         icon:'↑', color:'var(--green)', bg:'rgba(61,186,114,0.07)', border:'rgba(61,186,114,0.2)',
         label:'Racha ganadora',
-        text:'Llevas <strong>'+streak2+' trades ganadores consecutivos.</strong> Momento de alta confianza — mantén la disciplina y no sobredimensiones posiciones.'
+        text:'You have <strong>'+streak2+' consecutive winning trades.</strong> High confidence moment — maintain discipline and don\'t over-size positions.'
       } : {
         icon:'↓', color:'var(--red)', bg:'rgba(224,85,85,0.07)', border:'rgba(224,85,85,0.2)',
         label:'Racha perdedora',
-        text:'Llevas <strong>'+streak2+' pérdidas consecutivas.</strong> La estadística muestra que los revenge trades empeoran el resultado. Considera tomar un descanso.'
+        text:'You have <strong>'+streak2+' consecutive losses.</strong> Statistics show that revenge trades worsen outcomes. Considera tomar un descanso.'
       });
     }
 
@@ -2538,7 +2533,7 @@ async function loadAccountData(id, silent) {
   })() +
 
 
-  // ── ROW 1: Mind · Disciplina · Ejecución ──
+  // ── ROW 1: Mind · Disciplina · Execution ──
   '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">' +
 
   // Mind
@@ -2550,7 +2545,7 @@ async function loadAccountData(id, silent) {
   '<div style="font-size:10px;color:var(--text2);font-weight:600;margin-bottom:8px">'+mindData.label+'</div>' +
   '<div style="display:flex;flex-direction:column;gap:4px">' +
   '<div style="display:flex;justify-content:space-between"><span style="font-size:9px;color:var(--text3)">Mood</span><span style="font-size:9px;color:var(--text2)">'+mindData.moodPts+'/40</span></div>' +
-  '<div style="display:flex;justify-content:space-between"><span style="font-size:9px;color:var(--text3)">Emoción</span><span style="font-size:9px;color:var(--text2)">'+(mindData.emotionPts!==null?mindData.emotionPts+'/40':'—')+'</span></div>' +
+  '<div style="display:flex;justify-content:space-between"><span style="font-size:9px;color:var(--text3)">Emotion</span><span style="font-size:9px;color:var(--text2)">'+(mindData.emotionPts!==null?mindData.emotionPts+'/40':'—')+'</span></div>' +
   '<div style="display:flex;justify-content:space-between"><span style="font-size:9px;color:var(--text3)">Comportamiento</span><span style="font-size:9px;color:var(--text2)">'+mindData.behaviorPts+'/20</span></div>' +
   '</div></div>' +
 
@@ -2567,9 +2562,9 @@ async function loadAccountData(id, silent) {
   '<div style="display:flex;justify-content:space-between"><span style="font-size:9px;color:var(--text3)">Operativa</span><span style="font-size:9px;color:var(--text2)">'+(discData.tagPts!==null?discData.tagPts+'/30':'—')+'</span></div>' +
   '</div></div>' +
 
-  // Ejecución
+  // Execution
   '<div class="panel" style="padding:16px">' +
-  '<div style="font-size:9px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Ejecución</div>' +
+  '<div style="font-size:9px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Execution</div>' +
   (execData.hasTrades ?
     '<div style="display:flex;align-items:baseline;gap:4px;margin-bottom:8px">' +
     '<span style="font-size:36px;font-weight:800;color:'+(execData.total>=75?'var(--green)':execData.total>=50?'var(--amber)':'var(--red)')+'">'+execData.total+'</span>' +
@@ -2687,15 +2682,15 @@ async function loadAccountData(id, silent) {
       '<span style="font-size:16px">'+b.emoji+'</span>' +
       '<div><div style="font-size:10px;color:var(--text);font-weight:500">'+b.name+'</div>' +
       '<div style="font-size:8px;color:var(--text3)">'+b.desc+'</div></div></div>';
-  }).join(''):'<div style="font-size:10px;color:var(--text3);padding:8px 0">Opera más trades para desbloquear logros</div>') +
+  }).join(''):'<div style="font-size:10px;color:var(--text3);padding:8px 0">Log more trades to unlock achievements</div>') +
   (badges.next?'<div style="margin-top:8px;padding:7px;background:var(--surface2);border-radius:7px;border:1px dashed var(--border2)">' +
-    '<div style="font-size:8px;color:var(--text3);margin-bottom:2px">PRÓXIMO</div>' +
+    '<div style="font-size:8px;color:var(--text3);margin-bottom:2px">NEXT</div>' +
     '<div style="font-size:9px;color:var(--text2)">'+badges.next.emoji+' '+badges.next.name+' — '+badges.next.progress+'</div></div>':'') +
   '</div>' +
 
   '</div>' +
 
-  // ── ROW 5: métricas ──
+  // ── ROW 5: metrics ──
   '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px">' +
   '<div class="metric"><div class="m-label">Avg. Win</div><div class="m-val pos">$'+avgWin+'</div></div>' +
   '<div class="metric"><div class="m-label">Avg. Loss</div><div class="m-val neg">-$'+avgLoss+'</div></div>' +
@@ -2706,13 +2701,13 @@ async function loadAccountData(id, silent) {
   '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
   // Best day
   '<div class="metric" style="display:flex;flex-direction:column;gap:4px;padding:12px">' +
-  '<div class="m-label">Mejor día semana</div>' +
+  '<div class="m-label">Best day this week</div>' +
   '<div class="m-val pos">'+(bestDayW!==null?fmt(bestDayW,true):'--')+'</div>' +
   (bestDayInsight ? '<div style="font-size:9px;color:var(--text3);line-height:1.5;margin-top:3px;border-top:1px solid var(--border);padding-top:5px">✓ '+bestDayInsight+'</div>' : '') +
   '</div>' +
   // Worst day
   '<div class="metric" style="display:flex;flex-direction:column;gap:4px;padding:12px">' +
-  '<div class="m-label">Peor día semana</div>' +
+  '<div class="m-label">Worst day this week</div>' +
   '<div class="m-val neg">'+(worstDayW!==null?fmt(worstDayW,false):'--')+'</div>' +
   (worstDayInsight ? '<div style="font-size:9px;color:var(--text3);line-height:1.5;margin-top:3px;border-top:1px solid var(--border);padding-top:5px">⚠ '+worstDayInsight+'</div>' : '') +
   '</div>' +
@@ -2790,10 +2785,10 @@ function calcReadinessScore(todayMood, clSessions, trades) {
     var moodBd  = _readMoodLevel==='green'?'var(--green-bd)':'#3d3020';
     var _isSyn  = todayMood && todayMood.synthetic;
     var moodLbl = _readMoodLevel==='green'
-      ? (_isSyn ? '📈 Día rentable' : '😴 Buen descanso')
+      ? (_isSyn ? '📈 Profitable day' : '😴 Buen descanso')
       : _readMoodLevel==='yellow'
-        ? (_isSyn ? '↔ Día en equilibrio' : '😐 Descanso regular')
-        : (_isSyn ? '📉 Día en pérdidas' : '😫 Mal descanso');
+        ? (_isSyn ? '↔ Breakeven day' : '😐 Descanso regular')
+        : (_isSyn ? '📉 Loss day' : '😫 Mal descanso');
     factors.push({label: moodLbl, color:moodCol, bg:moodBg, border:moodBd});
   } else {
     factors.push({label:'❓ Sin datos de hoy', color:'var(--text3)', bg:'var(--surface2)', border:'var(--border)'});
@@ -2821,7 +2816,7 @@ function calcReadinessScore(todayMood, clSessions, trades) {
     else break;
   }
   if (lossStreak>=3) { score -= 20; factors.push({label:'📉 Racha perdedora ('+lossStreak+')', color:'#9e5a5a', bg:'var(--red-bg)', border:'var(--red-bd)'}); }
-  else if (lossStreak>=1) { score -= 8; factors.push({label:'📉 '+lossStreak+' pérdidas seguidas', color:'#9e8050', bg:'var(--amber-bg)', border:'#3d3020'}); }
+  else if (lossStreak>=1) { score -= 8; factors.push({label:'📉 '+lossStreak+' consecutive losses', color:'#9e8050', bg:'var(--amber-bg)', border:'#3d3020'}); }
 
   // Win streak bonus — also today only
   var winStreak = 0;
@@ -2839,10 +2834,10 @@ function calcReadinessScore(todayMood, clSessions, trades) {
   score = Math.max(0, Math.min(100, Math.round(score)));
 
   var rec;
-  if (score>=70)      rec = 'Condiciones óptimas. Opera con tamaño normal y sigue tu plan.';
-  else if (score>=50) rec = 'Condiciones aceptables. Sé selectivo, reduce tamaño a 75%.';
-  else if (score>=30) rec = 'Condiciones difíciles. Considera reducir tamaño al 50%.';
-  else                rec = 'Condiciones no óptimas. Considera no operar hoy.';
+  if (score>=70)      rec = 'Optimal conditions. Trade normal size and follow your plan.';
+  else if (score>=50) rec = 'Acceptable conditions. Be selective, reduce size to 75%.';
+  else if (score>=30) rec = 'Difficult conditions. Consider reducing size to 50%.';
+  else                rec = 'Suboptimal conditions. Consider not trading today.';
 
   return { score:score, recommendation:rec, factors:factors.slice(0,4) };
 }
@@ -2852,8 +2847,8 @@ function calcBiggestMistakes(trades) {
   if (!trades || trades.length < 5) return [];
   var mistakes = [];
   var errorLabels = {
-    moved_sl:'Movió el Stop Loss', scaled_in:'Escaló en pérdida',
-    impulse:'Trades impulsivos', no_confirmation:'Sin confirmación', overtrading:'Overtrading', fomo:'FOMO'
+    moved_sl:'Moved Stop Loss', scaled_in:'Scaled into loss',
+    impulse:'Trades impulsivos', no_confirmation:'No confirmation', overtrading:'Overtrading', fomo:'FOMO'
   };
 
   // 1. Worst discipline error
@@ -2894,7 +2889,7 @@ function calcBiggestMistakes(trades) {
     var plWins = postLossTrades.filter(function(t){return (t.pnl||0)>0;}).length;
     var plWr   = Math.round(plWins/postLossTrades.length*100);
     if (plWr < 40) {
-      mistakes.push({ label:'Revenge trading', detail: 'WR después de pérdida: '+plWr+'% ('+postLossTrades.length+' casos)' });
+      mistakes.push({ label:'Revenge trading', detail: 'WR after loss: '+plWr+'% ('+postLossTrades.length+' casos)' });
     }
   }
 
@@ -2953,7 +2948,7 @@ function calcPeriodMentalScore(tradesInPeriod) {
     ? (scores.slice(-3).reduce(function(s,x){return s+x.total;},0)/3) - (scores.slice(0,3).reduce(function(s,x){return s+x.total;},0)/3)
     : 0;
 
-  var label = avg >= 90 ? 'Trader élite 🏆' : avg >= 75 ? 'Rendimiento sólido ✅' : avg >= 60 ? 'En desarrollo ⚠️' : avg >= 40 ? 'Necesita atención 🔶' : 'Estado crítico 🔴';
+  var label = avg >= 90 ? 'Elite trader 🏆' : avg >= 75 ? 'Solid performance ✅' : avg >= 60 ? 'En desarrollo ⚠️' : avg >= 40 ? 'Needs attention 🔶' : 'Critical state 🔴';
   var color = avg >= 75 ? 'var(--green)' : avg >= 50 ? 'var(--amber)' : 'var(--red)';
 
   return { avg: avg, label: label, color: color, days: dayList.length, scores: scores, best: best.total, worst: worst.total, bestDay: bestDay, worstDay: worstDay, trend: Math.round(trend) };
@@ -3086,35 +3081,35 @@ function calcAllAchievements(trades, clSessions, moodSessions) {
   var streaks = [
     {
       id:'streak_checklist', emoji:'📋', name:'Racha Checklist',
-      desc:'Días consecutivos completando el checklist',
+      desc:'Consecutive days completing the checklist',
       levels:[3,7,14,30],
       current: currentStreak(tDays, function(d){ var s=clDay(d); return s&&s.score_pct>=80; }),
       type:'streak'
     },
     {
       id:'streak_mood', emoji:'🧠', name:'Racha Mood Check',
-      desc:'Días consecutivos con mood check hecho',
+      desc:'Consecutive days with mood check done',
       levels:[3,7,14],
       current: currentStreak(tDays, function(d){ return !!moodDay(d); }),
       type:'streak'
     },
     {
       id:'streak_rules', emoji:'🛡', name:'Racha Reglas',
-      desc:'Días consecutivos sin violar ninguna regla activa',
+      desc:'Consecutive days without violating any active rule',
       levels:[3,7,14],
       current: hasActiveRules() ? currentStreak(tDays, function(d){ return dayTrades(d).length>0 && !hasViolations(d); }) : 0,
       type:'streak'
     },
     {
       id:'streak_tilt', emoji:'⚡', name:'Sin Tilt',
-      desc:'Días consecutivos sin alerta de tilt',
+      desc:'Consecutive days without tilt alert',
       levels:[5,10,20],
       current: currentStreak(tDays, function(d){ return !hasTilt(d); }),
       type:'streak'
     },
     {
       id:'streak_calibrado', emoji:'🎯', name:'Calibrado',
-      desc:'Días con emoción registrada y resultado positivo o pérdida controlada',
+      desc:'Days with emotion logged and positive result or controlled loss',
       levels:[3,7],
       current: currentStreak(tDays, function(d){
         var dt=dayTrades(d);
@@ -3124,7 +3119,7 @@ function calcAllAchievements(trades, clSessions, moodSessions) {
     },
     {
       id:'streak_journaling', emoji:'✍️', name:'Journaling Express',
-      desc:'Días consecutivos con al menos un trade registrado',
+      desc:'Consecutive days with at least one trade logged',
       levels:[3,7,14],
       current: currentStreak(tDays, function(d){ return dayTrades(d).length > 0; }),
       type:'streak'
@@ -3194,43 +3189,43 @@ function calcAllAchievements(trades, clSessions, moodSessions) {
       total:10, current:Math.min(noEmoConsec,10), unlocked:noEmoConsec>=10
     },
     {
-      id:'checklist_21',  emoji:'📋', name:'Hábito formado',
-      desc:'21 días acumulados con checklist completado al 80%+',
+      id:'checklist_21',  emoji:'📋', name:'Habit formed',
+      desc:'21 cumulative days with checklist completed at 80%+',
       total:21, current:Math.min(clAccum,21), unlocked:clAccum>=21
     },
     {
       id:'mental_10',     emoji:'🧘', name:'Mente de acero',
-      desc:'10 días acumulados con Mental Score > 70',
+      desc:'10 cumulative days with Mental Score > 70',
       total:10, current:Math.min(mentalDays,10), unlocked:mentalDays>=10
     },
     {
       id:'perfect_week',  emoji:'🏆', name:'Semana perfecta',
-      desc:'Una semana con checklist + reglas + mood check los 5 días',
+      desc:'One week with checklist + rules + mood check all 5 days',
       total:1, current:hasPerfectWeek()?1:0, unlocked:hasPerfectWeek()
     },
     {
-      id:'month_elite',   emoji:'💎', name:'Mes de élite',
-      desc:'20 días en un mes con Mental Score > 70',
+      id:'month_elite',   emoji:'💎', name:'Elite month',
+      desc:'20 days in a month with Mental Score > 70',
       total:20, current:Math.min(monthDays,20), unlocked:monthDays>=20
     },
     {
       id:'30_days',       emoji:'🌱', name:'En camino',
-      desc:'30 días usando la plataforma',
+      desc:'30 days using the platform',
       total:30, current:Math.min(tDays.length,30), unlocked:tDays.length>=30
     },
     {
       id:'freno_mano',    emoji:'🛑', name:'Freno de mano',
-      desc:'Día con tilt detectado y no tomaste más trades — control total',
+      desc:'Day with tilt detected and no more trades taken — total control',
       total:1, current:hasFrenoDeMano()?1:0, unlocked:hasFrenoDeMano()
     },
     {
-      id:'fotografo',     emoji:'📸', name:'Fotógrafo del mercado',
+      id:'fotografo',     emoji:'📸', name:'Market photographer',
       desc:'50 trades con screenshot guardado',
       total:50, current:Math.min(screenshotCount,50), unlocked:screenshotCount>=50
     },
     {
-      id:'perdida_pro',   emoji:'📉', name:'Pérdida profesional',
-      desc:'Tu primer trade clean que terminó en pérdida — el ego no manda',
+      id:'perdida_pro',   emoji:'📉', name:'Professional loss',
+      desc:'Your first clean trade that ended in a loss — ego doesn\'t rule',
       total:1, current:cleanLossExists?1:0, unlocked:cleanLossExists
     },
     {
@@ -3239,7 +3234,7 @@ function calcAllAchievements(trades, clSessions, moodSessions) {
       total:5, current:Math.min(consultCount,5), unlocked:consultCount>=5
     },
     {
-      id:'ejecucion_sim', emoji:'⚖️', name:'Ejecución simétrica',
+      id:'ejecucion_sim', emoji:'⚖️', name:'Symmetric execution',
       desc:'10 trades consecutivos con R:R logrado ≥ 90% del planeado',
       total:10, current:Math.min(rrConsec,10), unlocked:rrConsec>=10
     }
@@ -3275,11 +3270,11 @@ function calcBadges(trades, clSessions) {
 // ── Onboarding Screen ──
 function buildOnboardingScreen(acc) {
   var MILESTONES = [
-    { at:1,  icon:'◈', label:'Primer trade', desc:'El diario está activo.' },
-    { at:5,  icon:'◉', label:'5 trades',     desc:'Verás tu primera emoción dominante.' },
-    { at:10, icon:'↗', label:'10 trades',    desc:'El Coach IA detectará tu error principal.' },
-    { at:20, icon:'⚡', label:'20 trades',   desc:'Análisis psicológico completo disponible.' },
-    { at:30, icon:'★', label:'30+ trades',   desc:'Patrón de horario y perfil de trader.' },
+    { at:1,  icon:'◈', label:'Primer trade', desc:'Journal is active.' },
+    { at:5,  icon:'◉', label:'5 trades',     desc:'You\'ll see your first dominant emotion.' },
+    { at:10, icon:'↗', label:'10 trades',    desc:'AI Coach will detect your main error.' },
+    { at:20, icon:'⚡', label:'20 trades',   desc:'Full psychological analysis disponible.' },
+    { at:30, icon:'★', label:'30+ trades',   desc:'Time pattern (Pattro) and trader profile.' },
   ];
   var milestonesHtml = MILESTONES.map(function(m) {
     return '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">'
@@ -3292,26 +3287,26 @@ function buildOnboardingScreen(acc) {
   return '<div class="fade-in" style="max-width:600px;margin:32px auto;padding:0 16px">'
     + '<div style="text-align:center;margin-bottom:28px">'
     + '<div style="font-size:38px;margin-bottom:12px;letter-spacing:-2px;color:var(--text3)">&#9672;</div>'
-    + '<div style="font-size:20px;font-weight:800;color:var(--text);margin-bottom:8px;letter-spacing:-.3px">Empieza a construir tu ventaja</div>'
+    + '<div style="font-size:20px;font-weight:800;color:var(--text);margin-bottom:8px;letter-spacing:-.3px">Start building your edge</div>'
     + '<div style="font-size:12px;color:var(--text3);line-height:1.8;max-width:400px;margin:0 auto">La mayoria de traders saben <em>que</em> hacen mal.<br>Pattro te muestra <strong style="color:var(--text)">cuando, como y por que</strong> lo hacen.</div>'
     + '</div>'
     + '<div class="panel" style="padding:20px;margin-bottom:16px">'
-    + '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px">Tu camino hacia los insights</div>'
+    + '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px">Your path to insights</div>'
     + milestonesHtml
     + '<div style="margin-top:14px;padding:12px 14px;background:rgba(90,158,158,0.08);border:1px solid rgba(90,158,158,0.25);border-radius:8px">'
-    + '<div style="font-size:10px;color:#5a9e9e;font-weight:600;margin-bottom:4px">Por donde empezar</div>'
+    + '<div style="font-size:10px;color:#5a9e9e;font-weight:600;margin-bottom:4px">Where to start</div>'
     + '<div style="font-size:10px;color:var(--text3);line-height:1.7">Registra tu primer trade con <strong style="color:var(--text)">+ Log Trade</strong> en la barra superior, o instala la extension para TopstepX y captura trades automaticamente.</div>'
     + '</div></div>'
     + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
     + '<div class="panel" style="padding:14px;cursor:pointer" onclick="navigateTo(\'psychology\')">'
-    + '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">Paso 1</div>'
+    + '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">Step 1</div>'
     + '<div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:4px">&#128203; Configura tu checklist</div>'
-    + '<div style="font-size:9px;color:var(--text3);line-height:1.5">Las preguntas que revisas antes de cada sesion. Define las tuyas.</div>'
+    + '<div style="font-size:9px;color:var(--text3);line-height:1.5">The questions you review before each session. Define your own.</div>'
     + '</div>'
     + '<div class="panel" style="padding:14px;cursor:pointer" onclick="navigateTo(\'psychology\')">'
-    + '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">Paso 2</div>'
+    + '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">Step 2</div>'
     + '<div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:4px">&#9878; Define tus reglas</div>'
-    + '<div style="font-size:9px;color:var(--text3);line-height:1.5">Daily loss limit, max drawdown, horarios. El sistema las monitorea por ti.</div>'
+    + '<div style="font-size:9px;color:var(--text3);line-height:1.5">Daily loss limit, max drawdown, trading hours. The system monitors them for you.</div>'
     + '</div>'
     + '</div>'
     + '</div>';
@@ -3381,9 +3376,9 @@ function calcDisciplineStreaks(trades, clSessions) {
   cleanStreak = tempClean;
 
   return [
-    { emoji:'🧱', label:'Sin Revenge Trading', desc:'Días seguidos sin trades impulsivos post-pérdida', current:noRevengeStreak, goal:5, best:noRevengeBest },
-    { emoji:'📋', label:'Checklist ≥80%',       desc:'Días seguidos completando el checklist correctamente', current:checklistStreak, goal:7, best:checklistBest },
-    { emoji:'✨', label:'Días Limpios',          desc:'Días seguidos sin errores de disciplina', current:cleanStreak, goal:10, best:cleanBest }
+    { emoji:'🧱', label:'Sin Revenge Trading', desc:'Consecutive days without impulsive trades after losses', current:noRevengeStreak, goal:5, best:noRevengeBest },
+    { emoji:'📋', label:'Checklist ≥80%',       desc:'Consecutive days completing the checklist correctly', current:checklistStreak, goal:7, best:checklistBest },
+    { emoji:'✨', label:'Clean Days',          desc:'Consecutive days without discipline errors', current:cleanStreak, goal:10, best:cleanBest }
   ];
 }
 
@@ -3620,7 +3615,7 @@ function checkRuleViolations(rulesObj, trades) {
 
   // ── Rule 2: No Monday / No Friday ──
   if (r.nodays && r.nodays.active && r.nodays.days && r.nodays.days.length) {
-    var dayNames = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+    var dayNames = ['domingo','lunes','martes','wednesday','jueves','viernes','saturday'];
     var badDayTrades = todayTrades.filter(function(t) {
       var d = new Date(t.entry_time);
       var dow = d.getDay(); // 0=Sun,1=Mon,...,5=Fri
@@ -3628,7 +3623,7 @@ function checkRuleViolations(rulesObj, trades) {
     });
     if (badDayTrades.length) {
       var dayLabels = r.nodays.days.map(function(d){ return dayNames[d]; }).join(' y ');
-      violations.push({ rule:{id:'nodays', label:'No operar ' + dayLabels}, detail: badDayTrades.length + ' trade(s) en día restringido' });
+      violations.push({ rule:{id:'nodays', label:'No operar ' + dayLabels}, detail: badDayTrades.length + ' trade(s) on restricted day' });
     }
   }
 
@@ -3636,7 +3631,7 @@ function checkRuleViolations(rulesObj, trades) {
   if (r.maxtrades && r.maxtrades.active) {
     var limit = parseInt(r.maxtrades.value) || 3;
     if (todayTrades.length > limit) {
-      violations.push({ rule:{id:'maxtrades', label:'Máximo ' + limit + ' trades/día'}, detail: 'Tomaste ' + todayTrades.length + ' trades (límite: ' + limit + ')' });
+      violations.push({ rule:{id:'maxtrades', label:'Maximum ' + limit + ' trades/day'}, detail: 'Tomaste ' + todayTrades.length + ' trades (limit: ' + limit + ')' });
     }
   }
 
@@ -3648,7 +3643,7 @@ function checkRuleViolations(rulesObj, trades) {
     var maxStreak = 0;
     sorted4.forEach(function(t){ if ((t.pnl||0)<0){ streak++; maxStreak=Math.max(maxStreak,streak); } else { streak=0; } });
     if (maxStreak >= lossLimit) {
-      violations.push({ rule:{id:'maxlosses', label:'Máx ' + lossLimit + ' pérdidas seguidas'}, detail: 'Alcanzaste ' + maxStreak + ' pérdidas consecutivas' });
+      violations.push({ rule:{id:'maxlosses', label:'Max ' + lossLimit + ' consecutive losses'}, detail: 'Alcanzaste ' + maxStreak + ' consecutive losses' });
     }
   }
 
@@ -3678,7 +3673,7 @@ function checkRuleViolations(rulesObj, trades) {
       }
     });
     if (badSizeTrades.length) {
-      violations.push({ rule:{id:'maxsize', label:'Tamaño máx ' + maxContracts + ' ' + sizeType + (maxContracts>1?'s':'')}, detail: badSizeTrades.length + ' trade(s) superaron el tamaño máximo' });
+      violations.push({ rule:{id:'maxsize', label:'Max size ' + maxContracts + ' ' + sizeType + (maxContracts>1?'s':'')}, detail: badSizeTrades.length + ' trade(s) exceeded maximum size' });
     }
   }
 
@@ -3710,7 +3705,7 @@ function checkRuleViolations(rulesObj, trades) {
       if (gapMins >= 0 && gapMins < minGap) gapViolations++;
     }
     if (gapViolations > 0) {
-      violations.push({ rule:{id:'mintimegap', label:'Min ' + minGap + ' min entre trades'}, detail: gapViolations + ' trade(s) tomados demasiado rápido' });
+      violations.push({ rule:{id:'mintimegap', label:'Min ' + minGap + ' min entre trades'}, detail: gapViolations + ' trade(s) taken too quickly' });
     }
   }
 
@@ -3719,7 +3714,7 @@ function checkRuleViolations(rulesObj, trades) {
     var maxLoss   = parseFloat(r.maxdailyloss.value) || 100;
     var todayPnl  = todayTrades.reduce(function(s,t){ return s + (t.pnl||0); }, 0);
     if (todayPnl < -Math.abs(maxLoss)) {
-      violations.push({ rule:{id:'maxdailyloss', label:'Pérdida máx $' + maxLoss + '/día'}, detail: 'Perdiste $' + Math.abs(todayPnl).toFixed(0) + ' (límite: $' + maxLoss + ')' });
+      violations.push({ rule:{id:'maxdailyloss', label:'Max loss $' + maxLoss + '/day'}, detail: 'Perdiste $' + Math.abs(todayPnl).toFixed(0) + ' (limit: $' + maxLoss + ')' });
     }
   }
 
@@ -3811,8 +3806,8 @@ function calcDailyDisciplineScore(dateStr) {
   var label = total >= 90 ? 'Elite 🏆'
             : total >= 70 ? 'Disciplinado ✅'
             : total >= 50 ? 'En progreso ⚠️'
-            : total >= 30 ? 'Atención 🔶'
-            : 'Caótico 🔴';
+            : total >= 30 ? 'Attention 🔶'
+            : 'Chaotic 🔴';
 
   return {
     total:        total,
@@ -3867,7 +3862,7 @@ function inferTradeEmotion(trade, allDayTrades) {
     var allLoss = w.every(function(t){ return (t.pnl||0) < 0; });
     if (allLoss) {
       var span = (new Date(w[w.length-1].entry_time) - new Date(w[0].entry_time)) / 60000;
-      if (span < 60) return { emotion: 'frustrated', inferred: true, reason: 'Tilt — 3+ pérdidas consecutivas' };
+      if (span < 60) return { emotion: 'frustrated', inferred: true, reason: 'Tilt — 3+ consecutive losses' };
     }
   }
 
@@ -3898,7 +3893,7 @@ function inferTradeEmotion(trade, allDayTrades) {
   } else if (pnl < 0) {
     var allLosses = allTrades.filter(function(t){ return (t.pnl||0) < 0; });
     var avgLoss = allLosses.length ? Math.abs(allLosses.reduce(function(s,t){ return s+(t.pnl||0); },0)/allLosses.length) : Math.abs(pnl);
-    if (Math.abs(pnl) >= avgLoss * 1.5) return { emotion: 'anxious', inferred: true, reason: 'Pérdida grande (≥1.5× promedio)' };
+    if (Math.abs(pnl) >= avgLoss * 1.5) return { emotion: 'anxious', inferred: true, reason: 'Large loss (≥1.5× average)' };
     return { emotion: 'neutral', inferred: true, reason: 'Trade perdedor normal' };
   }
   return { emotion: 'neutral', inferred: true, reason: 'Sin datos suficientes' };
@@ -4045,7 +4040,7 @@ function calcDailyMindScore(dateStr) {
     }
     if (tiltDetected) {
       behaviorPts -= 10;
-      behaviorDetails.push({ label: 'Tilt detectado (3+ pérdidas en <1h)', pts: -10, color: 'var(--red)' });
+      behaviorDetails.push({ label: 'Tilt detected (3+ losses in <1h)', pts: -10, color: 'var(--red)' });
     }
 
     // Active loss streak > 2
@@ -4056,7 +4051,7 @@ function calcDailyMindScore(dateStr) {
     }
     if (activeLossStreak > 2) {
       behaviorPts -= 5;
-      behaviorDetails.push({ label: 'Racha activa de ' + activeLossStreak + ' pérdidas', pts: -5, color: 'var(--amber)' });
+      behaviorDetails.push({ label: 'Racha activa de ' + activeLossStreak + ' losses', pts: -5, color: 'var(--amber)' });
     }
   }
 
@@ -4072,11 +4067,11 @@ function calcDailyMindScore(dateStr) {
   }
   total = Math.max(0, Math.min(100, total));
 
-  var label = total >= 90 ? 'Mentalidad élite 🏆'
-            : total >= 70 ? 'Mente sólida 🧘'
+  var label = total >= 90 ? 'Elite mindset 🏆'
+            : total >= 70 ? 'Solid mindset 🧘'
             : total >= 50 ? 'Estable ⚠️'
             : total >= 30 ? 'En riesgo 🔶'
-            : 'Estado crítico 🔴';
+            : 'Critical state 🔴';
 
   return {
     total:              total,
@@ -4207,11 +4202,11 @@ function calcMentalScore(dateStr) {
   }
   total = Math.max(0, Math.min(100, total));
 
-  var label = total >= 90 ? 'Trader élite 🏆'
-            : total >= 75 ? 'Rendimiento sólido ✅'
+  var label = total >= 90 ? 'Elite trader 🏆'
+            : total >= 75 ? 'Solid performance ✅'
             : total >= 60 ? 'En desarrollo ⚠️'
-            : total >= 40 ? 'Necesita atención 🔶'
-            : 'Estado crítico 🔴';
+            : total >= 40 ? 'Needs attention 🔶'
+            : 'Critical state 🔴';
 
   var color = total >= 75 ? 'var(--green)'
             : total >= 50 ? 'var(--amber)'
@@ -4335,7 +4330,7 @@ function renderRulesView() {
           + '<span style="font-size:12px;color:' + (on?'var(--red)':'var(--text3)') + ';font-weight:' + (on?'600':'400') + '">' + o.lbl + '</span>'
           + '</label>';
       }).join('') + '</div>';
-  html += rCard('nodays','📅','No operar lunes / viernes','Marca los dias en los que tienes prohibido operar', ndHtml, !!r2.active, violations.some(function(v){return v.rule.id==='nodays';}));
+  html += rCard('nodays','📅','No operar lunes / viernes','Mark the days you are not allowed to trade', ndHtml, !!r2.active, violations.some(function(v){return v.rule.id==='nodays';}));
 
   // ── Rule 3: Max trades/day ──
   var r3 = rules.maxtrades || {};
@@ -4359,7 +4354,7 @@ function renderRulesView() {
     + '<span style="font-size:10px;color:var(--text3)">perdidas seguidas</span></div>'
     + '<div style="font-size:11px;color:var(--text3)">Racha max hoy: <span style="color:' + (ms4>=(parseInt(r4.value)||2)?'var(--red)':'var(--text)') + ';font-weight:600">' + ms4 + '</span></div>'
     + '</div>';
-  html += rCard('maxlosses','🛑','Maximo perdidas consecutivas','Detente cuando encadenes este numero de perdidas seguidas', ml4, !!r4.active, violations.some(function(v){return v.rule.id==='maxlosses';}));
+  html += rCard('maxlosses','🛑','Max consecutive losses','Stop trading when you chain this number of losingdas seguidas', ml4, !!r4.active, violations.some(function(v){return v.rule.id==='maxlosses';}));
 
   // ── Rule 5: Max position size ──
   var r5 = rules.maxsize || {};
@@ -4417,7 +4412,7 @@ function renderRulesView() {
   // ── Save button ──
   html += '<div style="display:flex;justify-content:flex-end;margin:4px 0 16px 0">'
     + '<button onclick="saveRulesConfig()" id="save-rules-btn" class="btn btn-solid" style="padding:10px 28px;font-size:13px;font-weight:700;background:#5a9e9e;border:none;border-radius:8px;color:#fff;cursor:pointer;font-family:inherit">'
-    + 'Guardar reglas</button></div>';
+    + 'Save rules</button></div>';
 
   // ── Coach panel ──
   html += '<div class="panel" style="padding:18px;margin-top:8px">'
@@ -4474,7 +4469,7 @@ function saveRulesConfig() {
     btn.style.background = 'var(--green)';
     btn.disabled = true;
     setTimeout(function() {
-      if (btn) { btn.textContent = 'Guardar reglas'; btn.style.background = '#5a9e9e'; btn.disabled = false; }
+      if (btn) { btn.textContent = 'Save rules'; btn.style.background = '#5a9e9e'; btn.disabled = false; }
     }, 2000);
   }
 }
@@ -4508,7 +4503,7 @@ function updateRuleValue(id, val) {
   if (!r[id]) r[id] = { active: true };
   r[id].value = val;
   _rulesTemp = r;
-  // Don't re-render — let user keep typing
+  // Don\'t re-render — let user keep typing
 }
 function updateRuleSizeType(val) {
   var r = getRulesTempOrSaved();
@@ -4556,7 +4551,7 @@ async function generateRulesCoach() {
     if (msg) {
       outEl.innerHTML = '<div style="font-size:12px;color:var(--text2);line-height:1.8;white-space:pre-wrap;background:var(--surface2);border-radius:8px;padding:14px">' + msg + '</div>';
     } else {
-      outEl.innerHTML = '<div style="font-size:11px;color:var(--red);text-align:center;padding:16px">No se pudo generar el análisis.</div>';
+      outEl.innerHTML = '<div style="font-size:11px;color:var(--red);text-align:center;padding:16px">Could not generate the analysis.</div>';
     }
   } catch(e) {
     outEl.innerHTML = '<div style="font-size:11px;color:var(--red);text-align:center;padding:16px">Error al contactar el Coach.</div>';
@@ -4801,9 +4796,9 @@ function renderTradeLogHTML(trades) {
     '<input class="form-input" style="width:130px;padding:6px 10px" type="date" value="'+tlFilters.date+'" onchange="tlFilters={date:this.value,ticker:tlFilters.ticker,result:tlFilters.result};tlPage=1;renderTradesView()">'+
     '<input class="form-input" style="width:120px;padding:6px 10px" type="text" placeholder="Ticker..." value="'+tlFilters.ticker+'" oninput="tlFilters={date:tlFilters.date,ticker:this.value,result:tlFilters.result};tlPage=1;renderTradesView()">'+
     '<select class="form-select" style="width:120px;padding:6px 10px" onchange="tlFilters={date:tlFilters.date,ticker:tlFilters.ticker,result:this.value};tlPage=1;renderTradesView()">'+
-    '<option value="all"'+(tlFilters.result==='all'?' selected':'')+'>'+t('filter_all')+'</option>'+
-    '<option value="win"'+(tlFilters.result==='win'?' selected':'')+'>'+t('filter_winners')+'</option>'+
-    '<option value="loss"'+(tlFilters.result==='loss'?' selected':'')+'>'+t('filter_losers')+'</option>'+
+    '<option value="all"'+(tlFilters.result==='all'?' selected':'')+'>'+'All trades'+'</option>'+
+    '<option value="win"'+(tlFilters.result==='win'?' selected':'')+'>'+'Winners'+'</option>'+
+    '<option value="loss"'+(tlFilters.result==='loss'?' selected':'')+'>'+'Losers'+'</option>'+
     '</select>'+
     '<button class="btn btn-ghost" style="font-size:11px" onclick="tlFilters={date:\'\',ticker:\'\',result:\'all\'};tlPage=1;renderTradesView()">Clear</button>'+
     '</div>'+
@@ -5304,7 +5299,7 @@ function renderRulesTab(el) {
       + '</div>';
   });
   ndHtml += '</div>';
-  html += rCard('nodays','📅','No operar lunes / viernes','Marca los dias en los que tienes prohibido operar', ndHtml, !!r2.active, violations.some(function(v){return v.rule.id==='nodays';}));
+  html += rCard('nodays','📅','No operar lunes / viernes','Mark the days you are not allowed to trade', ndHtml, !!r2.active, violations.some(function(v){return v.rule.id==='nodays';}));
 
   // Rule 3
   var r3 = rules.maxtrades || {};
@@ -5328,7 +5323,7 @@ function renderRulesTab(el) {
     + '<span style="font-size:10px;color:var(--text3)">perdidas seguidas</span></div>'
     + '<div style="font-size:11px;color:var(--text3)">Racha hoy: <span style="color:' + (ms4>=(parseInt(r4.value)||2)?'var(--red)':'var(--text)') + ';font-weight:600">' + ms4 + '</span></div>'
     + '</div>';
-  html += rCard('maxlosses','🛑','Maximo perdidas consecutivas','Detente cuando encadenes este numero de perdidas seguidas', ml4, !!r4.active, violations.some(function(v){return v.rule.id==='maxlosses';}));
+  html += rCard('maxlosses','🛑','Max consecutive losses','Stop trading when you chain this number of losingdas seguidas', ml4, !!r4.active, violations.some(function(v){return v.rule.id==='maxlosses';}));
 
   // Rule 5
   var r5 = rules.maxsize || {};
@@ -5385,7 +5380,7 @@ function renderRulesTab(el) {
 
   // Save button
   html += '<div style="display:flex;justify-content:flex-end;margin:8px 0 16px 0">'
-    + '<button id="save-rules-btn" onclick="saveRulesConfig()" style="padding:11px 32px;font-size:13px;font-weight:700;background:#5a9e9e;border:none;border-radius:8px;color:#fff;cursor:pointer;font-family:inherit;letter-spacing:.3px">Guardar reglas</button></div>';
+    + '<button id="save-rules-btn" onclick="saveRulesConfig()" style="padding:11px 32px;font-size:13px;font-weight:700;background:#5a9e9e;border:none;border-radius:8px;color:#fff;cursor:pointer;font-family:inherit;letter-spacing:.3px">Save rules</button></div>';
 
   html += '</div>';
   el.innerHTML = html;
@@ -5719,7 +5714,7 @@ function renderOperativaTab(el) {
       var worst = itemStats.filter(function(s){return s.impact > 30;})[0];
       var insightHtml = worst
         ? '<div style="margin-bottom:14px;padding:10px 14px;border-radius:8px;background:var(--red-bg);border:1px solid var(--red-bd);font-size:10px;color:var(--text2);line-height:1.6">'
-          + '<strong style="color:var(--red)">⚠ Item más crítico:</strong> Cuando NO marcas <em>"'+worst.text+'"</em>, tu P&L diario promedio baja $'+Math.abs(worst.impact)+' y tu WR cae de '+worst.avgMarkedWr+'% a '+worst.avgUnmarkedWr+'%.'
+          + '<strong style="color:var(--red)">⚠ Most critical item:</strong> When you DON\'T check <em>"'+worst.text+'"</em>, your daily P&L drops $'+Math.abs(worst.impact)+' y tu WR cae de '+worst.avgMarkedWr+'% a '+worst.avgUnmarkedWr+'%.'
           + '</div>'
         : '';
 
@@ -5727,7 +5722,7 @@ function renderOperativaTab(el) {
         var mClr = s.avgMarkedPnl   >= 0 ? 'var(--green)' : 'var(--red)';
         var uClr = s.avgUnmarkedPnl >= 0 ? 'var(--green)' : 'var(--red)';
         var tag  = s.impact > 30
-          ? '<span style="font-size:8px;padding:2px 7px;border-radius:9px;background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd)">crítico</span>'
+          ? '<span style="font-size:8px;padding:2px 7px;border-radius:9px;background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd)">critical</span>'
           : s.impact > 0
             ? '<span style="font-size:8px;padding:2px 7px;border-radius:9px;background:var(--green-bg);color:var(--green);border:1px solid var(--green-bd)">ayuda</span>'
             : '<span style="font-size:8px;padding:2px 7px;border-radius:9px;background:var(--surface2);color:var(--text3)">neutro</span>';
@@ -5740,7 +5735,7 @@ function renderOperativaTab(el) {
       }).join('');
 
       return '<div class="panel" style="margin-top:12px">'
-        + '<div class="panel-head"><span class="panel-title">Checklist Item Impact</span><span class="panel-cap" style="color:var(--text3)">Qué items realmente importan</span></div>'
+        + '<div class="panel-head"><span class="panel-title">Checklist Item Impact</span><span class="panel-cap" style="color:var(--text3)">Which items really matter</span></div>'
         + '<div style="padding:14px 18px">'
         + insightHtml
         + '<div style="display:grid;grid-template-columns:1fr auto auto auto;gap:10px;padding:0 0 6px;border-bottom:1px solid var(--border2)">'
@@ -5802,7 +5797,7 @@ function renderRendimientoView() {
     { label:'Win Rate Semana', val: weekWR!==null ? weekWR+'%' : '--', color: weekWR>=60?'var(--green)':weekWR>=40?'var(--amber)':'var(--red)', sub: weekWR!==null?'':'Sin trades' },
     { label:'Win Rate Mes',    val: monthWR!==null ? monthWR+'%' : '--', color: monthWR>=60?'var(--green)':monthWR>=40?'var(--amber)':'var(--red)', sub: monthWR!==null?'':'Sin trades' },
     { label:'Limpios Semana',  val: weekClean!==null ? weekClean+'%' : '--', color: weekClean>=70?'var(--green)':weekClean>=50?'var(--amber)':'var(--red)', sub: 'trades clean' },
-    { label:'Total Trades',    val: trades.length, color: 'var(--text)', sub: 'histórico' },
+    { label:'Total Trades',    val: trades.length, color: 'var(--text)', sub: 'historical' },
   ];
   metrics2.forEach(function(m, i) {
     var borderR = (i%3 < 2) ? 'border-right:1px solid var(--border);' : '';
@@ -5817,16 +5812,16 @@ function renderRendimientoView() {
 
   // ── Weekly Coach ──
   out += '<div class="panel" style="padding:0;overflow:hidden">';
-  out += '<div class="panel-head"><span class="panel-title">✦ Coach Semanal</span><span class="panel-cap" style="color:var(--amber)">Análisis de rendimiento · powered by Claude</span></div>';
+  out += '<div class="panel-head"><span class="panel-title">✦ Coach Semanal</span><span class="panel-cap" style="color:var(--amber)">Performance analysis · powered by Claude</span></div>';
   out += '<div style="padding:18px" id="insights-coach-wrap">';
   var isFriday = now.getDay() === 5;
   if (!isFriday) {
-    out += '<div style="background:var(--amber-bg);border:1px solid var(--amber-bd);border-radius:8px;padding:10px 14px;font-size:11px;color:var(--text2);margin-bottom:14px">El Coach semanal se genera automáticamente cada <strong>viernes</strong>. Puedes solicitarlo manualmente abajo.</div>';
+    out += '<div style="background:var(--amber-bg);border:1px solid var(--amber-bd);border-radius:8px;padding:10px 14px;font-size:11px;color:var(--text2);margin-bottom:14px">The weekly Coach is generated automatically every <strong>Friday</strong>. You can request it manually abajo.</div>';
   }
   out += '<div id="coach-output" style="min-height:60px">';
   out += coachAnalysis
     ? '<div style="font-size:12px;color:var(--text2);line-height:1.8;white-space:pre-wrap">'+coachAnalysis+'</div>'
-    : '<div style="font-size:11px;color:var(--text3);text-align:center;padding:20px 0">Sin análisis aún. Haz clic para generar el análisis de la semana.</div>';
+    : '<div style="font-size:11px;color:var(--text3);text-align:center;padding:20px 0">No analysis yet. Click to generate the weekly analysis.</div>';
   out += '</div>';
   out += '<div style="margin-top:14px;display:flex;gap:8px">';
   out += '<button class="btn btn-solid" id="coach-btn" onclick="generateCoachAnalysis()">' + (coachLoading?'Analizando...':'⚡ Analizar semana') + '</button>';
@@ -5915,7 +5910,7 @@ async function generateCoachAnalysis() {
     var d = new Date(s.session_date||s.date);
     if (d >= _weekStart2) _moodDays++;
   });
-  var _dataCtxLine = "Calidad de datos: "+_weekWithEmo+" trades con emoción real, "+_weekInferred+" inferidos por comportamiento. Mood check: "+_moodDays+"/5 días. "+(_weekInferred>0?"Para los trades sin emoción usa el comportamiento (revenge, tilt, overtrading) como proxy psicológico, no afirmes emociones específicas.":"");
+  var _dataCtxLine = "Calidad de datos: "+_weekWithEmo+" trades with real emotion, "+_weekInferred+" inferidos por comportamiento. Mood check: "+_moodDays+"/5 days. "+(_weekInferred>0?"For trades without emotion, use behavior (revenge, tilt, overtrading) as psychological proxy, don\'t assert specific emotions.":"");
 
   var prompt = "Eres un coach de trading profesional. Analiza la semana en espanol, directo y constructivo.\n\n" +
     "DATOS:\n" +
@@ -5928,13 +5923,13 @@ async function generateCoachAnalysis() {
     "CHECKLIST (" + (ctx.checkItems||[]).length + " items):\n" +
     (ctx.checkSummary||"Sin datos") + "\n\n" +
     "NOTAS:\n" + (ctx.weekNotes||"Sin notas") + "\n\n" +
-    "Estructura: 1) Resumen semana 2) Error principal 3) Lo que hizo bien 4) Gestion del tiempo (duracion trades, horas en pantalla, si opera demasiado) 5) 2-3 acciones concretas 6) Frase motivadora. Si hay datos incompletos, sé honesto sobre la limitación del análisis. Max 350 palabras.";
+    "Structure: 1) Weekly summary 2) Main error 3) What they did well 4) Time managementn trades, horas en pantalla, si opera demasiado) 5) 2-3 concrete actions 6) Motivational phrase. If data is incomplete, be honest about limitations. Max 350 words.";
 
   try {
     var text = await callCoach(prompt, 1000);
     coachAnalysis = text || "No se pudo generar.";
   } catch(e) {
-    coachAnalysis = 'Error conectando con el coach. Asegúrate de abrir Pattro desde pattro.com.';
+    coachAnalysis = 'Error connecting to the coach. Make sure you open Pattro from pattro.com.';
   }
   coachLoading = false;
   var tabEl2 = document.getElementById("disc-tab-content");
@@ -5988,7 +5983,7 @@ function buildMindView(trades) {
   var heatmap = {}; // "day_hour" → { pnl, count }
   var hourStats = {}; // hour → { pnl, count, wins }
   var dayStats  = {}; // day → { pnl, count, wins }
-  var dayNames  = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  var dayNames  = ['Dom','Lun','Mar','Wed','Jue','Vie','Sat'];
   trades.forEach(function(t) {
     if (!t.entry_time) return;
     var d  = new Date(t.entry_time);
@@ -6096,7 +6091,7 @@ function buildMindView(trades) {
   if (currentLossStreak >= 2) {
     html += '<div style="background:#2e0d0d;border:1px solid #5c1e1e;border-left:4px solid var(--red);border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:12px">'
       + '<span style="font-size:24px">⚠️</span>'
-      + '<div style="flex:1"><div style="font-weight:700;color:var(--red);font-size:13px">'+currentLossStreak+' pérdidas consecutivas hoy</div>'
+      + '<div style="flex:1"><div style="font-weight:700;color:var(--red);font-size:13px">'+currentLossStreak+' losses consecutivas hoy</div>'
       + '<div style="font-size:11px;color:var(--text3);margin-top:3px">Considera tomarte un descanso. El revenge trading es el mayor destructor de cuentas.</div></div>'
       + '<span onclick="dismissOverviewAlert(\'mind_loss_streak_'+currentAccountId+'_'+new Date().toISOString().slice(0,10)+'\')" style="font-size:18px;color:var(--text3);cursor:pointer;padding:0 4px;flex-shrink:0" title="Cerrar">×</span>'
       + '</div>';
@@ -6109,8 +6104,8 @@ function buildMindView(trades) {
   var coachFreq = getCoachFrequency(acctId2);
   var freqMode  = coachFreq.mode || 'biweekly';
   var freqOpts  = [
-    { val:'daily',    lbl:'Cada día' },
-    { val:'biweekly', lbl:'Mié y Vie' },
+    { val:'daily',    lbl:'Every day' },
+    { val:'biweekly', lbl:'Wed and Fri' },
     { val:'weekly',   lbl:'Semanal' },
     { val:'monthly',  lbl:'Mensual' },
     { val:'custom',   lbl:'Personalizado' }
@@ -6124,22 +6119,22 @@ function buildMindView(trades) {
   html += '<div class="panel" style="padding:20px">'
     + '<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;gap:12px">'
     + '<div>'
-    + '<div style="font-size:10px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px">Coach IA — Análisis psicológico</div>'
-    + '<div style="font-size:11px;color:var(--text3);margin-top:3px">Evolución: 2 días · semana · semana anterior · mes · mes anterior</div>'
+    + '<div style="font-size:10px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px">AI Coach — Psychological analysis</div>'
+    + '<div style="font-size:11px;color:var(--text3);margin-top:3px">Trend: 2 days · week · prev week · month · prev month</div>'
     + '</div>'
     + (_coachReady
         ? '<button class="btn btn-solid" id="mind-coach-btn" style="white-space:nowrap;flex-shrink:0" onclick="generateMindCoach()">'
           + (mindCoachLoading ? '<span class="spinner" style="width:12px;height:12px;margin-right:6px"></span>Analizando...' : '⚡ Analizar ahora')
           + '</button>'
         : '<div style="text-align:right">'
-          + '<div style="font-size:10px;color:var(--text2);font-weight:600;margin-bottom:6px">Necesito <strong style="color:var(--amber)">' + _coachNeed + ' trades más</strong></div>'
+          + '<div style="font-size:10px;color:var(--text2);font-weight:600;margin-bottom:6px">Necesito <strong style="color:var(--amber)">' + _coachNeed + ' more trades</strong></div>'
           + '<div style="width:140px;height:6px;background:var(--surface3);border-radius:3px;overflow:hidden">'
           + '<div style="height:100%;width:' + _coachPct + '%;background:var(--amber);border-radius:3px;transition:width .5s"></div></div>'
           + '<div style="font-size:9px;color:var(--text3);margin-top:4px">' + _coachTradeCount + ' / 20 trades</div>'
           + '</div>')
     + '</div>'
     + '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:11px;margin-bottom:14px">'
-    + '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:9px">Frecuencia del análisis automático</div>'
+    + '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:9px">Automatic analysis frequency</div>'
     + '<div style="display:flex;gap:5px;flex-wrap:wrap">'
     + freqOpts.map(function(o) {
         var isActive = freqMode === o.val;
@@ -6152,8 +6147,8 @@ function buildMindView(trades) {
         ? '<div style="margin-top:9px;display:flex;align-items:center;gap:8px">'
           + '<span style="font-size:10px;color:var(--text3)">Cada</span>'
           + '<input id="custom-freq-days" type="number" min="1" max="30" value="' + (coachFreq.customDays||7) + '" style="width:50px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-size:12px;font-family:inherit;text-align:center">'
-          + '<span style="font-size:10px;color:var(--text3)">días</span>'
-          + '<button onclick="saveCustomFreqDays()" style="padding:4px 10px;background:#5a9e9e;border:none;border-radius:6px;color:#fff;font-size:10px;cursor:pointer;font-family:inherit">Guardar</button>'
+          + '<span style="font-size:10px;color:var(--text3)">days</span>'
+          + '<button onclick="saveCustomFreqDays()" style="padding:4px 10px;background:#5a9e9e;border:none;border-radius:6px;color:#fff;font-size:10px;cursor:pointer;font-family:inherit">Save</button>'
           + '</div>'
         : '')
     + '</div>'
@@ -6163,7 +6158,7 @@ function buildMindView(trades) {
     html += '<div style="font-size:13px;color:var(--text2);line-height:1.8;white-space:pre-wrap;background:var(--surface2);border-radius:8px;padding:16px">' + mindCoachAnalysis + '</div>'
       + '<button class="btn btn-ghost" style="margin-top:10px;font-size:11px" onclick="mindCoachAnalysis=\'\';renderMindView()">Limpiar</button>';
   } else {
-    html += '<div style="font-size:11px;color:var(--text3);text-align:center;padding:24px 0">Presiona "Analizar ahora" para recibir un diagnóstico basado en tu evolución histórica.</div>';
+    html += '<div style="font-size:11px;color:var(--text3);text-align:center;padding:24px 0">Press "Analyze now" to receive a diagnosis based on your historical evolution.</div>';
   }
   html += '</div></div>';
 
@@ -6183,14 +6178,14 @@ function buildMindView(trades) {
     + '<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px">'+mindData.label+'</div>'
     + '<div style="display:flex;flex-direction:column;gap:7px">'
     + '<div><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:9px;color:var(--text3)">Mood</span><span style="font-size:9px;color:var(--text2);font-weight:600">'+mindData.moodPts+' / 40</span></div><div style="height:4px;background:var(--surface3);border-radius:2px;overflow:hidden"><div style="height:100%;width:'+Math.round(mindData.moodPts/40*100)+'%;background:'+(mindData.moodPts>=32?'var(--green)':mindData.moodPts>=20?'var(--amber)':'var(--red)')+';border-radius:2px"></div></div></div>'
-    + '<div><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:9px;color:var(--text3)">Emoción trades</span><span style="font-size:9px;color:var(--text2);font-weight:600">'+(mindData.emotionPts!==null?mindData.emotionPts+' / 40':'— / 40')+'</span></div><div style="height:4px;background:var(--surface3);border-radius:2px;overflow:hidden"><div style="height:100%;width:'+(mindData.emotionPts!==null?Math.round(mindData.emotionPts/40*100):0)+'%;background:'+(mindData.emotionPts===null?'var(--border)':mindData.emotionPts>=32?'var(--green)':mindData.emotionPts>=20?'var(--amber)':'var(--red)')+';border-radius:2px"></div></div></div>'
+    + '<div><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:9px;color:var(--text3)">Trade emotion</span><span style="font-size:9px;color:var(--text2);font-weight:600">'+(mindData.emotionPts!==null?mindData.emotionPts+' / 40':'— / 40')+'</span></div><div style="height:4px;background:var(--surface3);border-radius:2px;overflow:hidden"><div style="height:100%;width:'+(mindData.emotionPts!==null?Math.round(mindData.emotionPts/40*100):0)+'%;background:'+(mindData.emotionPts===null?'var(--border)':mindData.emotionPts>=32?'var(--green)':mindData.emotionPts>=20?'var(--amber)':'var(--red)')+';border-radius:2px"></div></div></div>'
     + '<div><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:9px;color:var(--text3)">Comportamiento</span><span style="font-size:9px;color:var(--text2);font-weight:600">'+mindData.behaviorPts+' / 20</span></div><div style="height:4px;background:var(--surface3);border-radius:2px;overflow:hidden"><div style="height:100%;width:'+Math.round(mindData.behaviorPts/20*100)+'%;background:'+(mindData.behaviorPts>=16?'var(--green)':mindData.behaviorPts>=10?'var(--amber)':'var(--red)')+';border-radius:2px"></div></div></div>'
     + '</div></div></div></div>';
 
-  // Panel rico: Mental Score Semana + Mes (con sparklines, tendencia, mejor/peor día)
+  // Panel rico: Mental Score Semana + Mes (con sparklines, tendencia, mejor/peor d)
   html += renderMentalScorePanel(trades);
 
-    // ── 3: Perfil Psicológico ──
+    // ── 3: Psychological Profile ──
   html += renderPsychProfilePanel(trades);
 
   // ── 4: Disciplina | P&L por tipo | Patrones autosabotaje ──
@@ -6250,7 +6245,7 @@ function buildMindView(trades) {
           severity: avgCapture < 0.5 ? 'high' : 'medium',
           title: 'Sales prematuros',
           detail: 'Capturas solo el ' + Math.round(avgCapture*100) + '% del R:R planeado en trades ganadores.',
-          fix: 'Usa take profit límite en lugar de cierre manual. Confía en el plan.',
+          fix: 'Use limit take profit instead of manual close. Trust the plan.',
           sample: withRR.length
         });
       }
@@ -6281,9 +6276,9 @@ function buildMindView(trades) {
       sabotage.push({
         type: 'size_escalation',
         severity: 'high',
-        title: 'Aumentas tamaño al ir perdiendo',
-        detail: 'En ' + Math.round(sizeEscalation/sizeEscalationDays*100) + '% de los días malos, incrementas el tamaño en la segunda mitad de la sesión.',
-        fix: 'Establece un máximo de tamaño fijo por día. Nunca aumentes size para recuperar pérdidas.',
+        title: 'You increase size while losing',
+        detail: 'En ' + Math.round(sizeEscalation/sizeEscalationDays*100) + '% of bad days, you increase size in the second half of the session.',
+        fix: 'Set a fixed maximum size per day. Never increase size to recover losses.',
         sample: sizeEscalationDays
       });
     }
@@ -6306,9 +6301,9 @@ function buildMindView(trades) {
       sabotage.push({
         type: 'post_win_loss',
         severity: 'medium',
-        title: 'Devuelves ganancias tras big win',
-        detail: 'En el ' + Math.round(overtrade/overtradeTotal*100) + '% de los trades grandes, los siguientes 2 trades son pérdidas.',
-        fix: 'Después de un trade extraordinario, tómate 15 minutos. El mercado seguirá ahí.',
+        title: 'Returning profits after big win',
+        detail: 'En el ' + Math.round(overtrade/overtradeTotal*100) + '% of large trades, the next 2 trades are losses.',
+        fix: 'After an extraordinary trade, take 15 minutes. The market will still be there.',
         sample: overtradeTotal
       });
     }
@@ -6327,9 +6322,9 @@ function buildMindView(trades) {
         sabotage.push({
           type: 'late_session',
           severity: 'medium',
-          title: 'Operas tarde y pierdes más',
-          detail: 'Tu win rate después de las 15:00 es ' + lateWR + '% vs ' + allWR + '% general. El cansancio afecta tu juicio.',
-          fix: 'Considera cerrar tu sesión antes de las 15:00. Calidad sobre cantidad.',
+          title: 'You trade late and lose more',
+          detail: 'Your win rate after 15:00 is ' + lateWR + '% vs ' + allWR + '% general. El cansancio afecta tu juicio.',
+          fix: 'Consider closing your session before 15:00. Quality over quantity.',
           sample: lateDay.length
         });
       }
@@ -6345,8 +6340,8 @@ function buildMindView(trades) {
         sabotage.push({
           type: 'moved_sl',
           severity: 'high',
-          title: 'Mueves el stop loss y pierdes más',
-          detail: 'Tus pérdidas con SL movido tienen avg de $' + Math.round(Math.abs(avgMovedSLLoss)) + ' vs $' + Math.round(Math.abs(avgNL)) + ' en pérdidas normales.',
+          title: 'You move the stop loss and lose more',
+          detail: 'Tus losses con SL movido tienen avg de $' + Math.round(Math.abs(avgMovedSLLoss)) + ' vs $' + Math.round(Math.abs(avgNL)) + ' en losses normales.',
           fix: 'Trata el SL como inviolable. Cierra si el precio llega — sin excepciones.',
           sample: movedSL.length
         });
@@ -6370,7 +6365,7 @@ function buildMindView(trades) {
           + '<div style="font-size:28px;margin-bottom:10px">📊</div>'
           + '<div style="font-size:12px;color:var(--text);font-weight:600;margin-bottom:6px">Acumulando datos...</div>'
           + '<div style="font-size:10px;color:var(--text3);line-height:1.6;max-width:260px;margin:0 auto">'
-          + 'Registra <strong style="color:var(--text)">' + needed + ' trade' + (needed !== 1 ? 's' : '') + ' más</strong> para que el sistema pueda detectar tus patrones de comportamiento.'
+          + 'Registra <strong style="color:var(--text)">' + needed + ' trade' + (needed !== 1 ? 's' : '') + ' more</strong> for the system to detect your behavior patterns (Pattros).'
           + '</div>'
           + '<div style="margin-top:12px;background:var(--surface2);border-radius:20px;height:5px;width:160px;margin-left:auto;margin-right:auto;overflow:hidden">'
           + '<div style="height:100%;width:' + Math.round(trades.length/10*100) + '%;background:var(--amber);border-radius:20px"></div>'
@@ -6437,7 +6432,7 @@ function buildMindView(trades) {
     + '<div style="display:flex;align-items:baseline;gap:8px;margin-bottom:4px">'
     + '<div style="font-size:10px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px">Confidence Calibration</div>'
     + '</div>'
-    + '<div style="font-size:10px;color:var(--text3);margin-bottom:12px;line-height:1.5">¿Tu autopercepción es precisa? Cuando dices "Seguro", ¿realmente ganas más?</div>';
+    + '<div style="font-size:10px;color:var(--text3);margin-bottom:12px;line-height:1.5">Is your self-perception accurate? When you say "Seguro", do you actually win more?</div>';
 
   if (Object.keys(calibData).length) {
     html += '<div style="display:flex;flex-direction:column;gap:6px">';
@@ -6466,12 +6461,12 @@ function buildMindView(trades) {
     var worstE = emos2.sort(function(a,b){ return calibData[a].calibScore-calibData[b].calibScore; })[0];
     if (bestE || worstE) {
       html += '<div style="margin-top:10px;padding:10px;background:var(--surface3);border-radius:7px;font-size:10px;color:var(--text2);line-height:1.6">';
-      if (bestE && calibData[bestE].calibScore>10) html += '✓ <strong>'+bestE+'</strong> es tu emoción más precisa. ';
-      if (worstE && calibData[worstE].calibScore<-10) html += '⚠ <strong>'+worstE+'</strong> te engaña — tus resultados no coinciden con lo que sientes.';
+      if (bestE && calibData[bestE].calibScore>10) html += '✓ <strong>'+bestE+'</strong> is your most accurate emotion. ';
+      if (worstE && calibData[worstE].calibScore<-10) html += '⚠ <strong>'+worstE+'</strong> misleads you — your results don\'t match what you feel.';
       html += '</div>';
     }
   } else {
-    html += '<div style="font-size:11px;color:var(--text3);text-align:center;padding:20px">Registra al menos 2 trades con la misma emoción para ver tu calibración.</div>';
+    html += '<div style="font-size:11px;color:var(--text3);text-align:center;padding:20px">Log at least 2 trades with the same emotion to see your calibration.</div>';
   }
   html += '</div>';
 
@@ -6496,7 +6491,7 @@ function buildMindView(trades) {
       var ts = dt ? (String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0')+' '+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0')) : '';
       html += '<div style="display:flex;align-items:center;gap:12px;padding:8px 12px;background:var(--surface2);border-radius:7px;border-left:3px solid var(--red)">'
         + '<div style="font-size:10px;color:var(--text3);width:80px">'+ts+'</div>'
-        + '<div style="font-size:11px;color:var(--text2)">Pérdida <strong style="color:var(--red)">'+(r.prev.pnl>=0?'+':'')+'$'+Math.round(r.prev.pnl)+'</strong> → siguiente en <strong>'+r.gap+'min</strong></div>'
+        + '<div style="font-size:11px;color:var(--text2)">Loss <strong style="color:var(--red)">'+(r.prev.pnl>=0?'+':'')+'$'+Math.round(r.prev.pnl)+'</strong> → next in <strong>'+r.gap+'min</strong></div>'
         + '<div style="margin-left:auto;font-size:11px;font-weight:700;color:'+(r.cur.pnl>=0?'var(--green)':'var(--red)')+'">'+(r.cur.pnl>=0?'+':'')+'$'+Math.round(r.cur.pnl)+'</div>'
         + '</div>';
     });
@@ -6515,7 +6510,7 @@ function buildMindView(trades) {
   
   html += '</div>'; // end section 5
 
-  // ── 6: Análisis por horario ──
+  // ── 6: Time Analysis ──
 // ── ROW 2: Heatmap + Deep Hour Analysis ──
 
   // ── Session buckets (London, NY Open, NY Midday, NY Close) ──
@@ -6541,7 +6536,7 @@ function buildMindView(trades) {
   });
 
   html += '<div class="panel" style="padding:20px">'
-    + '<div style="font-size:10px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:16px">Análisis por horario</div>';
+    + '<div style="font-size:10px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:16px">Time Analysis</div>';
 
   // ── Session cards row ──
   html += '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:20px">';
@@ -6685,7 +6680,7 @@ function buildMindView(trades) {
         + '<div style="font-size:10px;color:var(--text);font-weight:600;margin-bottom:2px">'+s.label+'</div>'
         + '<div style="font-size:8px;color:var(--text3);margin-bottom:8px">'+s.desc+'</div>'
         + '<div style="height:3px;background:var(--border);border-radius:2px"><div style="height:100%;width:'+pct+'%;background:'+clr+';border-radius:2px"></div></div>'
-        + (s.best ? '<div style="font-size:8px;color:var(--text3);margin-top:5px">Mejor racha: '+s.best+' días</div>' : '')
+        + (s.best ? '<div style="font-size:8px;color:var(--text3);margin-top:5px">Best streak: '+s.best+' days</div>' : '')
         + (s.current >= s.goal ? '<div style="font-size:9px;color:var(--green);margin-top:5px;font-weight:600">🏆 Meta alcanzada!</div>' : '')
         + '</div>';
     }).join('');
@@ -6700,7 +6695,7 @@ function buildMindView(trades) {
   
 // Revenge + streak card
   html += '<div class="panel" style="padding:20px">'
-    + '<div style="font-size:10px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px">Streaks & Alertas</div>'    + '<div style="display:flex;flex-direction:column;gap:0">'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'    + '<span style="font-size:11px;color:var(--text2)">Racha wins actual</span>'    + '<span style="font-size:16px;font-weight:700;color:'+(currentWinStreak>=3?'var(--green)':currentWinStreak>=1?'var(--text)':'var(--text3)')+'">'+currentWinStreak+'</span></div>'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'    + '<span style="font-size:11px;color:var(--text2)">Racha pérdidas actual</span>'    + '<span style="font-size:16px;font-weight:700;color:'+(currentLossStreak>=2?'var(--red)':currentLossStreak>=1?'var(--amber)':'var(--text3)')+'">'+currentLossStreak+'</span></div>'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'    + '<span style="font-size:11px;color:var(--text2)">Hot streak máx <span style="font-size:9px;color:var(--text3)">(wins seguidos)</span></span>'    + '<span style="font-size:16px;font-weight:700;color:var(--green)">'+maxWinStreak+'</span></div>'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'    + '<span style="font-size:11px;color:var(--text2)">Racha pérdidas máx</span>'    + '<span style="font-size:16px;font-weight:700;color:'+(maxLossStreak>=4?'var(--red)':maxLossStreak>=2?'var(--amber)':'var(--text)')+'">'+maxLossStreak+'</span></div>'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'    + '<span style="font-size:11px;color:var(--text2)">Revenge trades</span>'    + '<span style="font-size:16px;font-weight:700;color:'+(revengeTrades.length>0?'var(--red)':'var(--green)')+'">'+revengeTrades.length+'</span></div>'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0">'    + '<span style="font-size:11px;color:var(--text2)">% Clean trades</span>'    + '<span style="font-size:16px;font-weight:700;color:'+(cleanPct>=60?'var(--green)':cleanPct>=40?'var(--amber)':'var(--red)')+'">'+cleanPct+'%</span></div>'    + (currentWinStreak>=4 ? '<div style="background:var(--green-bg);border:1px solid var(--green-bd);border-left:3px solid var(--green);border-radius:7px;padding:9px 12px;margin-top:8px;font-size:10px;color:var(--text2);line-height:1.5">🔥 <strong>Hot streak de '+currentWinStreak+' wins.</strong> Cuidado con el exceso de confianza — es cuando más errores se cometen por sobre-dimensionar posiciones.</div>' : '')    + '</div></div>';
+    + '<div style="font-size:10px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px">Streaks & Alertas</div>'    + '<div style="display:flex;flex-direction:column;gap:0">'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'    + '<span style="font-size:11px;color:var(--text2)">Racha wins actual</span>'    + '<span style="font-size:16px;font-weight:700;color:'+(currentWinStreak>=3?'var(--green)':currentWinStreak>=1?'var(--text)':'var(--text3)')+'">'+currentWinStreak+'</span></div>'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'    + '<span style="font-size:11px;color:var(--text2)">Racha losses actual</span>'    + '<span style="font-size:16px;font-weight:700;color:'+(currentLossStreak>=2?'var(--red)':currentLossStreak>=1?'var(--amber)':'var(--text3)')+'">'+currentLossStreak+'</span></div>'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'    + '<span style="font-size:11px;color:var(--text2)">Max hot streak <span style="font-size:9px;color:var(--text3)">(wins seguidos)</span></span>'    + '<span style="font-size:16px;font-weight:700;color:var(--green)">'+maxWinStreak+'</span></div>'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'    + '<span style="font-size:11px;color:var(--text2)">Max loss streak</span>'    + '<span style="font-size:16px;font-weight:700;color:'+(maxLossStreak>=4?'var(--red)':maxLossStreak>=2?'var(--amber)':'var(--text)')+'">'+maxLossStreak+'</span></div>'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'    + '<span style="font-size:11px;color:var(--text2)">Revenge trades</span>'    + '<span style="font-size:16px;font-weight:700;color:'+(revengeTrades.length>0?'var(--red)':'var(--green)')+'">'+revengeTrades.length+'</span></div>'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0">'    + '<span style="font-size:11px;color:var(--text2)">% Clean trades</span>'    + '<span style="font-size:16px;font-weight:700;color:'+(cleanPct>=60?'var(--green)':cleanPct>=40?'var(--amber)':'var(--red)')+'">'+cleanPct+'%</span></div>'    + (currentWinStreak>=4 ? '<div style="background:var(--green-bg);border:1px solid var(--green-bd);border-left:3px solid var(--green);border-radius:7px;padding:9px 12px;margin-top:8px;font-size:10px;color:var(--text2);line-height:1.5">🔥 <strong>Hot streak de '+currentWinStreak+' wins.</strong> Beware of overconfidence — that\'s when most errors come from over-sizensionar posiciones.</div>' : '')    + '</div></div>';
 
   
   html += '</div>'; // end section 7
@@ -6718,9 +6713,9 @@ function buildMindView(trades) {
     html += '<div class="panel" style="padding:20px">'
       + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">'
       + '<div style="font-size:10px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px">Pattern Severity — Impacto Real</div>'
-      + '<div style="font-size:9px;color:var(--red)">Total pérdidas por errores: $'+Math.round(totalLoss)+'</div>'
+      + '<div style="font-size:9px;color:var(--red)">Total losses por errores: $'+Math.round(totalLoss)+'</div>'
       + '</div>'
-      + '<div style="font-size:10px;color:var(--text3);margin-bottom:14px;line-height:1.5">¿Qué errores te cuestan más dinero en términos absolutos?</div>'
+      + '<div style="font-size:10px;color:var(--text3);margin-bottom:14px;line-height:1.5">Which errors cost you the most money in absolute terms?</div>'
       + '<div style="display:flex;flex-direction:column;gap:8px">';
 
     patterns.forEach(function(p) {
@@ -6739,14 +6734,14 @@ function buildMindView(trades) {
         + '</div>'
         + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">'
         + '<span style="font-size:18px;font-weight:800;color:'+barCol+'">-'+fmtP2(p.lossAmt)+'</span>'
-        + '<span style="font-size:10px;color:var(--text3)">en pérdidas</span>'
-        + '<span style="font-size:11px;font-weight:700;color:'+barCol+';margin-left:auto">'+p.impactPct+'% de tus pérdidas</span>'
+        + '<span style="font-size:10px;color:var(--text3)">en losses</span>'
+        + '<span style="font-size:11px;font-weight:700;color:'+barCol+';margin-left:auto">'+p.impactPct+'% de tus losses</span>'
         + '</div>'
         + '<div style="background:var(--surface3);border-radius:3px;height:5px;margin-bottom:6px">'
         + '<div style="height:100%;width:'+barPct+'%;background:'+barCol+';border-radius:3px"></div></div>'
         + '<div style="display:flex;gap:12px">'
         + '<span style="font-size:9px;color:var(--text3)">'+p.winRate+'% WR en estos trades</span>'
-        + (p.avgLoss > 0 ? '<span style="font-size:9px;color:var(--text3)">avg pérdida: -$'+p.avgLoss+'</span>' : '')
+        + (p.avgLoss > 0 ? '<span style="font-size:9px;color:var(--text3)">avg ploss: -$'+p.avgLoss+'</span>' : '')
         + '</div></div>';
     });
 
@@ -6754,8 +6749,8 @@ function buildMindView(trades) {
   })();
 
   
-  // ── 9: Emoción × Hora — P&L Real ──
-// ── EMOTIONAL PNL HEATMAP (emoción × hora) ──────────────────────────────
+  // ── 9: Emotion × Hour — Real P&L ──
+// ── EMOTIONAL PNL HEATMAP (emotion × hour) ──────────────────────────────
   (function() {
     var tradesWithBoth = trades.filter(function(t){ return t.emotion && t.entry_time; });
     if (tradesWithBoth.length < 5) return;
@@ -6809,10 +6804,10 @@ function buildMindView(trades) {
 
     html += '<div class="panel" style="padding:20px">'
       + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">'
-      + '<div style="font-size:10px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px">Emoción × Hora — P&L Real</div>'
+      + '<div style="font-size:10px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px">Emotion × Hour — Real P&L</div>'
       + '<div style="font-size:9px;color:var(--text3)">'+tradesWithBoth.length+' trades</div>'
       + '</div>'
-      + '<div style="font-size:10px;color:var(--text3);margin-bottom:14px;line-height:1.5">¿En qué horario eres rentable según tu estado emocional?</div>'
+      + '<div style="font-size:10px;color:var(--text3);margin-bottom:14px;line-height:1.5">At what time are you profitable based on your emotional state?</div>'
       + '<div style="display:flex;flex-direction:column;gap:8px">';
 
     emoSummary.forEach(function(e) {
@@ -6992,71 +6987,71 @@ function showOnboardingGuide() {
       icon: '👋',
       title: 'Bienvenido a Pattro',
       subtitle: 'Tu Trading Psychology Engine',
-      content: 'Pattro no es un journal normal. Su objetivo es ayudarte a entender <strong>por qué tomas malas decisiones</strong> — no solo registrar cuánto ganaste o perdiste.<br><br>Mide tu psicología, detecta patrones de error, calcula tu estado mental diario y te da feedback real sobre tu disciplina como trader.<br><br>Esta guía toma unos minutos y cubre todo lo que necesitas saber.',
+      content: 'Pattro is not a normal journal. Its goal is to help you understand <strong>why you make bad decisionsiones</strong> — no solo registrar how much you won or lost.<br><br>Track your psychology, detect error patterns, calcula tu estado mental diario y te da feedback real sobre tu disciplina como trader.<br><br>Esta gu takes a few minutes and covers everything you need to know.',
       tip: null
     },
     {
       icon: '🏦',
-      title: 'Paso 1 — Crea tu cuenta de trading',
-      subtitle: 'Una cuenta = una cuenta de trading real',
-      content: 'Una <strong>cuenta</strong> en Pattro representa tu cuenta de trading real (ej: "Funded Account #1", "Paper Trading"). Puedes tener varias y cambiar entre ellas desde el menú lateral.<br><br>Haz clic en <strong>"+ Add account"</strong> en la barra lateral para empezar. Cada cuenta tiene sus propios trades, reglas, checklist y configuración.',
-      tip: '💡 Si tienes varias cuentas de fondeo activas, crea una por cada una — así los datos no se mezclan.'
+      title: 'Step 1 — Create your trading account',
+      subtitle: 'One account = one trading de trading real',
+      content: 'Una <strong>cuenta</strong> en Pattro representa tu cuenta de trading real (ej: "Funded Account #1", "Paper Trading"). You can have multiple and switch between them from the sidebar.<br><br>Click <strong>"+ Add account"</strong> in the sidebar to get started. Eacha cuenta tiene sus propios trades, reglas, checklist y configuración.',
+      tip: '💡 If you have multiple active funded accounts, create one for each — this keeps the data separate.'
     },
     {
       icon: '🔌',
-      title: 'Paso 2A — Extensión de Chrome (recomendado)',
-      subtitle: 'Captura automática desde TopstepX',
-      content: 'Si operas en <strong>TopstepX</strong>, instala la extensión Pattro para Chrome. Una vez conectada:<br><br>• Los trades se detectan y guardan <strong>automáticamente</strong> al cerrarse<br>• Al detectar un trade aparece un popup para registrar tu emoción, disciplina y notas<br>• Si rompes una regla, la extensión te <strong>bloquea la pantalla 15 minutos</strong> para que te resetees<br>• Muestra el P&L de la sesión en pantalla en tiempo real',
-      tip: '💡 Descarga la extensión desde Settings → Extensión. Después instálala en Chrome como extensión descomprimida.'
+      title: 'Step 2A — Chrome Extension (recommended)',
+      subtitle: 'Automatic capture from TopstepX',
+      content: 'If you trade on <strong>TopstepX</strong>, install the Pattro Chrome extension. Once connected:<br><br>• Los trades se detectan y guardan <strong>automaticamente</strong> al closing<br>• When a trade is detected, a popup appears to log your emotion, discipline and notes<br>• If you break a rule, the extension <strong>blocks your screen for 15 mintos</strong> para que te resetees<br>• Muestra el P&L in the session on screen in real time',
+      tip: '💡 Download the extension from Settings → Extension. Then install it in Chrome as an unpacked extensionomprimida.'
     },
     {
       icon: '✍️',
-      title: 'Paso 2B — Registro manual',
-      subtitle: 'Si no usas TopstepX o prefieres hacerlo tú',
-      content: 'Usa el botón <strong>"+ Log Trade"</strong> en la barra superior después de cada operación. Puedes registrar:<br><br>• Ticker, lado (long/short), P&L<br>• R:R planeado vs conseguido<br>• Tu emoción durante el trade<br>• Tag de disciplina (clean, impulse, FOMO, etc.)<br>• Setup tags personalizados, notas y screenshot',
-      tip: '💡 También puedes combinar ambas opciones — la extensión captura lo objetivo y tú añades el contexto.'
+      title: 'Step 2B — Registro manual',
+      subtitle: 'If you don\'t use TopstepX or prefer to do it yourself',
+      content: 'Usa el botón <strong>"+ Log Trade"</strong> en la barra superior despuafter each trade. You can log:<br><br>• Ticker, lado (long/short), P&L<br>• R:R planned vs achieved<br>• Your emotion during the trade<br>• Discipline tag (clean, impulse, FOMO, etc.)<br>• Custom setup tagsos, notas y screenshot',
+      tip: '💡 You can also combine both options — the extension captures the objective data and you add the context.'
     },
     {
       icon: '📋',
       title: 'Paso 3 — Tu checklist y tus reglas',
-      subtitle: 'Sin esto, el análisis no es completo',
-      content: 'En <strong>Discipline → Checklist</strong> creas tu lista de verificación pre-trade. Ejemplos: "SL definido antes de entrar", "R:R mínimo 1.5", "No operar en la primera media hora".<br><br>En <strong>Rules</strong> defines tus límites: horario permitido, máximo de trades por día, pérdidas consecutivas permitidas, etc.<br><br>Pattro usa estas reglas para calcular tu disciplina diaria y avisarte cuando las rompes.',
-      tip: '💡 El sistema detecta automáticamente si operas fuera de tus horarios, si superas el límite de pérdidas o si saltaste el checklist.'
+      subtitle: 'Without this, the analysis is incomplete',
+      content: 'En <strong>Discipline → Checklist</strong> you create your pre-trade checklist. Examples: "SL defined before entry", "R:R minimum 1.5", "No trading in the first 30 minutes".<br><br>En <strong>Rules</strong> define your limits: allowed trading hours, max trades per day, max consecutive losses, etc.<br><br>Pattro uses these rules to calculate your daily discipline and warn you whando las rompes.',
+      tip: '💡 The system automatically detects if you trade outside your hours, if you exceed your loss limit o si saltaste el checklist.'
     },
     {
       icon: '🧠',
       title: 'Paso 4 — Check mental diario',
       subtitle: 'Tu estado interno afecta tus resultados',
-      content: 'Cada mañana antes de operar, Pattro te hace un check de 4 preguntas: calidad del sueño, nivel de estrés, concentración y presión económica.<br><br>Con el tiempo el sistema detecta si tus peores días de trading coinciden con poco sueño o alta presión. Esto aparece en la vista <strong>Mind</strong>.<br><br>Puedes responderlo desde el dashboard o desde la extensión.',
+      content: 'Every morning before trading, Pattro does a 4-question check: sleep quality, stress level, concentration and economic pressure.<br><br>Over time the system detects if your worst trading days coincide with poor sleep or high stress. This appears in the <strong>Mind</strong> view.<br><br>You can responderlo desde el dashboard o desde la extensión.',
       tip: '💡 Con 2 semanas de datos ya ves correlaciones claras entre tu estado mental y tu P&L.'
     },
     {
       icon: '📊',
       title: 'Las vistas del dashboard',
-      subtitle: 'Cada una tiene un propósito concreto',
-      content: '<strong>Overview</strong> — resumen del día: P&L, Mental Score, alertas activas y logros<br><strong>Trade Log</strong> — todos tus trades con filtros, edición y búsqueda<br><strong>Calendar</strong> — vista mensual, un día = un color según resultado<br><strong>Discipline</strong> — checklist diario, operativa y Coach IA semanal<br><strong>Mind</strong> — psicología profunda: mood, patrones emocionales, streaks<br><strong>Rules</strong> — configura tus reglas personalizadas de trading<br><strong>Psico Score</strong> — tu Mental Score semanal/mensual y perfil psicológico<br><strong>Settings</strong> — cuentas, tags, extensión y configuración',
+      subtitle: 'Each one has a concrete purpose',
+      content: '<strong>Overview</strong> — daily summary: P&L, Mental Score, active alerts and achievements<br><strong>Trade Log</strong> — todos tus trades con filters, editing and search<br><strong>Calendar</strong> — monthly view, one day = one color based on result<br><strong>Discipline</strong> — chaily checklist, operations and weekly AI Coach<br><strong>Mind</strong> — deep psychology: mood, emotional patterns, streaks<br><strong>Rules</strong> — configure your rules personalizadas de trading<br><strong>Psico Score</strong> — tu Mental Score semanal/mensual y perfil psicológico<br><strong>Settings</strong> — accounts, tags, extension and settings',
       tip: null
     },
     {
       icon: '🔢',
-      title: '¿Cómo se calculan las cosas?',
-      subtitle: 'Sin fórmulas complicadas, te lo explicamos claro',
-      content: '<strong>Mental Score (0–100)</strong> — combina tres cosas: qué tan disciplinado fuiste (40%), cómo estaba tu estado mental (35%) y qué tan bien ejecutaste tus trades (25%). Un día sin trades solo cuenta disciplina y mente.<br><br><strong>Disciplina Score</strong> — mide si completaste el checklist, si respetaste tus reglas, y si tus tags fueron "clean" en vez de impulso o FOMO.<br><br><strong>Mind Score</strong> — viene de tus respuestas al check mental diario. Sueño, estrés, concentración y presión económica.<br><br><strong>Execution Score</strong> — analiza tu R:R real vs planeado, win rate y consistencia entre trades.',
-      tip: '💡 Un Mental Score de 75+ significa que estás operando de forma profesional ese día, independientemente del P&L.'
+      title: 'How are things calculated?',
+      subtitle: 'No complex formulas, we explain it clearly',
+      content: '<strong>Mental Score (0–100)</strong> — combina tres cosas: quhow disciplined you were (40%), what your mental state (35%) y quhow well you executed your trades (25%). A day without trades onlyo cuenta disciplina y mente.<br><br><strong>Disciplina Score</strong> — mide si completaste el checklist, si respetaste tus reglas, y si tus tags fueron "clean" en vez de impulso o FOMO.<br><br><strong>Mind Score</strong> — comes from your daily mental check responses. Sleep, stress, focus and economic pressure.<br><br><strong>Execution Score</strong> — analyzes your real vs planned R:R, win rate y consistencia entre trades.',
+      tip: '💡 A Mental Score of 75+ means you\'re trading professionally that day, regardless of P&L.nte del P&L.'
     },
     {
       icon: '🏆',
       title: 'Rachas y logros',
       subtitle: 'Tu progreso a largo plazo',
-      content: 'En <strong>Psico Score</strong> verás dos tipos de reconocimientos:<br><br><strong>Rachas</strong> — días consecutivos haciendo algo bien: completar el checklist, respetar reglas, no caer en tilt. Se rompen si fallas un día.<br><br><strong>Hitos</strong> — logros permanentes que se desbloquean una sola vez: primer trade clean, 10 trades sin impulso, semana perfecta, etc.<br><br>No son decoración — reflejan tu consistencia real como trader.',
-      tip: '💡 Los hitos más difíciles (Semana Perfecta, Mes de Élite) requieren consistencia en checklist, reglas y estado mental simultáneamente.'
+      content: 'In <strong>Psico Score</strong> you\'ll see two types of recognition:<br><br><strong>Streaks</strong> — consecutive days doing something bien: completar el checklist, respetar reglas, no caer en tilt. Se rompen si fallas un día.<br><br><strong>Hitos</strong> — logros permanentes que se desbloquean una sola vez: primer trade clean, 10 impulse-free trades, perfect week, etc.<br><br>They\'re not decoration — they reflect your real consistency as a trader.',
+      tip: '💡 The hardest milestones (Perfect Week, Elite Month) require consistency in checklist, rules and thisado mental simultaneously.'
     },
     {
       icon: '🚀',
-      title: '¡Todo listo!',
-      subtitle: 'Con 15 trades ya ves tu perfil psicológico completo',
-      content: 'Cuantos más trades registres, más preciso es el análisis. Con <strong>15+ trades</strong> el Coach IA puede generar tu perfil psicológico completo: patrón dominante, saboteador principal, tus mejores horas y un plan de trabajo concreto.<br><br>Con <strong>30+ días</strong> verás tendencias claras sobre qué condiciones internas hacen que operes mejor o peor.',
-      tip: '💡 Puedes volver a esta guía cuando quieras desde Settings → "Ver guía de uso paso a paso".'
+      title: 'All set!',
+      subtitle: 'With 15 trades you\'ll see your full psychological profile',
+      content: 'The more trades you log, the more accurate the analysis. With <strong>15+ trades</strong> the AI Coach can generate your full psychological profile: dominant pattern, main saboteur, best trading hours and a concrete work plan.<br><br>With <strong>30+ días</strong> verclearer trends about which internal conditions make operes mejor o peor.',
+      tip: '💡 You can return to this guide anytime from Settings → "View step-by-step guide".'
     }
   ];
 
@@ -7090,7 +7085,7 @@ function showOnboardingGuide() {
       + '<div style="display:grid;grid-template-columns:' + (isFirst ? '1fr' : '1fr 2fr') + ';gap:8px">'
       + (isFirst ? '' : '<button id="ob-back" style="padding:11px;border:1px solid var(--border);border-radius:9px;background:none;color:var(--text3);font-size:11px;cursor:pointer;font-family:inherit">← Anterior</button>')
       + '<button id="ob-next" style="padding:11px;border:none;border-radius:9px;background:' + (isLast ? 'var(--green)' : '#5a9e9e') + ';color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">'
-      + (isLast ? '¡Empezar a usar Pattro! 🚀' : 'Siguiente →') + '</button>'
+      + (isLast ? 'Start using Pattro! 🚀' : 'Siguiente →') + '</button>'
       + '</div>'
       + (!isLast ? '<div style="text-align:center;margin-top:10px"><button id="ob-skip" style="background:none;border:none;color:var(--text3);font-size:9px;cursor:pointer;font-family:inherit">Saltar guía</button></div>' : '')
       + '</div>';
@@ -7158,10 +7153,10 @@ function showMoodCheck(accountId) {
   if (existing) existing.remove();
 
   var QUESTIONS = [
-    { id:'sleep',    text:'¿Cómo dormiste anoche?',                   opts:['Muy bien','Bien','Regular','Mal'] },
-    { id:'stress',   text:'¿Cómo es tu nivel de estrés ahora mismo?', opts:['Sin estrés','Poco estrés','Estresado','Muy estresado'] },
-    { id:'focus',    text:'¿Puedes concentrarte bien hoy?',           opts:['Totalmente','Bastante','Con dificultad','No puedo'] },
-    { id:'pressure', text:'¿Sientes presión de hacer dinero hoy?',    opts:['Para nada','Un poco','Bastante','Mucho'] }
+    { id:'sleep',    text:'How did you sleep last night?',                   opts:['Muy bien','Bien','Regular','Mal'] },
+    { id:'stress',   text:'What is your stress level right now?', opts:['No stress','Low stress','Estresado','Muy estresado'] },
+    { id:'focus',    text:'Can you focus well today?',           opts:['Totalmente','Bastante','Con dificultad','No puedo'] },
+    { id:'pressure', text:'Do you feel pressure to make money today?',    opts:['Para nada','Un poco','Bastante','Mucho'] }
   ];
   var COLORS = ['#5a9e72','#5a9e9e','#9e8050','#9e5a5a'];
 
@@ -7177,7 +7172,7 @@ function showMoodCheck(accountId) {
 
   // Header
   var hdr = document.createElement('div');
-  hdr.innerHTML = '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><span style="font-size:20px">🌅</span><div style="font-size:15px;font-weight:700;color:var(--text)">Check pre-sesión</div></div><div style="font-size:11px;color:var(--text3);margin-bottom:20px">Responde honestamente antes de operar.</div>';
+  hdr.innerHTML = '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><span style="font-size:20px">🌅</span><div style="font-size:15px;font-weight:700;color:var(--text)">Pre-session check</div></div><div style="font-size:11px;color:var(--text3);margin-bottom:20px">Responde honestamente antes de operar.</div>';
   card.appendChild(hdr);
 
   // Warning
@@ -7187,7 +7182,7 @@ function showMoodCheck(accountId) {
 
   // Submit button — created once
   var submitBtn = document.createElement('button');
-  submitBtn.textContent = 'Ver mi día de trading →';
+  submitBtn.textContent = 'View my trading day →';
   submitBtn.setAttribute('type','button');
   submitBtn.style.cssText = 'width:100%;padding:11px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;color:var(--text3);font-size:12px;font-weight:700;cursor:default;font-family:inherit;margin-top:2px;opacity:0.5';
 
@@ -7262,7 +7257,7 @@ function showMoodCheck(accountId) {
     var allDone = QUESTIONS.every(function(q){ return state[q.id] !== null; });
     if (!allDone) {
       warn.style.color = 'var(--red)';
-      warn.textContent = 'Completa todas las preguntas primero';
+      warn.textContent = 'Complete all questions first';
       return;
     }
 
@@ -7271,10 +7266,10 @@ function showMoodCheck(accountId) {
     var pct = score / (QUESTIONS.length * 3);
 
     var result = pct <= 0.33
-      ? { level:'green',  emoji:'🟢', title:'Green Day',  color:'var(--green)', bg:'var(--green-bg)', bd:'var(--green-bd)', msg:'Estás en buenas condiciones. Opera con tu plan normal y confía en tu proceso.' }
+      ? { level:'green',  emoji:'🟢', title:'Green Day',  color:'var(--green)', bg:'var(--green-bg)', bd:'var(--green-bd)', msg:'You\'re in good condition. Trade your normal plan and trust your process.' }
       : pct <= 0.66
-        ? { level:'yellow', emoji:'🟡', title:'Yellow Day', color:'var(--amber)', bg:'var(--amber-bg)', bd:'var(--amber-bd)', msg:'Hay factores que pueden afectar tu juicio. Reduce el tamaño de posición a la mitad y sé más selectivo.' }
-        : { level:'red',    emoji:'🔴', title:'Red Day',    color:'var(--red)',   bg:'var(--red-bg)',   bd:'var(--red-bd)',   msg:'Las condiciones no son óptimas para operar. Considera no tomar trades hoy o usar tamaño mínimo.' };
+        ? { level:'yellow', emoji:'🟡', title:'Yellow Day', color:'var(--amber)', bg:'var(--amber-bg)', bd:'var(--amber-bd)', msg:'Factors may affect your judgment. Reduce position size by half and be more selective.' }
+        : { level:'red',    emoji:'🔴', title:'Red Day',    color:'var(--red)',   bg:'var(--red-bg)',   bd:'var(--red-bd)',   msg:'Conditions are not optimal for trading. Consider not taking trades today or using minimum size.' };
 
     var today = new Date().toISOString().slice(0,10);
     var moodData = { date:today, answers:state, score:score, level:result.level };
@@ -7379,7 +7374,7 @@ function autoDetectSignals(trades, acc) {
     dayT.forEach(function(t, i) {
       var s = [];
 
-      // Only auto-detect if user hasn't already tagged it
+      // Only auto-detect if user hasn\'t already tagged it
       var userTagged = t.discipline_tag && t.discipline_tag !== 'clean';
 
       // Revenge: entry < 5min after previous trade exit and that trade was a loss
@@ -7432,10 +7427,10 @@ function calcPatternSeverity(trades, acc) {
     impulse:        { label:'Trade Impulsivo',    icon:'🎯', trades:[], color:'#9e5a5a' },
     fomo:           { label:'FOMO',               icon:'😰', trades:[], color:'#9e8050' },
     overtrading:    { label:'Overtrading',        icon:'🔄', trades:[], color:'#9e8050' },
-    moved_sl:       { label:'Movió Stop Loss',    icon:'🚧', trades:[], color:'#9e8050' },
+    moved_sl:       { label:'Moved Stop Loss',    icon:'🚧', trades:[], color:'#9e8050' },
     early_exit:     { label:'Salida Prematura',   icon:'🚪', trades:[], color:'#9e8050' },
-    size_escalation:{ label:'Escaló Tamaño',      icon:'📈', trades:[], color:'#9e5a5a' },
-    no_confirmation:{ label:'Sin Confirmación',   icon:'❓', trades:[], color:'#9e8050' },
+    size_escalation:{ label:'Scaled size',      icon:'📈', trades:[], color:'#9e5a5a' },
+    no_confirmation:{ label:'No Confirmation',   icon:'❓', trades:[], color:'#9e8050' },
   };
 
   trades.forEach(function(t) {
@@ -7504,7 +7499,7 @@ function detectTilt(trades) {
     var t2 = new Date(recent[i+1].exit_time || recent[i+1].entry_time);
     var gap = Math.abs(t1 - t2) / msMin;
     if (gap < 3 && gap > 0) {
-      signals.push({ type: 'speed', detail: 'Entraste en menos de ' + Math.round(gap*60) + 's después del trade anterior' });
+      signals.push({ type: 'speed', detail: 'Entraste en menos de ' + Math.round(gap*60) + 's after the previous trade' });
       score += 25;
       break;
     }
@@ -7519,7 +7514,7 @@ function detectTilt(trades) {
     return d > now30;
   });
   if (last30.length >= 3) {
-    signals.push({ type: 'frequency', detail: last30.length + ' trades en los últimos 30 minutos' });
+    signals.push({ type: 'frequency', detail: last30.length + ' trades in the last 30 minutes' });
     score += 30;
   }
 
@@ -7528,7 +7523,7 @@ function detectTilt(trades) {
     var lastTrade = recent[0];
     var prevTrade = recent[1];
     if ((prevTrade.pnl || 0) < 0 && (lastTrade.quantity || 0) > (prevTrade.quantity || 0)) {
-      signals.push({ type: 'size', detail: 'Aumentaste el tamaño de posición después de una pérdida' });
+      signals.push({ type: 'size', detail: 'You increased position size after a loss' });
       score += 35;
     }
   }
@@ -7540,7 +7535,7 @@ function detectTilt(trades) {
     else break;
   }
   if (streak >= 3) {
-    signals.push({ type: 'streak', detail: streak + ' pérdidas consecutivas' });
+    signals.push({ type: 'streak', detail: streak + ' consecutive losses' });
     score += 20 + (streak * 5);
   }
 
@@ -7553,7 +7548,7 @@ function detectTilt(trades) {
 }
 
 function showTiltAlert(tilt) {
-  // Don't spam — max 1 alert per 15 minutes
+  // Don\'t spam — max 1 alert per 15 minutes
   if (Date.now() - lastTiltAlert < 15 * 60000) return;
   lastTiltAlert = Date.now();
 
@@ -7564,10 +7559,10 @@ function showTiltAlert(tilt) {
   var bg       = isDanger ? 'var(--red-bg)'   : 'var(--amber-bg)';
   var border   = isDanger ? 'var(--red-bd)'   : 'var(--amber-bd)';
   var accent   = isDanger ? 'var(--red)'      : 'var(--amber)';
-  var title    = isDanger ? '🔴 TILT DETECTADO' : '⚠ Señales de tilt';
+  var title    = isDanger ? '🔴 TILT DETECTADO' : '⚠ Tilt signals';
   var msg      = isDanger
-    ? 'Estás en tilt. Para ahora, cierra los gráficos y toma un break de mínimo 15 minutos.'
-    : 'Hay señales de que podrías estar perdiendo objetividad. Revisa antes del próximo trade.';
+    ? 'You\'re in tilt. Stop now, close the charts and take a break of at least 15 minutes.'
+    : 'There are signs you may be losing objectivity. Review before your next trade.';
 
   var notif = document.createElement('div');
   notif.id  = 'tilt-notif';
@@ -7632,7 +7627,7 @@ function showBreakTimer(minutes) {
     '<div style="text-align:center;padding:40px">',
       '<div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:16px">Break obligatorio</div>',
       '<div id="break-timer" style="font-size:72px;font-weight:700;color:var(--text);letter-spacing:-2px;font-family:Geist Mono,monospace">' + String(minutes).padStart(2,'0') + ':00</div>',
-      '<div style="font-size:13px;color:var(--text3);margin-top:12px;max-width:280px;line-height:1.6">Aléjate de los gráficos. Respira. Vuelve con la mente clara.</div>',
+      '<div style="font-size:13px;color:var(--text3);margin-top:12px;max-width:280px;line-height:1.6">Step away from the charts. Breathe. Come back with a clear mind.</div>',
       '<button id="break-skip" style="margin-top:24px;padding:10px 24px;background:transparent;border:1px solid var(--border2);border-radius:8px;color:var(--text3);font-size:11px;cursor:pointer;font-family:inherit">Terminar antes</button>',
     '</div>'
   ].join('');
@@ -7685,8 +7680,8 @@ function startTiltMonitor() {
 // ── Targeted error alert ──
 async function generateErrorAlert(errors, tagCount, trades, accountId) {
   var errorLabels = {
-    moved_sl:'mover el stop loss', scaled_loss:'escalar en pérdidas',
-    impulse:'trades impulsivos', no_confirmation:'entrar sin confirmación',
+    moved_sl:'mover el stop loss', scaled_loss:'scaling into losses',
+    impulse:'trades impulsivos', no_confirmation:'entering without confirmation',
     overtrading:'overtrading', fomo:'FOMO'
   };
 
@@ -7751,9 +7746,9 @@ async function generateAutoFullAnalysis(trades, accountId, day) {
   var periodSummary = [
     summarizePeriod(t2days,    'ULTIMOS 2 DIAS'),
     summarizePeriod(t7days,    'ESTA SEMANA'),
-    summarizePeriod(tPrevWeek, 'SEMANA ANTERIOR'),
-    summarizePeriod(t30days,   'ESTE MES'),
-    summarizePeriod(tPrevMonth,'MES ANTERIOR')
+    summarizePeriod(tPrevWeek, 'PREV WEEK'),
+    summarizePeriod(t30days,   'THIS MONTH'),
+    summarizePeriod(tPrevMonth,'PREV MONTH')
   ].join('\n');
 
   // Emotion trend
@@ -7832,7 +7827,7 @@ function showCoachNotification(message, type, errors) {
   if (existing) existing.remove();
 
   var isError  = type === 'error_alert';
-  var title    = isError ? '⚠️ Coach detectó un patrón repetido' : '📊 Análisis del Coach — ' + (errors[0]||'Reporte semanal');
+  var title    = isError ? '⚠️ Coach detected a repeated pattern (Pattro)' : '📊 Coach Analysis — ' + (errors[0]||'Reporte semanal');
   var accentColor = isError ? '#e05c5c' : '#6c8bff';
 
   var notif = document.createElement('div');
@@ -7859,7 +7854,7 @@ function showCoachNotification(message, type, errors) {
     '</div>',
     '<div style="font-size:12px;color:var(--text2,#aaa);line-height:1.7;margin-bottom:14px;white-space:pre-wrap">'+preview+'</div>',
     '<div style="display:flex;gap:8px">',
-      '<button id="coach-notif-full" style="flex:1;padding:8px;background:'+accentColor+';border:none;border-radius:7px;color:#fff;font-size:11px;font-weight:600;cursor:pointer">Ver análisis completo</button>',
+      '<button id="coach-notif-full" style="flex:1;padding:8px;background:'+accentColor+';border:none;border-radius:7px;color:#fff;font-size:11px;font-weight:600;cursor:pointer">View full analysis</button>',
       '<button id="coach-notif-dismiss" style="padding:8px 12px;background:#1a1a1e;border:1px solid #2e2e36;border-radius:7px;color:#666;font-size:11px;cursor:pointer">Cerrar</button>',
     '</div>'
   ].join('');
@@ -7938,7 +7933,7 @@ async function generateMindCoach() {
   var allNotes = trades.filter(function(t){return t.notes;}).slice(-15)
     .map(function(t){return '['+(t.ticker||'?')+' '+(t.pnl>=0?'WIN':'LOSS')+']: '+(t.notes||'').slice(0,120);}).join('\n');
 
-  var prompt = 'Eres un coach de trading especializado en psicología del trading. Analiza en español con empatía y precisión.\n\n'
+  var prompt = 'You are a trading coach specialized in trading psychology. Analyze with empathy and precision.\n\n'
     + 'PERFIL DEL TRADER:\n'
     + '- Total trades: '+trades.length+'\n'
     + '- P&L total: '+(totalPnl>=0?'+':'')+totalPnl.toFixed(0)+'\n'
@@ -7948,12 +7943,12 @@ async function generateMindCoach() {
     + 'DISCIPLINA (distribución):\n'+JSON.stringify(discSummary,null,2)+'\n\n'
     + 'EMOCIONES → RESULTADOS:\n'+(emoSummary||'Sin datos de emociones')+'\n\n'
     + 'MEJORES HORAS: '+hourSummary+'\n\n'
-    + 'ÚLTIMAS NOTAS:\n'+(allNotes||'Sin notas')+'\n\n'
+    + 'LAST NOTES:\n'+(allNotes||'Sin notas')+'\n\n'
     + 'Por favor genera un analisis psicologico profundo con:\n1. DIAGNOSTICO: patron mental dominante\n2. PATRON DESTRUCTIVO: error principal\n3. FORTALEZA: lo que hace bien\n4. EMOCIONES: como afectan resultados\n5. TIEMPO: mejores y peores momentos\n6. PLAN: 3 acciones concretas esta semana\n7. MENSAJE PERSONAL: frase poderosa. Se directo con datos reales. Max 450 palabras.';
 
   try {
     var text = await callCoach(prompt, 1000);
-    mindCoachAnalysis = text || 'No se pudo generar el análisis.';
+    mindCoachAnalysis = text || 'Could not generate the analysis.';
   } catch(e) {
     mindCoachAnalysis = 'Error al conectar. Abre Pattro desde pattro.com.';
   }
@@ -7972,7 +7967,7 @@ function renderReports() {
 function buildReports(allTrades) {
   var el = getTabEl('insights-tab-content');
   if (!allTrades.length) {
-    el.innerHTML = '<div class="empty-state"><div class="empty-icon">🧠</div><div class="empty-title">Sin trades aún</div><div class="empty-sub">Opera y registra trades para ver tu Psico Score</div></div>';
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">🧠</div><div class="empty-title">No trades yet</div><div class="empty-sub">Opera y registra trades para ver tu Psico Score</div></div>';
     return;
   }
   el.innerHTML = renderMentalScorePanel(allTrades) + renderPsychProfilePanel(allTrades) + renderAchievementsHtml();
@@ -8020,15 +8015,15 @@ function renderMentalScorePanel(allTrades, period) {
       +'<div style="font-size:9px;color:var(--text3);margin-bottom:6px">'+data.label+'</div>'
       +spark
       +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px">'
-      +'<div style="text-align:center"><div style="font-size:16px;font-weight:700;color:var(--green)">'+data.best+'</div><div style="font-size:8px;color:var(--text3)">Mejor día</div></div>'
-      +'<div style="text-align:center"><div style="font-size:16px;font-weight:700;color:var(--red)">'+data.worst+'</div><div style="font-size:8px;color:var(--text3)">Peor día</div></div>'
-      +'<div style="text-align:center"><div style="font-size:16px;font-weight:700;color:var(--text)">'+data.days+'</div><div style="font-size:8px;color:var(--text3)">Días activos</div></div>'
+      +'<div style="text-align:center"><div style="font-size:16px;font-weight:700;color:var(--green)">'+data.best+'</div><div style="font-size:8px;color:var(--text3)">Best day</div></div>'
+      +'<div style="text-align:center"><div style="font-size:16px;font-weight:700;color:var(--red)">'+data.worst+'</div><div style="font-size:8px;color:var(--text3)">Worst day</div></div>'
+      +'<div style="text-align:center"><div style="font-size:16px;font-weight:700;color:var(--text)">'+data.days+'</div><div style="font-size:8px;color:var(--text3)">Active days</div></div>'
       +'</div>'
       +'</div>';
   }
 
   return '<div class="panel" style="margin-bottom:12px">'
-    +'<div class="panel-head"><span class="panel-title">◈ Mental Score</span><span class="panel-cap" style="font-size:9px;color:var(--text3)">Promedio de tus días activos</span></div>'
+    +'<div class="panel-head"><span class="panel-title">◈ Mental Score</span><span class="panel-cap" style="font-size:9px;color:var(--text3)">Average of your active days</span></div>'
     +'<div style="padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px">'
     +scoreCard('Esta semana', weekly, weekTrades)
     +scoreCard('Este mes', monthly, monthTrades)
@@ -8043,7 +8038,7 @@ function renderPsychProfilePanel(trades) {
   var emoLabels = { neutral:'Neutral 😶', calm:'Tranquilo 😌', confident:'Seguro 💪', anxious:'Ansioso 😰', fear:'Con miedo 😨', greedy:'Codicioso 🤑', bored:'Aburrido 😐', frustrated:'Frustrado 😤' };
 
   if (!profile) {
-    return '<div class="panel" style="margin-bottom:12px"><div class="panel-head"><span class="panel-title">🔬 Perfil Psicológico</span></div>'
+    return '<div class="panel" style="margin-bottom:12px"><div class="panel-head"><span class="panel-title">🔬 Psychological Profile</span></div>'
       +'<div style="padding:16px;text-align:center;color:var(--text3);font-size:11px">Necesitas al menos 5 trades para generar tu perfil.</div></div>';
   }
 
@@ -8071,34 +8066,34 @@ function renderPsychProfilePanel(trades) {
 
   // Psycho insights
   var insights = [];
-  if (profile.revengeCount > 0)     insights.push({ icon:'⚡', color:'var(--red)',   text: profile.revengeCount+' revenge trades detectados — patrón de recuperación emocional' });
-  if (profile.emoConsistency < 50)  insights.push({ icon:'📋', color:'var(--amber)', text: 'Solo el '+profile.emoConsistency+'% de tus trades tienen emoción registrada — mejora el journaling' });
+  if (profile.revengeCount > 0)     insights.push({ icon:'⚡', color:'var(--red)',   text: profile.revengeCount+' revenge trades detected — emotional recovery pattern (Pattro)' });
+  if (profile.emoConsistency < 50)  insights.push({ icon:'📋', color:'var(--amber)', text: 'Solo el '+profile.emoConsistency+'% of your trades have emotion logged — improve your journaling' });
   if (profile.emoConsistency >= 80) insights.push({ icon:'✅', color:'var(--green)',  text: profile.emoConsistency+'% de consistencia en journaling — excelente disciplina de registro' });
-  if (profile.rr !== '—' && parseFloat(profile.rr) < 1) insights.push({ icon:'📉', color:'var(--amber)', text: 'R:R promedio '+profile.rr+' — estás ganando menos de lo que arriesgas en cada trade' });
+  if (profile.rr !== '—' && parseFloat(profile.rr) < 1) insights.push({ icon:'📉', color:'var(--amber)', text: 'R:R promedio '+profile.rr+' — you\'re winning less than you risk per trade' });
   if (profile.bestHour !== null && profile.worstHour !== null && profile.bestHour !== profile.worstHour) {
     insights.push({ icon:'🕐', color:'var(--green)', text: 'Tu mejor hora es las '+profile.bestHour+'h (+$'+profile.bestHourPnl+'). Tu peor hora: '+profile.worstHour+'h ($'+profile.worstHourPnl+')' });
   }
 
   var insightHtml = insights.length
     ? insights.map(function(i){ return '<div style="display:flex;gap:8px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-size:13px;flex-shrink:0">'+i.icon+'</span><span style="font-size:10px;color:var(--text2);line-height:1.5">'+i.text+'</span></div>'; }).join('')
-    : '<div style="font-size:10px;color:var(--text3)">Acumula más trades para generar insights personalizados.</div>';
+    : '<div style="font-size:10px;color:var(--text3)">Accumulate more trades to generate personalized insights.</div>';
 
   // Psych coach button
   var psychCoachBtn = trades.length >= 15
-    ? '<button class="btn btn-solid" style="margin-top:12px;background:#5a9e9e;border-color:#5a9e9e;font-size:10px" onclick="generatePsychProfile()">🤖 Generar perfil psicológico con IA</button>'
-    : '<div style="font-size:9px;color:var(--text3);margin-top:10px;padding:8px;background:var(--surface2);border-radius:6px">Necesitas '+Math.max(0,15-trades.length)+' trades más para el análisis de IA</div>';
+    ? '<button class="btn btn-solid" style="margin-top:12px;background:#5a9e9e;border-color:#5a9e9e;font-size:10px" onclick="generatePsychProfile()">🤖 Generate psychological profile with AI</button>'
+    : '<div style="font-size:9px;color:var(--text3);margin-top:10px;padding:8px;background:var(--surface2);border-radius:6px">Necesitas '+Math.max(0,15-trades.length)+' more trades for AI analysis</div>';
 
   var psychAnalysisHtml = '';
   if (window._psychProfileAnalysis) {
     psychAnalysisHtml = '<div style="margin-top:12px;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px">'
-      +'<div style="font-size:9px;color:#5a9e9e;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">🤖 Análisis Coach IA</div>'
+      +'<div style="font-size:9px;color:#5a9e9e;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">🤖 AI Coach Analysis</div>'
       +'<div style="font-size:11px;color:var(--text2);line-height:1.7;white-space:pre-wrap">'+window._psychProfileAnalysis+'</div>'
       +'<button class="btn btn-ghost" style="margin-top:8px;font-size:9px" onclick="window._psychProfileAnalysis=null;buildReports(currentTrades||[])">Limpiar</button>'
       +'</div>';
   }
 
   return '<div class="panel" style="margin-bottom:12px">'
-    +'<div class="panel-head"><span class="panel-title">🔬 Perfil Psicológico</span><span class="panel-cap">'+trades.length+' trades analizados</span></div>'
+    +'<div class="panel-head"><span class="panel-title">🔬 Psychological Profile</span><span class="panel-cap">'+trades.length+' trades analizados</span></div>'
     +'<div style="padding:16px">'
     // Row 1: key metrics
     +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">'
@@ -8124,35 +8119,35 @@ async function generatePsychProfile() {
 
   var trades = currentTrades || [];
   var profile = buildPsychProfile(trades);
-  if (!profile) { btn.disabled=false; btn.textContent='🤖 Generar perfil psicológico con IA'; return; }
+  if (!profile) { btn.disabled=false; btn.textContent='🤖 Generate psychological profile with AI'; return; }
 
-  var tagLabels = { moved_sl:'Moved SL', no_confirmation:'Sin confirmación', overtrading:'Overtrading', impulse:'Impulso', fomo:'FOMO', scaled_in:'Scaled into loss' };
+  var tagLabels = { moved_sl:'Moved SL', no_confirmation:'No confirmation', overtrading:'Overtrading', impulse:'Impulso', fomo:'FOMO', scaled_in:'Scaled into loss' };
   var tagSummary = Object.keys(profile.tagBreakdown).map(function(k){ return (tagLabels[k]||k)+': '+profile.tagBreakdown[k]+'x'; }).join(', ') || 'ninguno';
 
-  var prompt = 'Eres un psicólogo de trading. Analiza el perfil psicológico de este trader en español, con empatía y precisión.\n\n'
+  var prompt = 'You are a trading psychologist. Analyze the psychological profile of this trader with empathy and precisión.\n\n'
     +'DATOS OBJETIVOS ('+profile.tradeCount+' trades):\n'
     +'- Win rate: '+profile.wr+'%\n'
     +'- R:R promedio: '+profile.rr+'\n'
     +'- Trades clean: '+Math.round(trades.filter(function(t){return !t.discipline_tag||t.discipline_tag==="clean";}).length/trades.length*100)+'%\n'
     +'- Errores de disciplina: '+tagSummary+'\n'
     +'- Revenge trades: '+profile.revengeCount+'\n'
-    +'- Emoción más frecuente: '+(profile.topEmo||'no registrada')+'\n'
+    +'- Most frequent emotion: '+(profile.topEmo||'no registrada')+'\n'
     +'- Journaling consistency: '+profile.emoConsistency+'%\n'
-    +'- Mejor hora: '+(profile.bestHour!==null?profile.bestHour+'h (+$'+profile.bestHourPnl+')':'desconocida')+'\n'
-    +'- Peor hora: '+(profile.worstHour!==null?profile.worstHour+'h ($'+profile.worstHourPnl+')':'desconocida')+'\n\n'
-    +'Estructura del análisis:\n'
-    +'1) Patrón psicológico dominante (qué tipo de trader es a nivel emocional)\n'
-    +'2) Principal saboteador (el error más costoso en términos psicológicos)\n'
-    +'3) Fortaleza identificada\n'
-    +'4) Hora/momento óptimo de operación y por qué\n'
-    +'5) Plan de trabajo psicológico: 3 hábitos concretos para las próximas 2 semanas\n'
-    +'Max 400 palabras. Directo, honesto, sin suavizar los problemas.';
+    +'- Best hour: '+(profile.bestHour!==null?profile.bestHour+'h (+$'+profile.bestHourPnl+')':'unknown')+'\n'
+    +'- Worst hour: '+(profile.worstHour!==null?profile.worstHour+'h ($'+profile.worstHourPnl+')':'unknown')+'\n\n'
+    +'Analysis structure:\n'
+    +'1) Dominant psychological pattern (trader type emotionally)\n'
+    +'2) Main saboteur (most costly psychological error)\n'
+    +'3) Identified strength\n'
+    +'4) Optimal trading time and why\n'
+    +'5) Work plan: 3 concrete habits for the next 2 weeks\n'
+    +'Max 400 words. Direct, honest, don\'t sugarcoat the problems.';
 
   try {
     var text = await callCoach(prompt, 1200);
-    window._psychProfileAnalysis = text || 'No se pudo generar el análisis.';
+    window._psychProfileAnalysis = text || 'Could not generate the analysis.';
   } catch(e) {
-    window._psychProfileAnalysis = 'Error conectando con el Coach IA.';
+    window._psychProfileAnalysis = 'Error connecting to AI Coach.';
   }
   buildReports(currentTrades||[]);
 }
@@ -8190,7 +8185,7 @@ function renderAchievementsHtml() {
 
     html += '<div style="background:var(--surface2);border:1px solid '+(isMaxed?'var(--green)':'var(--border)')+';border-radius:9px;padding:12px">';
     if (s.extensionOnly) {
-      html += '<div style="font-size:8px;color:var(--amber);margin-bottom:4px">EXTENSIÓN</div>';
+      html += '<div style="font-size:8px;color:var(--amber);margin-bottom:4px">EXTENSION</div>';
     }
     html += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">'
       + '<span style="font-size:18px">'+s.emoji+'</span>'
@@ -8207,11 +8202,11 @@ function renderAchievementsHtml() {
     if (!isMaxed) {
       html += '<div style="height:3px;background:var(--border);border-radius:2px;overflow:hidden">'
         +'<div style="height:100%;width:'+Math.min(100,Math.round(s.current/nextLevel*100))+'%;background:var(--amber);border-radius:2px"></div></div>'
-        +'<div style="font-size:8px;color:var(--text3);margin-top:3px">'+s.current+' / '+nextLevel+' días para siguiente nivel</div>';
+        +'<div style="font-size:8px;color:var(--text3);margin-top:3px">'+s.current+' / '+nextLevel+' days to next level</div>';
     } else {
-      html += '<div style="font-size:8px;color:var(--green);font-weight:700">✓ Nivel máximo alcanzado</div>';
+      html += '<div style="font-size:8px;color:var(--green);font-weight:700">✓ Maximum level reached</div>';
     }
-    html += '<div style="font-size:10px;font-weight:800;color:'+color+';margin-top:6px">Racha actual: '+s.current+' días</div>';
+    html += '<div style="font-size:10px;font-weight:800;color:'+color+';margin-top:6px">Racha actual: '+s.current+' days</div>';
     html += '</div>';
   });
   html += '</div>';
@@ -8255,8 +8250,8 @@ function exportReportPDF() {
   var now    = new Date();
 
   // Period label
-  var periodMap = { week:'Esta semana', month:'Este mes', year:'Este año', all:'Historial completo', range:'Período personalizado' };
-  var period    = periodMap[repFilters.period] || 'Período';
+  var periodMap = { week:'Esta semana', month:'Este mes', year:'This year', all:'Historial completo', range:'Custom period' };
+  var period    = periodMap[repFilters.period] || 'Period';
 
   // Filter trades same as buildReports
   var weekStart = new Date(); weekStart.setDate(weekStart.getDate()-weekStart.getDay()+(weekStart.getDay()===0?-6:1)); weekStart.setHours(0,0,0,0);
@@ -8516,10 +8511,10 @@ async function loadPlanPanel() {
 
   var planLabel    = plan === 'lifetime' ? 'Lifetime (Free)' : plan === 'pro' ? 'Pattro Pro' : 'Free';
   var planColor    = isActive ? 'var(--green)' : 'var(--text3)';
-  var statusLabel  = plan === 'lifetime' ? 'Acceso vitalicio' : plan === 'pro' && expires ? 'Renueva el ' + expires.toLocaleDateString('es', {day:'numeric',month:'long',year:'numeric'}) : plan === 'free' ? 'Sin suscripción activa' : '';
+  var statusLabel  = plan === 'lifetime' ? 'Acceso vitalicio' : plan === 'pro' && expires ? 'Renueva el ' + expires.toLocaleDateString('es', {day:'numeric',month:'long',year:'numeric'}) : plan === 'free' ? 'No active subscription' : '';
   var daysHtml     = (plan === 'pro' && daysLeft !== null)
     ? '<div style="margin-top:10px;padding:8px 12px;background:' + (daysLeft <= 5 ? 'var(--red-bg)' : 'var(--surface2)') + ';border:1px solid ' + (daysLeft <= 5 ? 'var(--red-bd)' : 'var(--border)') + ';border-radius:7px;font-size:11px;color:' + (daysLeft <= 5 ? 'var(--red)' : 'var(--text2)') + '">'
-      + (daysLeft <= 5 ? '⚠ ' : '') + daysLeft + ' días restantes en tu plan actual</div>'
+      + (daysLeft <= 5 ? '⚠ ' : '') + daysLeft + ' days remaining on your current plan</div>'
     : '';
 
   var upgradeBtn = plan === 'free'
@@ -8527,7 +8522,7 @@ async function loadPlanPanel() {
     : '';
 
   var cancelHtml = (plan === 'pro' && profile.paddle_subscription_id)
-    ? '<div style="margin-top:14px;font-size:10px;color:var(--text3)">Para cancelar tu suscripción contacta a <span style="color:var(--teal)">support@pattro.com</span></div>'
+    ? '<div style="margin-top:14px;font-size:10px;color:var(--text3)">To cancel your subscription contact <span style="color:var(--teal)">support@pattro.com</span></div>'
     : '';
 
   el.innerHTML =
@@ -8559,44 +8554,44 @@ function renderSettings() {
     '<div style="padding:18px" id="plan-panel-content"><div style="font-size:11px;color:var(--text3)">Loading...</div></div></div>'+
     '<div class="panel" style="margin-bottom:12px"><div class="panel-head"><span class="panel-title">Connect Platforms</span></div>'+
     '<div style="padding:18px">'+
-    '<div class="stat-row" style="padding:10px 0">'  +'<span class="stat-key">TopstepX</span>'  +'<span style="font-size:9px;color:var(--green);background:var(--green-bg);border:1px solid var(--green-bd);padding:2px 8px;border-radius:4px;font-weight:600">✓ Activo — Chrome Extension</span>'  +'</div>'  +'<div style="margin-top:8px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;font-size:10px;color:var(--text3);line-height:1.7">'  +'Próximamente: TradingView · Tradeify · Apex Trader · FTMO · NinjaTrader<br>'  +'<span style="font-size:9px">Estamos trabajando para conectar más plataformas. Si usas otra, escríbenos.</span>'  +'</div>'+
+    '<div class="stat-row" style="padding:10px 0">'  +'<span class="stat-key">TopstepX</span>'  +'<span style="font-size:9px;color:var(--green);background:var(--green-bg);border:1px solid var(--green-bd);padding:2px 8px;border-radius:4px;font-weight:600">✓ Activo — Chrome Extension</span>'  +'</div>'  +'<div style="margin-top:8px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;font-size:10px;color:var(--text3);line-height:1.7">'  +'Coming soon: TradingView · Tradeify · Apex Trader · FTMO · NinjaTrader<br>'  +'<span style="font-size:9px">We\'re working on connecting more platforms. If you use another, let us know.</span>'  +'</div>'+
     '</div></div>'+
-    '<div class="panel" style="margin-bottom:12px"><div class="panel-head"><span class="panel-title">Setup Tags</span><span style="font-size:10px;color:var(--text3)">Personaliza tus tags de setup</span></div>'    + '<div style="padding:18px">'    + '<div id="settings-tags-list" style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px"></div>'    + '<div style="display:flex;gap:7px;align-items:center">'    + '<input id="new-tag-input" class="form-input" type="text" placeholder="Nuevo tag (ej: ICT BOS)" style="flex:1">'    + '<button onclick="addSetupTag()" style="padding:8px 14px;background:#5a9e9e;border:none;border-radius:7px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">+ Agregar</button>'    + '</div>'    + '</div></div>'    + '<div class="panel" style="margin-bottom:12px"><div class="panel-head"><span class="panel-title">🔌 Extensión — Comportamiento</span></div>'+
+    '<div class="panel" style="margin-bottom:12px"><div class="panel-head"><span class="panel-title">Setup Tags</span><span style="font-size:10px;color:var(--text3)">Personaliza tus tags de setup</span></div>'    + '<div style="padding:18px">'    + '<div id="settings-tags-list" style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px"></div>'    + '<div style="display:flex;gap:7px;align-items:center">'    + '<input id="new-tag-input" class="form-input" type="text" placeholder="Nuevo tag (ej: ICT BOS)" style="flex:1">'    + '<button onclick="addSetupTag()" style="padding:8px 14px;background:#5a9e9e;border:none;border-radius:7px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">+ Agregar</button>'    + '</div>'    + '</div></div>'    + '<div class="panel" style="margin-bottom:12px"><div class="panel-head"><span class="panel-title">🔌 Extension — Behavior</span></div>'+
     '<div style="padding:18px;display:flex;flex-direction:column;gap:16px">'+
     '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px">'+
     '<div><div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px">Bloqueo preventivo (15 min)</div>'+
-    '<div style="font-size:10px;color:var(--text3);line-height:1.5">Cuando cometas una violación grave la extensión bloquea TopstepX 15 minutos.</div></div>'+
+    '<div style="font-size:10px;color:var(--text3);line-height:1.5">When you commit a serious violation the extension blocks TopstepX for 15 minutes.</div></div>'+
     '<div id="lock-toggle" onclick="toggleExtSetting(\'preventiveLock\')" style="cursor:pointer;flex-shrink:0">'+
     '<div id="lock-toggle-track" style="width:38px;height:22px;border-radius:11px;position:relative;transition:background .2s">'+
     '<div id="lock-toggle-thumb" style="width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.4)"></div></div>'+
     '<div id="lock-toggle-lbl" style="font-size:8px;font-weight:700;text-align:center;margin-top:3px"></div></div></div>'+
     '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px">'+
     '<div><div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px">Alertas en tiempo real</div>'+
-    '<div style="font-size:10px;color:var(--text3);line-height:1.5">Notificaciones para violaciones menores, 80% DLL, 2 pérdidas seguidas.</div></div>'+
+    '<div style="font-size:10px;color:var(--text3);line-height:1.5">Notificaciones para violaciones menores, 80% DLL, 2 consecutive losses.</div></div>'+
     '<div id="alerts-toggle" onclick="toggleExtSetting(\'realtimeAlerts\')" style="cursor:pointer;flex-shrink:0">'+
     '<div id="alerts-toggle-track" style="width:38px;height:22px;border-radius:11px;position:relative;transition:background .2s">'+
     '<div id="alerts-toggle-thumb" style="width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.4)"></div></div>'+
     '<div id="alerts-toggle-lbl" style="font-size:8px;font-weight:700;text-align:center;margin-top:3px"></div></div></div>'+
     '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px">'+
-    '<div><div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px">Alerta fuera de sesión</div>'+
+    '<div><div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px">Out-of-session alert</div>'+
     '<div style="font-size:10px;color:var(--text3);line-height:1.5">Avisa cuando abras TopstepX fuera del horario configurado en Reglas.</div></div>'+
     '<div id="session-alert-toggle" onclick="toggleExtSetting(\'sessionAlert\')" style="cursor:pointer;flex-shrink:0">'+
     '<div id="session-alert-toggle-track" style="width:38px;height:22px;border-radius:11px;position:relative;transition:background .2s">'+
     '<div id="session-alert-toggle-thumb" style="width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.4)"></div></div>'+
     '<div id="session-alert-toggle-lbl" style="font-size:8px;font-weight:700;text-align:center;margin-top:3px"></div></div></div>'+
-    '<div style="font-size:9px;color:var(--text3);padding:8px;background:var(--surface2);border-radius:7px">⚙️ Cambios sincronizados automáticamente con la extensión.</div>'+
+    '<div style="font-size:9px;color:var(--text3);padding:8px;background:var(--surface2);border-radius:7px">⚙️ Changes automatically synced with the extension.</div>'+
     '</div></div>'+
     '<div class="panel" style="margin-bottom:12px"><div class="panel-head"><span class="panel-title">Legal</span></div>'+
     '<div style="padding:18px;display:flex;flex-direction:column;gap:8px">'+
-    '<button onclick="openLegalModal(\'tos\')" style="background:none;border:none;text-align:left;font-size:12px;color:#5a9e9e;cursor:pointer;font-family:inherit;padding:2px 0">📄 Términos de Servicio</button>'+
-    '<button onclick="openLegalModal(\'privacy\')" style="background:none;border:none;text-align:left;font-size:12px;color:#5a9e9e;cursor:pointer;font-family:inherit;padding:2px 0">🔒 Política de Privacidad</button>'+
+    '<button onclick="openLegalModal(\'tos\')" style="background:none;border:none;text-align:left;font-size:12px;color:#5a9e9e;cursor:pointer;font-family:inherit;padding:2px 0">📄 Terms of Service</button>'+
+    '<button onclick="openLegalModal(\'privacy\')" style="background:none;border:none;text-align:left;font-size:12px;color:#5a9e9e;cursor:pointer;font-family:inherit;padding:2px 0">🔒 Privacy Policy</button>'+
     '<button onclick="openLegalModal(\'risk\')" style="background:none;border:none;text-align:left;font-size:12px;color:#5a9e9e;cursor:pointer;font-family:inherit;padding:2px 0">⚠️ Aviso de Riesgo</button>'+
     '<div style="font-size:9px;color:var(--text3);margin-top:4px">Pattro v0.5 · 2026</div>'+
     '</div></div>'+
     '<div class="panel" style="margin-bottom:12px"><div class="panel-head"><span class="panel-title">Ayuda</span></div>'+
     '<div style="padding:18px;display:flex;flex-direction:column;gap:10px">'+
-    '<div style="font-size:11px;color:var(--text2)">¿Primera vez usando Pattro o necesitas repasar cómo funciona?</div>'+
-    '<button onclick="resetOnboardingGuide()" style="padding:10px 18px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left">📖 Ver guía de uso paso a paso</button>'+
+    '<div style="font-size:11px;color:var(--text2)">First time using Pattro or need to review how it works?</div>'+
+    '<button onclick="resetOnboardingGuide()" style="padding:10px 18px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left">📖 View step-by-step guide</button>'+
     '</div></div>'+
     '</div>';
   setTimeout(function(){ initSettingsTags(); initExtSettings(); loadPlanPanel(); }, 50);
@@ -8673,7 +8668,7 @@ function showLockBlockedModal(minutesLeft) {
     + '<div style="font-size:11px;color:var(--text2);line-height:1.7;margin-bottom:18px">'
     + 'Hay un bloqueo activo en TopstepX.<br>'
     + 'Quedan aproximadamente <strong style="color:var(--red)">' + minutesLeft + ' min</strong> de pausa obligatoria.<br><br>'
-    + 'No puedes desactivar el bloqueo mientras está en curso.<br>Espera a que termine.'
+    + 'You cannot disable the lock while it is active.<br>Wait for it to end.'
     + '</div>'
     + '<button onclick="document.getElementById(\'bb-lock-blocked-modal\').remove()" '
     + 'style="padding:10px 24px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">Entendido</button>'
@@ -8791,7 +8786,7 @@ function getScreenshotUrl(trade) {
 function imgError(img, url) {
   if (!url || img.dataset.retried) return;
   img.dataset.retried = '1';
-  // If it's a Supabase storage URL, try with auth token
+  // If it\'s a Supabase storage URL, try with auth token
   if (url.includes('supabase.co/storage')) {
     var sess = currentUser ? (window.__sbSession || null) : null;
     if (sess && sess.access_token) {
@@ -8866,7 +8861,7 @@ function _openNoteModalWithData(t) {
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px">'
     + _infoCell('Entry',   fmt(entryDt))
     + (exitDt ? _infoCell('Exit', fmt(exitDt)) : '')
-    + (dur !== '--' ? _infoCell('Duración', dur) : '')
+    + (dur !== '--' ? _infoCell('Duration', dur) : '')
     + _infoCell('Qty',     t.quantity||'--')
     + _infoCell('Entry $', t.entry_price ? '$'+t.entry_price : '--')
     + _infoCell('Exit $',  t.exit_price  ? '$'+t.exit_price  : '--')
@@ -9174,58 +9169,58 @@ function previewScreenshot(input) {
 // ════════════════════════════════════════════════════════
 var LEGAL_CONTENT = {
   tos: {
-    title: 'Términos de Servicio',
+    title: 'Terms of Service',
     icon: '📄',
     sections: [
       {
         heading: 'Sobre Pattro',
-        body: 'Pattro es una herramienta de journaling y análisis psicológico para traders. Su función es registrar operaciones, medir disciplina y analizar patrones de comportamiento. No es un servicio de asesoría financiera, ni de señales de trading, ni de gestión de inversiones.'
+        body: 'Pattro is a journaling and psychological analysis tool for traders.s registrar operaciones, medir disciplina y analizar patrones de comportamiento. No es un servicio de asesorfinancial advice, trading signals, or investment managementersiones.'
       },
       {
-        heading: 'Sin relación con plataformas de trading',
-        body: 'Pattro no tiene ninguna relación comercial, societaria ni de afiliación con TopstepX, Apex, Tradovate, NinjaTrader ni con ninguna otra plataforma o empresa de fondeo. La integración con TopstepX es técnica y unilateral — únicamente lee datos de pantalla para facilitar el registro de trades.'
+        heading: 'No relationship with trading platforms',
+        body: 'Pattro has no commercial, corporate or affiliate relationship with TopstepX, Apex, Tradovate, NinjaTrader or any other platform or funding company. The TopstepX integration is technical and unilateral — it only reads screen data to facilitate trade loggingo de trades.'
       },
       {
         heading: 'Uso adecuado',
-        body: 'El usuario se compromete a usar Pattro únicamente para el registro y análisis de sus propias operaciones. Queda prohibido el uso del servicio para actividades ilegales, la reventa del acceso, o cualquier uso que interfiera con el funcionamiento normal de la plataforma.'
+        body: 'The user agrees to use Pattro solely for logging and analyzing their own trading operations. Use of the service for illegal activities is prohibited, including reventa del acceso, o cualquier uso que interfiera con el funcionamiento normal de la plataforma.'
       },
       {
         heading: 'Disponibilidad del servicio',
-        body: 'Pattro se ofrece "tal como está". No garantizamos disponibilidad ininterrumpida ni ausencia de errores. Podemos modificar, suspender o discontinuar funciones en cualquier momento, avisando con la mayor anticipación posible.'
+        body: 'Pattro is provided "as is". We do not guarantee uninterrupted availability.ia de errores. Podemos modificar, suspender o discontinuar funcions at any time, with as much advance notice as possible.'
       },
       {
-        heading: 'Propiedad intelectual',
-        body: 'Todo el código, diseño, textos y metodología de Pattro son propiedad de Pattro. El usuario obtiene una licencia de uso personal e intransferible. No está permitido copiar, modificar ni redistribuir ninguna parte de la plataforma.'
+        heading: 'Intellectual Property',
+        body: 'All code, design, content and methodology of Pattro are property of Pattro. The user obtains a personal, non-transferable use license e intransferible. No estYou may not copy, modify or redistribute any part ofe la plataforma.'
       }
     ]
   },
   privacy: {
-    title: 'Política de Privacidad',
+    title: 'Privacy Policy',
     icon: '🔒',
     sections: [
       {
-        heading: 'Qué datos recopilamos',
-        body: 'Recopilamos únicamente los datos que tú introduces: trades (P&L, ticker, emoción, notas), respuestas del check mental diario, checklist completado, y configuración de cuenta. También guardamos tu email para autenticación.'
+        heading: 'What data we collect',
+        body: 'We only collect the data you enter: trades (P&L, ticker, emotion, notes), daily mental check responses, completed checklist, and account settings. We also store your email for authentication.'
       },
       {
-        heading: 'Cómo usamos tus datos',
-        body: 'Tus datos se usan exclusivamente para generar el análisis y las métricas que ves en tu dashboard. El Coach IA procesa tus datos de trading para darte feedback personalizado — este procesamiento ocurre en tiempo real y no se almacena por separado.'
+        heading: 'How we use your data',
+        body: 'Tus datos se usan exclusivamente para generar el ananalysis and metrics you see in your dashboard. The AI Coach procesa tus datos de trading para darte feedback personalizado — este procesamiento ocurre en tiempo real y no se almacena por separado.'
       },
       {
         heading: 'Tus datos son tuyos',
-        body: 'No vendemos, cedemos, alquilamos ni compartimos tus datos personales ni tus datos de trading con ningún tercero, bajo ningún concepto. Tus datos de trading son confidenciales y solo tú tienes acceso a ellos.'
+        body: 'No vendemos, cedemos, alquilamos ni compashare your personal data or trading data with any third party, under any circumstance. Your trading data is confidential and only you have access to ellos.'
       },
       {
-        heading: 'Almacenamiento y seguridad',
-        body: 'Los datos se almacenan en Supabase, una plataforma de base de datos segura con cifrado en tránsito (HTTPS/TLS) y en reposo. Usamos autenticación con token seguro para acceder a tu información.'
+        heading: 'Storage & Security',
+        body: 'Data is stored in Supabase, a secure database platform with encryption in transit (HTTPS/TLS) and at rest. We use secure token authentication to access your information.'
       },
       {
-        heading: 'Eliminación de datos',
-        body: 'Puedes solicitar la eliminación completa de tu cuenta y todos tus datos en cualquier momento contactándonos. Una vez eliminados, los datos no son recuperables.'
+        heading: 'Data deletion',
+        body: 'You can request complete deletion of your account and all your data at any time by contactus. Once deleted, data cannot be recovered.'
       },
       {
         heading: 'Cookies y almacenamiento local',
-        body: 'Usamos localStorage del navegador para guardar preferencias de sesión y configuración de la extensión. No usamos cookies de seguimiento ni píxeles de terceros.'
+        body: 'We use browser localStorage to save session preferences and extension configuration. We do not use tracking cookies or third-party pixels.'
       }
     ]
   },
@@ -9234,24 +9229,24 @@ var LEGAL_CONTENT = {
     icon: '⚠️',
     sections: [
       {
-        heading: 'Pattro no es asesoría financiera',
-        body: 'Nada de lo que aparece en Pattro — incluyendo el Coach IA, el Mental Score, los análisis de disciplina o cualquier otra funcionalidad — constituye asesoría financiera, recomendación de inversión ni señal de trading. Pattro es una herramienta de autoconocimiento y journaling.'
+        heading: 'Pattro is not financial advice',
+        body: 'Nada de lo que aparece en Pattro — incluyendo el Coach IA, el Mental Score, los andiscipline analysis or any other feature — constitutuye asesorfinancial advice, investment recommendation or trading signal. Pattro es una herramienta de autoconocimiento y journaling.'
       },
       {
-        heading: 'El trading implica riesgo de pérdida',
-        body: 'El trading de futuros, divisas y cualquier instrumento financiero conlleva un riesgo significativo de pérdida de capital. La mayoría de los traders pierden dinero. Mejorar la psicología y la disciplina puede ayudar, pero no garantiza resultados positivos.'
+        heading: 'Trading involves risk of loss',
+        body: 'El trading de futuros, divisas y cualquier instrumento financiero conlleva un riesgo significativo de capital loss. Most traders lose money. Improving psychology and discipline can help, but does not guarantee positive results.'
       },
       {
-        heading: 'Sin garantía de resultados',
-        body: 'Pattro no garantiza que el uso de la plataforma mejore tus resultados de trading ni que evite pérdidas. Los análisis y métricas son informativos y basados en los datos que tú introduces — su precisión depende de la calidad de ese registro.'
+        heading: 'No guarantee of results',
+        body: 'Pattro no garantiza que el uso de la plataforma mejore tus resultados de trading ni que evite losses. Los ananalysis and metrics are informational and based on the data you enter — their accuracy depends on the quality of that data.'
       },
       {
-        heading: 'Sin responsabilidad por pérdidas',
-        body: 'Pattro y sus creadores no se hacen responsables de ninguna pérdida económica, directa o indirecta, derivada del uso de la plataforma, de sus análisis, de las recomendaciones del Coach IA, ni del comportamiento de la extensión de Chrome durante sesiones de trading.'
+        heading: 'Sin responsabilidad por losses',
+        body: 'Pattro y sus creadores no se hacen responsables de ninguna peconomic loss, direct or indirect, derived from the use of plataforma, de sus ananalysis, the AI Coach recommendations, or the trading behavior during Chrome extension trading sessions.'
       },
       {
-        heading: 'Sin relación con plataformas externas',
-        body: 'Pattro no tiene ninguna responsabilidad sobre las decisiones de negocio de TopstepX, Apex u otras plataformas de fondeo. Cualquier cambio en esas plataformas que afecte la captura automática de trades es ajeno a Pattro.'
+        heading: 'No relationship with external platforms',
+        body: 'Pattro no tiene ninguna responsabilidad sobre las decisiones de negocio de TopstepX, Apex u otras plataformas de fondeo. Cualquier cambio en esas plataformas que afecte la captura automatica de trades es ajeno a Pattro.'
       }
     ]
   }
@@ -9291,7 +9286,7 @@ function openLegalModal(type) {
     // Tabs
     + '<div style="padding:12px 24px 0;display:flex;gap:6px;border-bottom:1px solid var(--border);flex-shrink:0">'
     + ['tos','privacy','risk'].map(function(t) {
-        var labels = { tos:'Términos', privacy:'Privacidad', risk:'Riesgo' };
+        var labels = { tos:'Terms', privacy:'Privacidad', risk:'Riesgo' };
         var active = t === type;
         return '<button onclick="openLegalModal(\'' + t + '\')" style="padding:7px 13px;border:none;border-radius:7px 7px 0 0;background:' + (active ? 'var(--surface2)' : 'transparent') + ';color:' + (active ? 'var(--text)' : 'var(--text3)') + ';font-size:10px;font-weight:' + (active ? '700' : '400') + ';cursor:pointer;font-family:inherit;border-bottom:2px solid ' + (active ? '#5a9e9e' : 'transparent') + '">' + labels[t] + '</button>';
       }).join('')
@@ -9300,7 +9295,7 @@ function openLegalModal(type) {
     + '<div style="padding:22px 24px;overflow-y:auto;flex:1">' + sectionsHtml + '</div>'
     // Footer
     + '<div style="padding:14px 24px;border-top:1px solid var(--border);flex-shrink:0;display:flex;justify-content:space-between;align-items:center">'
-    + '<div style="font-size:9px;color:var(--text3)">Última actualización: enero 2026</div>'
+    + '<div style="font-size:9px;color:var(--text3)">Last updated: January 2026</div>'
     + '<button onclick="document.getElementById(\'bb-legal-modal\').remove()" style="padding:8px 18px;background:#5a9e9e;border:none;border-radius:7px;color:#fff;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit">Entendido</button>'
     + '</div>'
     + '</div>';
@@ -9308,313 +9303,6 @@ function openLegalModal(type) {
   document.body.appendChild(overlay);
   overlay.querySelector('#bb-legal-close').addEventListener('click', function() { overlay.remove(); });
   overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
-}
-// ══════════════════════════════════════════════
-// APP i18n SYSTEM
-// ══════════════════════════════════════════════
-var APP_LANG = {
-  en: {
-    // Nav
-    nav_dashboard:    'Dashboard',
-    nav_trades:       'Trades',
-    nav_psychology:   'Psychology',
-    nav_insights:     'Insights',
-    nav_accounts:     'Accounts',
-    nav_add_account:  '+ Add account',
-
-    // User dropdown
-    menu_settings:    'Settings',
-    menu_support:     'Contact Support',
-    menu_signout:     'Sign Out',
-
-    // Topbar
-    select_account:   'Select an account',
-    log_trade_btn:    '+ Log Trade',
-
-    // Trade modal
-    modal_log_title:  'Log Trade',
-    modal_edit_title: 'Edit Trade',
-    lbl_ticker:       'Ticker',
-    lbl_side:         'Side',
-    lbl_entry_price:  'Entry Price',
-    lbl_exit_price:   'Exit Price',
-    lbl_entry_time:   'Entry Time',
-    lbl_exit_time:    'Exit Time',
-    lbl_pnl:          'P&L ($)',
-    lbl_qty:          'Quantity',
-    lbl_rr_planned:   'R:R Planned',
-    lbl_rr_achieved:  'R:R Achieved',
-    lbl_emotion:      'Emotion',
-    lbl_discipline:   'Discipline',
-    lbl_notes:        'Notes',
-    lbl_screenshot:   'Screenshot',
-    lbl_checklist:    'Checklist %',
-    save_trade:       'Save Trade',
-    cancel:           'Cancel',
-    delete:           'Delete',
-
-    // Emotions
-    emo_neutral:      '😶 Neutral',
-    emo_calm:         '😌 Calm',
-    emo_confident:    '💪 Confident',
-    emo_bored:        '😐 Bored',
-    emo_anxious:      '😰 Anxious',
-    emo_frustrated:   '😤 Frustrated',
-    emo_fear:         '😨 Fear',
-    emo_greedy:       '🤑 Greedy',
-
-    // Discipline tags
-    disc_clean:       'Clean trade',
-    disc_no_conf:     'No confirmation',
-    disc_fomo:        'FOMO',
-    disc_impulse:     'Impulse trade',
-    disc_overtrade:   'Overtrading',
-    disc_scaled:      'Scaled into loss',
-    disc_moved_sl:    'Moved SL',
-
-    // Trade side
-    side_long:        'Long',
-    side_short:       'Short',
-
-    // Account modal
-    modal_add_account:  'Add Account',
-    modal_edit_account: 'Edit Account',
-    lbl_acc_name:     'Account Name',
-    lbl_acc_type:     'Type',
-    lbl_acc_firm:     'Firm / Broker',
-    lbl_acc_size:     'Account Size ($)',
-    lbl_acc_dll:      'Daily Loss Limit (negative)',
-    lbl_acc_dd:       'Max Drawdown (negative)',
-    lbl_acc_pt:       'Profit Target ($)',
-    lbl_acc_maxc:     'Max Contracts',
-    lbl_acc_status:   'Status',
-    lbl_acc_color:    'Color',
-    save_account:     'Save Account',
-
-    // Sections & panels
-    sec_trades:       'Trades',
-    sec_psychology:   'Psychology',
-    sec_performance:  'Performance',
-    panel_trade_log:  'Trade Log',
-    panel_calendar:   'P&L Calendar',
-    panel_score:      '◈ Mental Score',
-    panel_coach:      'AI Coach',
-    panel_profile:    'Profile',
-    panel_plan:       'Plan & Subscription',
-    panel_platforms:  'Connect Platforms',
-    panel_tags:       'Setup Tags',
-
-    // Filters
-    filter_all:       'All trades',
-    filter_winners:   'Winners',
-    filter_losers:    'Losers',
-
-    // Settings
-    lbl_display_name: 'Display Name',
-    lbl_email:        'Email',
-    lbl_new_password: 'New Password',
-    save_profile:     'Save Profile',
-
-    // Contact support
-    sup_title:        'Contact Support',
-    sup_name:         'Your name',
-    sup_subject:      'Subject',
-    sup_message:      'Message',
-    sup_send:         'Send Message',
-    sup_sending:      'Sending...',
-    sup_sent:         'Sent!',
-    sup_success:      '✓ Message sent! Our team will get back to you within 24h.',
-    sup_placeholder_subject: 'Bug report, question, suggestion...',
-    sup_placeholder_msg:     'Describe your issue or suggestion in detail...',
-
-    // Empty states
-    empty_no_accounts:   'No accounts',
-    empty_add_first:     'Add your first trading account.',
-    empty_no_trades:     'No trades yet',
-    empty_log_first:     'Log your first trade to start tracking.',
-
-    // General
-    loading:          'Loading...',
-    saving:           'Saving...',
-    saved:            'Saved',
-    error_generic:    'Something went wrong. Please try again.',
-    days_remaining:   'days remaining',
-    active:           'ACTIVE',
-    inactive:         'INACTIVE',
-  },
-
-  es: {
-    // Nav
-    nav_dashboard:    'Dashboard',
-    nav_trades:       'Trades',
-    nav_psychology:   'Psicología',
-    nav_insights:     'Rendimiento',
-    nav_accounts:     'Cuentas',
-    nav_add_account:  '+ Agregar cuenta',
-
-    // User dropdown
-    menu_settings:    'Configuración',
-    menu_support:     'Soporte',
-    menu_signout:     'Cerrar sesión',
-
-    // Topbar
-    select_account:   'Selecciona una cuenta',
-    log_trade_btn:    '+ Registrar trade',
-
-    // Trade modal
-    modal_log_title:  'Registrar Trade',
-    modal_edit_title: 'Editar Trade',
-    lbl_ticker:       'Ticker',
-    lbl_side:         'Dirección',
-    lbl_entry_price:  'Precio entrada',
-    lbl_exit_price:   'Precio salida',
-    lbl_entry_time:   'Hora entrada',
-    lbl_exit_time:    'Hora salida',
-    lbl_pnl:          'P&L ($)',
-    lbl_qty:          'Cantidad',
-    lbl_rr_planned:   'R:R Planeado',
-    lbl_rr_achieved:  'R:R Logrado',
-    lbl_emotion:      'Emoción',
-    lbl_discipline:   'Disciplina',
-    lbl_notes:        'Notas',
-    lbl_screenshot:   'Captura',
-    lbl_checklist:    'Checklist %',
-    save_trade:       'Guardar trade',
-    cancel:           'Cancelar',
-    delete:           'Eliminar',
-
-    // Emotions
-    emo_neutral:      '😶 Neutral',
-    emo_calm:         '😌 Tranquilo',
-    emo_confident:    '💪 Seguro',
-    emo_bored:        '😐 Aburrido',
-    emo_anxious:      '😰 Ansioso',
-    emo_frustrated:   '😤 Frustrado',
-    emo_fear:         '😨 Con miedo',
-    emo_greedy:       '🤑 Codicioso',
-
-    // Discipline tags
-    disc_clean:       'Trade limpio',
-    disc_no_conf:     'Sin confirmación',
-    disc_fomo:        'FOMO',
-    disc_impulse:     'Trade impulsivo',
-    disc_overtrade:   'Overtrading',
-    disc_scaled:      'Escalado en pérdida',
-    disc_moved_sl:    'SL movido',
-
-    // Trade side
-    side_long:        'Long',
-    side_short:       'Short',
-
-    // Account modal
-    modal_add_account:  'Agregar cuenta',
-    modal_edit_account: 'Editar cuenta',
-    lbl_acc_name:     'Nombre de cuenta',
-    lbl_acc_type:     'Tipo',
-    lbl_acc_firm:     'Firma / Broker',
-    lbl_acc_size:     'Tamaño de cuenta ($)',
-    lbl_acc_dll:      'Límite pérdida diaria (negativo)',
-    lbl_acc_dd:       'Drawdown máximo (negativo)',
-    lbl_acc_pt:       'Meta de ganancia ($)',
-    lbl_acc_maxc:     'Contratos máximos',
-    lbl_acc_status:   'Estado',
-    lbl_acc_color:    'Color',
-    save_account:     'Guardar cuenta',
-
-    // Sections & panels
-    sec_trades:       'Trades',
-    sec_psychology:   'Psicología',
-    sec_performance:  'Rendimiento',
-    panel_trade_log:  'Registro de Trades',
-    panel_calendar:   'Calendario P&L',
-    panel_score:      '◈ Mental Score',
-    panel_coach:      'Coach IA',
-    panel_profile:    'Perfil',
-    panel_plan:       'Plan & Suscripción',
-    panel_platforms:  'Conectar Plataformas',
-    panel_tags:       'Setup Tags',
-
-    // Filters
-    filter_all:       'Todos los trades',
-    filter_winners:   'Ganadores',
-    filter_losers:    'Perdedores',
-
-    // Settings
-    lbl_display_name: 'Nombre visible',
-    lbl_email:        'Correo',
-    lbl_new_password: 'Nueva contraseña',
-    save_profile:     'Guardar perfil',
-
-    // Contact support
-    sup_title:        'Soporte',
-    sup_name:         'Tu nombre',
-    sup_subject:      'Asunto',
-    sup_message:      'Mensaje',
-    sup_send:         'Enviar mensaje',
-    sup_sending:      'Enviando...',
-    sup_sent:         '¡Enviado!',
-    sup_success:      '✓ Mensaje enviado. Nuestro equipo responderá en menos de 24h.',
-    sup_placeholder_subject: 'Bug, pregunta, sugerencia...',
-    sup_placeholder_msg:     'Describe tu problema o sugerencia en detalle...',
-
-    // Empty states
-    empty_no_accounts:   'Sin cuentas',
-    empty_add_first:     'Agrega tu primera cuenta de trading.',
-    empty_no_trades:     'Sin trades aún',
-    empty_log_first:     'Registra tu primer trade para empezar.',
-
-    // General
-    loading:          'Cargando...',
-    saving:           'Guardando...',
-    saved:            'Guardado',
-    error_generic:    'Algo salió mal. Inténtalo de nuevo.',
-    days_remaining:   'días restantes',
-    active:           'ACTIVO',
-    inactive:         'INACTIVO',
-  }
-};
-
-var appLang = localStorage.getItem('pattro_app_lang') || 'en';
-
-// Translation helper
-function t(key) {
-  return (APP_LANG[appLang] && APP_LANG[appLang][key]) || (APP_LANG['en'] && APP_LANG['en'][key]) || key;
-}
-
-// Apply translations to all data-i18n-app elements
-function applyAppLang() {
-  // Update toggle button label
-  var langBtn = document.getElementById('app-lang-btn');
-  if (langBtn) langBtn.textContent = appLang === 'en' ? '🇪🇸 ES' : '🇺🇸 EN';
-  document.querySelectorAll('[data-i18n-app]').forEach(function(el) {
-    var key = el.getAttribute('data-i18n-app');
-    var val = t(key);
-    if (!val) return;
-    // Nav items have an icon span child — preserve it
-    if (el.classList.contains('nav-item')) {
-      var icon = el.querySelector('.nav-icon');
-      var iconHtml = icon ? icon.outerHTML : '';
-      el.innerHTML = iconHtml + ' ' + val;
-    } else {
-      el.textContent = val;
-    }
-  });
-}
-
-// Switch language
-function setAppLang(lang) {
-  appLang = lang;
-  localStorage.setItem('pattro_app_lang', lang);
-  applyAppLang();
-  // Re-render current view to apply translations
-  var activeNav = document.querySelector('.nav-item.active');
-  if (activeNav) {
-    var view = activeNav.getAttribute('data-view');
-    if (view) navigateTo(view);
-  }
-  // Update toggle button
-  var btn = document.getElementById('app-lang-btn');
-  if (btn) btn.textContent = lang === 'en' ? '🇪🇸 ES' : '🇺🇸 EN';
 }
 
 </script>
