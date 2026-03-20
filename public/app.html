@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774024651 -->
+<!-- v1774024956 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -3409,7 +3409,7 @@ function calcDisciplineProgress(trades) {
     byMonth[key].push(t);
   });
   var months = Object.keys(byMonth).sort().slice(-6); // last 6 months
-  var monthNames = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  var monthNames = ['Ene','Feb','Tue','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
   return months.map(function(key) {
     var parts = key.split('-');
     var label = monthNames[parseInt(parts[1])-1]+' '+parts[0].slice(2);
@@ -3877,7 +3877,7 @@ function calcDisciplineStreaks(trades, clSessions) {
   cleanStreak = tempClean;
 
   return [
-    { emoji:'🧱', label:'Sin Revenge Trading', desc:'Consecutive days without impulsive trades after losses', current:noRevengeStreak, goal:5, best:noRevengeBest },
+    { emoji:'🧱', label:'No Revenge Trading', desc:'Consecutive days without impulsive trades after losses', current:noRevengeStreak, goal:5, best:noRevengeBest },
     { emoji:'📋', label:'Checklist ≥80%',       desc:'Consecutive days completing the checklist correctly', current:checklistStreak, goal:7, best:checklistBest },
     { emoji:'✨', label:'Clean Days',          desc:'Consecutive days without discipline errors', current:cleanStreak, goal:10, best:cleanBest }
   ];
@@ -6484,7 +6484,7 @@ function buildMindView(trades) {
   var heatmap = {}; // "day_hour" → { pnl, count }
   var hourStats = {}; // hour → { pnl, count, wins }
   var dayStats  = {}; // day → { pnl, count, wins }
-  var dayNames  = ['Dom','Lun','Mar','Wed','Jue','Vie','Sat'];
+  var dayNames  = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   trades.forEach(function(t) {
     if (!t.entry_time) return;
     var d  = new Date(t.entry_time);
@@ -6608,8 +6608,8 @@ function buildMindView(trades) {
     { val:'daily',    lbl:'Every day' },
     { val:'biweekly', lbl:'Wed and Fri' },
     { val:'weekly',   lbl:'Weekly' },
-    { val:'monthly',  lbl:'Mensual' },
-    { val:'custom',   lbl:'Personalizado' }
+    { val:'monthly',  lbl:'Monthly' },
+    { val:'custom',   lbl:'Custom' }
   ];
 
   var _coachTradeCount = trades.length;
@@ -6664,11 +6664,11 @@ function buildMindView(trades) {
   html += '</div></div>';
 
   
-  // ── 2: Mind Score Hoy (card rico) + Mental Score Semana/Mes (panel completo) ──
+  // ── 2: Mind Score Today (card rico) + Mental Score Semana/Mes (panel completo) ──
   html += '<div class="panel" style="padding:20px">'
     + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">'
-    + '<div style="font-size:10px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px">Mind Score Hoy</div>'
-    + '<div style="font-size:9px;color:var(--text3)">' + (mindData.hasTrades ? mindData.tradeCount + ' trade' + (mindData.tradeCount!==1?'s':'') + ' hoy' : 'No trades today') + '</div>'
+    + '<div style="font-size:10px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px">Mind Score Today</div>'
+    + '<div style="font-size:9px;color:var(--text3)">' + (mindData.hasTrades ? mindData.tradeCount + ' trade' + (mindData.tradeCount!==1?'s':'') + ' today' : 'No trades today') + '</div>'
     + '</div>'
     + '<div style="display:flex;align-items:center;gap:20px">'
     + '<div style="text-align:center;flex-shrink:0">'
@@ -6693,7 +6693,7 @@ function buildMindView(trades) {
   html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">';
 // Discipline breakdown
   var discColors = { clean:'#5ec26a', moved_sl:'#f0b429', scaled_loss:'#e05c5c', impulse:'#e05c5c', no_confirmation:'#f0b429', overtrading:'#e05c5c', fomo:'#e05c5c' };
-  var discLabels = { clean:'Clean', moved_sl:'Moved SL', scaled_loss:'Scaled↓', impulse:'Impulse', no_confirmation:'No confirm', overtrading:'Overtrade', fomo:'FOMO' };
+  var discLabels = { clean:'Clean', moved_sl:'Moved SL', scaled_in:'Scaled↓', scaled_loss:'Scaled↓', impulse:'Impulse', no_confirmation:'No confirm', overtrading:'Overtrade', fomo:'FOMO' };
   html += '<div class="panel" style="padding:20px">'
     + '<div style="font-size:10px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px">Discipline</div>'
     + '<div style="display:flex;flex-direction:column;gap:7px">';
@@ -6711,7 +6711,7 @@ function buildMindView(trades) {
   
 // P&L by discipline
   html += '<div class="panel" style="padding:20px">'
-    + '<div style="font-size:10px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px">P&L por tipo de trade</div>'
+    + '<div style="font-size:10px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px">P&L by trade type</div>'
     + '<div style="display:flex;flex-direction:column;gap:7px">';
   Object.keys(discPnl).forEach(function(k) {
     var d = discPnl[k];
@@ -6730,7 +6730,7 @@ function buildMindView(trades) {
   html += '</div></div>';
 
   
-// ── ROW 5: Patrones de autosabotaje ──
+// ── ROW 5: Self-sabotage patterns ──
   (function() {
     var sabotage = [];
 
@@ -6852,16 +6852,16 @@ function buildMindView(trades) {
     if (sabotage.length === 0) {
       if (trades.length >= 10) {
         html += '<div class="panel" style="padding:20px">'
-          + '<div style="font-size:10px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">Patrones de autosabotaje</div>'
+          + '<div style="font-size:10px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">Self-sabotage patterns</div>'
           + '<div style="text-align:center;padding:20px 0">'
           + '<div style="font-size:32px;margin-bottom:8px">✓</div>'
-          + '<div style="font-size:13px;color:var(--text);font-weight:600;margin-bottom:4px">Sin patrones detectados</div>'
-          + '<div style="font-size:11px;color:var(--text3)">No se detectan patrones de autosabotaje con los datos actuales.</div>'
+          + '<div style="font-size:13px;color:var(--text);font-weight:600;margin-bottom:4px">No patterns detected</div>'
+          + '<div style="font-size:11px;color:var(--text3)">No self-sabotage patterns detected with current data.</div>'
           + '</div></div>';
       } else {
         var needed = 10 - trades.length;
         html += '<div class="panel" style="padding:20px">'
-          + '<div style="font-size:10px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">Patrones de autosabotaje</div>'
+          + '<div style="font-size:10px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">Self-sabotage patterns</div>'
           + '<div style="text-align:center;padding:24px 0">'
           + '<div style="font-size:28px;margin-bottom:10px">📊</div>'
           + '<div style="font-size:12px;color:var(--text);font-weight:600;margin-bottom:6px">Acumulando datos...</div>'
@@ -6879,7 +6879,7 @@ function buildMindView(trades) {
 
     html += '<div class="panel" style="padding:20px">'
       + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">'
-      + '<div style="font-size:10px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px">Patrones de autosabotaje</div>'
+      + '<div style="font-size:10px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px">Self-sabotage patterns</div>'
       + '<div style="font-size:9px;color:var(--red);background:var(--red-bg);border:1px solid var(--red-bd);padding:3px 8px;border-radius:10px">'
       + sabotage.length + ' detectado' + (sabotage.length>1?'s':'') + '</div>'
       + '</div>'
@@ -6933,7 +6933,7 @@ function buildMindView(trades) {
     + '<div style="display:flex;align-items:baseline;gap:8px;margin-bottom:4px">'
     + '<div style="font-size:10px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px">Confidence Calibration</div>'
     + '</div>'
-    + '<div style="font-size:10px;color:var(--text3);margin-bottom:12px;line-height:1.5">Is your self-perception accurate? When you say "Seguro", do you actually win more?</div>';
+    + '<div style="font-size:10px;color:var(--text3);margin-bottom:12px;line-height:1.5">Is your self-perception accurate? When you say "Confident", do you actually win more?</div>';
 
   if (Object.keys(calibData).length) {
     html += '<div style="display:flex;flex-direction:column;gap:6px">';
@@ -7052,7 +7052,7 @@ function buildMindView(trades) {
       + (hasData
           ? '<div style="font-size:13px;font-weight:700;color:'+pnlColor+'">'+(st.pnl>=0?'+':'')+'$'+Math.round(st.pnl)+'</div>'
           + '<div style="font-size:9px;color:var(--text3)">'+st.count+'t · '+wr+'% WR</div>'
-          : '<div style="font-size:10px;color:var(--text3)">sin datos</div>')
+          : '<div style="font-size:10px;color:var(--text3)">no data</div>')
       + '</div>';
   });
   html += '</div>';
@@ -7114,7 +7114,7 @@ function buildMindView(trades) {
   });
 
   html += '<div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%">'
-    + '<thead><tr><th style="font-size:9px;color:var(--text3);padding:3px 6px;text-align:left;font-weight:500">Hora</th>';
+    + '<thead><tr><th style="font-size:9px;color:var(--text3);padding:3px 6px;text-align:left;font-weight:500">Hour</th>';
   hmDays.forEach(function(dw) {
     html += '<th style="font-size:9px;color:var(--text3);padding:3px 8px;text-align:center;font-weight:500">'+dayNames[dw]+'</th>';
   });
@@ -7149,12 +7149,12 @@ function buildMindView(trades) {
   if (bestHour && worstHour) {
     html += '<div style="display:flex;gap:10px;margin-top:14px">'
       + '<div style="flex:1;background:var(--green-bg);border:1px solid var(--green-bd);border-left:3px solid var(--green);border-radius:8px;padding:10px 14px">'
-      + '<div style="font-size:9px;color:var(--text3);margin-bottom:4px">MEJOR HORA</div>'
+      + '<div style="font-size:9px;color:var(--text3);margin-bottom:4px">BEST HOUR</div>'
       + '<div style="font-size:18px;font-weight:700;color:var(--green)">'+bestHour.h+':00</div>'
       + '<div style="font-size:9px;color:var(--text3)">'+bestHour.wr+'% WR · +'+'$'+Math.abs(Math.round(bestHour.pnl))+'</div>'
       + '</div>'
       + '<div style="flex:1;background:var(--red-bg);border:1px solid var(--red-bd);border-left:3px solid var(--red);border-radius:8px;padding:10px 14px">'
-      + '<div style="font-size:9px;color:var(--text3);margin-bottom:4px">PEOR HORA</div>'
+      + '<div style="font-size:9px;color:var(--text3);margin-bottom:4px">WORST HOUR</div>'
       + '<div style="font-size:18px;font-weight:700;color:var(--red)">'+worstHour.h+':00</div>'
       + '<div style="font-size:9px;color:var(--text3)">'+worstHour.wr+'% WR · -'+'$'+Math.abs(Math.round(worstHour.pnl))+'</div>'
       + '</div></div>';
@@ -7162,7 +7162,7 @@ function buildMindView(trades) {
   html += '</div>'; // end panel
 
   
-  // ── 7: Discipline Streaks | Streaks & Alertas ──
+  // ── 7: Discipline Streaks | Streaks & Alerts ──
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">';
 // ── ROW 8: Discipline Streaks ──
   (function() {
@@ -7187,7 +7187,7 @@ function buildMindView(trades) {
     }).join('');
 
     html += '<div class="panel" style="margin-bottom:12px">'
-      + '<div class="panel-head"><span class="panel-title">Discipline Streaks</span><span class="panel-cap" style="color:var(--amber)">Racha activa</span></div>'
+      + '<div class="panel-head"><span class="panel-title">Discipline Streaks</span><span class="panel-cap" style="color:var(--amber)">Active streak</span></div>'
       + '<div style="padding:14px 18px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px">'
       + cards
       + '</div></div>';
@@ -7196,7 +7196,7 @@ function buildMindView(trades) {
   
 // Revenge + streak card
   html += '<div class="panel" style="padding:20px">'
-    + '<div style="font-size:10px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px">Streaks & Alertas</div>'    + '<div style="display:flex;flex-direction:column;gap:0">'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'    + '<span style="font-size:11px;color:var(--text2)">Racha wins actual</span>'    + '<span style="font-size:16px;font-weight:700;color:'+(currentWinStreak>=3?'var(--green)':currentWinStreak>=1?'var(--text)':'var(--text3)')+'">'+currentWinStreak+'</span></div>'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'    + '<span style="font-size:11px;color:var(--text2)">Racha losses actual</span>'    + '<span style="font-size:16px;font-weight:700;color:'+(currentLossStreak>=2?'var(--red)':currentLossStreak>=1?'var(--amber)':'var(--text3)')+'">'+currentLossStreak+'</span></div>'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'    + '<span style="font-size:11px;color:var(--text2)">Max hot streak <span style="font-size:9px;color:var(--text3)">(wins seguidos)</span></span>'    + '<span style="font-size:16px;font-weight:700;color:var(--green)">'+maxWinStreak+'</span></div>'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'    + '<span style="font-size:11px;color:var(--text2)">Max loss streak</span>'    + '<span style="font-size:16px;font-weight:700;color:'+(maxLossStreak>=4?'var(--red)':maxLossStreak>=2?'var(--amber)':'var(--text)')+'">'+maxLossStreak+'</span></div>'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'    + '<span style="font-size:11px;color:var(--text2)">Revenge trades</span>'    + '<span style="font-size:16px;font-weight:700;color:'+(revengeTrades.length>0?'var(--red)':'var(--green)')+'">'+revengeTrades.length+'</span></div>'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0">'    + '<span style="font-size:11px;color:var(--text2)">% Clean trades</span>'    + '<span style="font-size:16px;font-weight:700;color:'+(cleanPct>=60?'var(--green)':cleanPct>=40?'var(--amber)':'var(--red)')+'">'+cleanPct+'%</span></div>'    + (currentWinStreak>=4 ? '<div style="background:var(--green-bg);border:1px solid var(--green-bd);border-left:3px solid var(--green);border-radius:7px;padding:9px 12px;margin-top:8px;font-size:10px;color:var(--text2);line-height:1.5">🔥 <strong>Hot streak de '+currentWinStreak+' wins.</strong> Beware of overconfidence — that\'s when most errors come from over-size your positions.</div>' : '')    + '</div></div>';
+    + '<div style="font-size:10px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px">Streaks & Alerts</div>'    + '<div style="display:flex;flex-direction:column;gap:0">'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'    + '<span style="font-size:11px;color:var(--text2)">Current win streak</span>'    + '<span style="font-size:16px;font-weight:700;color:'+(currentWinStreak>=3?'var(--green)':currentWinStreak>=1?'var(--text)':'var(--text3)')+'">'+currentWinStreak+'</span></div>'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'    + '<span style="font-size:11px;color:var(--text2)">Current loss streak</span>'    + '<span style="font-size:16px;font-weight:700;color:'+(currentLossStreak>=2?'var(--red)':currentLossStreak>=1?'var(--amber)':'var(--text3)')+'">'+currentLossStreak+'</span></div>'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'    + '<span style="font-size:11px;color:var(--text2)">Max hot streak <span style="font-size:9px;color:var(--text3)"></span></span>'    + '<span style="font-size:16px;font-weight:700;color:var(--green)">'+maxWinStreak+'</span></div>'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'    + '<span style="font-size:11px;color:var(--text2)">Max loss streak</span>'    + '<span style="font-size:16px;font-weight:700;color:'+(maxLossStreak>=4?'var(--red)':maxLossStreak>=2?'var(--amber)':'var(--text)')+'">'+maxLossStreak+'</span></div>'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'    + '<span style="font-size:11px;color:var(--text2)">Revenge trades</span>'    + '<span style="font-size:16px;font-weight:700;color:'+(revengeTrades.length>0?'var(--red)':'var(--green)')+'">'+revengeTrades.length+'</span></div>'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0">'    + '<span style="font-size:11px;color:var(--text2)">% Clean trades</span>'    + '<span style="font-size:16px;font-weight:700;color:'+(cleanPct>=60?'var(--green)':cleanPct>=40?'var(--amber)':'var(--red)')+'">'+cleanPct+'%</span></div>'    + (currentWinStreak>=4 ? '<div style="background:var(--green-bg);border:1px solid var(--green-bd);border-left:3px solid var(--green);border-radius:7px;padding:9px 12px;margin-top:8px;font-size:10px;color:var(--text2);line-height:1.5">🔥 <strong>Hot streak de '+currentWinStreak+' wins.</strong> Beware of overconfidence — that\'s when most errors come from over-size your positions.</div>' : '')    + '</div></div>';
 
   
   html += '</div>'; // end section 7
@@ -7214,7 +7214,7 @@ function buildMindView(trades) {
     html += '<div class="panel" style="padding:20px">'
       + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">'
       + '<div style="font-size:10px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px">Pattern Severity — Impacto Real</div>'
-      + '<div style="font-size:9px;color:var(--red)">Total losses por errores: $'+Math.round(totalLoss)+'</div>'
+      + '<div style="font-size:9px;color:var(--red)">Total losses from errors: $'+Math.round(totalLoss)+'</div>'
       + '</div>'
       + '<div style="font-size:10px;color:var(--text3);margin-bottom:14px;line-height:1.5">Which errors cost you the most money in absolute terms?</div>'
       + '<div style="display:flex;flex-direction:column;gap:8px">';
@@ -7241,8 +7241,8 @@ function buildMindView(trades) {
         + '<div style="background:var(--surface3);border-radius:3px;height:5px;margin-bottom:6px">'
         + '<div style="height:100%;width:'+barPct+'%;background:'+barCol+';border-radius:3px"></div></div>'
         + '<div style="display:flex;gap:12px">'
-        + '<span style="font-size:9px;color:var(--text3)">'+p.winRate+'% WR en estos trades</span>'
-        + (p.avgLoss > 0 ? '<span style="font-size:9px;color:var(--text3)">avg ploss: -$'+p.avgLoss+'</span>' : '')
+        + '<span style="font-size:9px;color:var(--text3)">'+p.winRate+'% WR on these trades</span>'
+        + (p.avgLoss > 0 ? '<span style="font-size:9px;color:var(--text3)">avg loss: -$'+p.avgLoss+'</span>' : '')
         + '</div></div>';
     });
 
@@ -7258,8 +7258,8 @@ function buildMindView(trades) {
 
     // Build emo × hour map: { emotion: { hour: { pnl, count, wins } } }
     var emoHourMap = {};
-    var emoLabels  = { calm:'Tranquilo', neutral:'Neutral', confident:'Seguro', anxious:'Ansioso',
-                       fear:'Con miedo', greedy:'Codicioso', bored:'Aburrido', frustrated:'Frustrado' };
+    var emoLabels  = { calm:'Calm', neutral:'Neutral', confident:'Confident', anxious:'Anxious',
+                       fear:'Fearful', greedy:'Greedy', bored:'Bored', frustrated:'Frustrated' };
     var emoColors  = { calm:'#5a9e72', neutral:'#a0a0aa', confident:'#5a9e9e',
                        anxious:'#9e8050', fear:'#9e5a5a', greedy:'#9e8050', bored:'#606068', frustrated:'#9e5a5a' };
 
@@ -7348,7 +7348,7 @@ function buildMindView(trades) {
   var coachHistory = getCoachHistory(currentAccountId || '');
   if (coachHistory.length) {
     html += '<div class="panel" style="padding:20px">'
-      + '<div style="font-size:10px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:16px">Historial del Coach</div>'
+      + '<div style="font-size:10px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:16px">Coach History</div>'
       + '<div style="display:flex;flex-direction:column;gap:10px">';
 
     coachHistory.slice(0,5).forEach(function(item) {
@@ -8256,8 +8256,8 @@ async function generateAutoFullAnalysis(trades, accountId, day) {
   var emoRecent = {}; var emoOld = {};
   t7days.forEach(function(t){ if(t.emotion){emoRecent[t.emotion]=(emoRecent[t.emotion]||0)+1;} });
   tPrevWeek.forEach(function(t){ if(t.emotion){emoOld[t.emotion]=(emoOld[t.emotion]||0)+1;} });
-  var emoStr = 'This week: ' + (Object.entries(emoRecent).map(function(e){return e[0]+':'+e[1];}).join(', ')||'sin datos')
-    + ' | Last week: ' + (Object.entries(emoOld).map(function(e){return e[0]+':'+e[1];}).join(', ')||'sin datos');
+  var emoStr = 'This week: ' + (Object.entries(emoRecent).map(function(e){return e[0]+':'+e[1];}).join(', ')||'no data')
+    + ' | Last week: ' + (Object.entries(emoOld).map(function(e){return e[0]+':'+e[1];}).join(', ')||'no data');
 
   var mem = getCoachMemory(accountId);
   var prevContext = mem.lastFullMessage ? ('Your previous analysis ('+mem.lastAnalysisDay+'): ' + mem.lastFullMessage.slice(0,200) + '...') : '';
@@ -8554,7 +8554,7 @@ function renderPsychProfilePanel(trades) {
   var cleanCount = trades.filter(function(t){ return !t.discipline_tag || t.discipline_tag==='clean'; }).length;
   var cleanPct = Math.round(cleanCount/trades.length*100);
 
-  var tagBars = '<div style="font-size:8px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Errores de disciplina</div>';
+  var tagBars = '<div style="font-size:8px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Discipline errors</div>';
   if (Object.keys(profile.tagBreakdown).length === 0) {
     tagBars += '<div style="font-size:10px;color:var(--green)">✓ Sin errores registrados</div>';
   } else {
@@ -8569,10 +8569,10 @@ function renderPsychProfilePanel(trades) {
   var insights = [];
   if (profile.revengeCount > 0)     insights.push({ icon:'⚡', color:'var(--red)',   text: profile.revengeCount+' revenge trades detected — emotional recovery pattern (Pattro)' });
   if (profile.emoConsistency < 50)  insights.push({ icon:'📋', color:'var(--amber)', text: 'Solo el '+profile.emoConsistency+'% of your trades have emotion logged — improve your journaling' });
-  if (profile.emoConsistency >= 80) insights.push({ icon:'✅', color:'var(--green)',  text: profile.emoConsistency+'% de consistencia en journaling — excelente disciplina de registro' });
-  if (profile.rr !== '—' && parseFloat(profile.rr) < 1) insights.push({ icon:'📉', color:'var(--amber)', text: 'R:R promedio '+profile.rr+' — you\'re winning less than you risk per trade' });
+  if (profile.emoConsistency >= 80) insights.push({ icon:'✅', color:'var(--green)',  text: profile.emoConsistency+'% journaling consistency — excellent logging discipline' });
+  if (profile.rr !== '—' && parseFloat(profile.rr) < 1) insights.push({ icon:'📉', color:'var(--amber)', text: 'R:R avg '+profile.rr+' — you\'re winning less than you risk per trade' });
   if (profile.bestHour !== null && profile.worstHour !== null && profile.bestHour !== profile.worstHour) {
-    insights.push({ icon:'🕐', color:'var(--green)', text: 'Tu mejor hora es las '+profile.bestHour+'h (+$'+profile.bestHourPnl+'). Tu peor hora: '+profile.worstHour+'h ($'+profile.worstHourPnl+')' });
+    insights.push({ icon:'🕐', color:'var(--green)', text: 'Your best hour is '+profile.bestHour+':00 (+$'+profile.bestHourPnl+'). Worst hour: '+profile.worstHour+':00 ($'+profile.worstHourPnl+')' });
   }
 
   var insightHtml = insights.length
@@ -8599,7 +8599,7 @@ function renderPsychProfilePanel(trades) {
     // Row 1: key metrics
     +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">'
     +'<div style="text-align:center;background:var(--surface2);border-radius:8px;padding:12px"><div style="font-size:22px;font-weight:800;color:var(--text)">'+profile.wr+'%</div><div style="font-size:8px;color:var(--text3);margin-top:2px">Win Rate</div></div>'
-    +'<div style="text-align:center;background:var(--surface2);border-radius:8px;padding:12px"><div style="font-size:22px;font-weight:800;color:var(--text)">'+profile.rr+'</div><div style="font-size:8px;color:var(--text3);margin-top:2px">R:R promedio</div></div>'
+    +'<div style="text-align:center;background:var(--surface2);border-radius:8px;padding:12px"><div style="font-size:22px;font-weight:800;color:var(--text)">'+profile.rr+'</div><div style="font-size:8px;color:var(--text3);margin-top:2px">R:R avg</div></div>'
     +'<div style="text-align:center;background:var(--surface2);border-radius:8px;padding:12px"><div style="font-size:22px;font-weight:800;color:'+(cleanPct>=80?'var(--green)':cleanPct>=60?'var(--amber)':'var(--red)')+'">'+cleanPct+'%</div><div style="font-size:8px;color:var(--text3);margin-top:2px">Trades clean</div></div>'
     +'<div style="text-align:center;background:var(--surface2);border-radius:8px;padding:12px"><div style="font-size:22px;font-weight:800;color:'+(profile.emoConsistency>=80?'var(--green)':profile.emoConsistency>=50?'var(--amber)':'var(--red)')+'">'+profile.emoConsistency+'%</div><div style="font-size:8px;color:var(--text3);margin-top:2px">Journaling</div></div>'
     +'</div>'
@@ -8628,9 +8628,9 @@ async function generatePsychProfile() {
   var prompt = 'You are a trading psychologist. Analyze the psychological profile of this trader with empathy and precision.\n\n'
     +'DATOS OBJETIVOS ('+profile.tradeCount+' trades):\n'
     +'- Win rate: '+profile.wr+'%\n'
-    +'- R:R promedio: '+profile.rr+'\n'
+    +'- R:R avg: '+profile.rr+'\n'
     +'- Trades clean: '+Math.round(trades.filter(function(t){return !t.discipline_tag||t.discipline_tag==="clean";}).length/trades.length*100)+'%\n'
-    +'- Errores de disciplina: '+tagSummary+'\n'
+    +'- Discipline errors: '+tagSummary+'\n'
     +'- Revenge trades: '+profile.revengeCount+'\n'
     +'- Most frequent emotion: '+(profile.topEmo||'no registrada')+'\n'
     +'- Journaling consistency: '+profile.emoConsistency+'%\n'
