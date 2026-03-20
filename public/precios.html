@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<!-- v20260319 -->
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>Pattro — Precios</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230d1117'/><text x='16' y='25' text-anchor='middle' font-family='Georgia,serif' font-size='22' font-weight='700' fill='white'>P</text><circle cx='27' cy='4' r='4' fill='%233ecfcf'/></svg>">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0b;--surface:#111113;--surface2:#18181b;--border:#26262e;--border2:#32323c;
+  --text:#eeeef0;--text2:#9898a6;--text3:#52525e;
+  --teal:#3ecfcf;--teal-bg:rgba(62,207,207,0.08);--teal-bd:rgba(62,207,207,0.22);
+  --green:#3dba72;--green-bg:rgba(61,186,114,0.08);--green-bd:rgba(61,186,114,0.25);
+  --amber:#e09840;
+}
+body{background:var(--bg);color:var(--text);font-family:'Geist Mono',monospace;min-height:100vh}
+nav{position:sticky;top:0;background:var(--bg);border-bottom:1px solid var(--border);padding:0 40px;height:54px;display:flex;align-items:center;justify-content:space-between;z-index:100}
+.nav-logo{display:flex;align-items:center;gap:9px;text-decoration:none}
+.logo-p{position:relative;width:28px;height:28px;flex-shrink:0}
+.logo-p .p{font-family:Georgia,serif;font-size:26px;font-weight:700;color:#eeeef0;line-height:1;position:absolute;left:0;bottom:0}
+.logo-p .dot{position:absolute;top:0;right:0;width:7px;height:7px;border-radius:50%;background:#3ecfcf}
+.logo-name{font-size:14px;font-weight:700;color:var(--text);letter-spacing:-.3px}
+.nav-back{font-size:11px;color:var(--text3);text-decoration:none;transition:color .15s}
+.nav-back:hover{color:var(--teal)}
+.hero{padding:60px 20px 48px;text-align:center}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 14px;background:var(--teal-bg);border:1px solid var(--teal-bd);border-radius:20px;font-size:9px;color:var(--teal);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:18px}
+h1{font-size:30px;font-weight:800;color:var(--text);margin-bottom:10px;letter-spacing:-.5px}
+.hero-sub{font-size:12px;color:var(--text3);max-width:400px;margin:0 auto;line-height:1.7}
+.plans{display:flex;gap:20px;justify-content:center;padding:0 20px 80px;flex-wrap:wrap;max-width:900px;margin:0 auto}
+.plan{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:32px;width:100%;max-width:400px;position:relative}
+.plan.featured{border-color:var(--teal);border-width:2px}
+.plan-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);padding:4px 14px;background:var(--teal);color:#0a0a0b;border-radius:20px;font-size:9px;font-weight:800;letter-spacing:1px;white-space:nowrap}
+.plan-name{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:16px}
+.plan-price{display:flex;align-items:baseline;gap:4px;margin-bottom:4px}
+.plan-amount{font-size:44px;font-weight:800;color:var(--text);letter-spacing:-2px}
+.plan-period{font-size:12px;color:var(--text3)}
+.plan-billing{font-size:11px;color:var(--text3);margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border)}
+.plan-billing span{color:var(--amber)}
+.features{display:flex;flex-direction:column;gap:10px;margin-bottom:28px}
+.feat{display:flex;align-items:flex-start;gap:10px;font-size:11px;color:var(--text2);line-height:1.5}
+.feat-check{color:var(--teal);flex-shrink:0;margin-top:1px}
+.btn-plan{display:block;width:100%;padding:13px;background:var(--teal);border:none;border-radius:9px;color:#0a0a0b;font-family:'Geist Mono',monospace;font-size:12px;font-weight:800;cursor:pointer;letter-spacing:.5px;text-decoration:none;text-align:center;transition:all .2s}
+.btn-plan:hover{opacity:.88;transform:translateY(-1px)}
+.btn-plan.ghost{background:transparent;border:1px solid var(--border2);color:var(--text2)}
+.btn-plan.ghost:hover{border-color:var(--teal);color:var(--teal)}
+.note{font-size:10px;color:var(--text3);text-align:center;margin-top:10px;line-height:1.6}
+.faq{max-width:600px;margin:0 auto;padding:0 20px 80px}
+.faq h2{font-size:16px;font-weight:700;color:var(--text);margin-bottom:24px;text-align:center}
+.faq-item{border-bottom:1px solid var(--border);padding:18px 0}
+.faq-q{font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px}
+.faq-a{font-size:11px;color:var(--text3);line-height:1.7}
+footer{border-top:1px solid var(--border);padding:20px 40px;text-align:center;font-size:10px;color:var(--text3)}
+footer a{color:var(--teal);text-decoration:none}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="https://pattro.com" class="nav-logo">
+    <div class="logo-p"><span class="p">P</span><span class="dot"></span></div>
+    <span class="logo-name">pattro</span>
+  </a>
+  <a href="https://pattro.com" class="nav-back">← Volver al inicio</a>
+</nav>
+
+<div class="hero">
+  <div class="hero-badge">⚡ Acceso temprano</div>
+  <h1>Un precio simple.<br>Sin sorpresas.</h1>
+  <p class="hero-sub">Primeros 200 de 2026 — precio bloqueado para siempre.<br>Cancela cuando quieras. Sin contratos.</p>
+</div>
+
+<div class="plans">
+
+  <!-- Plan Mensual -->
+  <div class="plan featured">
+    <div class="plan-badge">MÁS POPULAR</div>
+    <div class="plan-name">Pattro Pro — Mensual</div>
+    <div class="plan-price">
+      <span class="plan-amount">$15</span>
+      <span class="plan-period">/mes</span>
+    </div>
+    <div class="plan-billing">Facturado mensualmente · <span>Precio bloqueado para los primeros 200</span></div>
+    <div class="features">
+      <div class="feat"><span class="feat-check">✓</span>Mental Score + seguimiento psicológico</div>
+      <div class="feat"><span class="feat-check">✓</span>Coach IA — análisis ilimitados</div>
+      <div class="feat"><span class="feat-check">✓</span>Registro de trades manual</div>
+      <div class="feat"><span class="feat-check">✓</span>Captura automática (extensión TopstepX)</div>
+      <div class="feat"><span class="feat-check">✓</span>Insights de comportamiento y patrones (Pattros)</div>
+      <div class="feat"><span class="feat-check">✓</span>Checklist diario y sistema de reglas</div>
+      <div class="feat"><span class="feat-check">✓</span>Recomendaciones Color Day</div>
+      <div class="feat"><span class="feat-check">✓</span>Cancela cuando quieras</div>
+    </div>
+    <a href="/register" class="btn-plan">Registrarse →</a>
+    <p class="note">Sin compromiso · Cancela en cualquier momento</p>
+  </div>
+
+
+</div>
+
+<div class="faq">
+  <h2>Preguntas frecuentes</h2>
+
+  <div class="faq-item">
+    <div class="faq-q">¿Puedo cancelar en cualquier momento?</div>
+    <div class="faq-a">Sí. Cancela cuando quieras desde tu cuenta. Tu acceso continúa hasta el final del período facturado.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">¿Hay reembolsos?</div>
+    <div class="faq-a">No ofrecemos reembolsos. Si tienes un problema técnico, contáctanos y lo resolvemos. Consulta nuestra <a href="/terms#s6" style="color:var(--teal)">política completa</a>.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">¿El precio de $15 se mantiene para siempre?</div>
+    <div class="faq-a">Sí, para los primeros 200 usuarios de 2026. Tu precio queda bloqueado mientras mantengas tu suscripción activa. Si cancelas y vuelves, el precio puede haber subido.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">¿Tengo un código Pattro?</div>
+    <div class="faq-a">Los códigos de acceso (Friends &amp; Family) dan acceso gratuito vitalicio. Ingrésalo durante el registro y entrarás directamente sin necesidad de pago.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">¿Qué métodos de pago aceptan?</div>
+    <div class="faq-a">Tarjeta de crédito y débito (Visa, Mastercard, Amex) a través de Paddle, nuestro procesador de pagos. Próximamente PayPal.</div>
+  </div>
+</div>
+
+<footer>
+  <p>© 2026 Pattro · Trading Psychology Engine &nbsp;·&nbsp; <a href="/terms">Términos</a> &nbsp;·&nbsp; <a href="/privacy">Privacidad</a> &nbsp;·&nbsp; <a href="https://pattro.com">pattro.com</a></p>
+</footer>
+
+</body>
+</html>

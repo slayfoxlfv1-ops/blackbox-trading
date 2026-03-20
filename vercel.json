@@ -4,7 +4,8 @@
     { "source": "/register",  "destination": "/register.html" },
     { "source": "/dashboard", "destination": "/app.html"      },
     { "source": "/terms",     "destination": "/terms.html"    },
-    { "source": "/privacy",   "destination": "/privacy.html"  }
+    { "source": "/privacy",   "destination": "/privacy.html"  },
+    { "source": "/precios",   "destination": "/precios.html"  }
   ],
   "headers": [
     {
