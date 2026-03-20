@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1773971372 -->
+<!-- v1773972014 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -1215,7 +1215,7 @@ async function selectAccount(id) {
   document.getElementById('log-btn').style.display = 'inline-flex';
   // Show loading state
   var main = document.getElementById('main-content');
-  if (main) main.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:200px;color:var(--text3);font-size:12px">Cargando cuenta...</div>';
+  if (main) main.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:200px;color:var(--text3);font-size:12px">Loading account...</div>';
   await loadAccountData(id);
   // Restore last view or default to overview
   var lastView = 'dashboard';
@@ -2198,12 +2198,12 @@ async function loadAccountData(id, silent) {
     var winTs = ts.filter(function(t){ return (t.pnl||0)>0; });
     if (winTs.length === ts.length && ts.length > 0) p.push({ icon:'🏆', label:'Dia 100% ganador' });
     var wr2 = dayWR(ts);
-    if (wr2 !== null && wr2 >= 70 && ts.length >= 3) p.push({ icon:'🎯', label:'Win rate '+wr2+'% hoy' });
+    if (wr2 !== null && wr2 >= 70 && ts.length >= 3) p.push({ icon:'🎯', label:'Win rate '+wr2+'% today' });
     // No violations
     var rulesObj = getPersonalRules(currentAccountId||'');
     var viols = checkRuleViolations(rulesObj, ts);
     if (viols.length===0 && Object.keys(rulesObj).some(function(k){return rulesObj[k]&&rulesObj[k].active;}))
-      p.push({ icon:'🛡', label:'0 reglas incumplidas' });
+      p.push({ icon:'🛡', label:'0 rules broken' });
     return p;
   }
 
@@ -2355,7 +2355,7 @@ async function loadAccountData(id, silent) {
   '<div style="display:flex;align-items:center;gap:0;margin-bottom:6px"><span style="font-size:13px;font-weight:700;color:var(--text)">'+ms.label+'</span>'+_dqBadge+'</div>' +
   (_dqNote ? '<div style="font-size:10px;color:var(--text3);margin-bottom:8px;font-style:italic">'+_dqNote+'</div>' : '') +
   '<div style="display:flex;gap:16px;flex-wrap:wrap">' +
-  '<span style="font-size:11px;color:var(--text3)">Disciplina <b style="color:'+(ms.discScore>=75?'var(--green)':ms.discScore>=50?'var(--amber)':'var(--red)')+'">'+ms.discScore+'</b></span>' +
+  '<span style="font-size:11px;color:var(--text3)">Discipline <b style="color:'+(ms.discScore>=75?'var(--green)':ms.discScore>=50?'var(--amber)':'var(--red)')+'">'+ms.discScore+'</b></span>' +
   '<span style="font-size:11px;color:var(--text3)">Mind <b style="color:'+(ms.mindScore>=75?'var(--green)':ms.mindScore>=50?'var(--amber)':'var(--red)')+'">'+ms.mindScore+'</b></span>' +
   '<span style="font-size:11px;color:var(--text3)">Execution <b style="color:'+(ms.execScore!==null?(ms.execScore>=75?'var(--green)':ms.execScore>=50?'var(--amber)':'var(--red)'):'var(--text3)')+'">'+( ms.execScore!==null?ms.execScore:'—')+'</b></span>' +
   '</div>' +
@@ -2364,9 +2364,9 @@ async function loadAccountData(id, silent) {
     var arrow = diff > 0 ? '↑' : diff < 0 ? '↓' : '→';
     var clr = diff > 0 ? 'var(--green)' : diff < 0 ? 'var(--red)' : 'var(--text3)';
     return '<div style="margin-top:8px;display:flex;align-items:center;gap:8px">'
-      + '<span style="font-size:10px;color:var(--text3)">Ayer: <b style="color:var(--text2)">'+msYest.total+'</b></span>'
+      + '<span style="font-size:10px;color:var(--text3)">Yesterday: <b style="color:var(--text2)">'+msYest.total+'</b></span>'
       + '<span style="font-size:11px;color:var(--text3)">→</span>'
-      + '<span style="font-size:10px;color:var(--text3)">Hoy: <b style="color:'+ms.color+'">'+ms.total+'</b></span>'
+      + '<span style="font-size:10px;color:var(--text3)">Today: <b style="color:'+ms.color+'">'+ms.total+'</b></span>'
       + '<span style="font-size:12px;font-weight:800;color:'+clr+'">'+arrow+' '+(diff>0?'+':'')+diff+'</span>'
       + '</div>';
   })() : '') +
@@ -2392,7 +2392,7 @@ async function loadAccountData(id, silent) {
     var _ec={}; trades.forEach(function(t){if(t.emotion)_ec[t.emotion]=(_ec[t.emotion]||0)+1;});
     var _ek=Object.keys(_ec); var _te=_ek.length?_ek.sort(function(a,b){return _ec[b]-_ec[a];})[0]:null;
     var _ee={calm:'😌',confident:'💪',anxious:'😰',fear:'😨',greedy:'🤑',bored:'😐',frustrated:'😤',neutral:'😶'};
-    var _pt = _wr>=60&&_cp>=70?'Disciplinado':_wr>=60&&_cp<70?'Alta WR, baja disciplina':_wr<40&&_cp>=70?'Disciplinado, baja WR':'En desarrollo';
+    var _pt = _wr>=60&&_cp>=70?'Disciplined':_wr>=60&&_cp<70?'High WR, low discipline':_wr<40&&_cp>=70?'Disciplined, low WR':'En desarrollo';
     var _pc = _wr>=60&&_cp>=70?'var(--green)':_wr>=40?'var(--amber)':'var(--red)';
     return '<div style="flex-shrink:0;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;min-width:160px">'
       + '<div style="font-size:8px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px">Perfil</div>'
@@ -2436,7 +2436,7 @@ async function loadAccountData(id, silent) {
         label:'Most frequent error',
         text:'Tu mayor error es <strong>'+tagLabels[worstTag]+'</strong> — '+worstN+' trades'
           +(tagPnl<0?', <strong style="color:var(--red)">'+tagPnlStr+'</strong> de impacto total':'')
-          +(pctWorse>10&&allAvg!==0?'. P&amp;L promedio en esos trades es <strong>'+pctWorse+'% peor</strong> que tu media':'')+'.'
+          +(pctWorse>10&&allAvg!==0?'. P&amp;L promedio en esos trades es <strong>'+pctWorse+'% worse</strong> than your average':'')+'.'
       });
     }
 
@@ -2459,7 +2459,7 @@ async function loadAccountData(id, silent) {
         insights.push({
           icon:'◷', color:'var(--amber)', bg:'rgba(224,152,64,0.07)', border:'rgba(224,152,64,0.2)',
           label:'Time pattern (Pattro)',
-          text:'Tu mejor hora es <strong>'+fmt12(bestH)+'</strong> (promedio <strong style="color:var(--green)">'+(bestAvg>=0?'+':'')+'$'+Math.abs(bestAvg)+'</strong>). '
+          text:'Your best hour is <strong>'+fmt12(bestH)+'</strong> (promedio <strong style="color:var(--green)">'+(bestAvg>=0?'+':'')+'$'+Math.abs(bestAvg)+'</strong>). '
             +'Evita operar a las <strong>'+fmt12(worstH)+'</strong> — promedio <strong style="color:var(--red)">'+(worstAvg>=0?'+':'')+'$'+worstAvg+'</strong> por trade.'
         });
       }
@@ -2499,11 +2499,11 @@ async function loadAccountData(id, silent) {
     if (streak2 >= 3) {
       insights.push(streakDir==='win' ? {
         icon:'↑', color:'var(--green)', bg:'rgba(61,186,114,0.07)', border:'rgba(61,186,114,0.2)',
-        label:'Racha ganadora',
+        label:'Winning streak',
         text:'You have <strong>'+streak2+' consecutive winning trades.</strong> High confidence moment — maintain discipline and don\'t over-size positions.'
       } : {
         icon:'↓', color:'var(--red)', bg:'rgba(224,85,85,0.07)', border:'rgba(224,85,85,0.2)',
-        label:'Racha perdedora',
+        label:'Losing streak',
         text:'You have <strong>'+streak2+' consecutive losses.</strong> Statistics show that revenge trades worsen outcomes. Considera tomar un descanso.'
       });
     }
@@ -2596,7 +2596,7 @@ async function loadAccountData(id, silent) {
   '<div style="flex-shrink:0;display:flex;flex-direction:column;gap:6px;text-align:right">' +
   '<div style="font-size:9px;color:var(--text3)">Checklist <span style="color:'+_clColor+'">'+(_clHasItems?(_clDoneCount>0?'✓':'✗'):'—')+'</span></div>' +
   '<div style="font-size:9px;color:var(--text3)">Mood check <span style="color:'+(moodLevel3?'var(--green)':'var(--red)')+'">'+( moodLevel3?'✓':'✗')+'</span></div>' +
-  '<div style="font-size:9px;color:var(--text3)">Reglas <span style="color:'+(hasRules?'var(--green)':'var(--amber)')+'">'+( hasRules?'✓':'Sin config')+'</span></div>' +
+  '<div style="font-size:9px;color:var(--text3)">Rules <span style="color:'+(hasRules?'var(--green)':'var(--amber)')+'">'+( hasRules?'✓':'Sin config')+'</span></div>' +
   '</div></div>' +
 
   // ── ROW 3: Mistakes · Positivos · Performance ──
@@ -2613,8 +2613,8 @@ async function loadAccountData(id, silent) {
         '<div style="font-size:10px;color:var(--text);font-weight:500">'+(tagLabels2[m.tag]||m.tag)+(m.ticker?' · '+m.ticker:'')+'</div></div>' +
         '<span style="font-size:10px;font-weight:700;color:'+(m.pnl>=0?'var(--green)':'var(--red)')+'">'+fmt(m.pnl,true)+'</span></div>';
     }
-    todayMistakes.slice(0,3).forEach(function(m){ html2 += mistakeRow(m,'Hoy'); });
-    prevMistakes.slice(0,2).forEach(function(m){ html2 += mistakeRow(m,'Ayer'); });
+    todayMistakes.slice(0,3).forEach(function(m){ html2 += mistakeRow(m,'Today'); });
+    prevMistakes.slice(0,2).forEach(function(m){ html2 += mistakeRow(m,'Yesterday'); });
     if (!html2) html2 = '<div style="font-size:10px;color:var(--green);padding:8px 0">✓ Sin errores registrados</div>';
     return html2;
   })() +
@@ -2631,8 +2631,8 @@ async function loadAccountData(id, silent) {
         '<div><div style="font-size:9px;color:var(--text3)">'+label+'</div>' +
         '<div style="font-size:10px;color:var(--text);font-weight:500">'+p.label+'</div></div></div>';
     }
-    todayPositives.slice(0,3).forEach(function(p){ html3 += posRow(p,'Hoy'); });
-    prevPositives.slice(0,2).forEach(function(p){ html3 += posRow(p,'Ayer'); });
+    todayPositives.slice(0,3).forEach(function(p){ html3 += posRow(p,'Today'); });
+    prevPositives.slice(0,2).forEach(function(p){ html3 += posRow(p,'Yesterday'); });
     if (!html3) html3 = '<div style="font-size:10px;color:var(--text3);padding:8px 0">Opera para ver tus puntos positivos</div>';
     return html3;
   })() +
@@ -2649,7 +2649,7 @@ async function loadAccountData(id, silent) {
   '<div style="font-size:9px;color:var(--text3);margin-top:3px">'+(todayWR!==null?'WR '+todayWR+'%':'—')+' · '+todayTrades.length+' trades</div></div>' +
   // Ayer
   '<div style="background:var(--surface2);border-radius:7px;padding:10px">' +
-  '<div style="font-size:8px;color:var(--text3);text-transform:uppercase;margin-bottom:6px">'+(prevDay?'Ayer':'Sin datos')+'</div>' +
+  '<div style="font-size:8px;color:var(--text3);text-transform:uppercase;margin-bottom:6px">'+(prevDay?'Yesterday':'Sin datos')+'</div>' +
   '<div style="font-size:20px;font-weight:800;color:'+(prevPnl>=0?'var(--green)':'var(--red)')+'">'+( prevDay?fmt(prevPnl,true):'—')+'</div>' +
   '<div style="font-size:9px;color:var(--text3);margin-top:3px">'+(prevDay&&prevWR!==null?'WR '+prevWR+'%':'—')+' · '+prevTrades.length+' trades</div></div>' +
   '</div>' +
@@ -2694,7 +2694,7 @@ async function loadAccountData(id, silent) {
   '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px">' +
   '<div class="metric"><div class="m-label">Avg. Win</div><div class="m-val pos">$'+avgWin+'</div></div>' +
   '<div class="metric"><div class="m-label">Avg. Loss</div><div class="m-val neg">-$'+avgLoss+'</div></div>' +
-  '<div class="metric"><div class="m-label">P&L Semana</div><div class="m-val '+(weekPnl>=0?'pos':'neg')+'">'+fmt(weekPnl,true)+'</div></div>' +
+  '<div class="metric"><div class="m-label">P&L Week</div><div class="m-val '+(weekPnl>=0?'pos':'neg')+'">'+fmt(weekPnl,true)+'</div></div>' +
   '<div class="metric"><div class="m-label">P&L Hoy</div><div class="m-val '+(todayPnl>=0?'pos':'neg')+'">'+fmt(todayPnl,true)+'</div></div>' +
   '</div>' +
 
@@ -2721,10 +2721,10 @@ async function loadAccountData(id, silent) {
   '<div class="cal-grid" style="overflow:visible">'+calHtml+'</div></div>' +
 
   '<div class="panel" style="padding:16px">' +
-  '<div style="font-size:9px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Equity Curve — Semana</div>' +
+  '<div style="font-size:9px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Equity Curve — Week</div>' +
   miniEquity(weekTrades) +
   '<div style="display:flex;justify-content:space-between;margin-top:6px">' +
-  '<span style="font-size:9px;color:var(--text3)">P&L semana</span>' +
+  '<span style="font-size:9px;color:var(--text3)">P&L week</span>' +
   '<span style="font-size:11px;font-weight:700;color:'+(weekPnl>=0?'var(--green)':'var(--red)')+'">'+fmt(weekPnl,true)+'</span></div>' +
   '</div>' +
 
@@ -2791,7 +2791,7 @@ function calcReadinessScore(todayMood, clSessions, trades) {
         : (_isSyn ? '📉 Loss day' : '😫 Mal descanso');
     factors.push({label: moodLbl, color:moodCol, bg:moodBg, border:moodBd});
   } else {
-    factors.push({label:'❓ Sin datos de hoy', color:'var(--text3)', bg:'var(--surface2)', border:'var(--border)'});
+    factors.push({label:'❓ No data for today', color:'var(--text3)', bg:'var(--surface2)', border:'var(--border)'});
   }
 
   // Checklist (25%) — did user complete checklist today?
@@ -2815,7 +2815,7 @@ function calcReadinessScore(todayMood, clSessions, trades) {
     if ((sorted[i].pnl||0)<0) lossStreak++;
     else break;
   }
-  if (lossStreak>=3) { score -= 20; factors.push({label:'📉 Racha perdedora ('+lossStreak+')', color:'#9e5a5a', bg:'var(--red-bg)', border:'var(--red-bd)'}); }
+  if (lossStreak>=3) { score -= 20; factors.push({label:'📉 Losing streak ('+lossStreak+')', color:'#9e5a5a', bg:'var(--red-bg)', border:'var(--red-bd)'}); }
   else if (lossStreak>=1) { score -= 8; factors.push({label:'📉 '+lossStreak+' consecutive losses', color:'#9e8050', bg:'var(--amber-bg)', border:'#3d3020'}); }
 
   // Win streak bonus — also today only
@@ -2824,7 +2824,7 @@ function calcReadinessScore(todayMood, clSessions, trades) {
     if ((sorted[j].pnl||0)>0) winStreak++;
     else break;
   }
-  if (winStreak>=3) { score += 5; factors.push({label:'🔥 Racha ganadora ('+winStreak+')', color:'#5a9e72', bg:'var(--green-bg)', border:'var(--green-bd)'}); }
+  if (winStreak>=3) { score += 5; factors.push({label:'🔥 Winning streak ('+winStreak+')', color:'#5a9e72', bg:'var(--green-bg)', border:'var(--green-bd)'}); }
 
   // Tilt (15%)
   var tiltData = detectTilt(trades||[]);
@@ -2877,7 +2877,7 @@ function calcBiggestMistakes(trades) {
   if (worstHour) {
     var hs = hourStats[worstHour];
     var hwr = Math.round(hs.wins/hs.count*100);
-    mistakes.push({ label:'Hora '+worstHour+':00 — tu peor horario', detail: hwr+'% WR · P&L: '+(hs.pnl>=0?'+':'')+Math.round(hs.pnl) });
+    mistakes.push({ label:'Hora '+worstHour+':00 — your worst trading time', detail: hwr+'% WR · P&L: '+(hs.pnl>=0?'+':'')+Math.round(hs.pnl) });
   }
 
   // 3. After-loss behavior
@@ -3080,21 +3080,21 @@ function calcAllAchievements(trades, clSessions, moodSessions) {
   // ── RACHAS ──
   var streaks = [
     {
-      id:'streak_checklist', emoji:'📋', name:'Racha Checklist',
+      id:'streak_checklist', emoji:'📋', name:'Checklist Streak',
       desc:'Consecutive days completing the checklist',
       levels:[3,7,14,30],
       current: currentStreak(tDays, function(d){ var s=clDay(d); return s&&s.score_pct>=80; }),
       type:'streak'
     },
     {
-      id:'streak_mood', emoji:'🧠', name:'Racha Mood Check',
+      id:'streak_mood', emoji:'🧠', name:'Mood Check Streak',
       desc:'Consecutive days with mood check done',
       levels:[3,7,14],
       current: currentStreak(tDays, function(d){ return !!moodDay(d); }),
       type:'streak'
     },
     {
-      id:'streak_rules', emoji:'🛡', name:'Racha Reglas',
+      id:'streak_rules', emoji:'🛡', name:'Rule Streak',
       desc:'Consecutive days without violating any active rule',
       levels:[3,7,14],
       current: hasActiveRules() ? currentStreak(tDays, function(d){ return dayTrades(d).length>0 && !hasViolations(d); }) : 0,
@@ -3180,7 +3180,7 @@ function calcAllAchievements(trades, clSessions, moodSessions) {
   var milestones = [
     {
       id:'first_clean',   emoji:'✅', name:'Primer trade clean',
-      desc:'Tu primer trade sin errores de disciplina',
+      desc:'Your first trade with no discipline errors',
       total:1, current:Math.min(totalClean,1), unlocked:totalClean>=1
     },
     {
@@ -3199,7 +3199,7 @@ function calcAllAchievements(trades, clSessions, moodSessions) {
       total:10, current:Math.min(mentalDays,10), unlocked:mentalDays>=10
     },
     {
-      id:'perfect_week',  emoji:'🏆', name:'Semana perfecta',
+      id:'perfect_week',  emoji:'🏆', name:'Perfect week',
       desc:'One week with checklist + rules + mood check all 5 days',
       total:1, current:hasPerfectWeek()?1:0, unlocked:hasPerfectWeek()
     },
@@ -3305,7 +3305,7 @@ function buildOnboardingScreen(acc) {
     + '</div>'
     + '<div class="panel" style="padding:14px;cursor:pointer" onclick="navigateTo(\'psychology\')">'
     + '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">Step 2</div>'
-    + '<div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:4px">&#9878; Define tus reglas</div>'
+    + '<div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:4px">&#9878; Define your rules</div>'
     + '<div style="font-size:9px;color:var(--text3);line-height:1.5">Daily loss limit, max drawdown, trading hours. The system monitors them for you.</div>'
     + '</div>'
     + '</div>'
@@ -3681,7 +3681,7 @@ function checkRuleViolations(rulesObj, trades) {
   if (r.checklist && r.checklist.active) {
     var todayCL = (currentChecklistSessions||[]).find(function(s){ return s.session_date === todayStr; });
     if (todayTrades.length > 0 && (!todayCL || todayCL.score_pct < 1)) {
-      violations.push({ rule:{id:'checklist', label:'Completar checklist antes de operar'}, detail: 'Operaste sin completar el checklist hoy' });
+      violations.push({ rule:{id:'checklist', label:'Complete checklist before trading'}, detail: 'You traded without completing today\'s checklist' });
     }
   }
 
@@ -3689,7 +3689,7 @@ function checkRuleViolations(rulesObj, trades) {
   if (r.redday && r.redday.active) {
     var todayMoodSess = (currentMoodSessions||[]).find(function(s){ return (s.session_date||s.date) === todayStr; });
     if (todayTrades.length > 0 && todayMoodSess && todayMoodSess.level === 'red') {
-      violations.push({ rule:{id:'redday', label:'No operar en Red Day'}, detail: 'Operaste siendo un Red Day (mood check rojo)' });
+      violations.push({ rule:{id:'redday', label:'No operar en Red Day'}, detail: 'You traded on a Red Day (red mood check)' });
     }
   }
 
@@ -3804,7 +3804,7 @@ function calcDailyDisciplineScore(dateStr) {
   total = Math.max(0, Math.min(100, total));
 
   var label = total >= 90 ? 'Elite 🏆'
-            : total >= 70 ? 'Disciplinado ✅'
+            : total >= 70 ? 'Disciplined ✅'
             : total >= 50 ? 'En progreso ⚠️'
             : total >= 30 ? 'Attention 🔶'
             : 'Chaotic 🔴';
@@ -4164,7 +4164,7 @@ function calcDailyExecutionScore(dateStr) {
   var label = total >= 90 ? 'Ejecucion perfecta 🎯'
             : total >= 70 ? 'Buena ejecucion ✅'
             : total >= 50 ? 'Ejecucion regular ⚠️'
-            : total >= 30 ? 'Necesita mejora 🔶'
+            : total >= 30 ? 'Needs improvement 🔶'
             : 'Ejecucion deficiente 🔴';
 
   return {
@@ -4236,7 +4236,7 @@ function renderRulesView() {
   var todayTrades = trades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(today); });
   var dscore = calcRulesDisciplineScore(rules, trades);
   var dcolor = dscore.score>=80?'var(--green)':dscore.score>=50?'var(--amber)':'var(--red)';
-  var dlabel = dscore.score>=90?'Disciplina elite':dscore.score>=70?'Trader disciplinado':dscore.score>=50?'En progreso':dscore.score>=30?'Necesita atencion':'Sesion caotica';
+  var dlabel = dscore.score>=90?'Elite Discipline':dscore.score>=70?'Disciplined Trader':dscore.score>=50?'En progreso':dscore.score>=30?'Necesita atencion':'Sesion caotica';
 
   var html = '<div style="padding:20px 24px;max-width:760px">';
 
@@ -4316,8 +4316,8 @@ function renderRulesView() {
           + '<span style="font-size:9px;color:var(--text3)">' + ls + '-' + le + '</span>'
           + '</label>';
       }).join('') + '</div>'
-    + (sel1.length===0 ? '<div style="font-size:10px;color:var(--amber);margin-top:6px">Selecciona al menos una sesion</div>' : '');
-  html += rCard('session','🕐','Horario permitido para operar','Solo puedes tomar trades durante las sesiones seleccionadas', sessHtml, !!r1.active, violations.some(function(v){return v.rule.id==='session';}));
+    + (sel1.length===0 ? '<div style="font-size:10px;color:var(--amber);margin-top:6px">Select at least one session</div>' : '');
+  html += rCard('session','🕐','Horario permitido para operar','You can only trade during selected sessions', sessHtml, !!r1.active, violations.some(function(v){return v.rule.id==='session';}));
 
   // ── Rule 2: No days ──
   var r2 = rules.nodays || {};
@@ -4375,18 +4375,18 @@ function renderRulesView() {
   var cl6 = '<div style="display:flex;align-items:center;gap:8px">'
     + '<div style="width:8px;height:8px;border-radius:50%;background:' + (tCL?'var(--green)':'var(--red)') + '"></div>'
     + '<span style="font-size:11px;color:' + (tCL?'var(--green)':'var(--red)') + ';font-weight:600">'
-    + (tCL ? 'Checklist completado hoy — ' + tCL.score_pct + '%' : 'Sin checklist hoy') + '</span></div>';
-  html += rCard('checklist','📋','No operar sin completar el checklist','El checklist debe estar respondido antes del primer trade del dia', cl6, !!r6.active, violations.some(function(v){return v.rule.id==='checklist';}));
+    + (tCL ? 'Checklist completed today — ' + tCL.score_pct + '%' : 'No checklist today') + '</span></div>';
+  html += rCard('checklist','📋','No trading without completing the checklist','El checklist debe estar respondido antes del primer trade del dia', cl6, !!r6.active, violations.some(function(v){return v.rule.id==='checklist';}));
 
   // ── Rule 7: No Red Day ──
   var r7 = rules.redday || {};
   var tMd = (currentMoodSessions||[]).find(function(s){return (s.session_date||s.date)===today;});
   var rdClr = tMd?(tMd.level==='green'?'var(--green)':tMd.level==='yellow'?'var(--amber)':'var(--red)'):'var(--text3)';
-  var rdTxt = tMd?(tMd.level==='green'?'Green Day — puedes operar':tMd.level==='yellow'?'Yellow Day — opera con cuidado':'Red Day — NO deberias operar'):'Sin mood check hoy';
+  var rdTxt = tMd?(tMd.level==='green'?'Green Day — puedes operar':tMd.level==='yellow'?'Yellow Day — opera con cuidado':'Red Day — NO deberias operar'):'No mood check today';
   var rd7 = '<div style="display:flex;align-items:center;gap:8px">'
     + '<div style="width:8px;height:8px;border-radius:50%;background:' + rdClr + '"></div>'
     + '<span style="font-size:11px;color:' + rdClr + ';font-weight:600">' + rdTxt + '</span></div>';
-  html += rCard('redday','🧠','No operar en Red Day','Si el mood check fue rojo, no tomas trades ese dia', rd7, !!r7.active, violations.some(function(v){return v.rule.id==='redday';}));
+  html += rCard('redday','🧠','No operar en Red Day','If mood check is red, no trades that day', rd7, !!r7.active, violations.some(function(v){return v.rule.id==='redday';}));
 
   // ── Rule 8: Min time gap ──
   var r8 = rules.mintimegap || {};
@@ -4418,7 +4418,7 @@ function renderRulesView() {
   html += '<div class="panel" style="padding:18px;margin-top:8px">'
     + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
     + '<div><div style="font-size:10px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px">Analisis de cumplimiento</div>'
-    + '<div style="font-size:10px;color:var(--text3);margin-top:2px">El Coach IA revisa tus reglas y patrones de incumplimiento</div></div>'
+    + '<div style="font-size:10px;color:var(--text3);margin-top:2px">AI Coach reviews your rules and violation patterns</div></div>'
     + '<button onclick="generateRulesCoach()" class="btn btn-solid" style="font-size:10px;padding:7px 14px">Analizar</button>'
     + '</div>'
     + '<div id="rules-coach-output"><div style="font-size:11px;color:var(--text3);text-align:center;padding:12px 0">Haz clic en Analizar para recibir feedback personalizado sobre tu disciplina.</div></div>'
@@ -5168,7 +5168,7 @@ function renderRulesTab(el) {
   var todayTrades = trades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(today); });
   var dscore = calcRulesDisciplineScore(saved, trades);
   var dcolor = dscore.score>=80?'var(--green)':dscore.score>=50?'var(--amber)':'var(--red)';
-  var dlabel = dscore.score>=90?'Disciplina elite':dscore.score>=70?'Trader disciplinado':dscore.score>=50?'En progreso':dscore.score>=30?'Necesita atencion':'Sesion caotica';
+  var dlabel = dscore.score>=90?'Elite Discipline':dscore.score>=70?'Disciplined Trader':dscore.score>=50?'En progreso':dscore.score>=30?'Necesita atencion':'Sesion caotica';
 
   var html = '<div style="padding:20px 24px;max-width:760px">';
 
@@ -5188,7 +5188,7 @@ function renderRulesTab(el) {
     + '<div style="height:100%;width:' + daily.total + '%;background:' + dcolor2 + ';border-radius:3px;transition:width .5s"></div></div>'
     + '<div style="font-size:13px;color:var(--text);font-weight:700">' + daily.label + '</div>'
     + '<div style="font-size:10px;color:var(--text3);margin-top:2px">'
-    + (daily.hasTrades ? daily.tradeCount + ' trade' + (daily.tradeCount!==1?'s':'') + ' hoy' : 'Sin trades hoy')
+    + (daily.hasTrades ? daily.tradeCount + ' trade' + (daily.tradeCount!==1?'s':'') + ' hoy' : 'No trades today')
     + ' · ' + violations.length + ' regla' + (violations.length!==1?'s':'') + ' incumplida' + (violations.length!==1?'s':'')
     + '</div></div></div>'
     // 3 sub-scores
@@ -5284,8 +5284,8 @@ function renderRulesTab(el) {
       + '</div>';
   });
   sessHtml += '</div>';
-  if (!sel1.length) sessHtml += '<div style="font-size:10px;color:var(--amber);margin-top:6px">Selecciona al menos una sesion</div>';
-  html += rCard('session','🕐','Horario permitido para operar','Solo puedes tomar trades durante las sesiones seleccionadas', sessHtml, !!r1.active, violations.some(function(v){return v.rule.id==='session';}));
+  if (!sel1.length) sessHtml += '<div style="font-size:10px;color:var(--amber);margin-top:6px">Select at least one session</div>';
+  html += rCard('session','🕐','Horario permitido para operar','You can only trade during selected sessions', sessHtml, !!r1.active, violations.some(function(v){return v.rule.id==='session';}));
 
   // Rule 2: No days
   var r2 = rules.nodays || {};
@@ -5344,18 +5344,18 @@ function renderRulesTab(el) {
   var cl6 = '<div style="display:flex;align-items:center;gap:8px">'
     + '<div style="width:8px;height:8px;border-radius:50%;background:' + (tCL?'var(--green)':'var(--red)') + '"></div>'
     + '<span style="font-size:11px;color:' + (tCL?'var(--green)':'var(--red)') + ';font-weight:600">'
-    + (tCL ? 'Checklist completado hoy — ' + tCL.score_pct + '%' : 'Sin checklist hoy') + '</span></div>';
-  html += rCard('checklist','📋','No operar sin completar el checklist','El checklist debe estar respondido antes del primer trade del dia', cl6, !!r6.active, violations.some(function(v){return v.rule.id==='checklist';}));
+    + (tCL ? 'Checklist completed today — ' + tCL.score_pct + '%' : 'No checklist today') + '</span></div>';
+  html += rCard('checklist','📋','No trading without completing the checklist','El checklist debe estar respondido antes del primer trade del dia', cl6, !!r6.active, violations.some(function(v){return v.rule.id==='checklist';}));
 
   // Rule 7
   var r7 = rules.redday || {};
   var tMd = (currentMoodSessions||[]).find(function(s){return (s.session_date||s.date)===today;});
   var rdClr = tMd?(tMd.level==='green'?'var(--green)':tMd.level==='yellow'?'var(--amber)':'var(--red)'):'var(--text3)';
-  var rdTxt = tMd?(tMd.level==='green'?'Green Day — puedes operar':tMd.level==='yellow'?'Yellow Day — opera con cuidado':'Red Day — NO deberias operar'):'Sin mood check hoy';
+  var rdTxt = tMd?(tMd.level==='green'?'Green Day — puedes operar':tMd.level==='yellow'?'Yellow Day — opera con cuidado':'Red Day — NO deberias operar'):'No mood check today';
   var rd7 = '<div style="display:flex;align-items:center;gap:8px">'
     + '<div style="width:8px;height:8px;border-radius:50%;background:' + rdClr + '"></div>'
     + '<span style="font-size:11px;color:' + rdClr + ';font-weight:600">' + rdTxt + '</span></div>';
-  html += rCard('redday','🧠','No operar en Red Day','Si el mood check fue rojo, no tomas trades ese dia', rd7, !!r7.active, violations.some(function(v){return v.rule.id==='redday';}));
+  html += rCard('redday','🧠','No operar en Red Day','If mood check is red, no trades that day', rd7, !!r7.active, violations.some(function(v){return v.rule.id==='redday';}));
 
   // Rule 8
   var r8 = rules.mintimegap || {};
@@ -5789,14 +5789,14 @@ function renderRendimientoView() {
 
   // Header metrics grid
   out += '<div class="panel" style="padding:0;overflow:hidden">';
-  out += '<div class="panel-head"><span class="panel-title">◈ Rendimiento</span><span class="panel-cap">Semana actual · ' + now.toLocaleDateString('es',{month:'long',year:'numeric'}) + '</span></div>';
+  out += '<div class="panel-head"><span class="panel-title">◈ Performance</span><span class="panel-cap">Semana actual · ' + now.toLocaleDateString('es',{month:'long',year:'numeric'}) + '</span></div>';
   out += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0">';
   var metrics2 = [
-    { label:'P&L Semana',   val: weekTrades.length  ? fmt(weekPnl)  : '--', color: weekTrades.length  ? pnlColor(weekPnl)  : 'var(--text3)', sub: (weekTrades.length||'0') + ' trades' },
+    { label:'P&L Week',   val: weekTrades.length  ? fmt(weekPnl)  : '--', color: weekTrades.length  ? pnlColor(weekPnl)  : 'var(--text3)', sub: (weekTrades.length||'0') + ' trades' },
     { label:'P&L Mes',      val: monthTrades.length ? fmt(monthPnl) : '--', color: monthTrades.length ? pnlColor(monthPnl) : 'var(--text3)', sub: (monthTrades.length||'0') + ' trades' },
-    { label:'Win Rate Semana', val: weekWR!==null ? weekWR+'%' : '--', color: weekWR>=60?'var(--green)':weekWR>=40?'var(--amber)':'var(--red)', sub: weekWR!==null?'':'Sin trades' },
+    { label:'Win Rate Week', val: weekWR!==null ? weekWR+'%' : '--', color: weekWR>=60?'var(--green)':weekWR>=40?'var(--amber)':'var(--red)', sub: weekWR!==null?'':'Sin trades' },
     { label:'Win Rate Mes',    val: monthWR!==null ? monthWR+'%' : '--', color: monthWR>=60?'var(--green)':monthWR>=40?'var(--amber)':'var(--red)', sub: monthWR!==null?'':'Sin trades' },
-    { label:'Limpios Semana',  val: weekClean!==null ? weekClean+'%' : '--', color: weekClean>=70?'var(--green)':weekClean>=50?'var(--amber)':'var(--red)', sub: 'trades clean' },
+    { label:'Clean Week',  val: weekClean!==null ? weekClean+'%' : '--', color: weekClean>=70?'var(--green)':weekClean>=50?'var(--amber)':'var(--red)', sub: 'trades clean' },
     { label:'Total Trades',    val: trades.length, color: 'var(--text)', sub: 'historical' },
   ];
   metrics2.forEach(function(m, i) {
@@ -5812,7 +5812,7 @@ function renderRendimientoView() {
 
   // ── Weekly Coach ──
   out += '<div class="panel" style="padding:0;overflow:hidden">';
-  out += '<div class="panel-head"><span class="panel-title">✦ Coach Semanal</span><span class="panel-cap" style="color:var(--amber)">Performance analysis · powered by Claude</span></div>';
+  out += '<div class="panel-head"><span class="panel-title">✦ Weekly Coach</span><span class="panel-cap" style="color:var(--amber)">Performance analysis · powered by Claude</span></div>';
   out += '<div style="padding:18px" id="insights-coach-wrap">';
   var isFriday = now.getDay() === 5;
   if (!isFriday) {
@@ -5824,7 +5824,7 @@ function renderRendimientoView() {
     : '<div style="font-size:11px;color:var(--text3);text-align:center;padding:20px 0">No analysis yet. Click to generate the weekly analysis.</div>';
   out += '</div>';
   out += '<div style="margin-top:14px;display:flex;gap:8px">';
-  out += '<button class="btn btn-solid" id="coach-btn" onclick="generateCoachAnalysis()">' + (coachLoading?'Analizando...':'⚡ Analizar semana') + '</button>';
+  out += '<button class="btn btn-solid" id="coach-btn" onclick="generateCoachAnalysis()">' + (coachLoading?'Analizando...':'⚡ Analyze week') + '</button>';
   if (coachAnalysis) out += '<button class="btn btn-ghost" onclick="coachAnalysis=null;renderRendimientoView()">Limpiar</button>';
   out += '</div></div></div>';
 
@@ -5912,7 +5912,7 @@ async function generateCoachAnalysis() {
   });
   var _dataCtxLine = "Calidad de datos: "+_weekWithEmo+" trades with real emotion, "+_weekInferred+" inferidos por comportamiento. Mood check: "+_moodDays+"/5 days. "+(_weekInferred>0?"For trades without emotion, use behavior (revenge, tilt, overtrading) as psychological proxy, don\'t assert specific emotions.":"");
 
-  var prompt = "Eres un coach de trading profesional. Analiza la semana en espanol, directo y constructivo.\n\n" +
+  var prompt = "Eres un coach de trading profesional. Analyze the week in English, direct and constructive.\n\n" +
     "DATOS:\n" +
     "- Trades: " + wt.length + "\n" +
     "- P&L: " + (ctx.weekPnl>=0?"+":"") + "$" + (ctx.weekPnl||0).toFixed(0) + "\n" +
@@ -6106,7 +6106,7 @@ function buildMindView(trades) {
   var freqOpts  = [
     { val:'daily',    lbl:'Every day' },
     { val:'biweekly', lbl:'Wed and Fri' },
-    { val:'weekly',   lbl:'Semanal' },
+    { val:'weekly',   lbl:'Weekly' },
     { val:'monthly',  lbl:'Mensual' },
     { val:'custom',   lbl:'Personalizado' }
   ];
@@ -6124,7 +6124,7 @@ function buildMindView(trades) {
     + '</div>'
     + (_coachReady
         ? '<button class="btn btn-solid" id="mind-coach-btn" style="white-space:nowrap;flex-shrink:0" onclick="generateMindCoach()">'
-          + (mindCoachLoading ? '<span class="spinner" style="width:12px;height:12px;margin-right:6px"></span>Analizando...' : '⚡ Analizar ahora')
+          + (mindCoachLoading ? '<span class="spinner" style="width:12px;height:12px;margin-right:6px"></span>Analizando...' : '⚡ Analyze now')
           + '</button>'
         : '<div style="text-align:right">'
           + '<div style="font-size:10px;color:var(--text2);font-weight:600;margin-bottom:6px">Necesito <strong style="color:var(--amber)">' + _coachNeed + ' more trades</strong></div>'
@@ -6167,7 +6167,7 @@ function buildMindView(trades) {
   html += '<div class="panel" style="padding:20px">'
     + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">'
     + '<div style="font-size:10px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px">Mind Score Hoy</div>'
-    + '<div style="font-size:9px;color:var(--text3)">' + (mindData.hasTrades ? mindData.tradeCount + ' trade' + (mindData.tradeCount!==1?'s':'') + ' hoy' : 'Sin trades hoy') + '</div>'
+    + '<div style="font-size:9px;color:var(--text3)">' + (mindData.hasTrades ? mindData.tradeCount + ' trade' + (mindData.tradeCount!==1?'s':'') + ' hoy' : 'No trades today') + '</div>'
     + '</div>'
     + '<div style="display:flex;align-items:center;gap:20px">'
     + '<div style="text-align:center;flex-shrink:0">'
@@ -6418,7 +6418,7 @@ function buildMindView(trades) {
     var emoWins  = tradesWithEmo.filter(function(t){ return (t.pnl||0)>0; }).length;
     var avgPnl2  = emoPnl[emo] / emoCounts[emo];
     var winRate2 = emoCounts[emo] ? Math.round(emoWins/emoCounts[emo]*100) : 0;
-    var positiveEmos = ['Tranquilo','Disciplinado','Seguro','En zona'];
+    var positiveEmos = ['Tranquilo','Disciplined','Seguro','En zona'];
     var negativeEmos = ['Ansioso','Impulsivo','Con miedo','Frustrado'];
     var isPos = positiveEmos.includes(emo);
     var isNeg = negativeEmos.includes(emo);
@@ -6565,7 +6565,7 @@ function buildMindView(trades) {
     html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">';
 
     // Best hours
-    html += '<div><div style="font-size:9px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">🏆 Mejores horas</div>'
+    html += '<div><div style="font-size:9px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">🏆 Best hours</div>'
       + '<div style="display:flex;flex-direction:column;gap:6px">';
     top3Best.forEach(function(h) {
       var barPct = Math.round(Math.abs(h.pnl)/maxBar*100);
@@ -6581,7 +6581,7 @@ function buildMindView(trades) {
     html += '</div></div>';
 
     // Worst hours
-    html += '<div><div style="font-size:9px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">⚠ Peores horas</div>'
+    html += '<div><div style="font-size:9px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">⚠ Worst hours</div>'
       + '<div style="display:flex;flex-direction:column;gap:6px">';
     top3Worst.forEach(function(h) {
       var barPct = Math.round(Math.abs(h.pnl)/maxBar*100);
@@ -7041,7 +7041,7 @@ function showOnboardingGuide() {
     },
     {
       icon: '🏆',
-      title: 'Rachas y logros',
+      title: 'Streaks & Achievements',
       subtitle: 'Tu progreso a largo plazo',
       content: 'In <strong>Psico Score</strong> you\'ll see two types of recognition:<br><br><strong>Streaks</strong> — consecutive days doing something bien: completar el checklist, respetar reglas, no caer en tilt. Se rompen si fallas un día.<br><br><strong>Hitos</strong> — logros permanentes que se desbloquean una sola vez: primer trade clean, 10 impulse-free trades, perfect week, etc.<br><br>They\'re not decoration — they reflect your real consistency as a trader.',
       tip: '💡 The hardest milestones (Perfect Week, Elite Month) require consistency in checklist, rules and thisado mental simultaneously.'
@@ -7083,9 +7083,9 @@ function showOnboardingGuide() {
       + '<div style="font-size:11px;color:var(--text2);line-height:1.8;margin-bottom:' + (s.tip ? '0' : '24px') + '">' + s.content + '</div>'
       + (s.tip ? '<div style="margin:14px 0 24px;padding:10px 14px;background:#1e2a1e;border:1px solid var(--green-bd);border-radius:8px;font-size:10px;color:var(--green);line-height:1.6">' + s.tip + '</div>' : '')
       + '<div style="display:grid;grid-template-columns:' + (isFirst ? '1fr' : '1fr 2fr') + ';gap:8px">'
-      + (isFirst ? '' : '<button id="ob-back" style="padding:11px;border:1px solid var(--border);border-radius:9px;background:none;color:var(--text3);font-size:11px;cursor:pointer;font-family:inherit">← Anterior</button>')
+      + (isFirst ? '' : '<button id="ob-back" style="padding:11px;border:1px solid var(--border);border-radius:9px;background:none;color:var(--text3);font-size:11px;cursor:pointer;font-family:inherit">← Previous</button>')
       + '<button id="ob-next" style="padding:11px;border:none;border-radius:9px;background:' + (isLast ? 'var(--green)' : '#5a9e9e') + ';color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">'
-      + (isLast ? 'Start using Pattro! 🚀' : 'Siguiente →') + '</button>'
+      + (isLast ? 'Start using Pattro! 🚀' : 'Next →') + '</button>'
       + '</div>'
       + (!isLast ? '<div style="text-align:center;margin-top:10px"><button id="ob-skip" style="background:none;border:none;color:var(--text3);font-size:9px;cursor:pointer;font-family:inherit">Saltar guía</button></div>' : '')
       + '</div>';
@@ -7299,7 +7299,7 @@ function showMoodCheck(accountId) {
       + '<div style="background:'+result.bg+';border:1px solid '+result.bd+';border-radius:10px;padding:14px 18px;margin-bottom:20px;font-size:12px;color:var(--text2);line-height:1.7">'+result.msg+'</div>';
     card.appendChild(res);
     var closeBtn = document.createElement('button');
-    closeBtn.textContent = 'Entendido, empezar';
+    closeBtn.textContent = 'Got it, let\'s start';
     closeBtn.setAttribute('type','button');
     closeBtn.style.cssText = 'width:100%;padding:11px;background:'+result.color+';border:none;border-radius:9px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit';
     closeBtn.addEventListener('click', function(){ overlay.remove(); });
@@ -7310,7 +7310,7 @@ function showMoodCheck(accountId) {
   card.appendChild(submitBtn);
 
   var skipBtn = document.createElement('button');
-  skipBtn.textContent = 'Omitir hoy';
+  skipBtn.textContent = 'Skip today';
   skipBtn.setAttribute('type','button');
   skipBtn.style.cssText = 'width:100%;padding:8px;background:none;border:none;color:var(--text3);font-size:10px;cursor:pointer;font-family:inherit;margin-top:6px';
   skipBtn.addEventListener('click', function() {
@@ -7759,7 +7759,7 @@ async function generateAutoFullAnalysis(trades, accountId, day) {
     + ' | Semana pasada: ' + (Object.entries(emoOld).map(function(e){return e[0]+':'+e[1];}).join(', ')||'sin datos');
 
   var mem = getCoachMemory(accountId);
-  var prevContext = mem.lastFullMessage ? ('Tu analisis anterior ('+mem.lastAnalysisDay+') decia: ' + mem.lastFullMessage.slice(0,200) + '...') : '';
+  var prevContext = mem.lastFullMessage ? ('Your previous analysis ('+mem.lastAnalysisDay+') decia: ' + mem.lastFullMessage.slice(0,200) + '...') : '';
 
   var prompt = 'Eres el coach de psico-trading personal de este trader. Hoy es ' + day + '.'
     + (prevContext ? ' ' + prevContext + ' Muestra evolucion respecto a eso.' : '')
@@ -7769,7 +7769,7 @@ async function generateAutoFullAnalysis(trades, accountId, day) {
     + 'Estructura tu respuesta: '
     + '1) TENDENCIA: Como ha evolucionado su performance (2 dias vs semana vs mes) '
     + '2) PATRON PSICOLOGICO: El patron mental dominante que ves en sus notas y disciplina '
-    + '3) PROGRESO: Que ha mejorado comparado con el periodo anterior '
+    + '3) PROGRESS: What has improved compared to the previous period '
     + '4) ERROR PERSISTENTE: El error que sigue repitiendo a lo largo del tiempo '
     + '5) PLAN: 3 acciones concretas y especificas para la proxima sesion '
     + '6) MENSAJE: Una frase poderosa y personalizada. '
@@ -7804,7 +7804,7 @@ function saveCustomFreqDays() {
   if (inp) freq.customDays = parseInt(inp.value) || 7;
   saveCoachFrequency(acctId, freq);
   var btn = inp && inp.nextElementSibling;
-  if (btn) { btn.textContent = '✓'; setTimeout(function(){ btn.textContent = 'Guardar'; }, 1500); }
+  if (btn) { btn.textContent = '✓'; setTimeout(function(){ btn.textContent = 'Save'; }, 1500); }
 }
 
 // ── Persist coach messages history ──
@@ -8173,7 +8173,7 @@ function renderAchievementsHtml() {
     + '<div style="padding:16px">';
 
   // ── RACHAS ──
-  html += '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:8px">Rachas activas</div>';
+  html += '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:8px">Active streaks</div>';
   html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px">';
 
   streaks.forEach(function(s) {
@@ -8376,12 +8376,12 @@ function exportReportPDF() {
     bestTrade && worstTrade ? [
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">',
         '<div style="background:#f0faf4;border:1px solid #c3e6cb;border-left:3px solid #2a7a45;border-radius:6px;padding:10px 12px">',
-          '<div style="font-size:8px;color:#777;text-transform:uppercase;margin-bottom:4px">Mejor trade</div>',
+          '<div style="font-size:8px;color:#777;text-transform:uppercase;margin-bottom:4px">Best trade</div>',
           '<div style="font-size:15px;font-weight:700;color:#2a7a45">+$'+Math.round(bestTrade.pnl)+'</div>',
           '<div style="font-size:9px;color:#555">'+(bestTrade.ticker||'')+'  '+((bestTrade.entry_time||'').slice(0,10))+'</div>',
         '</div>',
         '<div style="background:#fff3f3;border:1px solid #f5c6cb;border-left:3px solid #8b1c1c;border-radius:6px;padding:10px 12px">',
-          '<div style="font-size:8px;color:#777;text-transform:uppercase;margin-bottom:4px">Peor trade</div>',
+          '<div style="font-size:8px;color:#777;text-transform:uppercase;margin-bottom:4px">Worst trade</div>',
           '<div style="font-size:15px;font-weight:700;color:#8b1c1c">-$'+Math.abs(Math.round(worstTrade.pnl))+'</div>',
           '<div style="font-size:9px;color:#555">'+(worstTrade.ticker||'')+'  '+((worstTrade.entry_time||'').slice(0,10))+'</div>',
         '</div>',
@@ -8409,7 +8409,7 @@ function exportReportPDF() {
       '<div style="font-size:9px;color:#777;text-transform:uppercase;margin-bottom:8px">Trades ('+total+')</div>',
       '<table style="width:100%;border-collapse:collapse;font-size:9px">',
         '<thead><tr style="background:#e8e8e8">',
-          ['Fecha/Hora','Ticker','Lado','P&L','R:R','Tag','Notas'].map(function(h){
+          ['Fecha/Hora','Ticker','Lado','P&L','R:R','Tag','Notes'].map(function(h){
             return '<th style="padding:4px 6px;text-align:left;border:1px solid #ddd;white-space:nowrap">'+h+'</th>';
           }).join(''),
         '</tr></thead>',
@@ -8671,7 +8671,7 @@ function showLockBlockedModal(minutesLeft) {
     + 'You cannot disable the lock while it is active.<br>Wait for it to end.'
     + '</div>'
     + '<button onclick="document.getElementById(\'bb-lock-blocked-modal\').remove()" '
-    + 'style="padding:10px 24px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">Entendido</button>'
+    + 'style="padding:10px 24px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">Got it</button>'
     + '</div>';
   overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
   document.body.appendChild(overlay);
@@ -9296,7 +9296,7 @@ function openLegalModal(type) {
     // Footer
     + '<div style="padding:14px 24px;border-top:1px solid var(--border);flex-shrink:0;display:flex;justify-content:space-between;align-items:center">'
     + '<div style="font-size:9px;color:var(--text3)">Last updated: January 2026</div>'
-    + '<button onclick="document.getElementById(\'bb-legal-modal\').remove()" style="padding:8px 18px;background:#5a9e9e;border:none;border-radius:7px;color:#fff;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit">Entendido</button>'
+    + '<button onclick="document.getElementById(\'bb-legal-modal\').remove()" style="padding:8px 18px;background:#5a9e9e;border:none;border-radius:7px;color:#fff;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit">Got it</button>'
     + '</div>'
     + '</div>';
 
@@ -9343,7 +9343,7 @@ function openLegalModal(type) {
       </div>
       <!-- Actions -->
       <div style="display:flex;gap:8px;padding-top:4px;border-top:1px solid var(--border)">
-        <button class="btn btn-solid" onclick="saveNoteModal()" style="flex:1">Guardar nota</button>
+        <button class="btn btn-solid" onclick="saveNoteModal()" style="flex:1">Save note</button>
         <button class="btn btn-ghost" onclick="closeNoteModal()">Cerrar</button>
       </div>
     </div>
