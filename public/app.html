@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1773972014 -->
+<!-- v1773972673 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -803,13 +803,13 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
         </div>
         <select class="form-select" id="t-emotion">
           <option value="neutral" selected>😶 Neutral</option>
-          <option value="calm">😌 Tranquilo</option>
-          <option value="confident">💪 Seguro</option>
-          <option value="anxious">😰 Ansioso</option>
-          <option value="fear">😨 Con miedo</option>
-          <option value="greedy">🤑 Codicioso</option>
-          <option value="bored">😐 Aburrido</option>
-          <option value="frustrated">😤 Frustrado</option>
+          <option value="calm">😌 Calm</option>
+          <option value="confident">💪 Confident</option>
+          <option value="anxious">😰 Anxious</option>
+          <option value="fear">😨 Fearful</option>
+          <option value="greedy">🤑 Greedy</option>
+          <option value="bored">😐 Bored</option>
+          <option value="frustrated">😤 Frustrated</option>
         </select>
       </div>
     </div>
@@ -6599,7 +6599,7 @@ function buildMindView(trades) {
   }
 
   // ── Heatmap ──
-  html += '<div style="font-size:9px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Heatmap — Hora × Día</div>';
+  html += '<div style="font-size:9px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Heatmap — Hour × Day</div>';
 
   var hmHours = [];
   for (var hh=8; hh<=17; hh++) hmHours.push(hh);
@@ -6695,7 +6695,7 @@ function buildMindView(trades) {
   
 // Revenge + streak card
   html += '<div class="panel" style="padding:20px">'
-    + '<div style="font-size:10px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px">Streaks & Alertas</div>'    + '<div style="display:flex;flex-direction:column;gap:0">'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'    + '<span style="font-size:11px;color:var(--text2)">Racha wins actual</span>'    + '<span style="font-size:16px;font-weight:700;color:'+(currentWinStreak>=3?'var(--green)':currentWinStreak>=1?'var(--text)':'var(--text3)')+'">'+currentWinStreak+'</span></div>'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'    + '<span style="font-size:11px;color:var(--text2)">Racha losses actual</span>'    + '<span style="font-size:16px;font-weight:700;color:'+(currentLossStreak>=2?'var(--red)':currentLossStreak>=1?'var(--amber)':'var(--text3)')+'">'+currentLossStreak+'</span></div>'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'    + '<span style="font-size:11px;color:var(--text2)">Max hot streak <span style="font-size:9px;color:var(--text3)">(wins seguidos)</span></span>'    + '<span style="font-size:16px;font-weight:700;color:var(--green)">'+maxWinStreak+'</span></div>'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'    + '<span style="font-size:11px;color:var(--text2)">Max loss streak</span>'    + '<span style="font-size:16px;font-weight:700;color:'+(maxLossStreak>=4?'var(--red)':maxLossStreak>=2?'var(--amber)':'var(--text)')+'">'+maxLossStreak+'</span></div>'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'    + '<span style="font-size:11px;color:var(--text2)">Revenge trades</span>'    + '<span style="font-size:16px;font-weight:700;color:'+(revengeTrades.length>0?'var(--red)':'var(--green)')+'">'+revengeTrades.length+'</span></div>'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0">'    + '<span style="font-size:11px;color:var(--text2)">% Clean trades</span>'    + '<span style="font-size:16px;font-weight:700;color:'+(cleanPct>=60?'var(--green)':cleanPct>=40?'var(--amber)':'var(--red)')+'">'+cleanPct+'%</span></div>'    + (currentWinStreak>=4 ? '<div style="background:var(--green-bg);border:1px solid var(--green-bd);border-left:3px solid var(--green);border-radius:7px;padding:9px 12px;margin-top:8px;font-size:10px;color:var(--text2);line-height:1.5">🔥 <strong>Hot streak de '+currentWinStreak+' wins.</strong> Beware of overconfidence — that\'s when most errors come from over-sizensionar posiciones.</div>' : '')    + '</div></div>';
+    + '<div style="font-size:10px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px">Streaks & Alertas</div>'    + '<div style="display:flex;flex-direction:column;gap:0">'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'    + '<span style="font-size:11px;color:var(--text2)">Racha wins actual</span>'    + '<span style="font-size:16px;font-weight:700;color:'+(currentWinStreak>=3?'var(--green)':currentWinStreak>=1?'var(--text)':'var(--text3)')+'">'+currentWinStreak+'</span></div>'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'    + '<span style="font-size:11px;color:var(--text2)">Racha losses actual</span>'    + '<span style="font-size:16px;font-weight:700;color:'+(currentLossStreak>=2?'var(--red)':currentLossStreak>=1?'var(--amber)':'var(--text3)')+'">'+currentLossStreak+'</span></div>'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'    + '<span style="font-size:11px;color:var(--text2)">Max hot streak <span style="font-size:9px;color:var(--text3)">(wins seguidos)</span></span>'    + '<span style="font-size:16px;font-weight:700;color:var(--green)">'+maxWinStreak+'</span></div>'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'    + '<span style="font-size:11px;color:var(--text2)">Max loss streak</span>'    + '<span style="font-size:16px;font-weight:700;color:'+(maxLossStreak>=4?'var(--red)':maxLossStreak>=2?'var(--amber)':'var(--text)')+'">'+maxLossStreak+'</span></div>'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'    + '<span style="font-size:11px;color:var(--text2)">Revenge trades</span>'    + '<span style="font-size:16px;font-weight:700;color:'+(revengeTrades.length>0?'var(--red)':'var(--green)')+'">'+revengeTrades.length+'</span></div>'    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0">'    + '<span style="font-size:11px;color:var(--text2)">% Clean trades</span>'    + '<span style="font-size:16px;font-weight:700;color:'+(cleanPct>=60?'var(--green)':cleanPct>=40?'var(--amber)':'var(--red)')+'">'+cleanPct+'%</span></div>'    + (currentWinStreak>=4 ? '<div style="background:var(--green-bg);border:1px solid var(--green-bd);border-left:3px solid var(--green);border-radius:7px;padding:9px 12px;margin-top:8px;font-size:10px;color:var(--text2);line-height:1.5">🔥 <strong>Hot streak de '+currentWinStreak+' wins.</strong> Beware of overconfidence — that\'s when most errors come from over-size your positions.</div>' : '')    + '</div></div>';
 
   
   html += '</div>'; // end section 7
@@ -6994,7 +6994,7 @@ function showOnboardingGuide() {
       icon: '🏦',
       title: 'Step 1 — Create your trading account',
       subtitle: 'One account = one trading de trading real',
-      content: 'Una <strong>cuenta</strong> en Pattro representa tu cuenta de trading real (ej: "Funded Account #1", "Paper Trading"). You can have multiple and switch between them from the sidebar.<br><br>Click <strong>"+ Add account"</strong> in the sidebar to get started. Eacha cuenta tiene sus propios trades, reglas, checklist y configuración.',
+      content: 'A <strong>account</strong> in Pattro represents your real trading account (e.g., "Funded Account #1", "Paper Trading"). You can have multiple and switch between them from the sidebar.<br><br>Click <strong>"+ Add account"</strong> in the sidebar to get started. Each account has its own trades, rules, checklist and settings.',
       tip: '💡 If you have multiple active funded accounts, create one for each — this keeps the data separate.'
     },
     {
@@ -7008,7 +7008,7 @@ function showOnboardingGuide() {
       icon: '✍️',
       title: 'Step 2B — Registro manual',
       subtitle: 'If you don\'t use TopstepX or prefer to do it yourself',
-      content: 'Usa el botón <strong>"+ Log Trade"</strong> en la barra superior despuafter each trade. You can log:<br><br>• Ticker, lado (long/short), P&L<br>• R:R planned vs achieved<br>• Your emotion during the trade<br>• Discipline tag (clean, impulse, FOMO, etc.)<br>• Custom setup tagsos, notas y screenshot',
+      content: 'Use the <strong>"+ Log Trade"</strong> button in the top bar after each trade. You can log:<br><br>• Ticker, side (long/short), P&L<br>• R:R planned vs achieved<br>• Your emotion during the trade<br>• Discipline tag (clean, impulse, FOMO, etc.)<br>• Custom setup tags, notes and screenshot',
       tip: '💡 You can also combine both options — the extension captures the objective data and you add the context.'
     },
     {
@@ -7022,14 +7022,14 @@ function showOnboardingGuide() {
       icon: '🧠',
       title: 'Paso 4 — Check mental diario',
       subtitle: 'Tu estado interno afecta tus resultados',
-      content: 'Every morning before trading, Pattro does a 4-question check: sleep quality, stress level, concentration and economic pressure.<br><br>Over time the system detects if your worst trading days coincide with poor sleep or high stress. This appears in the <strong>Mind</strong> view.<br><br>You can responderlo desde el dashboard o desde la extensión.',
+      content: 'Every morning before trading, Pattro does a 4-question check: sleep quality, stress level, concentration and economic pressure.<br><br>Over time the system detects if your worst trading days coincide with poor sleep or high stress. This appears in the <strong>Mind</strong> view.<br><br>You can answer it from the dashboard or from the extension.',
       tip: '💡 Con 2 semanas de datos ya ves correlaciones claras entre tu estado mental y tu P&L.'
     },
     {
       icon: '📊',
       title: 'Las vistas del dashboard',
       subtitle: 'Each one has a concrete purpose',
-      content: '<strong>Overview</strong> — daily summary: P&L, Mental Score, active alerts and achievements<br><strong>Trade Log</strong> — todos tus trades con filters, editing and search<br><strong>Calendar</strong> — monthly view, one day = one color based on result<br><strong>Discipline</strong> — chaily checklist, operations and weekly AI Coach<br><strong>Mind</strong> — deep psychology: mood, emotional patterns, streaks<br><strong>Rules</strong> — configure your rules personalizadas de trading<br><strong>Psico Score</strong> — tu Mental Score semanal/mensual y perfil psicológico<br><strong>Settings</strong> — accounts, tags, extension and settings',
+      content: '<strong>Overview</strong> — daily summary: P&L, Mental Score, active alerts and achievements<br><strong>Trade Log</strong> — all your trades with filters, editing and search<br><strong>Calendar</strong> — monthly view, one day = one color based on result<br><strong>Discipline</strong> — daily checklist, operations and weekly AI Coach<br><strong>Mind</strong> — deep psychology: mood, emotional patterns, streaks<br><strong>Rules</strong> — configure your personal trading rules<br><strong>Psico Score</strong> — your weekly/monthly Mental Score and psychological profile<br><strong>Settings</strong> — accounts, tags, extension and settings',
       tip: null
     },
     {
@@ -7043,14 +7043,14 @@ function showOnboardingGuide() {
       icon: '🏆',
       title: 'Streaks & Achievements',
       subtitle: 'Tu progreso a largo plazo',
-      content: 'In <strong>Psico Score</strong> you\'ll see two types of recognition:<br><br><strong>Streaks</strong> — consecutive days doing something bien: completar el checklist, respetar reglas, no caer en tilt. Se rompen si fallas un día.<br><br><strong>Hitos</strong> — logros permanentes que se desbloquean una sola vez: primer trade clean, 10 impulse-free trades, perfect week, etc.<br><br>They\'re not decoration — they reflect your real consistency as a trader.',
+      content: 'In <strong>Psico Score</strong> you\'ll see two types of recognition:<br><br><strong>Streaks</strong> — consecutive days doing something right: completing the checklist, respecting rules, avoiding tilt. They break if you fail a day.<br><br><strong>Milestones</strong> — permanent achievements unlocked once: first clean trade, 10 impulse-free trades, perfect week, etc.<br><br>They\'re not decoration — they reflect your real consistency as a trader.',
       tip: '💡 The hardest milestones (Perfect Week, Elite Month) require consistency in checklist, rules and thisado mental simultaneously.'
     },
     {
       icon: '🚀',
       title: 'All set!',
       subtitle: 'With 15 trades you\'ll see your full psychological profile',
-      content: 'The more trades you log, the more accurate the analysis. With <strong>15+ trades</strong> the AI Coach can generate your full psychological profile: dominant pattern, main saboteur, best trading hours and a concrete work plan.<br><br>With <strong>30+ días</strong> verclearer trends about which internal conditions make operes mejor o peor.',
+      content: 'The more trades you log, the more accurate the analysis. With <strong>15+ trades</strong> the AI Coach can generate your full psychological profile: dominant pattern, main saboteur, best trading hours and a concrete work plan.<br><br>With <strong>30+ days</strong> you\'ll see clearer trends about which internal conditions make you perform better or worse.',
       tip: '💡 You can return to this guide anytime from Settings → "View step-by-step guide".'
     }
   ];
@@ -7087,7 +7087,7 @@ function showOnboardingGuide() {
       + '<button id="ob-next" style="padding:11px;border:none;border-radius:9px;background:' + (isLast ? 'var(--green)' : '#5a9e9e') + ';color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">'
       + (isLast ? 'Start using Pattro! 🚀' : 'Next →') + '</button>'
       + '</div>'
-      + (!isLast ? '<div style="text-align:center;margin-top:10px"><button id="ob-skip" style="background:none;border:none;color:var(--text3);font-size:9px;cursor:pointer;font-family:inherit">Saltar guía</button></div>' : '')
+      + (!isLast ? '<div style="text-align:center;margin-top:10px"><button id="ob-skip" style="background:none;border:none;color:var(--text3);font-size:9px;cursor:pointer;font-family:inherit">Skip guide</button></div>' : '')
       + '</div>';
 
     // Attach events AFTER setting innerHTML — search within overlay container
@@ -7940,7 +7940,7 @@ async function generateMindCoach() {
     + '- Win rate: '+winRate+'%\n'
     + '- Wins: '+wins.length+' | Losses: '+losses.length+'\n'
     + '- Revenge trades detectados: '+revengeCount+'\n\n'
-    + 'DISCIPLINA (distribución):\n'+JSON.stringify(discSummary,null,2)+'\n\n'
+    + 'DISCIPLINE (breakdown):\n'+JSON.stringify(discSummary,null,2)+'\n\n'
     + 'EMOCIONES → RESULTADOS:\n'+(emoSummary||'Sin datos de emociones')+'\n\n'
     + 'MEJORES HORAS: '+hourSummary+'\n\n'
     + 'LAST NOTES:\n'+(allNotes||'Sin notas')+'\n\n'
@@ -8124,7 +8124,7 @@ async function generatePsychProfile() {
   var tagLabels = { moved_sl:'Moved SL', no_confirmation:'No confirmation', overtrading:'Overtrading', impulse:'Impulso', fomo:'FOMO', scaled_in:'Scaled into loss' };
   var tagSummary = Object.keys(profile.tagBreakdown).map(function(k){ return (tagLabels[k]||k)+': '+profile.tagBreakdown[k]+'x'; }).join(', ') || 'ninguno';
 
-  var prompt = 'You are a trading psychologist. Analyze the psychological profile of this trader with empathy and precisión.\n\n'
+  var prompt = 'You are a trading psychologist. Analyze the psychological profile of this trader with empathy and precision.\n\n'
     +'DATOS OBJETIVOS ('+profile.tradeCount+' trades):\n'
     +'- Win rate: '+profile.wr+'%\n'
     +'- R:R promedio: '+profile.rr+'\n'
