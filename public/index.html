@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1773987742 -->
+<!-- v1773988846 -->
 <html lang="en" id="html-root">
 <head>
 <meta charset="UTF-8">
@@ -364,6 +364,20 @@ footer{border-top:1px solid var(--border);padding:22px 48px;display:flex;align-i
   .proof-inner {
     grid-template-columns: 1fr !important;
   }
+}
+
+/* ── Prob band mobile ── */
+@media (max-width: 640px) {
+  .prob-band { padding: 48px 20px; }
+  .prob-inner {
+    grid-template-columns: 1fr !important;
+    gap: 28px !important;
+  }
+  .prob-quote { font-size: 18px !important; }
+  .prob-note  { font-size: 11px; }
+  .mistakes { gap: 10px; }
+  .mistake { padding: 14px; }
+  .mistake p { font-size: 10px; }
 }
 </style>
 </head>

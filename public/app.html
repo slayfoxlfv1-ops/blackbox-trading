@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1773987813 -->
+<!-- v1773988832 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -815,51 +815,81 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
 
 /* ── Modal fixes for mobile ── */
 @media (max-width: 640px) {
-  /* All overlays → bottom sheet */
+  /* Overlays → align to bottom */
   .overlay {
     align-items: flex-end !important;
     padding: 0 !important;
   }
-  /* Modal becomes bottom sheet */
+
+  /* Modal = bottom sheet with internal scroll */
   .modal {
     width: 100% !important;
     max-width: 100% !important;
-    max-height: 88vh !important;
-    border-radius: 18px 18px 0 0 !important;
+    max-height: 85vh !important;
+    border-radius: 20px 20px 0 0 !important;
     border-left: none !important;
     border-right: none !important;
     border-bottom: none !important;
     border-top: 2px solid var(--teal) !important;
-    display: flex;
-    flex-direction: column;
-    padding: 16px 16px 0 !important;
+    /* KEY: remove top-level overflow so sticky footer works */
+    overflow: visible !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0 !important;
   }
-  /* Scrollable content area */
-  .modal > *:not(.modal-title):not(.modal-foot) {
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    flex: 1;
-    min-height: 0;
-  }
-  /* Fixed footer with buttons — always visible */
-  .modal-foot {
-    position: sticky;
-    bottom: 0;
-    background: var(--surface);
-    padding: 12px 0 20px !important;
-    margin-top: 0 !important;
-    padding-bottom: max(20px, env(safe-area-inset-bottom)) !important;
-    z-index: 10;
-  }
-  /* Modal title */
-  .modal-title {
-    margin-bottom: 12px;
+
+  /* Drag handle */
+  .modal::before {
+    content: '';
+    display: block;
+    width: 36px;
+    height: 4px;
+    background: var(--border2);
+    border-radius: 2px;
+    margin: 12px auto 0;
     flex-shrink: 0;
   }
-  /* Settings wrap full width */
-  [style*="max-width:560px"] {
-    max-width: 100% !important;
+
+  /* Title - fixed at top */
+  .modal-title {
+    padding: 12px 16px 10px !important;
     margin: 0 !important;
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+
+  /* All inner content wrapper - this scrolls */
+  .modal > .form-row,
+  .modal > .form-group,
+  .modal > div:not(.modal-title):not(.modal-foot) {
+    /* These are inside the scroll container below */
+  }
+
+  /* Wrap all scrollable content */
+  .modal-body-scroll {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 12px 16px 8px;
+    min-height: 0;
+  }
+
+  /* Footer ALWAYS visible - uses padding-bottom for safe area */
+  .modal-foot {
+    flex-shrink: 0 !important;
+    position: relative !important;
+    background: var(--surface) !important;
+    padding: 10px 16px !important;
+    padding-bottom: max(16px, env(safe-area-inset-bottom)) !important;
+    margin: 0 !important;
+    border-top: 1px solid var(--border) !important;
+    border-radius: 0 !important;
+  }
+
+  /* Full width buttons in footer */
+  .modal-foot .btn {
+    flex: 1;
   }
 }
 </style>
@@ -1065,6 +1095,7 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
 <div class="overlay modal-overlay" id="log-overlay">
   <div class="modal">
     <div class="modal-title">Log Trade</div>
+    <div class="modal-body-scroll">
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">Ticker</label>
@@ -1190,6 +1221,7 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
       </div>
       <input type="file" id="t-screenshot-file" accept="image/*" style="display:none" onchange="previewScreenshot(this)">
     </div>
+    </div><!-- end modal-body-scroll -->
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="closeLogModal()">Cancel</button>
       <button class="btn btn-solid" id="save-trade-btn" onclick="saveTrade()">Save Trade</button>
@@ -1205,7 +1237,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let currentUser = null, accounts = [], currentAccountId = null, currentTrades = null, currentChecklistSessions = [], currentMoodSessions = [], currentView = 'dashboard', authTab = 'login', editingTradeId = null;
 let _tradesLoadedForAccount = null; // tracks which account trades are loaded for
 let tlFilters = { date:'', ticker:'', result:'all' };
-var _achToastedThisSession = {}; // tracks badge IDs toasted in current page session
+// Achievement toasts tracked per-day in localStorage (see _achKey below)
 let tlPage = 1;
 const TL_PAGE_SIZE = 15;
 let repFilters = { period:'month', result:'all', ticker:'', dateFrom:'', dateTo:'' };
@@ -2375,29 +2407,32 @@ async function loadAccountData(id, silent) {
   var badges      = calcBadges(trades, currentChecklistSessions);
 
   // ── Achievement unlock toast ──
-  // Rule: show toast only if badge ID is not in localStorage AND not in session var
-  // This prevents: (a) re-showing after page refresh, (b) re-showing while navigating tabs
+  // Rule: show max once per day per badge. Uses date-stamped localStorage key.
   if (!silent && badges.earned.length) {
     (function() {
-      var _achKey = 'seen_ach_' + id; // use local `id` param, not global
-      var _seen   = [];
+      var _today    = new Date().toISOString().slice(0,10);
+      var _achKey   = 'seen_ach_' + id + '_' + _today; // day-scoped key
+      var _seen     = [];
       try { _seen = JSON.parse(bbStore.get(_achKey) || '[]'); } catch(e) {}
 
-      // New = not in localStorage AND not already toasted this session
+      // Only show badges NOT yet shown today
       var _toShow = badges.earned.filter(function(b) {
-        return _seen.indexOf(b.id) < 0 && !_achToastedThisSession[id + ':' + b.id];
+        return _seen.indexOf(b.id) < 0;
       });
 
       if (!_toShow.length) return;
 
-      // Mark ALL earned badges as seen in localStorage immediately
-      var _allIds = badges.earned.map(function(b){ return b.id; });
-      bbStore.set(_achKey, JSON.stringify(_allIds));
+      // Mark shown today immediately
+      var _newSeen = _seen.concat(_toShow.map(function(b){ return b.id; }));
+      bbStore.set(_achKey, JSON.stringify(_newSeen));
 
-      // Mark the new ones as toasted in session var
-      _toShow.forEach(function(b) { _achToastedThisSession[id + ':' + b.id] = true; });
+      // Clean up yesterday's key so storage doesn't grow
+      try {
+        var _yesterday = new Date(Date.now() - 86400000).toISOString().slice(0,10);
+        bbStore.set('seen_ach_' + id + '_' + _yesterday, null);
+      } catch(e) {}
 
-      // Show toasts
+      // Show max 3 toasts, staggered
       _toShow.slice(0, 3).forEach(function(b, i) {
         setTimeout(function() { showAchievementToast(b); }, 1000 + i * 2200);
       });
