@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774126457 -->
+<!-- v1774126989 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -304,7 +304,7 @@ footer{border-top:1px solid var(--border);padding:22px 48px;display:flex;align-i
   </a>
   <div class="nav-r">
     <a href="#how" class="nav-link" data-i18n="how_label">How it works</a>
-    <a href="#pricing" class="nav-link">Pricing</a>
+    <a href="#pricing" class="nav-link" data-i18n="nav_pricing">Pricing</a>
     <div class="lang-wrap">
       <button class="lang-btn" id="lang-current" onclick="toggleLangMenu()" type="button">
         <span id="lang-label">EN</span>
@@ -315,8 +315,8 @@ footer{border-top:1px solid var(--border);padding:22px 48px;display:flex;align-i
         <div class="lang-opt" onclick="setLang('es')">🇪🇸 <span>Español</span></div>
       </div>
     </div>
-    <a href="/login" class="nav-login">Login</a>
-    <a href="/register" class="btn-cta">Start Free →</a>
+    <a href="/login" class="nav-login" data-i18n="nav_login">Login</a>
+    <a href="/register" class="btn-cta" data-i18n="nav_cta">Start Free →</a>
   </div>
 </nav>
 
@@ -349,18 +349,18 @@ footer{border-top:1px solid var(--border);padding:22px 48px;display:flex;align-i
   <div class="hero-inner">
     <div class="hero-left">
       <div class="hero-badge fu d1">Trading Psychology Engine</div>
-      <h1 class="fu d2">
-        <span data-i18n-html="hero_h1">Stop losing money<br>because of your<br><span class="pain">psychology.</span></span>
+      <h1 class="fu d2" data-i18n="hero_h1">
+        Stop losing money<br>because of your<br><span class="pain">psychology.</span>
       </h1>
-      <p class="hero-sub fu d3">
+      <p class="hero-sub fu d3" data-i18n="hero_sub">
         Pattro detects your trading mistakes automatically
         and tells you <strong>exactly what to fix</strong> —
         revenge trading, FOMO, overtrading, emotional patterns.
         Before they cost you another trade.
       </p>
       <div class="hero-btns fu d4">
-        <a href="/register" class="btn-primary">Start analyzing my trades →</a>
-        <a href="#how" class="btn-outline">See how it works</a>
+        <a href="/register" class="btn-primary" data-i18n="hero_cta">Start analyzing my trades →</a>
+        <a href="#how" class="btn-outline" data-i18n="hero_cta2">See how it works</a>
       </div>
       <div class="hero-trust fu d5" data-i18n="hero_trust" data-i18n="cta_sub">$15/month · Cancel anytime</div>
     </div>
@@ -809,12 +809,16 @@ function applyTranslations(lang) {
 
 
 // ── Scroll animations ──
+// Add 'in' class to hero elements immediately (above fold)
+document.querySelectorAll('.hero .fu').forEach(function(el) {
+  el.classList.add('in');
+});
 var observer = new IntersectionObserver(function(entries) {
   entries.forEach(function(e) {
     if (e.isIntersecting) { e.target.classList.add('in'); observer.unobserve(e.target); }
   });
 }, { threshold: 0.1 });
-document.querySelectorAll('.fu').forEach(function(el) { observer.observe(el); });
+document.querySelectorAll('.fu:not(.in)').forEach(function(el) { observer.observe(el); });
 
 // ── Init lang ──
 (function() {
