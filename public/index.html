@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774030000 -->
+<!-- v1774126457 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -303,7 +303,7 @@ footer{border-top:1px solid var(--border);padding:22px 48px;display:flex;align-i
     <span class="logo-name">pattro</span>
   </a>
   <div class="nav-r">
-    <a href="#how" class="nav-link">How it works</a>
+    <a href="#how" class="nav-link" data-i18n="how_label">How it works</a>
     <a href="#pricing" class="nav-link">Pricing</a>
     <div class="lang-wrap">
       <button class="lang-btn" id="lang-current" onclick="toggleLangMenu()" type="button">
@@ -350,9 +350,7 @@ footer{border-top:1px solid var(--border);padding:22px 48px;display:flex;align-i
     <div class="hero-left">
       <div class="hero-badge fu d1">Trading Psychology Engine</div>
       <h1 class="fu d2">
-        Stop losing money<br>
-        because of your<br>
-        <span class="pain">psychology.</span>
+        <span data-i18n-html="hero_h1">Stop losing money<br>because of your<br><span class="pain">psychology.</span></span>
       </h1>
       <p class="hero-sub fu d3">
         Pattro detects your trading mistakes automatically
@@ -364,7 +362,7 @@ footer{border-top:1px solid var(--border);padding:22px 48px;display:flex;align-i
         <a href="/register" class="btn-primary">Start analyzing my trades →</a>
         <a href="#how" class="btn-outline">See how it works</a>
       </div>
-      <div class="hero-trust fu d5">No credit card · $15/month · Cancel anytime</div>
+      <div class="hero-trust fu d5" data-i18n="hero_trust" data-i18n="cta_sub">$15/month · Cancel anytime</div>
     </div>
 
     <div class="fu d6">
@@ -413,9 +411,9 @@ footer{border-top:1px solid var(--border);padding:22px 48px;display:flex;align-i
 <div class="pain-section">
   <div class="pain-inner">
     <div class="pain-left">
-      <div class="slabel">The real problem</div>
-      <h2>You don't lose because of<br>your <em>strategy.</em></h2>
-      <p>Most traders have a solid edge. They lose because of what happens between trades — the decisions driven by fear, frustration, and impulse that they can't see in real time.</p>
+      <div class="slabel" data-i18n="pain_label">The real problem</div>
+      <h2 data-i18n="pain_h2">You don't lose<br>because of your <em>strategy.</em></h2>
+      <p data-i18n="pain_p">Most traders have a solid edge. They lose because of what happens between trades — the decisions driven by fear, frustration, and impulse that they can't see in real time.</p>
       <div class="pain-stats">
         <div class="pain-stat">
           <div class="pain-stat-val">80%</div>
@@ -465,8 +463,8 @@ footer{border-top:1px solid var(--border);padding:22px 48px;display:flex;align-i
 <div class="insight-section">
   <div class="insight-inner">
     <div class="section-header">
-      <div class="slabel">What Pattro tells you</div>
-      <h2>Specific insights.<br>Not generic advice.</h2>
+      <div class="slabel" data-i18n="insights_label">What Pattro tells you</div>
+      <h2 data-i18n="insights_h2">Specific insights.<br>Not generic advice.</h2>
       <p>These are the kind of insights your data generates — based on your numbers, your patterns, your behavior.</p>
     </div>
     <div class="insights-grid">
@@ -535,8 +533,8 @@ footer{border-top:1px solid var(--border);padding:22px 48px;display:flex;align-i
     </div>
 
     <div class="profile-right">
-      <div class="slabel">Your profile · Automatically</div>
-      <h2>Know exactly<br>who you are<br>as a trader.</h2>
+      <div class="slabel" data-i18n="profile_label">Your profile · Automatically</div>
+      <h2 data-i18n="profile_h2">Know exactly<br>who you are<br>as a trader.</h2>
       <p>Pattro builds your psychological profile from your trades. Not a questionnaire — your real behavior, patterns and emotional fingerprint.</p>
       <div class="profile-features">
         <div class="pf-item">Dominant pattern (Pattro) detected automatically</div>
@@ -554,9 +552,9 @@ footer{border-top:1px solid var(--border);padding:22px 48px;display:flex;align-i
 <div class="how-section">
   <div class="how-inner">
     <div class="section-header">
-      <div class="slabel">How it works</div>
-      <h2>From trade to insight<br>in seconds.</h2>
-      <p>Four steps. Zero friction. No spreadsheets.</p>
+      <div class="slabel" data-i18n="how_label">How it works</div>
+      <h2 data-i18n="how_h2">From trade to insight<br>in seconds.</h2>
+      <p data-i18n="how_p">Four steps. Zero friction. No spreadsheets.</p>
     </div>
     <div class="steps-list">
       <div class="step-item">
@@ -595,9 +593,9 @@ footer{border-top:1px solid var(--border);padding:22px 48px;display:flex;align-i
 <div class="cmp-section">
   <div class="cmp-inner">
     <div class="section-header">
-      <div class="slabel">Why Pattro</div>
-      <h2>Not just another journal.</h2>
-      <p>Most tools tell you what happened. Pattro tells you why — and what to do about it.</p>
+      <div class="slabel" data-i18n="cmp_label">Why Pattro</div>
+      <h2 data-i18n="cmp_h2">Not just another journal.</h2>
+      <p data-i18n="cmp_p">Most tools tell you what happened. Pattro tells you why — and what to do about it.</p>
     </div>
     <div class="cmp-grid">
       <div class="cmp-col bad">
@@ -640,9 +638,9 @@ footer{border-top:1px solid var(--border);padding:22px 48px;display:flex;align-i
 <div class="pricing-section" id="pricing">
   <div class="pricing-inner">
     <div class="pricing-left">
-      <div class="slabel">Early access</div>
-      <h2>Simple pricing.<br>No surprises.</h2>
-      <p>We're in early access with the first traders defining what we build next. The price is locked for life for founding members.</p>
+      <div class="slabel" data-i18n="pricing_label">Early access</div>
+      <h2 data-i18n="pricing_h2">Simple pricing.<br>No surprises.</h2>
+      <p data-i18n="pricing_p">We're in early access with the first traders defining what we build next. The price is locked for life for founding members.</p>
       <div class="pricing-pts">
         <div class="pp"><span class="pp-n">01</span><span>First 200 members of 2026 lock the price at $15/month forever. If pricing changes later, you keep yours.</span></div>
         <div class="pp"><span class="pp-n">02</span><span>Direct access to give feedback. Early members define what we build next.</span></div>
@@ -653,7 +651,7 @@ footer{border-top:1px solid var(--border);padding:22px 48px;display:flex;align-i
       <div class="price-badge">🔒 Price locked forever</div>
       <div class="price-amount">$15</div>
       <div class="price-period">/ month · billed monthly</div>
-      <div class="price-lock">⚡ Early access pricing — lock it before it increases</div>
+      <div class="price-lock" data-i18n="price_lock">⚡ Early access pricing — lock it before it increases</div>
       <div class="price-features">
         <div class="price-feat">Mental Score + Discipline + Execution</div>
         <div class="price-feat">AI Coach weekly psychological analysis</div>
@@ -663,18 +661,18 @@ footer{border-top:1px solid var(--border);padding:22px 48px;display:flex;align-i
         <div class="price-feat">Unlimited trades & accounts</div>
         <div class="price-feat">Color Day + pre-session check</div>
       </div>
-      <a href="/register" class="price-cta">Start for $15/month →</a>
-      <div class="price-sub">No credit card required to explore · Cancel anytime</div>
+      <a href="/register" class="price-cta" data-i18n="price_cta">Start for $15/month →</a>
+      <div class="price-sub" data-i18n="price_sub">Cancel anytime</div>
     </div>
   </div>
 </div>
 
 <!-- CTA BAND -->
 <div class="cta-band">
-  <h2>Your next losing streak<br>is preventable.</h2>
+  <h2 data-i18n="cta_h2">Your next losing streak<br>is preventable.</h2>
   <p>Most traders know <em>what</em> they do wrong. Pattro shows you <strong>when, how, and why</strong> — so you can actually stop.</p>
-  <a href="/register" class="btn-primary">Start analyzing my trades →</a>
-  <div style="margin-top:12px;font-size:10px;color:var(--text3)">No credit card · $15/month · Cancel anytime</div>
+  <a href="/register" class="btn-primary" data-i18n="cta_btn">Start analyzing my trades →</a>
+  <div style="margin-top:12px;font-size:10px;color:var(--text3)" data-i18n="hero_trust" data-i18n="cta_sub">$15/month · Cancel anytime</div>
 </div>
 
 <!-- FOOTER -->
@@ -687,12 +685,12 @@ footer{border-top:1px solid var(--border);padding:22px 48px;display:flex;align-i
     <a href="/terms">Terms</a>
     <a href="/privacy">Privacy</a>
     <a href="/precios">Pricing</a>
-    <a href="mailto:support@pattro.com">Support</a>
+    <a href="/cdn-cgi/l/email-protection#a8dbddd8d8c7dadce8d8c9dcdcdac786cbc7c5">Support</a>
   </div>
   <div style="font-size:10px;color:var(--text3)">© 2026 Pattro</div>
 </footer>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ── Lang switcher ──
 function toggleLangMenu() {
   var dd = document.getElementById('lang-dropdown');
@@ -706,33 +704,109 @@ document.addEventListener('click', function(e) {
   }
 });
 
-var LANG_ES = {
-  hero_badge: 'Motor de Psicología Trading',
-  hero_h1: 'Para de perder dinero\npor tu\npsicología.',
-  hero_sub: 'Pattro detecta tus errores de trading automáticamente y te dice <strong>exactamente qué corregir</strong> — revenge trading, FOMO, overtrading, patrones emocionales. Antes de que te cuesten otro trade.',
-  hero_cta: 'Analizar mis trades →',
-  hero_cta2: 'Ver cómo funciona',
-  hero_trust: 'Sin tarjeta · $15/mes · Cancela cuando quieras',
-  pain_label: 'El problema real',
-  pain_h2: 'No pierdes por tu\nestrategia.',
-  pain_p: 'La mayoría de traders tienen una estrategia sólida. Pierden por lo que pasa entre trades — las decisiones impulsadas por el miedo, la frustración y el impulso que no pueden ver en tiempo real.',
-  cta_h: 'Tu próxima racha de pérdidas\nes prevenible.',
-  cta_p: 'La mayoría de traders saben qué hacen mal. Pattro te muestra cuándo, cómo y por qué — para que puedas realmente parar.',
-  cta_btn: 'Empieza a analizar mis trades →',
+var TRANSLATIONS = {
+  en: {
+    nav_how:'How it works', nav_pricing:'Pricing', nav_login:'Login', nav_cta:'Start Free →',
+    hero_badge:'Trading Psychology Engine',
+    hero_trust:'$15/month · Cancel anytime',
+    hero_cta:'Start analyzing my trades →', hero_cta2:'See how it works',
+    pain_label:'The real problem',
+    pain_s1_lbl:'of trading losses are behavioral, not strategic',
+    pain_s2_lbl:'worse results when trading after a loss',
+    pain_s3_lbl:'of traders repeat the same mistake every week',
+    pain_s4_lbl:'tools that tell you exactly what your pattern is',
+    insights_label:'What Pattro tells you',
+    profile_label:'Your profile · Automatically',
+    how_label:'How it works', how_p:'Four steps. Zero friction. No spreadsheets.',
+    cmp_label:'Why Pattro', pricing_label:'Early access',
+    price_lock:'⚡ Early access pricing — lock it before it increases',
+    price_cta:'Start for $15/month →', price_sub:'Cancel anytime',
+    cta_sub:'$15/month · Cancel anytime',
+  },
+  es: {
+    nav_how:'Cómo funciona', nav_pricing:'Precios', nav_login:'Entrar', nav_cta:'Empezar →',
+    hero_badge:'Motor de Psicología Trading',
+    hero_trust:'$15/mes · Cancela cuando quieras',
+    hero_cta:'Analizar mis trades →', hero_cta2:'Ver cómo funciona',
+    pain_label:'El problema real',
+    pain_s1_lbl:'de las pérdidas son conductuales, no estratégicas',
+    pain_s2_lbl:'peores resultados cuando operas tras una pérdida',
+    pain_s3_lbl:'de traders repiten el mismo error cada semana',
+    pain_s4_lbl:'herramientas que te dicen exactamente cuál es tu patrón',
+    insights_label:'Lo que Pattro te dice',
+    profile_label:'Tu perfil · Automáticamente',
+    how_label:'Cómo funciona', how_p:'Cuatro pasos. Sin fricción. Sin hojas de cálculo.',
+    cmp_label:'Por qué Pattro', pricing_label:'Acceso temprano',
+    price_lock:'⚡ Precio de acceso temprano — bloquéalo antes de que suba',
+    price_cta:'Empezar por $15/mes →', price_sub:'Cancela cuando quieras',
+    cta_sub:'$15/mes · Cancela cuando quieras',
+  }
 };
 
+// Big content blocks per language
+var CONTENT = {
+  en: {
+    hero_h1: 'Stop losing money<br>because of your<br><span class="pain">psychology.</span>',
+    hero_sub: 'Pattro detects your trading mistakes automatically and tells you <strong>exactly what to fix</strong> — revenge trading, FOMO, overtrading, emotional patterns. Before they cost you another trade.',
+    pain_h2: "You don't lose<br>because of your <em>strategy.</em>",
+    pain_p: "Most traders have a solid edge. They lose because of what happens between trades — the decisions driven by fear, frustration, and impulse that they can't see in real time.",
+    insights_h2: 'Specific insights.<br>Not generic advice.',
+    insights_p: 'These are the kind of insights your data generates — based on your numbers, your patterns, your behavior.',
+    profile_h2: 'Know exactly<br>who you are<br>as a trader.',
+    profile_p: 'Pattro builds your psychological profile from your trades. Not a questionnaire — your real behavior, patterns and emotional fingerprint.',
+    how_h2: 'From trade to insight<br>in seconds.',
+    cmp_h2: 'Not just another journal.',
+    cmp_p: 'Most tools tell you what happened. Pattro tells you why — and what to do about it.',
+    pricing_h2: 'Simple pricing.<br>No surprises.',
+    pricing_p: "We're in early access with the first traders defining what we build next. The price is locked for life for founding members.",
+    cta_h2: 'Your next losing streak<br>is preventable.',
+    cta_p: 'Most traders know what they do wrong. Pattro shows you <strong>when, how, and why</strong> — so you can actually stop.',
+    cta_btn: 'Start analyzing my trades →',
+  },
+  es: {
+    hero_h1: 'Para de perder dinero<br>por culpa de tu<br><span class="pain">psicología.</span>',
+    hero_sub: 'Pattro detecta tus errores de trading automáticamente y te dice <strong>exactamente qué corregir</strong> — revenge trading, FOMO, overtrading, patrones emocionales. Antes de que te cuesten otro trade.',
+    pain_h2: 'No pierdes<br>por culpa de tu <em>estrategia.</em>',
+    pain_p: 'La mayoría de traders tienen una estrategia sólida. Pierden por lo que pasa entre trades — las decisiones impulsadas por el miedo, la frustración y el impulso que no pueden ver en tiempo real.',
+    insights_h2: 'Insights específicos.<br>No consejos genéricos.',
+    insights_p: 'Estos son los insights que genera tu data — basados en tus números, tus patrones, tu comportamiento.',
+    profile_h2: 'Sabe exactamente<br>quién eres<br>como trader.',
+    profile_p: 'Pattro construye tu perfil psicológico a partir de tus trades. No un cuestionario — tu comportamiento real, patrones y huella emocional.',
+    how_h2: 'Del trade al insight<br>en segundos.',
+    cmp_h2: 'No es otro journal más.',
+    cmp_p: 'La mayoría de herramientas te dicen qué pasó. Pattro te dice por qué — y qué hacer al respecto.',
+    pricing_h2: 'Precio simple.<br>Sin sorpresas.',
+    pricing_p: 'Estamos en acceso temprano con los primeros traders definiendo qué construimos después. El precio queda bloqueado de por vida para los miembros fundadores.',
+    cta_h2: 'Tu próxima racha de pérdidas<br>es prevenible.',
+    cta_p: 'La mayoría de traders saben qué hacen mal. Pattro te muestra <strong>cuándo, cómo y por qué</strong> — para que puedas realmente parar.',
+    cta_btn: 'Empezar a analizar mis trades →',
+  }
+};
+
+var currentLang = 'en';
+
 function setLang(lang) {
+  currentLang = lang;
   try { localStorage.setItem('pattro_lang', lang); } catch(e) {}
   var lbl = document.getElementById('lang-label');
   if (lbl) lbl.textContent = lang.toUpperCase();
   var dd = document.getElementById('lang-dropdown');
   if (dd) dd.classList.remove('open');
-  // Update active state
   document.querySelectorAll('.lang-opt').forEach(function(o) {
-    o.classList.toggle('active', o.textContent.includes(lang === 'en' ? 'English' : 'Español'));
+    o.classList.toggle('active', o.textContent.trim().includes(lang === 'en' ? 'English' : 'Español'));
   });
-  // Language change just updates the label — full i18n can be added later
+  applyTranslations(lang);
 }
+
+function applyTranslations(lang) {
+  var t = Object.assign({}, TRANSLATIONS[lang] || TRANSLATIONS.en, CONTENT[lang] || CONTENT.en);
+  document.querySelectorAll('[data-i18n]').forEach(function(el) {
+    var key = el.getAttribute('data-i18n');
+    if (t[key] !== undefined) el.innerHTML = t[key];
+  });
+  document.documentElement.lang = lang;
+}
+
 
 // ── Scroll animations ──
 var observer = new IntersectionObserver(function(entries) {
@@ -745,10 +819,4 @@ document.querySelectorAll('.fu').forEach(function(el) { observer.observe(el); })
 // ── Init lang ──
 (function() {
   var saved = 'en';
-  try { saved = localStorage.getItem('pattro_lang') || 'en'; } catch(e) {}
-  var lbl = document.getElementById('lang-label');
-  if (lbl) lbl.textContent = saved.toUpperCase();
-})();
-</script>
-</body>
-</html>
+  try { saved = localStorage.getItem('pattro_lang') || 'en'
