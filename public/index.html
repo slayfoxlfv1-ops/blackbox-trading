@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774126989 -->
+<!-- v1774127300 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -823,4 +823,15 @@ document.querySelectorAll('.fu:not(.in)').forEach(function(el) { observer.observ
 // ── Init lang ──
 (function() {
   var saved = 'en';
-  try { saved = localStorage.getItem('pattro_lang') || 'en'
+  try { saved = localStorage.getItem('pattro_lang') || 'en'} catch(e) {}
+  currentLang = saved;
+  var lbl = document.getElementById('lang-label');
+  if (lbl) lbl.textContent = saved.toUpperCase();
+  if (saved !== 'en') applyTranslations(saved);
+  document.querySelectorAll('.lang-opt').forEach(function(o) {
+    o.classList.toggle('active', o.textContent.trim().includes(saved === 'en' ? 'English' : 'Español'));
+  });
+})();
+</script>
+</body>
+</html>
