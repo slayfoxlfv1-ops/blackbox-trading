@@ -1,204 +1,206 @@
 <!DOCTYPE html>
-<!-- v1773988846 -->
-<html lang="en" id="html-root">
+<!-- v1774030000 -->
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-  <!-- SEO -->
-  <meta name="description" content="Pattro is a trading psychology journal and AI coaching platform. Track your emotions, discipline and mental state. Understand why you make bad decisions — not just how much you won or lost.">
-  <meta name="keywords" content="trading journal, trading psychology, prop trading, TopstepX, trade journal, trading discipline, AI coach, mental score">
-  <meta name="author" content="Pattro">
-  <link rel="canonical" href="https://pattro.com">
-
-  <!-- Open Graph (WhatsApp, Facebook, LinkedIn) -->
-  <meta property="og:type"        content="website">
-  <meta property="og:url"         content="https://pattro.com">
-  <meta property="og:title"       content="Pattro — Trading Psychology Engine">
-  <meta property="og:description" content="Understand why you make bad decisions. Track emotions, discipline and mental state. AI coaching for traders.">
-  <meta property="og:image"       content="https://pattro.com/og-image.png">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
-  <meta property="og:locale"      content="en_US">
-  <meta property="og:site_name"   content="Pattro">
-
-  <!-- Twitter / X -->
-  <meta name="twitter:card"        content="summary_large_image">
-  <meta name="twitter:url"         content="https://pattro.com">
-  <meta name="twitter:title"       content="Pattro — Trading Psychology Engine">
-  <meta name="twitter:description" content="Understand why you make bad decisions. Track emotions, discipline and mental state. AI coaching for traders.">
-  <meta name="twitter:image"       content="https://pattro.com/og-image.png">
-
-  <!-- Favicon -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230d1117'/><text x='16' y='26' text-anchor='middle' font-family='Georgia,serif' font-size='22' font-weight='700' fill='white'>P</text><circle cx='27' cy='5' r='5' fill='%233ecfcf'/></svg>">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pattro — Trading Psychology Engine</title>
+<title>Pattro — Stop Losing Money Because of Your Psychology</title>
+<meta name="description" content="Pattro automatically detects your trading mistakes and tells you exactly what to fix. Revenge trading, overtrading, emotional patterns — identified in real time.">
+<meta name="keywords" content="trading psychology, trading journal, mental score, discipline score, trading mistakes, revenge trading, AI trading coach">
+<meta property="og:title" content="Pattro — Stop Losing Money Because of Your Psychology">
+<meta property="og:description" content="Pattro detects your trading mistakes automatically and tells you exactly what to fix.">
+<meta property="og:image" content="https://pattro.com/og-image.png">
+<meta property="og:url" content="https://pattro.com">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Pattro — Stop Losing Money Because of Your Psychology">
+<meta name="twitter:description" content="Detects your trading mistakes automatically and tells you exactly what to fix.">
+<meta name="twitter:image" content="https://pattro.com/og-image.png">
+<link rel="canonical" href="https://pattro.com">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230d1117'/><text x='16' y='25' text-anchor='middle' font-family='Georgia,serif' font-size='22' font-weight='700' fill='white'>P</text><circle cx='27' cy='4' r='4' fill='%233ecfcf'/></svg>">
-<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;600;700;800;900&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#0a0a0b;--surface:#111113;--surface2:#18181b;--surface3:#222228;
-  --border:#26262e;--border2:#32323c;
-  --text:#eeeef0;--text2:#9898a6;--text3:#52525e;
+  --bg:#0a0a0b;--surface:#111113;--surface2:#18181b;--border:#26262e;--border2:#32323c;
+  --text:#eeeef0;--text2:#9898a6;--text3:#9898a6;
   --teal:#3ecfcf;--teal-bg:rgba(62,207,207,0.08);--teal-bd:rgba(62,207,207,0.22);
-  --green:#3dba72;--green-bg:rgba(61,186,114,0.1);--green-bd:rgba(61,186,114,0.25);
-  --red:#e05555;--red-bg:rgba(224,85,85,0.1);--red-bd:rgba(224,85,85,0.2);
-  --amber:#e09840;--amber-bg:rgba(224,152,64,0.1);--amber-bd:rgba(224,152,64,0.25);
+  --green:#3dba72;--green-bg:rgba(61,186,114,0.08);--green-bd:rgba(61,186,114,0.22);
+  --red:#e05555;--red-bg:rgba(224,85,85,0.08);--red-bd:rgba(224,85,85,0.22);
+  --amber:#e09840;--amber-bg:rgba(224,152,64,0.08);--amber-bd:rgba(224,152,64,0.22);
 }
 html{scroll-behavior:smooth}
 body{background:var(--bg);color:var(--text);font-family:'Geist Mono',monospace;line-height:1.6;overflow-x:hidden}
-body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.5}
 
 /* ── NAV ── */
-nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 40px;height:58px;display:flex;align-items:center;justify-content:space-between;background:rgba(10,10,11,.92);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);overflow:visible}
-.logo{display:flex;align-items:center;gap:9px;text-decoration:none}
-.logo-mark{width:28px;height:28px;background:var(--teal);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#0a0a0b;letter-spacing:-1px;flex-shrink:0}
-.logo-name{font-size:14px;font-weight:700;color:var(--text)}
+nav{position:sticky;top:0;z-index:100;background:rgba(10,10,11,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 48px;height:58px;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;cursor:pointer}
+.logo-mark{position:relative;width:30px;height:30px;flex-shrink:0}
+.logo-mark .p{font-family:Georgia,serif;font-size:28px;font-weight:700;color:#eeeef0;line-height:1;position:absolute;left:0;bottom:0}
+.logo-mark .dot{position:absolute;top:0;right:0;width:8px;height:8px;border-radius:50%;background:#3ecfcf}
+.logo-name{font-family:Georgia,serif;font-size:15px;font-weight:700;color:var(--text);letter-spacing:-.3px}
 .nav-r{display:flex;align-items:center;gap:16px}
 .nav-link{font-size:11px;color:var(--text3);text-decoration:none;transition:color .15s}
 .nav-link:hover{color:var(--text2)}
-
-/* Language switcher */
-.lang-btn{display:flex;align-items:center;gap:5px;padding:5px 10px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;font-size:10px;color:var(--text2);cursor:pointer;font-family:'Geist Mono',monospace;transition:all .15s;letter-spacing:.3px}
+.nav-login{font-size:11px;color:var(--text2);text-decoration:none;padding:6px 12px;border:1px solid var(--border2);border-radius:6px;transition:all .15s}
+.nav-login:hover{border-color:var(--teal);color:var(--teal)}
+.btn-cta{padding:8px 18px;background:var(--teal);color:#0a0a0b;border:none;border-radius:7px;font-size:11px;font-weight:800;font-family:'Geist Mono',monospace;cursor:pointer;letter-spacing:.5px;text-transform:uppercase;text-decoration:none;transition:all .2s;white-space:nowrap}
+.btn-cta:hover{opacity:.88;transform:translateY(-1px)}
+.lang-wrap{position:relative}
+.lang-btn{display:flex;align-items:center;gap:5px;padding:5px 10px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;font-size:10px;color:var(--text2);cursor:pointer;font-family:'Geist Mono',monospace;transition:all .15s}
 .lang-btn:hover{border-color:var(--teal-bd);color:var(--teal)}
-.lang-btn .flag{font-size:12px}
-.lang-wrap{position:relative;z-index:9999}
-.lang-dropdown{display:none;position:fixed;top:62px;right:40px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.5);min-width:130px;z-index:99999}
+.lang-dropdown{display:none;position:absolute;top:calc(100% + 8px);right:0;background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:4px;min-width:120px;box-shadow:0 8px 32px rgba(0,0,0,.4);z-index:200}
 .lang-dropdown.open{display:block}
-.lang-opt{padding:10px 14px;font-size:10px;color:var(--text2);cursor:pointer;display:flex;align-items:center;gap:8px;transition:background .1s;letter-spacing:.3px}
-.lang-opt:hover{background:var(--surface3);color:var(--text)}
+.lang-opt{padding:7px 12px;border-radius:5px;font-size:11px;cursor:pointer;color:var(--text2);transition:all .12s;display:flex;align-items:center;gap:8px}
+.lang-opt:hover{background:var(--surface2);color:var(--text)}
 .lang-opt.active{color:var(--teal)}
 
-.btn-cta{padding:8px 18px;background:var(--teal);color:#0a0a0b;border:none;border-radius:7px;font-size:11px;font-weight:800;font-family:'Geist Mono',monospace;cursor:pointer;letter-spacing:.5px;text-transform:uppercase;text-decoration:none;transition:all .2s}
-.btn-cta:hover{opacity:.88;transform:translateY(-1px)}
-
 /* ── TICKER ── */
-.ticker{overflow:hidden;border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:9px 0;background:var(--surface);position:relative;z-index:1}
-.ticker-inner{display:flex;animation:tick 30s linear infinite;white-space:nowrap}
-@keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-.ti{display:inline-flex;align-items:center;gap:6px;padding:0 22px;font-size:10px;color:var(--text3);border-right:1px solid var(--border)}
-.pos{color:var(--green);font-weight:700}.neg{color:var(--red);font-weight:700}
+.ticker{background:var(--surface);border-bottom:1px solid var(--border);overflow:hidden;padding:0;height:32px;display:flex;align-items:center}
+.ticker-inner{display:flex;gap:48px;white-space:nowrap;animation:tick 30s linear infinite}
+@keyframes tick{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.ti{font-size:10px;color:var(--text3);letter-spacing:.3px;display:flex;gap:8px;flex-shrink:0}
+.ti .pos{color:var(--green);font-weight:700}
+.ti .neg{color:var(--red);font-weight:700}
 
 /* ── HERO ── */
-.hero{min-height:100vh;display:flex;align-items:center;padding:100px 48px 80px;position:relative;overflow:hidden}
-.grid-bg{position:absolute;inset:0;background-image:linear-gradient(rgba(62,207,207,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(62,207,207,.02) 1px,transparent 1px);background-size:48px 48px;mask-image:radial-gradient(ellipse 80% 70% at 50% 40%,black 30%,transparent 100%)}
-.hero-glow{position:absolute;top:8%;left:50%;transform:translateX(-50%);width:800px;height:400px;background:radial-gradient(ellipse,rgba(62,207,207,.06) 0%,transparent 65%);pointer-events:none}
-.hero-inner{max-width:1100px;margin:0 auto;width:100%;position:relative;z-index:1}
-.hero-badge{display:inline-flex;align-items:center;gap:7px;padding:4px 12px;background:var(--teal-bg);border:1px solid var(--teal-bd);border-radius:20px;font-size:10px;color:var(--teal);letter-spacing:1px;text-transform:uppercase;margin-bottom:22px}
-.hero-badge::before{content:'';width:5px;height:5px;background:var(--teal);border-radius:50%;animation:blink 2s infinite;flex-shrink:0}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-h1{font-family:'DM Serif Display',serif;font-size:clamp(42px,5.5vw,80px);line-height:1.05;letter-spacing:-2px;color:var(--text);margin-bottom:22px;font-weight:400}
-h1 em{font-style:italic;color:var(--teal)}
-.hero-sub{font-size:15px;color:var(--text2);max-width:560px;line-height:1.85;margin-bottom:36px;font-weight:400}
-.hero-btns{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px}
-.btn-primary{padding:15px 32px;background:var(--teal);color:#0a0a0b;border:none;border-radius:9px;font-size:12px;font-weight:800;font-family:'Geist Mono',monospace;cursor:pointer;letter-spacing:.5px;text-transform:uppercase;text-decoration:none;display:inline-block;transition:all .2s}
-.btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(62,207,207,.25)}
-.btn-outline{padding:15px 32px;background:transparent;color:var(--text2);border:1px solid var(--border2);border-radius:9px;font-size:12px;font-weight:600;font-family:'Geist Mono',monospace;cursor:pointer;text-decoration:none;display:inline-block;transition:all .2s}
-.btn-outline:hover{border-color:var(--text3);color:var(--text)}
-.trust-line{font-size:10px;color:var(--text3);letter-spacing:.3px;display:flex;align-items:center;gap:8px}
-.trust-line::before{content:'';width:4px;height:4px;border-radius:50%;background:var(--amber);animation:blink 2s infinite;flex-shrink:0}
+.hero{min-height:92vh;display:flex;align-items:center;position:relative;overflow:hidden;padding:80px 48px 60px}
+.hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%, rgba(62,207,207,0.06) 0%, transparent 70%)}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.02) 1px,transparent 1px);background-size:60px 60px;mask-image:radial-gradient(ellipse 80% 80% at 50% 0%, black 40%, transparent 100%)}
+.hero-inner{max-width:1200px;margin:0 auto;width:100%;display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;position:relative;z-index:1}
+.hero-left{}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;background:var(--teal-bg);border:1px solid var(--teal-bd);border-radius:20px;font-size:9px;color:var(--teal);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:20px}
+.hero-badge::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--teal);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.hero h1{font-size:clamp(32px,4.5vw,52px);font-weight:800;line-height:1.1;letter-spacing:-1.5px;margin-bottom:8px}
+.hero h1 .accent{color:var(--teal)}
+.hero h1 .pain{color:var(--red)}
+.hero-sub{font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:32px;max-width:480px}
+.hero-sub strong{color:var(--text)}
+.hero-btns{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.btn-primary{padding:13px 28px;background:var(--teal);color:#0a0a0b;border:none;border-radius:9px;font-size:13px;font-weight:800;font-family:'Geist Mono',monospace;cursor:pointer;letter-spacing:.3px;text-decoration:none;transition:all .2s;display:inline-block}
+.btn-primary:hover{opacity:.9;transform:translateY(-2px);box-shadow:0 8px 24px rgba(62,207,207,.25)}
+.btn-outline{padding:12px 24px;background:transparent;color:var(--text2);border:1px solid var(--border2);border-radius:9px;font-size:13px;font-weight:600;font-family:'Geist Mono',monospace;cursor:pointer;text-decoration:none;transition:all .2s}
+.btn-outline:hover{border-color:var(--teal);color:var(--teal)}
+.hero-trust{font-size:10px;color:var(--text3);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.hero-trust::before{content:'🔒';font-size:11px}
 
-/* ── PROBLEM QUOTE BAND ── */
-.quote-band{background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:70px 48px;text-align:center}
-.quote-band-inner{max-width:700px;margin:0 auto}
-.big-quote{font-family:'DM Serif Display',serif;font-size:clamp(28px,4vw,52px);line-height:1.2;color:var(--text);letter-spacing:-.8px;font-weight:400;margin-bottom:16px}
-.big-quote em{font-style:italic;color:var(--red)}
-.big-quote-answer{font-family:'DM Serif Display',serif;font-size:clamp(18px,2.5vw,28px);line-height:1.3;color:var(--teal);font-style:italic;letter-spacing:-.3px}
+/* ── HERO RIGHT — LIVE PROFILE CARD ── */
+.profile-demo{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:24px;position:relative;overflow:hidden}
+.profile-demo::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--red),var(--amber),var(--teal))}
+.profile-demo-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.profile-demo-title{font-size:10px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:1px}
+.profile-badge{font-size:9px;padding:3px 10px;border-radius:20px;background:var(--red-bg);border:1px solid var(--red-bd);color:var(--red);font-weight:700}
+.pattern-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;border-left:3px solid var(--red)}
+.pattern-label{font-size:8px;color:var(--red);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:6px}
+.pattern-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px}
+.pattern-stat{font-size:11px;color:var(--text2)}
+.pattern-stat strong{color:var(--red)}
+.insight-row{display:flex;gap:10px;margin-bottom:10px}
+.insight-pill{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px}
+.insight-pill-label{font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px}
+.insight-pill-val{font-size:18px;font-weight:800;letter-spacing:-1px}
+.insight-pill-val.red{color:var(--red)}
+.insight-pill-val.green{color:var(--green)}
+.insight-pill-val.amber{color:var(--amber)}
+.action-card{background:rgba(62,207,207,0.05);border:1px solid var(--teal-bd);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px}
+.action-icon{font-size:20px;flex-shrink:0}
+.action-text{font-size:11px;color:var(--text2);line-height:1.5}
+.action-text strong{color:var(--teal)}
 
-/* ── MOCKUP ── */
-.mockup-wrap{margin-top:64px;position:relative}
-.mockup-wrap::before{content:'';position:absolute;top:-30px;left:50%;transform:translateX(-50%);width:60%;height:30px;background:radial-gradient(ellipse,rgba(62,207,207,.1) 0%,transparent 70%)}
-.mockup{background:var(--surface);border:1px solid var(--border2);border-radius:14px;overflow:hidden;box-shadow:0 40px 100px rgba(0,0,0,.7),0 0 0 1px rgba(62,207,207,.04)}
-.mock-bar{background:var(--surface2);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;gap:7px}
-.dot{width:10px;height:10px;border-radius:50%}
-.mock-url{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:3px 10px;font-size:10px;color:var(--text3);text-align:center;max-width:300px;margin:0 auto}
-.mock-body{display:grid;grid-template-columns:170px 1fr;height:400px}
-.mock-sb{background:var(--surface2);border-right:1px solid var(--border);padding:14px 10px;display:flex;flex-direction:column;gap:2px}
-.mock-nav{padding:8px 9px;border-radius:6px;font-size:9px;color:var(--text3);display:flex;align-items:center;gap:6px}
-.mock-nav.on{background:var(--teal-bg);color:var(--teal);font-weight:700;border:1px solid var(--teal-bd)}
-.mock-main{padding:14px;display:flex;flex-direction:column;gap:9px;overflow:hidden}
-.mock-banner{background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:12px 16px;display:flex;align-items:center;gap:16px}
-.mock-score{font-size:44px;font-weight:800;color:var(--green);line-height:1;letter-spacing:-2px;flex-shrink:0}
-.mock-bars{flex:1;display:flex;flex-direction:column;gap:5px}
-.mock-bar-r{display:flex;align-items:center;gap:7px;font-size:8px;color:var(--text3)}
-.mock-track{flex:1;height:3px;background:var(--border2);border-radius:2px;overflow:hidden}
-.mock-fill{height:100%;border-radius:2px}
-.mock-insight{background:var(--teal-bg);border:1px solid var(--teal-bd);border-left:3px solid var(--teal);border-radius:8px;padding:10px 13px;font-size:9px;color:var(--text2);line-height:1.65}
-.mock-insight strong{color:var(--teal)}
-.mock-grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px}
-.mock-card{background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:9px 11px}
-.mc-l{font-size:7px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
-.mc-v{font-size:22px;font-weight:800;line-height:1}
+/* ── PAIN SECTION ── */
+.pain-section{padding:100px 48px;background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.pain-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center}
+.pain-left .slabel{font-size:9px;color:var(--red);text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:16px}
+.pain-left h2{font-size:clamp(24px,3.5vw,40px);font-weight:800;line-height:1.2;letter-spacing:-1px;margin-bottom:16px}
+.pain-left h2 em{color:var(--red);font-style:normal}
+.pain-left p{font-size:13px;color:var(--text2);line-height:1.8;margin-bottom:32px}
+.pain-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pain-stat{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:16px}
+.pain-stat-val{font-size:28px;font-weight:800;color:var(--red);letter-spacing:-1px;margin-bottom:4px}
+.pain-stat-lbl{font-size:10px;color:var(--text3);line-height:1.5}
+.loss-list{display:flex;flex-direction:column;gap:12px}
+.loss-item{display:flex;align-items:flex-start;gap:14px;padding:16px;background:var(--bg);border:1px solid var(--border);border-left:3px solid var(--red);border-radius:10px}
+.loss-item-ico{font-size:20px;flex-shrink:0;margin-top:2px}
+.loss-item h4{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px}
+.loss-item p{font-size:11px;color:var(--text3);line-height:1.6}
 
-/* ── SECTIONS ── */
-.section{max-width:1100px;margin:0 auto;padding:100px 48px}
-.slabel{font-size:9px;color:var(--teal);text-transform:uppercase;letter-spacing:2.5px;margin-bottom:14px;display:flex;align-items:center;gap:8px}
-.slabel::before{content:'';display:inline-block;width:16px;height:1px;background:var(--teal)}
-h2{font-family:'DM Serif Display',serif;font-size:clamp(30px,3.8vw,52px);line-height:1.08;letter-spacing:-1px;color:var(--text);margin-bottom:18px;font-weight:400}
-h2 em{font-style:italic;color:var(--teal)}
-.sub{font-size:13px;color:var(--text2);max-width:520px;line-height:1.85;margin-bottom:52px}
+/* ── INSIGHT SECTION ── */
+.insight-section{padding:100px 48px}
+.insight-inner{max-width:1100px;margin:0 auto}
+.section-header{text-align:center;margin-bottom:60px}
+.slabel{font-size:9px;color:var(--teal);text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:12px}
+.section-header h2{font-size:clamp(24px,3.5vw,40px);font-weight:800;line-height:1.2;letter-spacing:-1px;margin-bottom:12px}
+.section-header p{font-size:13px;color:var(--text2);max-width:520px;margin:0 auto;line-height:1.8}
+.insights-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.insight-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;position:relative;overflow:hidden;transition:border-color .2s}
+.insight-card:hover{border-color:var(--border2)}
+.insight-card.hot{border-color:var(--red-bd);background:linear-gradient(135deg,var(--surface) 0%,rgba(224,85,85,0.03) 100%)}
+.insight-card.warm{border-color:var(--amber-bd);background:linear-gradient(135deg,var(--surface) 0%,rgba(224,152,64,0.03) 100%)}
+.insight-card.cool{border-color:var(--teal-bd);background:linear-gradient(135deg,var(--surface) 0%,rgba(62,207,207,0.03) 100%)}
+.ic-type{font-size:8px;text-transform:uppercase;letter-spacing:1.2px;font-weight:700;margin-bottom:12px}
+.ic-type.red{color:var(--red)}
+.ic-type.amber{color:var(--amber)}
+.ic-type.teal{color:var(--teal)}
+.ic-icon{font-size:28px;margin-bottom:12px}
+.ic-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px}
+.ic-text{font-size:11px;color:var(--text2);line-height:1.7}
+.ic-text strong{color:var(--text)}
+.ic-text .bad{color:var(--red);font-weight:700}
+.ic-text .good{color:var(--green);font-weight:700}
 
-/* ── PROBLEM ── */
-.prob-band{background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:90px 48px}
-.prob-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:start}
-.prob-quote{font-family:'DM Serif Display',serif;font-size:clamp(22px,2.8vw,38px);line-height:1.25;color:var(--text);letter-spacing:-.5px;font-weight:400;margin-bottom:18px}
-.prob-quote em{color:var(--red);font-style:italic}
-.prob-note{font-size:12px;color:var(--text3);line-height:1.8;max-width:400px}
-.mistakes{display:flex;flex-direction:column;gap:12px}
-.mistake{display:flex;align-items:flex-start;gap:14px;padding:16px 18px;background:var(--bg);border:1px solid var(--border);border-radius:10px;border-left:3px solid var(--red)}
-.mistake-ico{font-size:18px;flex-shrink:0;margin-top:1px}
-.mistake h4{font-size:12px;font-weight:700;color:var(--text);margin-bottom:4px}
-.mistake p{font-size:10px;color:var(--text3);line-height:1.65}
+/* ── PROFILE SECTION ── */
+.profile-section{padding:100px 48px;background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.profile-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center}
+.profile-right .slabel{color:var(--teal)}
+.profile-right h2{font-size:clamp(24px,3.5vw,40px);font-weight:800;line-height:1.2;letter-spacing:-1px;margin-bottom:16px}
+.profile-right p{font-size:13px;color:var(--text2);line-height:1.8;margin-bottom:24px}
+.profile-features{display:flex;flex-direction:column;gap:10px}
+.pf-item{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text2)}
+.pf-item::before{content:'✓';color:var(--teal);font-weight:700;flex-shrink:0}
+.big-profile{background:var(--bg);border:1px solid var(--border2);border-radius:16px;padding:24px;overflow:hidden}
+.bp-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.bp-title{font-size:10px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px}
+.bp-score{font-size:32px;font-weight:800;color:var(--amber);letter-spacing:-1px}
+.bp-score-lbl{font-size:9px;color:var(--text3)}
+.bp-rows{display:flex;flex-direction:column;gap:0}
+.bp-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}
+.bp-row:last-child{border:none}
+.bp-row-label{font-size:11px;color:var(--text2)}
+.bp-row-val{font-size:12px;font-weight:700}
+.bp-action{margin-top:16px;background:var(--red-bg);border:1px solid var(--red-bd);border-radius:10px;padding:14px 16px}
+.bp-action-title{font-size:9px;color:var(--red);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:6px}
+.bp-action-text{font-size:12px;color:var(--text);font-weight:600}
 
 /* ── HOW IT WORKS ── */
-.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;background:var(--border);border:1px solid var(--border);border-radius:14px;overflow:hidden}
-.step{background:var(--surface);padding:28px 24px}
-.step-n{font-size:9px;color:var(--teal);letter-spacing:2px;text-transform:uppercase;margin-bottom:18px;font-weight:700}
-.step-icon{width:40px;height:40px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:14px;background:var(--teal-bg);border:1px solid var(--teal-bd)}
-.step h3{font-size:13px;font-weight:700;color:var(--text);margin-bottom:9px;letter-spacing:-.2px}
-.step p{font-size:10px;color:var(--text3);line-height:1.7}
-
-/* ── INSIGHTS ── */
-.ins-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.ins-card{padding:18px 20px;border-radius:12px;border-left:4px solid;display:flex;align-items:flex-start;gap:14px}
-.ins-card.teal{background:var(--teal-bg);border-color:var(--teal);border-top:1px solid var(--teal-bd);border-right:1px solid var(--teal-bd);border-bottom:1px solid var(--teal-bd)}
-.ins-card.red{background:var(--red-bg);border-color:var(--red);border-top:1px solid var(--red-bd);border-right:1px solid var(--red-bd);border-bottom:1px solid var(--red-bd)}
-.ins-card.amber{background:var(--amber-bg);border-color:var(--amber);border-top:1px solid var(--amber-bd);border-right:1px solid var(--amber-bd);border-bottom:1px solid var(--amber-bd)}
-.ins-card.green{background:var(--green-bg);border-color:var(--green);border-top:1px solid var(--green-bd);border-right:1px solid var(--green-bd);border-bottom:1px solid var(--green-bd)}
-.ins-ico{font-size:22px;flex-shrink:0}
-.ins-type{font-size:8px;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:5px}
-.ins-card.teal .ins-type{color:var(--teal)}
-.ins-card.red  .ins-type{color:var(--red)}
-.ins-card.amber .ins-type{color:var(--amber)}
-.ins-card.green .ins-type{color:var(--green)}
-.ins-text{font-size:12px;color:var(--text2);line-height:1.7}
-.ins-text strong{color:var(--text)}
+.how-section{padding:100px 48px}
+.how-inner{max-width:900px;margin:0 auto}
+.steps-list{display:flex;flex-direction:column;gap:0;margin-top:48px;position:relative}
+.steps-list::before{content:'';position:absolute;left:19px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,var(--teal),transparent);opacity:.3}
+.step-item{display:flex;gap:24px;padding:0 0 40px 0}
+.step-num{width:40px;height:40px;border-radius:50%;background:var(--surface);border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--teal);flex-shrink:0;position:relative;z-index:1}
+.step-content{flex:1;padding-top:8px}
+.step-content h3{font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px}
+.step-content p{font-size:12px;color:var(--text2);line-height:1.8}
 
 /* ── COMPARISON ── */
-.compare-wrap{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:720px;margin:0 auto}
-.compare-col{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
-.compare-col.bb{border-color:var(--teal-bd);box-shadow:0 0 0 1px var(--teal-bd)}
-.compare-head{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px}
-.compare-head.bb{background:var(--teal-bg)}
-.compare-title{font-size:12px;font-weight:700;color:var(--text)}
-.compare-sub-text{font-size:9px;color:var(--text3);margin-top:1px}
-.compare-item{display:flex;align-items:center;gap:10px;padding:11px 20px;border-bottom:1px solid var(--border);font-size:11px;color:var(--text2)}
-.compare-item:last-child{border-bottom:none}
-.x{color:var(--red);font-size:13px;font-weight:700;flex-shrink:0}
-.ck{color:var(--teal);font-size:13px;font-weight:700;flex-shrink:0}
+.cmp-section{padding:80px 48px;background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.cmp-inner{max-width:800px;margin:0 auto}
+.cmp-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:40px}
+.cmp-col{border-radius:12px;overflow:hidden}
+.cmp-col-header{padding:14px 18px;font-size:11px;font-weight:700;text-align:center}
+.cmp-col.bad .cmp-col-header{background:rgba(224,85,85,.1);color:var(--red);border:1px solid var(--red-bd);border-bottom:none}
+.cmp-col.good .cmp-col-header{background:var(--teal-bg);color:var(--teal);border:1px solid var(--teal-bd);border-bottom:none}
+.cmp-col-body{border:1px solid var(--border)}
+.cmp-col.bad .cmp-col-body{border-color:var(--red-bd)}
+.cmp-col.good .cmp-col-body{border-color:var(--teal-bd)}
+.cmp-row{display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid var(--border);font-size:11px;color:var(--text2)}
+.cmp-row:last-child{border:none}
+.cmp-col.bad .cmp-row::before{content:'✕';color:var(--red);font-weight:700;flex-shrink:0}
+.cmp-col.good .cmp-row::before{content:'✓';color:var(--teal);font-weight:700;flex-shrink:0}
 
-/* ── FEATURES ── */
-.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-.feat{padding:22px;background:var(--surface);border:1px solid var(--border);border-radius:12px;transition:border-color .2s,transform .2s}
-.feat:hover{border-color:var(--border2);transform:translateY(-2px)}
-.feat-ico{font-size:20px;margin-bottom:12px}
-.feat h3{font-size:12px;font-weight:700;color:var(--text);margin-bottom:7px}
-.feat p{font-size:10px;color:var(--text3);line-height:1.65}
-
-/* ── METRICS ── */
-.met-strip{background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:36px 48px}
+/* ── MET STRIP ── */
+.met-strip{background:var(--bg);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:36px 48px}
 .met-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
 .met{text-align:center;padding:16px;border-right:1px solid var(--border)}
 .met:last-child{border-right:none}
@@ -206,305 +208,200 @@ h2 em{font-style:italic;color:var(--teal)}
 .met-lbl{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px}
 
 /* ── PRICING ── */
-.pricing-band{background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:90px 48px}
-.pricing-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}
-.pricing-card{background:var(--bg);border:1px solid var(--teal-bd);border-radius:16px;padding:36px;position:relative;overflow:hidden}
+.pricing-section{padding:100px 48px}
+.pricing-inner{max-width:1000px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center}
+.pricing-left .slabel{color:var(--teal)}
+.pricing-left h2{font-size:clamp(24px,3vw,36px);font-weight:800;line-height:1.2;letter-spacing:-1px;margin-bottom:16px}
+.pricing-left p{font-size:13px;color:var(--text2);line-height:1.8;margin-bottom:24px}
+.pricing-pts{display:flex;flex-direction:column;gap:10px}
+.pp{display:flex;gap:12px;font-size:12px;color:var(--text2)}
+.pp-n{color:var(--teal);font-weight:700;flex-shrink:0;min-width:24px}
+.pricing-card{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:32px;position:relative;overflow:hidden}
 .pricing-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--teal)}
-.pricing-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:var(--teal-bg);border:1px solid var(--teal-bd);border-radius:20px;font-size:9px;color:var(--teal);letter-spacing:1px;text-transform:uppercase;margin-bottom:18px}
-.pricing-card h3{font-family:'DM Serif Display',serif;font-size:26px;font-weight:400;color:var(--text);margin-bottom:6px}
-.price{font-size:52px;font-weight:800;color:var(--teal);line-height:1;letter-spacing:-2px;margin-bottom:4px}
-.price span{font-size:15px;font-weight:400;color:var(--text3);letter-spacing:0}
-.price-note{font-size:10px;color:var(--text3);margin-bottom:24px}
-.pricing-feats{display:flex;flex-direction:column;gap:10px;margin-bottom:28px}
-.pf{display:flex;align-items:center;gap:9px;font-size:11px;color:var(--text2)}
-.pf::before{content:'✓';color:var(--teal);font-weight:800;flex-shrink:0}
-.pricing-spots{font-size:10px;color:var(--amber);margin-top:14px;display:flex;align-items:center;gap:6px}
-.pricing-spots::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--amber);animation:blink 2s infinite;flex-shrink:0}
-.pricing-left h2{font-family:'DM Serif Display',serif;font-size:clamp(26px,3.2vw,42px);line-height:1.18;letter-spacing:-.8px;margin-bottom:14px;font-weight:400}
-.pricing-left p{font-size:12px;color:var(--text2);line-height:1.85;margin-bottom:22px}
-.pricing-pts{display:flex;flex-direction:column;gap:12px}
-.pp{display:flex;align-items:flex-start;gap:12px;font-size:11px;color:var(--text3);line-height:1.6}
-.pp-n{font-size:9px;color:var(--teal);font-weight:700;flex-shrink:0;margin-top:2px}
+.price-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:var(--green-bg);border:1px solid var(--green-bd);border-radius:20px;font-size:9px;color:var(--green);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px}
+.price-amount{font-size:48px;font-weight:800;color:var(--text);letter-spacing:-2px;line-height:1;margin-bottom:4px}
+.price-period{font-size:12px;color:var(--text3);margin-bottom:24px}
+.price-lock{font-size:11px;color:var(--amber);background:var(--amber-bg);border:1px solid var(--amber-bd);border-radius:7px;padding:8px 12px;margin-bottom:20px}
+.price-features{display:flex;flex-direction:column;gap:9px;margin-bottom:24px}
+.price-feat{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--text2)}
+.price-feat::before{content:'✓';color:var(--teal);font-weight:700;flex-shrink:0}
+.price-cta{display:block;width:100%;padding:13px;background:var(--teal);color:#0a0a0b;border:none;border-radius:9px;font-size:13px;font-weight:800;font-family:'Geist Mono',monospace;cursor:pointer;letter-spacing:.3px;text-align:center;text-decoration:none;transition:all .2s}
+.price-cta:hover{opacity:.9;transform:translateY(-1px)}
+.price-sub{font-size:10px;color:var(--text3);text-align:center;margin-top:10px}
 
-/* ── CTA FINAL ── */
-.cta-final{padding:110px 48px;text-align:center;position:relative;overflow:hidden}
-.cta-glow{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:600px;height:300px;background:radial-gradient(ellipse,rgba(62,207,207,.08) 0%,transparent 65%);pointer-events:none}
-.cta-inner{max-width:600px;margin:0 auto;position:relative;z-index:1}
-.cta-final h2{font-size:clamp(28px,4vw,50px);margin-bottom:14px}
-.cta-final p{font-size:13px;color:var(--text2);margin-bottom:34px;line-height:1.85}
+/* ── CTA BAND ── */
+.cta-band{padding:80px 48px;text-align:center;position:relative;overflow:hidden}
+.cta-band::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at 50% 50%,rgba(62,207,207,0.05) 0%,transparent 70%)}
+.cta-band h2{font-size:clamp(24px,4vw,44px);font-weight:800;letter-spacing:-1.5px;margin-bottom:12px;position:relative}
+.cta-band p{font-size:14px;color:var(--text2);margin-bottom:32px;position:relative}
+.cta-band .btn-primary{font-size:14px;padding:15px 36px;position:relative}
 
 /* ── FOOTER ── */
 footer{border-top:1px solid var(--border);padding:22px 48px;display:flex;align-items:center;justify-content:space-between}
-.fc{font-size:10px;color:var(--text3)}
-.fl{display:flex;gap:18px}
-.fl a{font-size:10px;color:var(--text3);text-decoration:none}
-.fl a:hover{color:var(--text2)}
+.footer-logo{display:flex;align-items:center;gap:8px}
+.footer-links{display:flex;align-items:center;gap:20px}
+.footer-links a{font-size:10px;color:var(--text3);text-decoration:none;transition:color .15s}
+.footer-links a:hover{color:var(--teal)}
 
-/* ── ANIMS ── */
-@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
-.fu{animation:fadeUp .55s ease forwards;opacity:0}
-.d1{animation-delay:.1s}.d2{animation-delay:.2s}.d3{animation-delay:.3s}.d4{animation-delay:.4s}.d5{animation-delay:.5s}.d6{animation-delay:.6s}
+/* ── ANIMATIONS ── */
+.fu{opacity:0;transform:translateY(18px);transition:opacity .55s ease,transform .55s ease}
+.fu.in{opacity:1;transform:none}
+.d1{transition-delay:.05s}.d2{transition-delay:.12s}.d3{transition-delay:.18s}
+.d4{transition-delay:.24s}.d5{transition-delay:.3s}.d6{transition-delay:.4s}
 
-/* ── LEGAL MODAL ── */
-.legal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:99998;display:none;align-items:center;justify-content:center;padding:20px;box-sizing:border-box}
-.legal-overlay.open{display:flex}
-.legal-modal{background:#111113;border:1px solid #32323c;border-top:2px solid var(--teal);border-radius:14px;width:min(600px,94vw);max-height:85vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.7)}
-.legal-head{padding:18px 24px;border-bottom:1px solid #26262e;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-.legal-title{font-size:14px;font-weight:700;color:#eeeef0}
-.legal-close{width:28px;height:28px;border-radius:50%;border:1px solid #32323c;background:#18181b;color:#52525e;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit}
-.legal-close:hover{color:#eeeef0;border-color:#52525e}
-.legal-tabs{display:flex;gap:0;padding:0 20px;border-bottom:1px solid #26262e;background:#18181b;flex-shrink:0}
-.legal-tab{padding:10px 14px;font-size:10px;color:#52525e;cursor:pointer;border-bottom:2px solid transparent;letter-spacing:.3px;transition:all .15s;font-family:inherit;background:transparent;border-top:none;border-left:none;border-right:none}
-.legal-tab:hover{color:#9898a6}
-.legal-tab.active{color:var(--teal);border-bottom-color:var(--teal)}
-.legal-body{padding:24px;overflow-y:auto;flex:1}
-.legal-section{margin-bottom:20px}
-.legal-section:last-child{margin-bottom:0}
-.legal-section h4{font-size:11px;font-weight:700;color:#eeeef0;margin-bottom:7px;letter-spacing:-.1px}
-.legal-section p{font-size:11px;color:#9898a6;line-height:1.75}
-.legal-footer{padding:14px 24px;border-top:1px solid #26262e;flex-shrink:0;text-align:right}
-.legal-footer button{padding:8px 20px;background:var(--teal);border:none;border-radius:7px;color:#0a0a0b;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit}
-
-/* ═══════════════════════════════════════════
-   LANDING MOBILE RESPONSIVE
-   ═══════════════════════════════════════════ */
+/* ── MOBILE ── */
 @media (max-width: 640px) {
-
-  /* ── Nav ── */
   nav { padding: 0 16px; height: 54px; }
-  .nav-r { gap: 8px; }
-  .nav-r .nav-link { display: none; } /* hide How it works / Features / Pricing */
-  .nav-login { display: inline-flex !important; font-size: 11px; padding: 6px 12px; background: var(--surface2); border: 1px solid var(--border2); border-radius: 6px; color: var(--text2) !important; text-decoration: none; }
+  .nav-r .nav-link { display: none; }
+  .nav-login { display: inline-flex !important; }
   .lang-btn { padding: 4px 8px; font-size: 9px; }
-  .btn-cta { padding: 8px 14px; font-size: 11px; }
+  .btn-cta { padding: 8px 12px; font-size: 10px; }
 
-  /* ── Hero ── */
-  .hero { padding: 72px 20px 48px; min-height: auto; }
-  .hero-inner { text-align: center; }
-  .hero-inner h1 { font-size: 32px !important; line-height: 1.2; }
-  .hero-badge { margin: 0 auto 18px; }
-  .hero-sub { font-size: 13px; margin: 0 auto 28px; }
-  .hero-btns { flex-direction: column; align-items: center; gap: 10px; }
-  .hero-btns a { width: 100%; text-align: center; max-width: 300px; }
-  .hero-glow { display: none; }
-  .mockup-wrap { display: none; }
+  .hero { padding: 60px 20px 48px; min-height: auto; }
+  .hero-inner { grid-template-columns: 1fr; gap: 40px; }
+  .hero h1 { font-size: 30px; }
+  .hero-sub { font-size: 13px; }
+  .hero-btns { flex-direction: column; align-items: stretch; }
+  .btn-primary, .btn-outline { text-align: center; }
+  .profile-demo { display: none; }
 
-  /* ── Sections ── */
-  .features-band, .how-band, .pricing-band, .extension-band, .proof-band, .faq {
-    padding: 56px 20px !important;
-  }
+  .pain-section, .insight-section, .profile-section, .how-section, .cmp-section, .pricing-section, .cta-band { padding: 60px 20px; }
+  .pain-inner, .profile-inner, .pricing-inner { grid-template-columns: 1fr; gap: 40px; }
+  .insights-grid { grid-template-columns: 1fr; }
+  .cmp-grid { grid-template-columns: 1fr; }
+  .pain-stats { grid-template-columns: 1fr 1fr; }
 
-  /* ── How it works ── */
-  .steps { grid-template-columns: 1fr !important; }
-  .how-head { text-align: center; }
-
-  /* ── Features ── */
-  .feat-grid { grid-template-columns: 1fr !important; gap: 10px; }
-  .features-head { text-align: center; }
-
-  /* ── Pricing ── */
-  .pricing-inner { grid-template-columns: 1fr !important; gap: 28px; }
-  .pricing-card { padding: 24px; }
-  .pricing-left { text-align: center; }
-
-  /* ── Extension ── */
-  .ext-grid { grid-template-columns: 1fr !important; gap: 20px; }
-
-  /* ── Footer ── */
-  footer { flex-direction: column; gap: 14px; padding: 20px 16px; text-align: center; }
-  footer > * { justify-content: center; }
-  .footer-links { flex-wrap: wrap; justify-content: center; gap: 12px; }
-
-  /* ── Typography ── */
-  h2 { font-size: clamp(22px, 7vw, 30px) !important; }
-  .section-sub { font-size: 13px; }
-
-  /* ── Lang dropdown ── */
-  .lang-dropdown { right: 0; top: 54px; }
-
-  /* ── Ticker ── */
-  .ticker { font-size: 10px; }
-
-  /* ── Mock browser (hero) ── */
-  .mock-browser { display: none; }
-}
-
-/* ── Additional landing mobile fixes ── */
-@media (max-width: 640px) {
-  /* Met strip: 4 cols → 2x2 grid */
-  .met-inner {
-    grid-template-columns: 1fr 1fr !important;
-    gap: 0;
-  }
-  .met {
-    border-right: 1px solid var(--border) !important;
-    border-bottom: 1px solid var(--border);
-  }
-  .met:nth-child(2n) { border-right: none !important; }
-  .met:nth-child(3),
-  .met:nth-child(4) { border-bottom: none; }
   .met-strip { padding: 24px 20px; }
-  .met-val { font-size: 28px; }
+  .met-inner { grid-template-columns: 1fr 1fr; }
+  .met { border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .met:nth-child(2n) { border-right: none; }
+  .met:nth-child(3), .met:nth-child(4) { border-bottom: none; }
 
-  /* Ins-grid: 2 cols → 1 col */
-  .ins-grid {
-    grid-template-columns: 1fr !important;
-  }
-  .ins-card {
-    padding: 14px 16px;
-  }
-
-  /* Compare section */
-  .compare-grid, .cmp-grid {
-    grid-template-columns: 1fr !important;
-    gap: 12px;
-  }
-
-  /* Proof band */
-  .proof-inner {
-    grid-template-columns: 1fr !important;
-  }
+  footer { flex-direction: column; gap: 14px; padding: 20px 16px; text-align: center; }
+  .footer-links { flex-wrap: wrap; justify-content: center; }
 }
 
-/* ── Prob band mobile ── */
-@media (max-width: 640px) {
-  .prob-band { padding: 48px 20px; }
-  .prob-inner {
-    grid-template-columns: 1fr !important;
-    gap: 28px !important;
-  }
-  .prob-quote { font-size: 18px !important; }
-  .prob-note  { font-size: 11px; }
-  .mistakes { gap: 10px; }
-  .mistake { padding: 14px; }
-  .mistake p { font-size: 10px; }
-}
+/* Legal modal */
+.legal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9999;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.legal-overlay.open{display:flex}
+.legal-box{background:var(--surface);border:1px solid var(--border2);border-radius:14px;width:min(540px,94vw);max-height:86vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.9)}
+.legal-tabs{padding:16px 20px 0;border-bottom:1px solid var(--border);display:flex;gap:4px;flex-shrink:0}
+.legal-tab{padding:7px 14px;border:none;border-radius:7px 7px 0 0;background:transparent;color:var(--text3);font-size:10px;font-weight:400;cursor:pointer;font-family:inherit;border-bottom:2px solid transparent}
+.legal-tab.active{color:var(--text);background:var(--surface2);border-bottom-color:var(--teal);font-weight:700}
+.legal-body{padding:20px;overflow-y:auto;flex:1;font-size:11px;color:var(--text2);line-height:1.8}
+.legal-body h3{color:var(--text);font-size:12px;margin:14px 0 6px}
+.legal-footer{padding:12px 20px;border-top:1px solid var(--border);flex-shrink:0;text-align:right}
+.legal-footer button{padding:8px 20px;background:var(--teal);border:none;border-radius:7px;color:#0a0a0b;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit}
 </style>
 </head>
 <body>
 
 <!-- NAV -->
 <nav>
-  <a href="#" class="logo">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="26" height="26" style="flex-shrink:0"><rect width="120" height="120" rx="26" fill="#0d1117"/><text x="60" y="95" text-anchor="middle" font-family="Georgia,serif" font-size="82" font-weight="700" fill="#ffffff">P</text><circle cx="103" cy="14" r="12" fill="#3ecfcf"/></svg>
+  <a href="/" class="logo">
+    <div class="logo-mark"><span class="p">P</span><span class="dot"></span></div>
     <span class="logo-name">pattro</span>
   </a>
   <div class="nav-r">
-    <a href="#como-funciona" class="nav-link" data-i18n="nav_how">Cómo funciona</a>
-    <a href="#features" class="nav-link" data-i18n="nav_features">Features</a>
-    <a href="/precios" class="nav-link" data-i18n="nav_pricing">Precios</a>
-
-    <!-- Language switcher -->
+    <a href="#how" class="nav-link">How it works</a>
+    <a href="#pricing" class="nav-link">Pricing</a>
     <div class="lang-wrap">
       <button class="lang-btn" id="lang-current" onclick="toggleLangMenu()" type="button">
-        <span class="flag">🌐</span>
-        <span id="lang-label">ES</span>
+        <span id="lang-label">EN</span>
         <span style="font-size:8px;opacity:.5">▾</span>
       </button>
-      <div class="lang-dropdown">
-        <div class="lang-opt" onclick="setLang('es')">🇪🇸 <span>Español</span></div>
+      <div class="lang-dropdown" id="lang-dropdown">
         <div class="lang-opt active" onclick="setLang('en')">🇺🇸 <span>English</span></div>
+        <div class="lang-opt" onclick="setLang('es')">🇪🇸 <span>Español</span></div>
       </div>
     </div>
-
-    <a href="/login" class="nav-login" style="color:var(--text2)" data-i18n="nav_login">Login</a>
-    <a href="/register" class="btn-cta" data-i18n="nav_cta">Regístrate →</a>
+    <a href="/login" class="nav-login">Login</a>
+    <a href="/register" class="btn-cta">Start Free →</a>
   </div>
 </nav>
 
 <!-- TICKER -->
-<div style="height:58px"></div>
 <div class="ticker">
   <div class="ticker-inner">
     <span class="ti">Mental Score <span class="pos">84</span></span>
-    <span class="ti">Disciplina <span class="pos">91</span></span>
-    <span class="ti">Revenge Trades <span class="neg">0</span></span>
-    <span class="ti">Trades Limpios <span class="pos">78%</span></span>
-    <span class="ti">Mind Score <span class="pos">79</span></span>
-    <span class="ti">FOMO <span class="neg">3×</span></span>
+    <span class="ti">Revenge Trades <span class="neg">0×</span></span>
     <span class="ti">Win Rate <span class="pos">64%</span></span>
+    <span class="ti">FOMO detected <span class="neg">3×</span></span>
+    <span class="ti">Best hour <span class="pos">9am</span></span>
+    <span class="ti">Discipline <span class="pos">91</span></span>
+    <span class="ti">Pattern (Pattro) <span class="neg">Impulse</span></span>
     <span class="ti">R:R real <span class="pos">2.3</span></span>
-    <span class="ti">Mejor hora <span class="pos">9am</span></span>
-    <span class="ti">Racha wins <span class="pos">4</span></span>
     <span class="ti">Mental Score <span class="pos">84</span></span>
-    <span class="ti">Disciplina <span class="pos">91</span></span>
-    <span class="ti">Revenge Trades <span class="neg">0</span></span>
-    <span class="ti">Trades Limpios <span class="pos">78%</span></span>
-    <span class="ti">Mind Score <span class="pos">79</span></span>
-    <span class="ti">FOMO <span class="neg">3×</span></span>
+    <span class="ti">Revenge Trades <span class="neg">0×</span></span>
     <span class="ti">Win Rate <span class="pos">64%</span></span>
+    <span class="ti">FOMO detected <span class="neg">3×</span></span>
+    <span class="ti">Best hour <span class="pos">9am</span></span>
+    <span class="ti">Discipline <span class="pos">91</span></span>
+    <span class="ti">Pattern (Pattro) <span class="neg">Impulse</span></span>
     <span class="ti">R:R real <span class="pos">2.3</span></span>
-    <span class="ti">Mejor hora <span class="pos">9am</span></span>
-    <span class="ti">Racha wins <span class="pos">4</span></span>
   </div>
 </div>
 
-<!-- ── 1. HERO ── -->
+<!-- HERO -->
 <div class="hero">
-  <div class="grid-bg"></div>
-  <div class="hero-glow"></div>
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
   <div class="hero-inner">
-    <div class="hero-badge fu d1" data-i18n="hero_badge">Trading Psychology Engine</div>
-    <h1 class="fu d2">
-      <span data-i18n="hero_h1a">Corrige los errores que están</span><br>
-      <em data-i18n="hero_h1b">destruyendo tu trading.</em>
-    </h1>
-    <p class="hero-sub fu d3" data-i18n="hero_sub">Pattro captura tus trades automáticamente, rastrea tus emociones y revela los patrones (Pattros) detrás de tus ganancias y pérdidas.</p>
-    <div class="hero-btns fu d4">
-      <a href="/register" class="btn-primary" data-i18n="hero_cta">Regístrate →</a>
-      <a href="#como-funciona" class="btn-outline" data-i18n="hero_cta2">Ver cómo funciona</a>
+    <div class="hero-left">
+      <div class="hero-badge fu d1">Trading Psychology Engine</div>
+      <h1 class="fu d2">
+        Stop losing money<br>
+        because of your<br>
+        <span class="pain">psychology.</span>
+      </h1>
+      <p class="hero-sub fu d3">
+        Pattro detects your trading mistakes automatically
+        and tells you <strong>exactly what to fix</strong> —
+        revenge trading, FOMO, overtrading, emotional patterns.
+        Before they cost you another trade.
+      </p>
+      <div class="hero-btns fu d4">
+        <a href="/register" class="btn-primary">Start analyzing my trades →</a>
+        <a href="#how" class="btn-outline">See how it works</a>
+      </div>
+      <div class="hero-trust fu d5">No credit card · $15/month · Cancel anytime</div>
     </div>
-    <p class="trust-line fu d5" data-i18n="hero_trust">Acceso temprano · Primeros 200 traders · $15/mes</p>
 
-    <!-- DASHBOARD MOCKUP -->
-    <div class="mockup-wrap fu d6">
-      <div class="mockup">
-        <div class="mock-bar">
-          <div class="dot" style="background:#ff5f57"></div>
-          <div class="dot" style="background:#ffbd2e"></div>
-          <div class="dot" style="background:#28ca41"></div>
-          <div class="mock-url">www.pattro.com</div>
+    <div class="fu d6">
+      <div class="profile-demo">
+        <div class="profile-demo-header">
+          <div class="profile-demo-title">Your Trader Profile</div>
+          <div class="profile-badge">⚠ Detected</div>
         </div>
-        <div class="mock-body">
-          <div class="mock-sb">
-            <!-- Logo in sidebar -->
-            <div style="display:flex;align-items:center;gap:7px;padding:8px 6px 10px;border-bottom:1px solid var(--border);margin-bottom:6px">
-              <div style="position:relative;flex-shrink:0;width:22px;height:22px">
-                <span style="font-family:Georgia,serif;font-size:20px;font-weight:700;color:#eeeef0;line-height:1;position:absolute;left:0;bottom:0">P</span>
-                <span style="position:absolute;top:0;right:0;width:6px;height:6px;border-radius:50%;background:#3ecfcf;display:block"></span>
-              </div>
-              <div style="display:flex;flex-direction:column;gap:1px">
-                <span style="font-size:9px;font-weight:700;color:#eeeef0;letter-spacing:-.2px;line-height:1">pattro</span>
-                <span style="font-size:6px;color:#3ecfcf;letter-spacing:1.2px;line-height:1;opacity:.7">TRADING JOURNAL</span>
-              </div>
-            </div>
-            <div class="mock-nav on">◈ Dashboard</div>
-            <div class="mock-nav">≡ Trades</div>
-            <div class="mock-nav">◉ Psychology</div>
-            <div class="mock-nav">✦ Insights</div>
-            <div class="mock-nav">⚙ Settings</div>
+
+        <div class="pattern-card">
+          <div class="pattern-label">⚡ Dominant pattern (Pattro)</div>
+          <div class="pattern-title">Revenge Trading</div>
+          <div class="pattern-stat">You enter <strong>68% of trades</strong> within <strong style="color:var(--red)">3 minutes</strong> after a loss</div>
+        </div>
+
+        <div class="insight-row">
+          <div class="insight-pill">
+            <div class="insight-pill-label">Loss after revenge</div>
+            <div class="insight-pill-val red">-$373</div>
+            <div style="font-size:9px;color:var(--text3)">avg per trade</div>
           </div>
-          <div class="mock-main">
-            <div class="mock-banner">
-              <div style="text-align:center;flex-shrink:0">
-                <div style="font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px;font-weight:700">Mental Score</div>
-                <div class="mock-score">84</div>
-                <div style="font-size:8px;color:var(--text3);margin-top:1px">/100</div>
-              </div>
-              <div class="mock-bars">
-                <div style="font-size:10px;font-weight:700;color:var(--text);margin-bottom:7px">Mente sólida 🧘</div>
-                <div class="mock-bar-r"><span style="width:58px">Disciplina</span><div class="mock-track"><div class="mock-fill" style="width:91%;background:var(--green)"></div></div><span style="width:22px;text-align:right">91</span></div>
-                <div class="mock-bar-r"><span style="width:58px">Mind</span><div class="mock-track"><div class="mock-fill" style="width:79%;background:var(--teal)"></div></div><span style="width:22px;text-align:right">79</span></div>
-                <div class="mock-bar-r"><span style="width:58px">Ejecución</span><div class="mock-track"><div class="mock-fill" style="width:76%;background:var(--amber)"></div></div><span style="width:22px;text-align:right">76</span></div>
-                <div style="margin-top:5px;font-size:8px;color:var(--text3)">Ayer: 67 → Hoy: 84 <span style="color:var(--green);font-weight:700">↑ +17</span></div>
-              </div>
-            </div>
-            <div class="mock-insight">⚠ <strong>Error más frecuente:</strong> FOMO — 8 trades, <strong style="color:var(--red)">-$1,240</strong>. Tu P&L en esos trades es <strong>62% peor</strong> que tu media.</div>
-            <div class="mock-grid3">
-              <div class="mock-card"><div class="mc-l">Mind</div><div class="mc-v" style="color:var(--green)">79</div><div style="font-size:7px;color:var(--text3);margin-top:2px">Sólida</div></div>
-              <div class="mock-card"><div class="mc-l">Disciplina</div><div class="mc-v" style="color:var(--green)">91</div><div style="font-size:7px;color:var(--text3);margin-top:2px">Elite ✅</div></div>
-              <div class="mock-card"><div class="mc-l">Ejecución</div><div class="mc-v" style="color:var(--amber)">76</div><div style="font-size:7px;color:var(--text3);margin-top:2px">En prog.</div></div>
-            </div>
+          <div class="insight-pill">
+            <div class="insight-pill-label">Win rate</div>
+            <div class="insight-pill-val amber">27%</div>
+            <div style="font-size:9px;color:var(--text3)">on revenge trades</div>
+          </div>
+          <div class="insight-pill">
+            <div class="insight-pill-label">Best hour</div>
+            <div class="insight-pill-val green">9am</div>
+            <div style="font-size:9px;color:var(--text3)">+$136 avg</div>
+          </div>
+        </div>
+
+        <div class="action-card">
+          <div class="action-icon">🎯</div>
+          <div class="action-text">
+            <strong>Today's action:</strong> Stop trading after 2 consecutive losses. Your data shows a 89% chance the next trade will also lose.
           </div>
         </div>
       </div>
@@ -512,528 +409,346 @@ footer{border-top:1px solid var(--border);padding:22px 48px;display:flex;align-i
   </div>
 </div>
 
-<!-- ── QUOTE BAND ── -->
-<div class="quote-band">
-  <div class="quote-band-inner">
-    <div class="big-quote" data-i18n="quote1">El problema no es <em>tu estrategia.</em><br>Es tu comportamiento.</div>
-    <div class="big-quote-answer" data-i18n="quote2">Pattro te ayuda a verlo.</div>
-  </div>
-</div>
-
-<!-- ── 2. PROBLEM ── -->
-<div class="prob-band">
-  <div class="prob-inner">
-    <div>
-      <div class="slabel" data-i18n="prob_label">El problema</div>
-      <div class="prob-quote" data-i18n="prob_quote">La mayoría de traders fracasan porque no analizan su <em>comportamiento</em> — solo su P&L.</div>
-      <p class="prob-note" data-i18n="prob_note">Puedes tener una estrategia sólida y seguir perdiendo dinero. La razón casi siempre es psicológica. Los traders repiten los mismos errores sesión tras sesión sin identificar el patrón (Pattro).</p>
-    </div>
-    <div class="mistakes">
-      <div class="mistake">
-        <div class="mistake-ico">🔄</div>
-        <div>
-          <h4 data-i18n="m1_title">Revenge Trading</h4>
-          <p data-i18n="m1_text">Después de una pérdida, el trader entra en el siguiente trade demasiado rápido, con demasiado tamaño y sin plan. Pattro lo detecta en tiempo real y te alerta antes del siguiente trade.</p>
+<!-- PAIN SECTION -->
+<div class="pain-section">
+  <div class="pain-inner">
+    <div class="pain-left">
+      <div class="slabel">The real problem</div>
+      <h2>You don't lose because of<br>your <em>strategy.</em></h2>
+      <p>Most traders have a solid edge. They lose because of what happens between trades — the decisions driven by fear, frustration, and impulse that they can't see in real time.</p>
+      <div class="pain-stats">
+        <div class="pain-stat">
+          <div class="pain-stat-val">80%</div>
+          <div class="pain-stat-lbl">of trading losses are behavioral, not strategic</div>
         </div>
-      </div>
-      <div class="mistake">
-        <div class="mistake-ico">😰</div>
-        <div>
-          <h4 data-i18n="m2_title">Trading Emocional</h4>
-          <p data-i18n="m2_text">Cuando estás ansioso o frustrado, el win rate cae drásticamente. Pattro correlaciona tu estado emocional con tu P&L para que veas el costo exacto de operar enojado.</p>
+        <div class="pain-stat">
+          <div class="pain-stat-val">3×</div>
+          <div class="pain-stat-lbl">worse results when trading after a loss</div>
         </div>
-      </div>
-      <div class="mistake">
-        <div class="mistake-ico">📈</div>
-        <div>
-          <h4 data-i18n="m3_title">Overtrading</h4>
-          <p data-i18n="m3_text">Demasiados trades diluyen tu ventaja. Pattro rastrea tu Discipline Score y señala cuándo estás tomando trades fuera de tu ventana óptima — por hora, por sesión, por estado emocional.</p>
+        <div class="pain-stat">
+          <div class="pain-stat-val">68%</div>
+          <div class="pain-stat-lbl">of traders repeat the same mistake every week</div>
+        </div>
+        <div class="pain-stat">
+          <div class="pain-stat-val">0</div>
+          <div class="pain-stat-lbl">tools that tell you exactly what your pattern is</div>
         </div>
       </div>
     </div>
-  </div>
-</div>
-
-<!-- ── 3. HOW IT WORKS ── -->
-<div id="como-funciona" class="section">
-  <div class="slabel" data-i18n="how_label">Cómo funciona</div>
-  <h2 data-i18n="how_h2">De trade a insight<br>en <em>segundos.</em></h2>
-  <p class="sub" data-i18n="how_sub">Cuatro pasos. Sin fricción. Sin hojas de cálculo.</p>
-  <div class="steps">
-    <div class="step">
-      <div class="step-n" data-i18n="s1_n">01 — Registra</div>
-      <div class="step-icon">✏️</div>
-      <h3 data-i18n="s1_h">Ingresa tus trades manualmente</h3>
-      <p data-i18n="s1_p">Después de cada trade abre Pattro y registra: ticker, dirección, P&L y cómo te sentiste. Toma menos de 30 segundos. Sin hojas de cálculo, sin fricción.</p>
-    </div>
-    <div class="step">
-      <div class="step-n" data-i18n="s2_n">02 — Etiqueta</div>
-      <div class="step-icon">⚡</div>
-      <h3 data-i18n="s2_h">Agrega emoción y disciplina</h3>
-      <p data-i18n="s2_p">Selecciona tu emoción con un emoji y etiqueta si fue un trade limpio, por FOMO, impulsivo, etc. Esos dos datos hacen que el análisis sea psicológico — no solo P&L.</p>
-    </div>
-    <div class="step">
-      <div class="step-n" data-i18n="s3_n">03 — Analiza</div>
-      <div class="step-icon">🧠</div>
-      <h3 data-i18n="s3_h">Pattro detecta tus patrones (Pattros)</h3>
-      <p data-i18n="s3_p">Tu Mental Score, Discipline Score y Execution Score se actualizan en tiempo real. Con 20+ trades el Coach IA identifica tu patrón (Pattro) de comportamiento dominante.</p>
-    </div>
-    <div class="step">
-      <div class="step-n" data-i18n="s4_n">04 — Mejora</div>
-      <div class="step-icon">🎯</div>
-      <h3 data-i18n="s4_h">Recibe insights y coaching</h3>
-      <p data-i18n="s4_p">Cada sesión ves exactamente qué te está costando dinero — no como número, sino como frase: <em>"Tus trades de FOMO te costaron $1,240 este mes."</em></p>
-    </div>
-  </div>
-
-  <!-- Extension info box -->
-  <div style="margin-top:16px;padding:16px 20px;background:var(--teal-bg);border:1px solid var(--teal-bd);border-radius:10px;display:flex;align-items:flex-start;gap:14px">
-    <span style="font-size:20px;flex-shrink:0">🔌</span>
-    <div>
-      <div style="font-size:11px;font-weight:700;color:var(--teal);margin-bottom:4px;text-transform:uppercase;letter-spacing:.8px" data-i18n="ext_badge">Extensión de Chrome — TopstepX</div>
-      <p style="font-size:11px;color:var(--text2);line-height:1.7" data-i18n="ext_note">¿Operas en TopstepX? Instala la extensión de Chrome y tus trades se capturan automáticamente — sin escribir nada. También muestra tu P&L en tiempo real y bloquea TopstepX si rompes una regla. <span style="color:var(--amber)">(Por ahora disponible para TopstepX · Próximamente más plataformas)</span></p>
-    </div>
-  </div>
-</div>
-
-<!-- ── 4. INSIGHTS REALES ── -->
-<div class="section" style="padding-top:0">
-  <div class="slabel" data-i18n="ins_label">Insights reales</div>
-  <h2 data-i18n="ins_h2">Lo que Pattro<br><em>te dice.</em></h2>
-  <p class="sub" style="margin-bottom:36px" data-i18n="ins_sub">Estos son los insights que genera tu data. No consejos genéricos — tus números, tus patrones (Pattros), tu comportamiento.</p>
-  <div class="ins-grid">
-    <div class="ins-card teal">
-      <div class="ins-ico">◷</div>
-      <div>
-        <div class="ins-type" data-i18n="i1_type">patrón (Pattro) de horario</div>
-        <div class="ins-text" data-i18n="i1_text">Tu mejor hora es <strong>9am</strong> (promedio <strong>+$180</strong> por trade). Evita operar después de las <strong>2pm</strong> — tu P&L promedio cae a <strong style="color:var(--red)">-$340</strong>.</div>
-      </div>
-    </div>
-    <div class="ins-card red">
-      <div class="ins-ico">⚠</div>
-      <div>
-        <div class="ins-type" data-i18n="i2_type">Error más frecuente</div>
-        <div class="ins-text" data-i18n="i2_text">Tu mayor error es <strong>FOMO</strong> — 8 trades, <strong style="color:var(--red)">-$1,240</strong> de impacto total. Tu P&L en esos trades es <strong>62% peor</strong> que tu media.</div>
-      </div>
-    </div>
-    <div class="ins-card amber">
-      <div class="ins-ico">😰</div>
-      <div>
-        <div class="ins-type" data-i18n="i3_type">Costo emocional</div>
-        <div class="ins-text" data-i18n="i3_text">Cuando operas <strong>ansioso</strong>, tu promedio es <strong style="color:var(--red)">-$94</strong> por trade (12 trades). Considera pausar cuando notes esa emoción.</div>
-      </div>
-    </div>
-    <div class="ins-card green">
-      <div class="ins-ico">↑</div>
-      <div>
-        <div class="ins-type" data-i18n="i4_type">Racha activa</div>
-        <div class="ins-text" data-i18n="i4_text">Llevas <strong>4 trades ganadores consecutivos.</strong> Momento de alta confianza — mantén la disciplina y no sobredimensiones la siguiente posición.</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ── 5. COMPARACIÓN ── -->
-<div class="section" style="padding-top:0;text-align:center">
-  <div class="slabel" style="justify-content:center" data-i18n="cmp_label">Por qué Pattro</div>
-  <h2 style="margin-bottom:12px" data-i18n="cmp_h2">Deja de hacer journaling <em>manual.</em></h2>
-  <p style="font-size:12px;color:var(--text3);margin-bottom:44px;max-width:440px;margin-left:auto;margin-right:auto" data-i18n="cmp_sub">Ya sabes que deberías llevar un journal. El problema es que toma demasiado tiempo y no te dice nada sobre tu psicología.</p>
-  <div class="compare-wrap">
-    <div class="compare-col">
-      <div class="compare-head">
+    <div class="loss-list">
+      <div class="loss-item">
+        <div class="loss-item-ico">🔄</div>
         <div>
-          <div class="compare-title" data-i18n="cmp_manual">Journal Manual</div>
-          <div class="compare-sub-text" data-i18n="cmp_manual_sub">Spreadsheets, notas, capturas</div>
+          <h4>Revenge Trading</h4>
+          <p>After a loss you enter the next trade too fast, too big, without a plan. Pattro detects this in real time and alerts you before the next trade.</p>
         </div>
       </div>
-      <div class="compare-item"><span class="x">✗</span><span data-i18n="c1">Toma 10+ minutos después de cada sesión</span></div>
-      <div class="compare-item"><span class="x">✗</span><span data-i18n="c2">Inconsistente — fácil de abandonar</span></div>
-      <div class="compare-item"><span class="x">✗</span><span data-i18n="c3">Sin análisis de comportamiento</span></div>
-      <div class="compare-item"><span class="x">✗</span><span data-i18n="c4">Sin seguimiento emocional</span></div>
-      <div class="compare-item"><span class="x">✗</span><span data-i18n="c5">Sin detección de patrones (Pattros) con IA</span></div>
-      <div class="compare-item"><span class="x">✗</span><span data-i18n="c6">Solo números — sin psicología</span></div>
-    </div>
-    <div class="compare-col bb">
-      <div class="compare-head bb">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="22" height="22" style="flex-shrink:0;margin-right:6px"><rect width="120" height="120" rx="26" fill="#0d1117"/><text x="60" y="95" text-anchor="middle" font-family="Georgia,serif" font-size="82" font-weight="700" fill="#ffffff">P</text><circle cx="103" cy="14" r="12" fill="#3ecfcf"/></svg>
+      <div class="loss-item">
+        <div class="loss-item-ico">😰</div>
         <div>
-          <div class="compare-title" style="color:var(--teal)">Pattro</div>
-          <div class="compare-sub-text" data-i18n="cmp_bb_sub">Automático · Psicológico · IA</div>
+          <h4>Emotional Trading</h4>
+          <p>When anxious or frustrated your win rate drops dramatically. Pattro shows you the exact dollar cost of trading in each emotional state.</p>
         </div>
       </div>
-      <div class="compare-item"><span class="ck">✓</span><span data-i18n="b1">Trades capturados automáticamente</span></div>
-      <div class="compare-item"><span class="ck">✓</span><span data-i18n="b2">Registro de emociones con 1 clic</span></div>
-      <div class="compare-item"><span class="ck">✓</span><span data-i18n="b3">Análisis de comportamiento completo</span></div>
-      <div class="compare-item"><span class="ck">✓</span><span data-i18n="b4">Estado emocional vs P&L correlacionado</span></div>
-      <div class="compare-item"><span class="ck">✓</span><span data-i18n="b5">Coach IA detecta tus patrones (Pattros)</span></div>
-      <div class="compare-item"><span class="ck">✓</span><span data-i18n="b6">Mental Score + insights psicológicos</span></div>
+      <div class="loss-item">
+        <div class="loss-item-ico">📈</div>
+        <div>
+          <h4>Overtrading</h4>
+          <p>Too many trades dilute your edge. Pattro tracks your optimal trading window — by hour, by session, by emotional state — and flags when you exceed it.</p>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- ── 6. FEATURES ── -->
-<div id="features" class="section" style="padding-top:80px">
-  <div class="slabel" data-i18n="feat_label">Features</div>
-  <h2 data-i18n="feat_h2">Todo lo que necesita<br>tu <em>psicología de trading.</em></h2>
-  <p class="sub" style="margin-bottom:36px" data-i18n="feat_sub">Construido para traders que quieren entenderse — no solo registrar P&L.</p>
-  <div class="feat-grid">
-    <div class="feat"><div class="feat-ico">🧠</div><h3 data-i18n="f1_h">Mental Score (0–100)</h3><p data-i18n="f1_p">Disciplina (40%) + Estado mental (35%) + Ejecución (25%). Un número que resume tu día de trading, actualizado con cada trade.</p></div>
-    <div class="feat"><div class="feat-ico">⚡</div><h3 data-i18n="f2_h">Coach IA</h3><p data-i18n="f2_p">Con 20+ trades, analiza tu evolución completa y entrega un diagnóstico de tu patrón (Pattro) dominante con un plan de mejora concreto.</p></div>
-    <div class="feat"><div class="feat-ico">🟢</div><h3 data-i18n="f3_h">Color Day</h3><p data-i18n="f3_p">Verde, Amarillo o Rojo — calibrado a tu P&L y estado mental. Recomendaciones específicas para cada nivel de condición.</p></div>
-    <div class="feat"><div class="feat-ico">◷</div><h3 data-i18n="f4_h">Análisis por horario</h3><p data-i18n="f4_p">Descubre en qué hora del día eres estadísticamente mejor trader. Protege tus peores ventanas automáticamente.</p></div>
-    <div class="feat"><div class="feat-ico">📋</div><h3 data-i18n="f5_h">Checklist diario</h3><p data-i18n="f5_p">Define tus condiciones pre-trade. El sistema califica cuánto cumpliste e integra el resultado en tu Discipline Score.</p></div>
-    <div class="feat"><div class="feat-ico">🔌</div><h3 data-i18n="f6_h">Captura automática TopstepX</h3><p data-i18n="f6_p">Instala la extensión de Chrome una vez. Cada trade que cierras se captura automáticamente — ticker, P&L, tamaño, entrada y salida. <span style="color:var(--amber)">Por ahora disponible para TopstepX · Próximamente más plataformas.</span></p></div>
+<!-- INSIGHTS SECTION -->
+<div class="insight-section">
+  <div class="insight-inner">
+    <div class="section-header">
+      <div class="slabel">What Pattro tells you</div>
+      <h2>Specific insights.<br>Not generic advice.</h2>
+      <p>These are the kind of insights your data generates — based on your numbers, your patterns, your behavior.</p>
+    </div>
+    <div class="insights-grid">
+      <div class="insight-card hot">
+        <div class="ic-type red">⚡ Pattern detected</div>
+        <div class="ic-icon">🔄</div>
+        <div class="ic-title">Your revenge trading costs $19,400</div>
+        <div class="ic-text">You enter <strong>73 trades</strong> within 3 minutes after a loss. Win rate on those: <span class="bad">27%</span>. Average loss: <span class="bad">-$373</span> per trade. Your normal average: -$44.</div>
+      </div>
+      <div class="insight-card warm">
+        <div class="ic-type amber">◷ Time pattern (Pattro)</div>
+        <div class="ic-icon">🕐</div>
+        <div class="ic-title">Stop trading after 11am</div>
+        <div class="ic-text">Your best hour is <strong>9am</strong> (avg <span class="good">+$136</span> per trade, 46% WR). After 11am your average drops to <span class="bad">-$45</span>. You're leaving money on the table every afternoon.</div>
+      </div>
+      <div class="insight-card cool">
+        <div class="ic-type teal">◈ Emotional cost</div>
+        <div class="ic-icon">😤</div>
+        <div class="ic-title">Frustrated = -$88 avg</div>
+        <div class="ic-text">When trading frustrated your average is <span class="bad">-$88</span> per trade across 54 trades. When calm: <span class="good">+$31</span>. The same market, a completely different result.</div>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- METRICS -->
+<!-- PROFILE SECTION -->
+<div class="profile-section" id="how">
+  <div class="profile-inner">
+    <div class="big-profile">
+      <div class="bp-header">
+        <div>
+          <div class="bp-title">Trader Profile</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px">Impulsive · High frequency · Emotional</div>
+        </div>
+        <div style="text-align:right">
+          <div class="bp-score">61</div>
+          <div class="bp-score-lbl">Mental Score</div>
+        </div>
+      </div>
+      <div class="bp-rows">
+        <div class="bp-row">
+          <div class="bp-row-label">Win Rate</div>
+          <div class="bp-row-val" style="color:var(--red)">30%</div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-row-label">Main error</div>
+          <div class="bp-row-val" style="color:var(--red)">Revenge trading (73×)</div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-row-label">Best hour</div>
+          <div class="bp-row-val" style="color:var(--green)">9am (+$5,585 total)</div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-row-label">Worst emotion</div>
+          <div class="bp-row-val" style="color:var(--red)">Frustrated (-$88/trade)</div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-row-label">Discipline</div>
+          <div class="bp-row-val" style="color:var(--amber)">65 / 100</div>
+        </div>
+      </div>
+      <div class="bp-action">
+        <div class="bp-action-title">🎯 AI Coach recommendation</div>
+        <div class="bp-action-text">Stop trading after 2 consecutive losses. Your next trade has an 89% chance of losing.</div>
+      </div>
+    </div>
+
+    <div class="profile-right">
+      <div class="slabel">Your profile · Automatically</div>
+      <h2>Know exactly<br>who you are<br>as a trader.</h2>
+      <p>Pattro builds your psychological profile from your trades. Not a questionnaire — your real behavior, patterns and emotional fingerprint.</p>
+      <div class="profile-features">
+        <div class="pf-item">Dominant pattern (Pattro) detected automatically</div>
+        <div class="pf-item">Mental Score updated after every trade</div>
+        <div class="pf-item">Best and worst trading hours from your data</div>
+        <div class="pf-item">Emotional cost per emotion, in real dollars</div>
+        <div class="pf-item">AI Coach weekly diagnosis and action plan</div>
+        <div class="pf-item">Red/Yellow/Green day — know before you trade</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<div class="how-section">
+  <div class="how-inner">
+    <div class="section-header">
+      <div class="slabel">How it works</div>
+      <h2>From trade to insight<br>in seconds.</h2>
+      <p>Four steps. Zero friction. No spreadsheets.</p>
+    </div>
+    <div class="steps-list">
+      <div class="step-item">
+        <div class="step-num">01</div>
+        <div class="step-content">
+          <h3>Connect or log your trades</h3>
+          <p>Install the Chrome extension for TopstepX and trades are captured automatically — ticker, P&L, entry, exit. Or log manually in 10 seconds with the + Log Trade button.</p>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">02</div>
+        <div class="step-content">
+          <h3>Tag your emotion in 1 click</h3>
+          <p>After each trade, select how you felt. Calm, anxious, frustrated, confident. That single data point unlocks your emotional P&L analysis over time.</p>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">03</div>
+        <div class="step-content">
+          <h3>Pattro detects your patterns</h3>
+          <p>Your Mental Score, Discipline Score and Execution Score update in real time. With 20+ trades the AI Coach identifies your dominant pattern (Pattro) — the specific behavior that's costing you the most.</p>
+        </div>
+      </div>
+      <div class="step-item" style="padding-bottom:0">
+        <div class="step-num">04</div>
+        <div class="step-content">
+          <h3>Get a concrete action for today</h3>
+          <p>Not generic advice. Specific instructions based on your data: stop at this hour, this emotion, after this many losses. Measurable improvement session by session.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- COMPARISON -->
+<div class="cmp-section">
+  <div class="cmp-inner">
+    <div class="section-header">
+      <div class="slabel">Why Pattro</div>
+      <h2>Not just another journal.</h2>
+      <p>Most tools tell you what happened. Pattro tells you why — and what to do about it.</p>
+    </div>
+    <div class="cmp-grid">
+      <div class="cmp-col bad">
+        <div class="cmp-col-header">Manual journal / Other tools</div>
+        <div class="cmp-col-body">
+          <div class="cmp-row">Takes 10+ minutes after each session</div>
+          <div class="cmp-row">No behavioral analysis</div>
+          <div class="cmp-row">No emotional pattern detection</div>
+          <div class="cmp-row">Numbers only — no psychology</div>
+          <div class="cmp-row">No real-time alerts</div>
+          <div class="cmp-row">No AI-generated action plan</div>
+        </div>
+      </div>
+      <div class="cmp-col good">
+        <div class="cmp-col-header">Pattro</div>
+        <div class="cmp-col-body">
+          <div class="cmp-row">Automatic capture — 0 minutes</div>
+          <div class="cmp-row">Full behavioral analysis</div>
+          <div class="cmp-row">Emotion × P&L correlation</div>
+          <div class="cmp-row">Mental Score + psychology insights</div>
+          <div class="cmp-row">Real-time tilt & revenge alerts</div>
+          <div class="cmp-row">Weekly AI Coach diagnosis</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MET STRIP -->
 <div class="met-strip">
   <div class="met-inner">
-    <div class="met"><div class="met-val">20+</div><div class="met-lbl" data-i18n="met1">Métricas rastreadas</div></div>
-    <div class="met"><div class="met-val">1</div><div class="met-lbl" data-i18n="met2">Clic para registrar emoción</div></div>
-    <div class="met"><div class="met-val">0</div><div class="met-lbl" data-i18n="met3">Hojas de cálculo necesarias</div></div>
-    <div class="met"><div class="met-val">∞</div><div class="met-lbl" data-i18n="met4">Trades analizables</div></div>
+    <div class="met"><div class="met-val">20+</div><div class="met-lbl">Metrics tracked</div></div>
+    <div class="met"><div class="met-val">1</div><div class="met-lbl">Click to log emotion</div></div>
+    <div class="met"><div class="met-val">0</div><div class="met-lbl">Spreadsheets needed</div></div>
+    <div class="met"><div class="met-val">∞</div><div class="met-lbl">Trades analyzable</div></div>
   </div>
 </div>
 
-<!-- ── 7. PRICING ── -->
-<div id="precios" class="pricing-band">
+<!-- PRICING -->
+<div class="pricing-section" id="pricing">
   <div class="pricing-inner">
     <div class="pricing-left">
-      <div class="slabel" data-i18n="price_label">Acceso Temprano</div>
-      <h2 data-i18n="price_h2">Más de 1000 traders<br>ya lo usan.</h2>
-      <p data-i18n="price_p">Ya contamos con más de 1000 traders usando Pattro en beta. Para los primeros 200 que se registren en <strong>2026</strong>, el precio es $15/mes bloqueado para siempre.</p>
+      <div class="slabel">Early access</div>
+      <h2>Simple pricing.<br>No surprises.</h2>
+      <p>We're in early access with the first traders defining what we build next. The price is locked for life for founding members.</p>
       <div class="pricing-pts">
-        <div class="pp"><span class="pp-n">01</span><span data-i18n="pp1">Para los primeros 200 de 2026 el precio se bloquea en $15/mes para siempre. En caso de actualización, el precio puede subir.</span></div>
-        <div class="pp"><span class="pp-n">02</span><span data-i18n="pp2">Acceso directo para dar feedback. Los primeros usuarios definen qué construimos después.</span></div>
-        <div class="pp"><span class="pp-n">03</span><span data-i18n="pp3">Cancela cuando quieras. Sin contratos ni compromisos.</span></div>
+        <div class="pp"><span class="pp-n">01</span><span>First 200 members of 2026 lock the price at $15/month forever. If pricing changes later, you keep yours.</span></div>
+        <div class="pp"><span class="pp-n">02</span><span>Direct access to give feedback. Early members define what we build next.</span></div>
+        <div class="pp"><span class="pp-n">03</span><span>Cancel anytime. No contracts, no commitments.</span></div>
       </div>
     </div>
     <div class="pricing-card">
-      <div class="pricing-badge" data-i18n="price_badge">⚡ Primeros 200 de 2026 — $15/mes</div>
-      <h3>Pattro</h3>
-      <div class="price">$15<span data-i18n="per_month">/mes</span></div>
-      <div class="price-note" data-i18n="price_note">Primeros 200 de 2026 · precio bloqueado para siempre</div>
-      <div class="pricing-feats">
-        <div class="pf" data-i18n="pf1">Captura automática de trades (TopstepX)</div>
-        <div class="pf" data-i18n="pf2">Mental Score + seguimiento psicológico</div>
-        <div class="pf" data-i18n="pf3">Coach IA (análisis ilimitados)</div>
-        <div class="pf" data-i18n="pf4">Insights de comportamiento y patrones (Pattros)</div>
-        <div class="pf" data-i18n="pf5">Checklist diario y sistema de reglas</div>
-        <div class="pf" data-i18n="pf6">Recomendaciones Color Day</div>
+      <div class="price-badge">🔒 Price locked forever</div>
+      <div class="price-amount">$15</div>
+      <div class="price-period">/ month · billed monthly</div>
+      <div class="price-lock">⚡ Early access pricing — lock it before it increases</div>
+      <div class="price-features">
+        <div class="price-feat">Mental Score + Discipline + Execution</div>
+        <div class="price-feat">AI Coach weekly psychological analysis</div>
+        <div class="price-feat">Automatic capture (TopstepX Chrome extension)</div>
+        <div class="price-feat">Real-time tilt & revenge trade alerts</div>
+        <div class="price-feat">Emotion × P&L correlation</div>
+        <div class="price-feat">Unlimited trades & accounts</div>
+        <div class="price-feat">Color Day + pre-session check</div>
       </div>
-      <a href="/register" class="btn-primary" style="width:100%;text-align:center;display:block;padding:13px" data-i18n="price_cta">Regístrate →</a>
-      <div class="pricing-spots" data-i18n="price_spots">Quedan pocos lugares al precio de $15/mes en 2026</div>
+      <a href="/register" class="price-cta">Start for $15/month →</a>
+      <div class="price-sub">No credit card required to explore · Cancel anytime</div>
     </div>
   </div>
 </div>
 
-<!-- ── 8. FINAL CTA ── -->
-<div class="cta-final">
-  <div class="cta-glow"></div>
-  <div class="cta-inner">
-    <div class="slabel" style="justify-content:center" data-i18n="cta_label">Empieza hoy</div>
-    <h2 data-i18n="cta_h2">Empieza a mejorar tu disciplina<br>de trading <em>ahora.</em></h2>
-    <p data-i18n="cta_p">Crea tu cuenta gratis. En tu primer día ya tendrás más datos sobre tu psicología de trading que en el último año operando.</p>
-    <a href="/register" class="btn-primary" style="font-size:13px;padding:16px 40px" data-i18n="cta_btn">Regístrate →</a>
-    <p class="trust-line" style="justify-content:center;margin-top:16px" data-i18n="cta_trust">Sin tarjeta de crédito · TopstepX + cualquier broker manual</p>
-  </div>
+<!-- CTA BAND -->
+<div class="cta-band">
+  <h2>Your next losing streak<br>is preventable.</h2>
+  <p>Most traders know <em>what</em> they do wrong. Pattro shows you <strong>when, how, and why</strong> — so you can actually stop.</p>
+  <a href="/register" class="btn-primary">Start analyzing my trades →</a>
+  <div style="margin-top:12px;font-size:10px;color:var(--text3)">No credit card · $15/month · Cancel anytime</div>
 </div>
 
 <!-- FOOTER -->
 <footer>
-  <div class="logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="26" height="26" style="flex-shrink:0"><rect width="120" height="120" rx="26" fill="#0d1117"/><text x="60" y="95" text-anchor="middle" font-family="Georgia,serif" font-size="82" font-weight="700" fill="#ffffff">P</text><circle cx="103" cy="14" r="12" fill="#3ecfcf"/></svg><span class="logo-name" style="font-size:13px">pattro</span></div>
-  <div class="fc" data-i18n="footer_copy">© 2025 Pattro — Trading Psychology Engine</div>
-  <div class="fl">
-    <a href="/terms" target="_blank" data-i18n="footer_terms">Términos</a>
-    <a href="/privacy" target="_blank" data-i18n="footer_privacy">Privacidad</a>
-    <a href="/terms#s6" target="_blank" data-i18n="footer_risk">Riesgo</a>
-    <span style="color:var(--text3);font-size:10px" data-i18n="footer_contact_pending">Contacto — próximamente</span>
+  <div class="footer-logo">
+    <div class="logo-mark" style="width:22px;height:22px"><span class="p" style="font-size:20px">P</span><span class="dot" style="width:6px;height:6px"></span></div>
+    <span style="font-size:12px;font-weight:700;color:var(--text)">pattro</span>
   </div>
+  <div class="footer-links">
+    <a href="/terms">Terms</a>
+    <a href="/privacy">Privacy</a>
+    <a href="/precios">Pricing</a>
+    <a href="mailto:support@pattro.com">Support</a>
+  </div>
+  <div style="font-size:10px;color:var(--text3)">© 2026 Pattro</div>
 </footer>
 
 <script>
-// ── i18n system ──
+// ── Lang switcher ──
 function toggleLangMenu() {
-  var dd = document.querySelector('.lang-dropdown');
+  var dd = document.getElementById('lang-dropdown');
   if (dd) dd.classList.toggle('open');
 }
-
 document.addEventListener('click', function(e) {
   var wrap = document.querySelector('.lang-wrap');
   if (wrap && !wrap.contains(e.target)) {
-    var dd = document.querySelector('.lang-dropdown');
+    var dd = document.getElementById('lang-dropdown');
     if (dd) dd.classList.remove('open');
   }
 });
 
-var LANG = {
-  es: {
-    nav_how:'Cómo funciona', nav_features:'Features', nav_pricing:'Precios', nav_cta:'Regístrate →', nav_login:'Login',
-    hero_badge:'Trading Psychology Engine',
-    hero_h1a:'Corrige los errores que están', hero_h1b:'destruyendo tu trading.',
-    hero_sub:'Pattro captura tus trades automáticamente, rastrea tus emociones y revela los patrones (Pattros) detrás de tus ganancias y pérdidas.',
-    hero_cta:'Regístrate →', hero_cta2:'Ver cómo funciona',
-    hero_trust:'Acceso temprano · Primeros 200 traders · $15/mes',
-    quote1:'El problema no es <em>tu estrategia.</em><br>Es tu comportamiento.',
-    quote2:'Pattro te ayuda a verlo.',
-    prob_label:'El problema',
-    prob_quote:'La mayoría de traders fracasan porque no analizan su <em>comportamiento</em> — solo su P&L.',
-    prob_note:'Puedes tener una estrategia sólida y seguir perdiendo dinero. La razón casi siempre es psicológica. Los traders repiten los mismos errores sesión tras sesión sin identificar el patrón (Pattro).',
-    m1_title:'Revenge Trading', m1_text:'Después de una pérdida, el trader entra en el siguiente trade demasiado rápido, con demasiado tamaño y sin plan. Pattro lo detecta en tiempo real y te alerta antes del siguiente trade.',
-    m2_title:'Trading Emocional', m2_text:'Cuando estás ansioso o frustrado, el win rate cae drásticamente. Pattro correlaciona tu estado emocional con tu P&L para que veas el costo exacto de operar enojado.',
-    m3_title:'Overtrading', m3_text:'Demasiados trades diluyen tu ventaja. Pattro rastrea tu Discipline Score y señala cuándo estás tomando trades fuera de tu ventana óptima — por hora, por sesión, por estado emocional.',
-    how_label:'Cómo funciona', how_h2:'De trade a insight<br>en <em>segundos.</em>', how_sub:'Cuatro pasos. Sin fricción. Sin hojas de cálculo.',
-    s1_n:'01 — Captura', s1_h:'Tus trades se registran automáticamente', s1_p:'La extensión de Chrome se conecta a TopstepX y captura cada posición cerrada — ticker, P&L, entrada, salida — sin que toques nada.',
-    s2_n:'02 — Registra', s2_h:'Agrega emociones con 1 clic', s2_p:'Después de cada trade aparece un popup mínimo. Selecciona cómo te sentiste con un emoji. Listo — el resto lo calcula Pattro automáticamente.',
-    s3_n:'03 — Analiza', s3_h:'Pattro detecta tus patrones (Pattros)', s3_p:'Tu Mental Score, Discipline Score y Execution Score se actualizan en tiempo real. Con 20+ trades el Coach IA identifica tu patrón (Pattro) de comportamiento dominante.',
-    s4_n:'04 — Mejora', s4_h:'Recibe insights y coaching', s4_p:'Cada sesión ves exactamente qué te está costando dinero — no como número, sino como frase: <em>"Tus trades de FOMO te costaron $1,240 este mes."</em>',
-    ins_label:'Insights reales', ins_h2:'Lo que Pattro<br><em>te dice.</em>', ins_sub:'Estos son los insights que genera tu data. No consejos genéricos — tus números, tus patrones (Pattros), tu comportamiento.',
-    i1_type:'patrón (Pattro) de horario', i1_text:'Tu mejor hora es <strong>9am</strong> (promedio <strong>+$180</strong> por trade). Evita operar después de las <strong>2pm</strong> — tu P&L promedio cae a <strong style="color:var(--red)">-$340</strong>.',
-    i2_type:'Error más frecuente', i2_text:'Tu mayor error es <strong>FOMO</strong> — 8 trades, <strong style="color:var(--red)">-$1,240</strong> de impacto total. Tu P&L en esos trades es <strong>62% peor</strong> que tu media.',
-    i3_type:'Costo emocional', i3_text:'Cuando operas <strong>ansioso</strong>, tu promedio es <strong style="color:var(--red)">-$94</strong> por trade (12 trades). Considera pausar cuando notes esa emoción.',
-    i4_type:'Racha activa', i4_text:'Llevas <strong>4 trades ganadores consecutivos.</strong> Momento de alta confianza — mantén la disciplina y no sobredimensiones la siguiente posición.',
-    cmp_label:'Por qué Pattro', cmp_h2:'Deja de hacer journaling <em>manual.</em>', cmp_sub:'Ya sabes que deberías llevar un journal. El problema es que toma demasiado tiempo y no te dice nada sobre tu psicología.',
-    cmp_manual:'Journal Manual', cmp_manual_sub:'Spreadsheets, notas, capturas', cmp_bb_sub:'Automático · Psicológico · IA',
-    c1:'Toma 10+ minutos después de cada sesión', c2:'Inconsistente — fácil de abandonar', c3:'Sin análisis de comportamiento', c4:'Sin seguimiento emocional', c5:'Sin detección de patrones (Pattros) con IA', c6:'Solo números — sin psicología',
-    b1:'Trades capturados automáticamente', b2:'Registro de emociones con 1 clic', b3:'Análisis de comportamiento completo', b4:'Estado emocional vs P&L correlacionado', b5:'Coach IA detecta tus patrones (Pattros)', b6:'Mental Score + insights psicológicos',
-    feat_label:'Features', feat_h2:'Todo lo que necesita<br>tu <em>psicología de trading.</em>', feat_sub:'Construido para traders que quieren entenderse — no solo registrar P&L.',
-    f1_h:'Mental Score (0–100)', f1_p:'Disciplina (40%) + Estado mental (35%) + Ejecución (25%). Un número que resume tu día de trading, actualizado con cada trade.',
-    f2_h:'Coach IA', f2_p:'Con 20+ trades, analiza tu evolución completa y entrega un diagnóstico de tu patrón (Pattro) dominante con un plan de mejora concreto.',
-    f3_h:'Color Day', f3_p:'Verde, Amarillo o Rojo — calibrado a tu P&L y estado mental. Recomendaciones específicas para cada nivel.',
-    f4_h:'Análisis por horario', f4_p:'Descubre en qué hora del día eres estadísticamente mejor trader. Protege tus peores ventanas automáticamente.',
-    f5_h:'Checklist diario', f5_p:'Define tus condiciones pre-trade. El sistema califica cuánto cumpliste e integra el resultado en tu Discipline Score.',
-    f6_h:'Captura automática TopstepX', f6_p:'Instala la extensión de Chrome una vez. Cada trade que cierras se captura automáticamente — ticker, P&L, tamaño, entrada y salida. <span style="color:var(--amber)">Por ahora disponible para TopstepX · Próximamente más plataformas.</span>',
-    met1:'Métricas rastreadas', met2:'Clic para registrar emoción', met3:'Hojas de cálculo necesarias', met4:'Trades analizables',
-    price_label:'Acceso Temprano', price_h2:'Más de 1000 traders<br>ya lo usan.', price_p:'Ya contamos con más de 1000 traders usando Pattro en beta. Para los primeros 200 que se registren en <strong>2026</strong>, el precio es $15/mes bloqueado para siempre.',
-    pp1:'Para los primeros 200 de 2026 el precio se bloquea en $15/mes para siempre. En caso de actualización, el precio puede subir.',
-    pp2:'Acceso directo para dar feedback. Los primeros usuarios definen qué construimos después.',
-    pp3:'Cancela cuando quieras. Sin contratos ni compromisos.',
-    price_badge:'⚡ Precio de Acceso Temprano', per_month:'/mes', price_note:'Primeros 200 traders · Precio bloqueado para siempre',
-    pf1:'Captura automática de trades (TopstepX)', pf2:'Mental Score + seguimiento psicológico', pf3:'Coach IA (análisis ilimitados)', pf4:'Insights de comportamiento y patrones (Pattros)', pf5:'Checklist diario y sistema de reglas', pf6:'Recomendaciones Color Day',
-    price_cta:'Regístrate →', price_spots:'Quedan pocos lugares — solo 200 de 2026',
-    cta_label:'Empieza hoy', cta_h2:'Empieza a mejorar tu disciplina<br>de trading <em>ahora.</em>', cta_p:'Crea tu cuenta gratis. En tu primer día ya tendrás más datos sobre tu psicología de trading que en el último año operando.',
-    cta_btn:'Regístrate →', cta_trust:'Sin tarjeta de crédito · TopstepX + cualquier broker manual',
-    footer_copy:'© 2025 Pattro — Trading Psychology Engine', footer_terms:'Términos', footer_privacy:'Privacidad', footer_risk:'Riesgo', footer_contact_pending:'Contacto — próximamente'
-  },
-  en: {
-    nav_how:'How it works', nav_features:'Features', nav_pricing:'Pricing', nav_cta:'Sign Up →', nav_login:'Login',
-    hero_badge:'Trading Psychology Engine',
-    hero_h1a:'Fix the mistakes', hero_h1b:'ruining your trading.',
-    hero_sub:'Pattro automatically captures your trades, tracks your emotions, and reveals the patterns (Pattros) behind your wins and losses.',
-    hero_cta:'Sign Up →', hero_cta2:'See how it works',
-    hero_trust:'Early access · First 200 traders · $15/month',
-    quote1:'The problem is not <em>your strategy.</em><br>It\'s your behavior.',
-    quote2:'Pattro helps you see it.',
-    prob_label:'The problem',
-    prob_quote:'Most traders fail because they don\'t analyze their <em>behavior</em> — only their P&L.',
-    prob_note:'You can have a solid strategy and still lose money. The reason is almost always psychological. Traders repeat the same mistakes session after session without ever identifying the pattern (Pattro).',
-    m1_title:'Revenge Trading', m1_text:'After a loss, traders enter the next trade too fast, too big, and with no plan. Pattro detects it in real time and alerts you before your next trade.',
-    m2_title:'Emotional Trading', m2_text:'When anxious or frustrated, win rate drops dramatically. Pattro correlates your emotional state with your P&L so you can see the exact cost of trading angry.',
-    m3_title:'Overtrading', m3_text:'Too many trades dilute your edge. Pattro tracks your Discipline Score and flags when you\'re taking trades outside your optimal window — by hour, by session, by emotional state.',
-    how_label:'How it works', how_h2:'From trade to insight<br>in <em>seconds.</em>', how_sub:'Four steps. Zero friction. No spreadsheets.',
-    s1_n:'01 — Capture', s1_h:'Your trades are recorded automatically', s1_p:'The Chrome extension connects to TopstepX and captures every closed position — ticker, P&L, entry, exit — without you touching anything.',
-    s2_n:'02 — Journal', s2_h:'Add emotions in 1 click', s2_p:'After each trade a minimal popup appears. Select how you felt with one emoji. Done — the rest is calculated automatically by Pattro.',
-    s3_n:'03 — Analyze', s3_h:'Pattro detects your patterns (Pattros)', s3_p:'Your Mental Score, Discipline Score, and Execution Score update in real time. After 20+ trades the AI Coach identifies your dominant behavioral pattern (Pattro).',
-    s4_n:'04 — Improve', s4_h:'Get insights and coaching', s4_p:'Every session you see exactly what\'s costing you money — not as a number, but as a sentence: <em>"Your FOMO trades cost you $1,240 this month."</em>',
-    ins_label:'Real insights', ins_h2:'What Pattro<br><em>tells you.</em>', ins_sub:'These are the kind of insights your data generates. Not generic advice — your numbers, your patterns (Pattros), your behavior.',
-    i1_type:'Time pattern (Pattro)', i1_text:'Your best hour is <strong>9am</strong> (avg <strong>+$180</strong> per trade). Avoid trading after <strong>2pm</strong> — your average P&L drops to <strong style="color:var(--red)">-$340</strong>.',
-    i2_type:'Most Frequent Error', i2_text:'Your biggest error is <strong>FOMO</strong> — 8 trades, <strong style="color:var(--red)">-$1,240</strong> total impact. Your P&L in those trades is <strong>62% worse</strong> than your average.',
-    i3_type:'Emotional Cost', i3_text:'When trading <strong>anxious</strong>, your average is <strong style="color:var(--red)">-$94</strong> per trade (12 trades). Consider pausing when you notice that emotion.',
-    i4_type:'Active Streak', i4_text:'You\'re on a <strong>4-trade winning streak.</strong> High confidence moment — maintain discipline and don\'t oversize your next position.',
-    cmp_label:'Why Pattro', cmp_h2:'Stop <em>manual journaling.</em>', cmp_sub:'You already know you should journal. The problem is it takes too long and tells you nothing about your psychology.',
-    cmp_manual:'Manual Journal', cmp_manual_sub:'Spreadsheets, notes, screenshots', cmp_bb_sub:'Automatic · Psychological · AI-powered',
-    c1:'Takes 10+ minutes after each session', c2:'Inconsistent — easy to skip', c3:'No behavioral analysis', c4:'No emotional tracking', c5:'No AI pattern (Pattro) detection', c6:'Numbers only — no psychology',
-    b1:'Trades captured automatically', b2:'1-click emotion logging', b3:'Full behavioral analysis', b4:'Emotional state vs P&L correlation', b5:'AI Coach detects your patterns (Pattros)', b6:'Mental Score + psychology insights',
-    feat_label:'Features', feat_h2:'Everything your<br><em>trading psychology</em> needs.', feat_sub:'Built for traders who want to understand themselves — not just track P&L.',
-    f1_h:'Mental Score (0–100)', f1_p:'Discipline (40%) + Mental state (35%) + Execution (25%). One number that summarizes your trading day, updated with every trade.',
-    f2_h:'AI Coach', f2_p:'With 20+ trades, analyzes your full evolution and delivers a diagnosis of your dominant pattern (Pattro) with a concrete improvement plan.',
-    f3_h:'Color Day', f3_p:'Green, Yellow, or Red — calibrated to your P&L and mental state. Specific recommendations for each condition level.',
-    f4_h:'Time Analysis', f4_p:'Discover which hour of day you\'re statistically the best trader. Protect your worst windows automatically.',
-    f5_h:'Daily Checklist', f5_p:'Define your pre-trade conditions. The system scores how much you completed and integrates it into your Discipline Score.',
-    f6_h:'TopstepX Auto-Capture', f6_p:'Install the Chrome extension once. Every trade you close is captured automatically — ticker, P&L, size, entry and exit price.',
-    met1:'Metrics tracked', met2:'Click to log emotion', met3:'Spreadsheets needed', met4:'Trades analyzable',
-    price_label:'Early Access', price_h2:'1000+ traders<br>already use it.', price_p:'We\'re in early access. For the first 200 who sign up in 2026, the price is $15/month locked in forever. (Free for beta users with their personal code). The fireases — even when we add more features.',
-    pp1:'Price locks in forever. When we launch publicly, price goes up. Your rate stays the same.',
-    pp2:'Direct access to give feedback. Early users shape what we build next.',
-    pp3:'Cancel anytime. No contracts, no commitments.',
-    price_badge:'⚡ First 200 of 2026 — $15/month', per_month:'/month', price_note:'First 200 of 2026 · Price locked forever',
-    pf1:'Automatic trade capture (TopstepX)', pf2:'Mental Score + psychology tracking', pf3:'AI Coach (unlimited analyses)', pf4:'Behavioral insights & patterns (Pattros)', pf5:'Daily checklist & rules system', pf6:'Color Day recommendations',
-    price_cta:'Sign Up →', price_spots:'Only a few spots left at this price',
-    cta_label:'Start today', cta_h2:'Start improving your trading<br>discipline <em>now.</em>', cta_p:'Create your free account. On your first day you\'ll already have more data about your trading psychology than in your last year of trading.',
-    cta_btn:'Sign Up →', cta_trust:'No credit card · TopstepX + any manual broker',
-    footer_copy:'© 2025 Pattro — Trading Psychology Engine', footer_terms:'Terms', footer_privacy:'Privacy', footer_risk:'Risk', footer_contact_pending:'Contact — coming soon'
-  }
+var LANG_ES = {
+  hero_badge: 'Motor de Psicología Trading',
+  hero_h1: 'Para de perder dinero\npor tu\npsicología.',
+  hero_sub: 'Pattro detecta tus errores de trading automáticamente y te dice <strong>exactamente qué corregir</strong> — revenge trading, FOMO, overtrading, patrones emocionales. Antes de que te cuesten otro trade.',
+  hero_cta: 'Analizar mis trades →',
+  hero_cta2: 'Ver cómo funciona',
+  hero_trust: 'Sin tarjeta · $15/mes · Cancela cuando quieras',
+  pain_label: 'El problema real',
+  pain_h2: 'No pierdes por tu\nestrategia.',
+  pain_p: 'La mayoría de traders tienen una estrategia sólida. Pierden por lo que pasa entre trades — las decisiones impulsadas por el miedo, la frustración y el impulso que no pueden ver en tiempo real.',
+  cta_h: 'Tu próxima racha de pérdidas\nes prevenible.',
+  cta_p: 'La mayoría de traders saben qué hacen mal. Pattro te muestra cuándo, cómo y por qué — para que puedas realmente parar.',
+  cta_btn: 'Empieza a analizar mis trades →',
 };
-
-var currentLang = 'en';
 
 function setLang(lang) {
-  currentLang = lang;
   try { localStorage.setItem('pattro_lang', lang); } catch(e) {}
-  var dd = document.querySelector('.lang-dropdown');
+  var lbl = document.getElementById('lang-label');
+  if (lbl) lbl.textContent = lang.toUpperCase();
+  var dd = document.getElementById('lang-dropdown');
   if (dd) dd.classList.remove('open');
-  document.getElementById('html-root').lang = lang;
-  document.getElementById('lang-label').textContent = lang.toUpperCase();
-  // Update nav anchor for pricing
-  // pricing link handled by /precios page
-
-  // Update all i18n elements
-  document.querySelectorAll('[data-i18n]').forEach(function(el) {
-    var key = el.getAttribute('data-i18n');
-    var val = LANG[lang][key];
-    if (val !== undefined) el.innerHTML = val;
+  // Update active state
+  document.querySelectorAll('.lang-opt').forEach(function(o) {
+    o.classList.toggle('active', o.textContent.includes(lang === 'en' ? 'English' : 'Español'));
   });
+  // Language change just updates the label — full i18n can be added later
+}
 
-  // Update active state in dropdown
-  document.querySelectorAll('.lang-opt').forEach(function(opt) {
-    opt.classList.toggle('active', opt.textContent.trim().toLowerCase().includes(lang === 'es' ? 'español' : 'english'));
+// ── Scroll animations ──
+var observer = new IntersectionObserver(function(entries) {
+  entries.forEach(function(e) {
+    if (e.isIntersecting) { e.target.classList.add('in'); observer.unobserve(e.target); }
   });
-}
+}, { threshold: 0.1 });
+document.querySelectorAll('.fu').forEach(function(el) { observer.observe(el); });
 
-
-// ── Legal modal ──
-var LEGAL = {
-  es: {
-    tab_terms:'Términos', tab_privacy:'Privacidad', tab_risk:'Riesgo', legal_close:'Entendido',
-    terms: {
-      title: 'Términos de Servicio',
-      sections: [
-        { h:'Sobre Pattro', p:'Pattro es una herramienta de journaling y análisis psicológico para traders. Su función es registrar operaciones, medir disciplina y analizar patrones de comportamiento. No es un servicio de asesoría financiera, ni de señales de trading, ni de gestión de inversiones.' },
-        { h:'Sin relación con plataformas de trading', p:'Pattro no tiene ninguna relación comercial ni de afiliación con TopstepX, Apex, Tradovate, NinjaTrader ni con ninguna otra plataforma de fondeo. La integración con TopstepX es técnica y unilateral — únicamente lee datos de pantalla para facilitar el registro de trades.' },
-        { h:'Uso adecuado', p:'El usuario se compromete a usar Pattro únicamente para el registro y análisis de sus propias operaciones. Queda prohibido el uso del servicio para actividades ilegales, la reventa del acceso, o cualquier uso que interfiera con el funcionamiento normal de la plataforma.' },
-        { h:'Disponibilidad del servicio', p:'Pattro se ofrece "tal como está". No garantizamos disponibilidad ininterrumpida ni ausencia de errores. Podemos modificar, suspender o discontinuar funciones en cualquier momento, avisando con la mayor anticipación posible.' },
-        { h:'Propiedad intelectual', p:'Todo el código, diseño, textos y metodología de Pattro son propiedad de Pattro. El usuario obtiene una licencia de uso personal e intransferible. No está permitido copiar, modificar ni redistribuir ninguna parte de la plataforma.' }
-      ]
-    },
-    privacy: {
-      title: 'Política de Privacidad',
-      sections: [
-        { h:'Qué datos recopilamos', p:'Recopilamos únicamente los datos que tú introduces: trades (P&L, ticker, emoción, notas), respuestas del check mental diario, checklist completado, y configuración de cuenta. También guardamos tu email para autenticación.' },
-        { h:'Cómo usamos tus datos', p:'Tus datos se usan exclusivamente para generar el análisis y las métricas que ves en tu dashboard. El Coach IA procesa tus datos de trading para darte feedback personalizado — este procesamiento ocurre en tiempo real y no se almacena por separado.' },
-        { h:'Tus datos son tuyos', p:'No vendemos, cedemos, alquilamos ni compartimos tus datos personales ni tus datos de trading con ningún tercero, bajo ningún concepto. Tus datos de trading son confidenciales y solo tú tienes acceso a ellos.' },
-        { h:'Almacenamiento y seguridad', p:'Los datos se almacenan en Supabase, una plataforma de base de datos segura con cifrado en tránsito (HTTPS/TLS) y en reposo. Usamos autenticación con token seguro para acceder a tu información.' },
-        { h:'Eliminación de datos', p:'Puedes solicitar la eliminación completa de tu cuenta y todos tus datos en cualquier momento contactándonos. Una vez eliminados, los datos no son recuperables.' },
-        { h:'Cookies y almacenamiento local', p:'Usamos localStorage del navegador para guardar preferencias de sesión y configuración de la extensión. No usamos cookies de seguimiento ni píxeles de terceros.' }
-      ]
-    },
-    risk: {
-      title: 'Aviso de Riesgo',
-      sections: [
-        { h:'Pattro no es asesoría financiera', p:'Nada de lo que aparece en Pattro constituye asesoría financiera, recomendación de inversión ni señal de trading. Pattro es una herramienta de autoconocimiento y journaling.' },
-        { h:'El trading implica riesgo de pérdida', p:'El trading de futuros, divisas y cualquier instrumento financiero conlleva un riesgo significativo de pérdida de capital. La mayoría de los traders pierden dinero. Mejorar la psicología y la disciplina puede ayudar, pero no garantiza resultados positivos.' },
-        { h:'Sin garantía de resultados', p:'Pattro no garantiza que el uso de la plataforma mejore tus resultados de trading ni que evite pérdidas. Los análisis y métricas son informativos y basados en los datos que tú introduces.' },
-        { h:'Sin responsabilidad por pérdidas', p:'Pattro y sus creadores no se hacen responsables de ninguna pérdida económica, directa o indirecta, derivada del uso de la plataforma, de sus análisis, de las recomendaciones del Coach IA, ni del comportamiento de la extensión de Chrome durante sesiones de trading.' },
-        { h:'Sin relación con plataformas externas', p:'Pattro no tiene ninguna responsabilidad sobre las decisiones de negocio de TopstepX, Apex u otras plataformas de fondeo. Cualquier cambio en esas plataformas que afecte la captura automática de trades es ajeno a Pattro.' }
-      ]
-    }
-  },
-  en: {
-    tab_terms:'Terms', tab_privacy:'Privacy', tab_risk:'Risk', legal_close:'Got it',
-    terms: {
-      title: 'Terms of Service',
-      sections: [
-        { h:'About Pattro', p:'Pattro is a journaling and psychological analysis tool for traders. Its purpose is to record trades, measure discipline, and analyze behavioral patterns. It is not a financial advisory, trading signal, or investment management service.' },
-        { h:'No affiliation with trading platforms', p:'Pattro has no commercial or affiliate relationship with TopstepX, Apex, Tradovate, NinjaTrader, or any other prop firm. The TopstepX integration is technical and unilateral — it only reads screen data to facilitate trade logging.' },
-        { h:'Appropriate use', p:'The user agrees to use Pattro solely for recording and analyzing their own trading operations. Use for illegal activities, resale of access, or any use that interferes with normal platform operation is prohibited.' },
-        { h:'Service availability', p:'Pattro is offered "as is". We do not guarantee uninterrupted availability or the absence of errors. We may modify, suspend, or discontinue features at any time with as much advance notice as possible.' },
-        { h:'Intellectual property', p:'All code, design, texts, and methodology of Pattro are property of Pattro. The user receives a personal, non-transferable license. Copying, modifying, or redistributing any part of the platform is not permitted.' }
-      ]
-    },
-    privacy: {
-      title: 'Privacy Policy',
-      sections: [
-        { h:'What data we collect', p:'We collect only the data you enter: trades (P&L, ticker, emotion, notes), daily mental check responses, completed checklists, and account settings. We also store your email for authentication.' },
-        { h:'How we use your data', p:'Your data is used exclusively to generate the analysis and metrics you see in your dashboard. The AI Coach processes your trading data to give you personalized feedback — this processing happens in real time and is not stored separately.' },
-        { h:'Your data is yours', p:'We do not sell, transfer, rent, or share your personal or trading data with any third party under any circumstances. Your trading data is confidential and only you have access to it.' },
-        { h:'Storage and security', p:'Data is stored in Supabase, a secure database platform with encryption in transit (HTTPS/TLS) and at rest. We use secure token authentication to access your information.' },
-        { h:'Data deletion', p:'You can request complete deletion of your account and all your data at any time by contacting us. Once deleted, data is not recoverable.' },
-        { h:'Cookies and local storage', p:'We use browser localStorage to save session preferences and extension settings. We do not use tracking cookies or third-party pixels.' }
-      ]
-    },
-    risk: {
-      title: 'Risk Disclosure',
-      sections: [
-        { h:'Pattro is not financial advice', p:'Nothing in Pattro constitutes financial advice, investment recommendation, or trading signal. Pattro is a self-awareness and journaling tool.' },
-        { h:'Trading involves risk of loss', p:'Trading futures, currencies, and any financial instrument carries significant risk of capital loss. Most traders lose money. Improving psychology and discipline may help, but does not guarantee positive results.' },
-        { h:'No guarantee of results', p:'Pattro does not guarantee that use of the platform will improve your trading results or prevent losses. All analyses and metrics are informational and based on data you enter.' },
-        { h:'No liability for losses', p:'Pattro and its creators are not responsible for any financial loss arising from use of the platform, its analyses, AI Coach recommendations, or the behavior of the Chrome extension during trading sessions.' },
-        { h:'No relationship with external platforms', p:'Pattro has no responsibility for the business decisions of TopstepX, Apex, or other prop firms. Any changes to those platforms that affect automatic trade capture are outside the scope of Pattro.' }
-      ]
-    }
-  }
-};
-
-var currentLegalTab = 'terms';
-
-function openLegal(tab) {
-  currentLegalTab = tab || 'terms';
-  renderLegalContent();
-  document.getElementById('legal-overlay').classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-
-function closeLegal() {
-  document.getElementById('legal-overlay').classList.remove('open');
-  document.body.style.overflow = '';
-}
-
-function switchLegalTab(tab) {
-  currentLegalTab = tab;
-  renderLegalContent();
-}
-
-function renderLegalContent() {
-  var lang = currentLang || 'es';
-  var data = LEGAL[lang][currentLegalTab];
-  if (!data) return;
-  document.getElementById('legal-modal-title').textContent = data.title;
-  ['terms','privacy','risk'].forEach(function(t) {
-    var btn = document.getElementById('ltab-' + t);
-    if (btn) {
-      btn.classList.toggle('active', t === currentLegalTab);
-      var key = 'tab_' + t;
-      if (LEGAL[lang][key]) btn.textContent = LEGAL[lang][key];
-    }
-  });
-  var closeBtn = document.querySelector('.legal-footer button');
-  if (closeBtn && LEGAL[lang].legal_close) closeBtn.textContent = LEGAL[lang].legal_close;
-  document.getElementById('legal-body').innerHTML = data.sections.map(function(s) {
-    return '<div class="legal-section"><h4>' + s.h + '</h4><p>' + s.p + '</p></div>';
-  }).join('');
-}
-
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') closeLegal();
-});
-
-// ── Initialize language on load ──
-document.addEventListener('DOMContentLoaded', function() {
-  // Check if user had a preference saved, otherwise default to EN
-  var saved = localStorage.getItem('pattro_lang');
-  setLang(saved === 'es' ? 'es' : 'en');
-});
-
+// ── Init lang ──
+(function() {
+  var saved = 'en';
+  try { saved = localStorage.getItem('pattro_lang') || 'en'; } catch(e) {}
+  var lbl = document.getElementById('lang-label');
+  if (lbl) lbl.textContent = saved.toUpperCase();
+})();
 </script>
-
-<!-- LEGAL MODAL -->
-<div class="legal-overlay" id="legal-overlay" onclick="if(event.target===this)closeLegal()">
-  <div class="legal-modal">
-    <div class="legal-head">
-      <span class="legal-title" id="legal-modal-title">Términos de Servicio</span>
-      <button class="legal-close" onclick="closeLegal()">&#215;</button>
-    </div>
-    <div class="legal-tabs">
-      <button class="legal-tab active" id="ltab-terms"   onclick="switchLegalTab('terms')"   data-i18n-tab="tab_terms">Términos</button>
-      <button class="legal-tab"        id="ltab-privacy" onclick="switchLegalTab('privacy')" data-i18n-tab="tab_privacy">Privacidad</button>
-      <button class="legal-tab"        id="ltab-risk"    onclick="switchLegalTab('risk')"    data-i18n-tab="tab_risk">Riesgo</button>
-    </div>
-    <div class="legal-body" id="legal-body"></div>
-    <div class="legal-footer">
-      <button onclick="closeLegal()" data-i18n="legal_close">Entendido</button>
-    </div>
-  </div>
-</div>
-
 </body>
 </html>
