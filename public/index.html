@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774127300 -->
+<!-- v1774128172 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -316,7 +316,7 @@ footer{border-top:1px solid var(--border);padding:22px 48px;display:flex;align-i
       </div>
     </div>
     <a href="/login" class="nav-login" data-i18n="nav_login">Login</a>
-    <a href="/register" class="btn-cta" data-i18n="nav_cta">Start Free →</a>
+    <a href="/register" class="btn-cta" data-i18n="nav_cta">Sign Up →</a>
   </div>
 </nav>
 
@@ -417,19 +417,19 @@ footer{border-top:1px solid var(--border);padding:22px 48px;display:flex;align-i
       <div class="pain-stats">
         <div class="pain-stat">
           <div class="pain-stat-val">80%</div>
-          <div class="pain-stat-lbl">of trading losses are behavioral, not strategic</div>
+          <div class="pain-stat-lbl" data-i18n="pain_s1_lbl">of trading losses are behavioral, not strategic</div>
         </div>
         <div class="pain-stat">
           <div class="pain-stat-val">3×</div>
-          <div class="pain-stat-lbl">worse results when trading after a loss</div>
+          <div class="pain-stat-lbl" data-i18n="pain_s2_lbl">worse results when trading after a loss</div>
         </div>
         <div class="pain-stat">
           <div class="pain-stat-val">68%</div>
-          <div class="pain-stat-lbl">of traders repeat the same mistake every week</div>
+          <div class="pain-stat-lbl" data-i18n="pain_s3_lbl">of traders repeat the same mistake every week</div>
         </div>
         <div class="pain-stat">
           <div class="pain-stat-val">0</div>
-          <div class="pain-stat-lbl">tools that tell you exactly what your pattern is</div>
+          <div class="pain-stat-lbl" data-i18n="pain_s4_lbl">tools that tell you exactly what your pattern is</div>
         </div>
       </div>
     </div>
@@ -465,7 +465,7 @@ footer{border-top:1px solid var(--border);padding:22px 48px;display:flex;align-i
     <div class="section-header">
       <div class="slabel" data-i18n="insights_label">What Pattro tells you</div>
       <h2 data-i18n="insights_h2">Specific insights.<br>Not generic advice.</h2>
-      <p>These are the kind of insights your data generates — based on your numbers, your patterns, your behavior.</p>
+      <p data-i18n="insights_p">These are the kind of insights your data generates — based on your numbers, your patterns, your behavior.</p>
     </div>
     <div class="insights-grid">
       <div class="insight-card hot">
@@ -535,7 +535,7 @@ footer{border-top:1px solid var(--border);padding:22px 48px;display:flex;align-i
     <div class="profile-right">
       <div class="slabel" data-i18n="profile_label">Your profile · Automatically</div>
       <h2 data-i18n="profile_h2">Know exactly<br>who you are<br>as a trader.</h2>
-      <p>Pattro builds your psychological profile from your trades. Not a questionnaire — your real behavior, patterns and emotional fingerprint.</p>
+      <p data-i18n="profile_p">Pattro builds your psychological profile from your trades. Not a questionnaire — your real behavior, patterns and emotional fingerprint.</p>
       <div class="profile-features">
         <div class="pf-item">Dominant pattern (Pattro) detected automatically</div>
         <div class="pf-item">Mental Score updated after every trade</div>
@@ -640,7 +640,7 @@ footer{border-top:1px solid var(--border);padding:22px 48px;display:flex;align-i
     <div class="pricing-left">
       <div class="slabel" data-i18n="pricing_label">Early access</div>
       <h2 data-i18n="pricing_h2">Simple pricing.<br>No surprises.</h2>
-      <p data-i18n="pricing_p">We're in early access with the first traders defining what we build next. The price is locked for life for founding members.</p>
+      <p data-i18n="pricing_p">We already have <strong style="color:var(--teal)">300+ traders</strong> using Pattro in early access. The price is locked for life for founding members.</p>
       <div class="pricing-pts">
         <div class="pp"><span class="pp-n">01</span><span>First 200 members of 2026 lock the price at $15/month forever. If pricing changes later, you keep yours.</span></div>
         <div class="pp"><span class="pp-n">02</span><span>Direct access to give feedback. Early members define what we build next.</span></div>
@@ -706,7 +706,7 @@ document.addEventListener('click', function(e) {
 
 var TRANSLATIONS = {
   en: {
-    nav_how:'How it works', nav_pricing:'Pricing', nav_login:'Login', nav_cta:'Start Free →',
+    nav_how:'How it works', nav_pricing:'Pricing', nav_login:'Login', nav_cta:'Sign Up →',
     hero_badge:'Trading Psychology Engine',
     hero_trust:'$15/month · Cancel anytime',
     hero_cta:'Start analyzing my trades →', hero_cta2:'See how it works',
@@ -724,7 +724,7 @@ var TRANSLATIONS = {
     cta_sub:'$15/month · Cancel anytime',
   },
   es: {
-    nav_how:'Cómo funciona', nav_pricing:'Precios', nav_login:'Entrar', nav_cta:'Empezar →',
+    nav_how:'Cómo funciona', nav_pricing:'Precios', nav_login:'Entrar', nav_cta:'Registrarse →',
     hero_badge:'Motor de Psicología Trading',
     hero_trust:'$15/mes · Cancela cuando quieras',
     hero_cta:'Analizar mis trades →', hero_cta2:'Ver cómo funciona',
@@ -758,7 +758,7 @@ var CONTENT = {
     cmp_h2: 'Not just another journal.',
     cmp_p: 'Most tools tell you what happened. Pattro tells you why — and what to do about it.',
     pricing_h2: 'Simple pricing.<br>No surprises.',
-    pricing_p: "We're in early access with the first traders defining what we build next. The price is locked for life for founding members.",
+    pricing_p: 'Ya tenemos <strong style="color:var(--teal)">300+ traders</strong> usando Pattro en acceso temprano. El precio queda bloqueado de por vida para los miembros fundadores.',
     cta_h2: 'Your next losing streak<br>is preventable.',
     cta_p: 'Most traders know what they do wrong. Pattro shows you <strong>when, how, and why</strong> — so you can actually stop.',
     cta_btn: 'Start analyzing my trades →',
@@ -776,10 +776,22 @@ var CONTENT = {
     cmp_h2: 'No es otro journal más.',
     cmp_p: 'La mayoría de herramientas te dicen qué pasó. Pattro te dice por qué — y qué hacer al respecto.',
     pricing_h2: 'Precio simple.<br>Sin sorpresas.',
-    pricing_p: 'Estamos en acceso temprano con los primeros traders definiendo qué construimos después. El precio queda bloqueado de por vida para los miembros fundadores.',
+    pricing_p: 'Ya tenemos <strong style="color:var(--teal)">300+ traders</strong> usando Pattro en acceso temprano. El precio queda bloqueado de por vida para los miembros fundadores.',
     cta_h2: 'Tu próxima racha de pérdidas<br>es prevenible.',
     cta_p: 'La mayoría de traders saben qué hacen mal. Pattro te muestra <strong>cuándo, cómo y por qué</strong> — para que puedas realmente parar.',
     cta_btn: 'Empezar a analizar mis trades →',
+    insights_p: 'Estos son los insights que genera tu data — basados en tus números, tus patrones, tu comportamiento.',
+    profile_p: 'Pattro construye tu perfil psicológico a partir de tus trades. No un cuestionario — tu comportamiento real, patrones y huella emocional.',
+    pricing_p: 'Ya tenemos <strong style="color:var(--teal)">300+ traders</strong> usando Pattro en acceso temprano. El precio queda bloqueado de por vida para los miembros fundadores.',
+    price_lock: '⚡ Precio de acceso temprano — bloquéalo antes de que suba',
+    price_cta: 'Empezar por $15/mes →',
+    price_sub: 'Cancela cuando quieras',
+    cta_sub: '$15/mes · Cancela cuando quieras',
+    hero_trust: '$15/mes · Cancela cuando quieras',
+    pain_s1_lbl: 'de las pérdidas de trading son conductuales, no estratégicas',
+    pain_s2_lbl: 'peores resultados cuando operas tras una pérdida',
+    pain_s3_lbl: 'de traders repiten el mismo error cada semana',
+    pain_s4_lbl: 'herramientas que te dicen exactamente cuál es tu patrón',
   }
 };
 
