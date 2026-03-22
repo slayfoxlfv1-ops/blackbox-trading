@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774129331 -->
+<!-- v1774140902 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -375,7 +375,7 @@ footer{border-top:1px solid var(--border);padding:22px 48px;display:flex;align-i
         <div class="pattern-card">
           <div class="pattern-label" data-i18n="demo_pattern_label">⚡ Dominant pattern (Pattro)</div>
           <div class="pattern-title" data-i18n="demo_pattern_title">Revenge Trading</div>
-          <div class="pattern-stat">You enter <strong>68% of trades</strong> within <strong style="color:var(--red)">3 minutes</strong> after a loss</div>
+          <div class="pattern-stat" data-i18n="demo_pattern_stat">You enter <strong>68% of trades</strong> within <strong style="color:var(--red)">3 minutes</strong> after a loss</div>
         </div>
 
         <div class="insight-row">
@@ -392,7 +392,7 @@ footer{border-top:1px solid var(--border);padding:22px 48px;display:flex;align-i
           <div class="insight-pill">
             <div class="insight-pill-label" data-i18n="demo_hour_label">Best hour</div>
             <div class="insight-pill-val green">9am</div>
-            <div style="font-size:9px;color:var(--text3)">+$136 avg</div>
+            <div style="font-size:9px;color:var(--text3)" data-i18n="demo_hour_avg">+$136 avg</div>
           </div>
         </div>
 
@@ -438,21 +438,21 @@ footer{border-top:1px solid var(--border);padding:22px 48px;display:flex;align-i
         <div class="loss-item-ico">🔄</div>
         <div>
           <h4 data-i18n="loss1_title">Revenge Trading</h4>
-          <p>After a loss you enter the next trade too fast, too big, without a plan. Pattro detects this in real time and alerts you before the next trade.</p>
+          <p data-i18n="loss1_p">After a loss you enter the next trade too fast, too big, without a plan. Pattro detects this in real time and alerts you before the next trade.</p>
         </div>
       </div>
       <div class="loss-item">
         <div class="loss-item-ico">😰</div>
         <div>
           <h4 data-i18n="loss2_title">Emotional Trading</h4>
-          <p>When anxious or frustrated your win rate drops dramatically. Pattro shows you the exact dollar cost of trading in each emotional state.</p>
+          <p data-i18n="loss2_p">When anxious or frustrated your win rate drops dramatically. Pattro shows you the exact dollar cost of trading in each emotional state.</p>
         </div>
       </div>
       <div class="loss-item">
         <div class="loss-item-ico">📈</div>
         <div>
           <h4 data-i18n="loss3_title">Overtrading</h4>
-          <p>Too many trades dilute your edge. Pattro tracks your optimal trading window — by hour, by session, by emotional state — and flags when you exceed it.</p>
+          <p data-i18n="loss3_p">Too many trades dilute your edge. Pattro tracks your optimal trading window — by hour, by session, by emotional state — and flags when you exceed it.</p>
         </div>
       </div>
     </div>
@@ -472,19 +472,19 @@ footer{border-top:1px solid var(--border);padding:22px 48px;display:flex;align-i
         <div class="ic-type red" data-i18n="ic1_type">⚡ Pattern detected</div>
         <div class="ic-icon">🔄</div>
         <div class="ic-title" data-i18n="ic1_title">Your revenge trading costs $19,400</div>
-        <div class="ic-text">You enter <strong>73 trades</strong> within 3 minutes after a loss. Win rate on those: <span class="bad">27%</span>. Average loss: <span class="bad">-$373</span> per trade. Your normal average: -$44.</div>
+        <div class="ic-text" data-i18n="ic1_text">You enter <strong>73 trades</strong> within 3 minutes after a loss. Win rate on those: <span class="bad">27%</span>. Average loss: <span class="bad">-$373</span> per trade. Your normal average: -$44.</div>
       </div>
       <div class="insight-card warm">
         <div class="ic-type amber" data-i18n="ic2_type">◷ Time pattern (Pattro)</div>
         <div class="ic-icon">🕐</div>
         <div class="ic-title" data-i18n="ic2_title">Stop trading after 11am</div>
-        <div class="ic-text">Your best hour is <strong>9am</strong> (avg <span class="good">+$136</span> per trade, 46% WR). After 11am your average drops to <span class="bad">-$45</span>. You're leaving money on the table every afternoon.</div>
+        <div class="ic-text" data-i18n="ic2_text">Your best hour is <strong>9am</strong> (avg <span class="good">+$136</span> per trade, 46% WR). After 11am your average drops to <span class="bad">-$45</span>. You're leaving money on the table every afternoon.</div>
       </div>
       <div class="insight-card cool">
         <div class="ic-type teal" data-i18n="ic3_type">◈ Emotional cost</div>
         <div class="ic-icon">😤</div>
         <div class="ic-title" data-i18n="ic3_title">Frustrated = -$88 avg</div>
-        <div class="ic-text">When trading frustrated your average is <span class="bad">-$88</span> per trade across 54 trades. When calm: <span class="good">+$31</span>. The same market, a completely different result.</div>
+        <div class="ic-text" data-i18n="ic3_text">When trading frustrated your average is <span class="bad">-$88</span> per trade across 54 trades. When calm: <span class="good">+$31</span>. The same market, a completely different result.</div>
       </div>
     </div>
   </div>
@@ -561,28 +561,28 @@ footer{border-top:1px solid var(--border);padding:22px 48px;display:flex;align-i
         <div class="step-num">01</div>
         <div class="step-content">
           <h3 data-i18n="step1_h">Connect or log your trades</h3>
-          <p>Install the Chrome extension for TopstepX and trades are captured automatically — ticker, P&L, entry, exit. Or log manually in 10 seconds with the + Log Trade button.</p>
+          <p data-i18n="step1_p">Install the Chrome extension for TopstepX and trades are captured automatically — ticker, P&L, entry, exit. Or log manually in 10 seconds with the + Log Trade button.</p>
         </div>
       </div>
       <div class="step-item">
         <div class="step-num">02</div>
         <div class="step-content">
           <h3 data-i18n="step2_h">Tag your emotion in 1 click</h3>
-          <p>After each trade, select how you felt. Calm, anxious, frustrated, confident. That single data point unlocks your emotional P&L analysis over time.</p>
+          <p data-i18n="step2_p">After each trade, select how you felt. Calm, anxious, frustrated, confident. That single data point unlocks your emotional P&L analysis over time.</p>
         </div>
       </div>
       <div class="step-item">
         <div class="step-num">03</div>
         <div class="step-content">
           <h3 data-i18n="step3_h">Pattro detects your patterns</h3>
-          <p>Your Mental Score, Discipline Score and Execution Score update in real time. With 20+ trades the AI Coach identifies your dominant pattern (Pattro) — the specific behavior that's costing you the most.</p>
+          <p data-i18n="step3_p">Your Mental Score, Discipline Score and Execution Score update in real time. With 20+ trades the AI Coach identifies your dominant pattern (Pattro) — the specific behavior that's costing you the most.</p>
         </div>
       </div>
       <div class="step-item" style="padding-bottom:0">
         <div class="step-num">04</div>
         <div class="step-content">
           <h3 data-i18n="step4_h">Get a concrete action for today</h3>
-          <p>Not generic advice. Specific instructions based on your data: stop at this hour, this emotion, after this many losses. Measurable improvement session by session.</p>
+          <p data-i18n="step4_p">Not generic advice. Specific instructions based on your data: stop at this hour, this emotion, after this many losses. Measurable improvement session by session.</p>
         </div>
       </div>
     </div>
@@ -595,7 +595,7 @@ footer{border-top:1px solid var(--border);padding:22px 48px;display:flex;align-i
     <div class="section-header">
       <div class="slabel" data-i18n="cmp_label">Why Pattro</div>
       <h2 data-i18n="cmp_h2">Not just another journal.</h2>
-      <p data-i18n="cmp_p">Most tools tell you what happened. Pattro tells you why — and what to do about it.</p>
+      <p data-i18n="cmp_p">Most tools tell you what happened.<br>Pattro tells you why — and what to do about it.</p>
     </div>
     <div class="cmp-grid">
       <div class="cmp-col bad">
@@ -757,7 +757,7 @@ var TRANSLATIONS = {
     step4_h:'Get a concrete action for today',
     step4_p:'Not generic advice. Specific instructions based on your data: stop at this hour, this emotion, after this many losses. Measurable improvement session by session.',
     cmp_label:'Why Pattro', cmp_h2:'Not just another journal.',
-    cmp_p:'Most tools tell you what happened. Pattro tells you why — and what to do about it.',
+    cmp_p:'Most tools tell you what happened.<br>Pattro tells you why — and what to do about it.',
     cmp_bad1:'Takes 10+ minutes after each session', cmp_bad2:'No behavioral analysis',
     cmp_bad3:'No emotional pattern detection', cmp_bad4:'Numbers only — no psychology',
     cmp_bad5:'No real-time alerts', cmp_bad6:'No AI-generated action plan',
@@ -841,7 +841,7 @@ var TRANSLATIONS = {
     step4_h:'Recibe una acción concreta para hoy',
     step4_p:'No consejos genéricos. Instrucciones específicas: para a esta hora, con esta emoción, tras estas pérdidas. Mejora medible sesión a sesión.',
     cmp_label:'Por qué Pattro', cmp_h2:'No es otro journal más.',
-    cmp_p:'La mayoría de herramientas te dicen qué pasó. Pattro te dice por qué — y qué hacer al respecto.',
+    cmp_p:'La mayoría de herramientas te dicen qué pasó.<br>Pattro te dice por qué — y qué hacer al respecto.',
     cmp_bad1:'Tarda 10+ minutos después de cada sesión', cmp_bad2:'Sin análisis conductual',
     cmp_bad3:'Sin detección de patrones emocionales', cmp_bad4:'Solo números — sin psicología',
     cmp_bad5:'Sin alertas en tiempo real', cmp_bad6:'Sin plan de acción con IA',
@@ -867,6 +867,12 @@ var TRANSLATIONS = {
     cta_h2:'Tu próxima racha de pérdidas<br>es prevenible.',
     cta_p:'La mayoría de traders saben qué hacen mal. Pattro te muestra <strong>cuándo, cómo y por qué</strong> — para que puedas realmente parar.',
     cta_btn:'Empezar a analizar mis trades →',
+    demo_pattern_stat:'Entras en el <strong>68% de tus trades</strong> dentro de <strong style="color:var(--red)">3 minutos</strong> tras una pérdida',
+    demo_action_text:'Para de operar tras 2 pérdidas consecutivas. Tus datos muestran un 89% de probabilidad de que el siguiente trade también pierda.',
+    demo_hour_avg:'+$136 promedio',
+    ic1_text:'Entras en <strong>73 trades</strong> dentro de 3 minutos tras una pérdida. Win rate: <span class="bad">27%</span>. Pérdida promedio: <span class="bad">-$373</span> por trade. Tu promedio normal: -$44.',
+    ic2_text:'Tu mejor hora es las <strong>9am</strong> (promedio <span class="good">+$136</span> por trade, 46% WR). Después de las 11am tu promedio cae a <span class="bad">-$45</span>. Estás dejando dinero sobre la mesa cada tarde.',
+    ic3_text:'Cuando operas frustrado tu promedio es <span class="bad">-$88</span> por trade en 54 trades. Cuando estás tranquilo: <span class="good">+$31</span>. El mismo mercado, un resultado completamente diferente.',
     cta_sub:'$15/mes · Cancela cuando quieras',
     hero_h1:'Para de perder dinero<br>por culpa de tu<br><span class="pain">psicología.</span>',
     hero_sub:'Pattro detecta tus errores de trading automáticamente y te dice <strong>exactamente qué corregir</strong> — revenge trading, FOMO, overtrading, patrones emocionales. Antes de que te cuesten otro trade.',
