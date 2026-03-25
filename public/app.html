@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774408643 -->
+<!-- v1774408950 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -1424,17 +1424,133 @@ const bbStore = {
   set: function(k,v) { try { localStorage.setItem(k,v); } catch(e) {} }
 };
 
+// ══════════════════════════════════════════════════════════════
+// TRADING DAYS — Fase 2
+// ══════════════════════════════════════════════════════════════
+
+// In-memory cache of trading_days loaded for current account
+var _tradingDaysCache = {}; // { 'YYYY-MM-DD': tradingDayObj }
+
+// Load all trading_days for current account
+async function loadTradingDays(accountId) {
+  try {
+    var res = await sb.from('trading_days')
+      .select('*')
+      .eq('account_id', accountId)
+      .order('session_date', { ascending: false })
+      .limit(120); // last ~4 months
+    if (res.data) {
+      _tradingDaysCache = {};
+      res.data.forEach(function(td) {
+        _tradingDaysCache[td.session_date] = td;
+      });
+    }
+  } catch(e) {
+    console.warn('[TradingDays] Load error:', e.message);
+  }
+}
+
+// Get trading_day for a date from cache
+function getTradingDay(dateStr) {
+  if (!dateStr) return null;
+  return _tradingDaysCache[dateStr.slice(0,10)] || null;
+}
+
+// Get or create a trading_day for a date
+async function getOrCreateTradingDay(dateStr, colorDay, colorSource) {
+  var d = dateStr.slice(0, 10);
+  // Return cached if exists
+  if (_tradingDaysCache[d]) return _tradingDaysCache[d];
+
+  var payload = {
+    account_id:   currentAccountId,
+    user_id:      currentUser.id,
+    session_date: d,
+    color_day:    colorDay || 'unknown',
+    color_source: colorSource || 'manual',
+    locked:       false
+  };
+
+  try {
+    var res = await sb.from('trading_days')
+      .upsert(payload, { onConflict: 'account_id,session_date' })
+      .select()
+      .single();
+    if (res.data) {
+      _tradingDaysCache[d] = res.data;
+      return res.data;
+    }
+  } catch(e) {
+    console.warn('[TradingDays] Create error:', e.message);
+  }
+  // Return local object even if DB failed
+  _tradingDaysCache[d] = payload;
+  return payload;
+}
+
+// Update color_day for a date
+async function updateTradingDayColor(dateStr, colorDay, colorSource) {
+  var d = dateStr.slice(0, 10);
+  var existing = _tradingDaysCache[d];
+  // Don't overwrite if day is locked
+  if (existing && existing.locked) return existing;
+
+  try {
+    var res = await sb.from('trading_days')
+      .upsert({
+        account_id:   currentAccountId,
+        user_id:      currentUser.id,
+        session_date: d,
+        color_day:    colorDay,
+        color_source: colorSource || 'manual',
+        updated_at:   new Date().toISOString()
+      }, { onConflict: 'account_id,session_date' })
+      .select()
+      .single();
+    if (res.data) {
+      _tradingDaysCache[d] = res.data;
+      return res.data;
+    }
+  } catch(e) {
+    console.warn('[TradingDays] Update error:', e.message);
+  }
+  return null;
+}
+
+// Auto-lock days older than 24h
+function autoLockOldDays() {
+  var yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  var cutoff = yesterday.toISOString().slice(0, 10);
+  Object.keys(_tradingDaysCache).forEach(function(d) {
+    if (d < cutoff && _tradingDaysCache[d] && !_tradingDaysCache[d].locked) {
+      _tradingDaysCache[d].locked = true;
+      // Fire-and-forget DB update
+      sb.from('trading_days')
+        .update({ locked: true, locked_at: new Date().toISOString() })
+        .eq('account_id', currentAccountId)
+        .eq('session_date', d)
+        .then(function(){});
+    }
+  });
+}
+
 // ── Get mood for a specific date (not just today) ──
 // Returns mood session object or null. Never falls back to today's mood.
 function getMoodForDate(dateStr) {
   if (!dateStr) return null;
   var d = dateStr.slice(0, 10);
-  // First check currentMoodSessions (loaded from Supabase)
+  // 1. Check trading_days cache (Fase 2 — most authoritative)
+  var td = getTradingDay(d);
+  if (td && td.color_day && td.color_day !== 'unknown') {
+    return { session_date: d, level: td.color_day, source: td.color_source };
+  }
+  // 2. Check currentMoodSessions (Supabase mood_sessions)
   var fromDb = (currentMoodSessions || []).find(function(s) {
     return (s.session_date || s.date) === d;
   });
   if (fromDb) return fromDb;
-  // Then check localStorage for that specific date
+  // 3. Check localStorage for that specific date
   try {
     var raw = localStorage.getItem('mood_' + (currentAccountId||'') + '_' + d);
     if (raw && raw !== 'skipped') {
@@ -2179,16 +2295,24 @@ async function saveTrade() {
   btn.textContent = 'Save Trade';
   screenshotDataUrl = null;
 
-  // ── Save historical color day if provided ──
+  // ── Get/create trading_day for this trade's date (Fase 2) ──
   var _histColorDay = document.getElementById('t-hist-color-day');
   var _entryTimeForDate = document.getElementById('t-entry-time');
-  if (_histColorDay && _entryTimeForDate && _entryTimeForDate.value) {
+  if (_entryTimeForDate && _entryTimeForDate.value) {
     var _tradeDate = _entryTimeForDate.value.slice(0, 10);
     var _todayDate = new Date().toISOString().slice(0, 10);
-    var _colorLevel = _histColorDay.value;
+    var _colorLevel = (_histColorDay && _tradeDate < _todayDate)
+      ? (_histColorDay.value || 'unknown')
+      : 'unknown'; // today's color day is set via mood check, not here
+
+    // Get or create trading_day — links the trade to its day
+    var _td = await getOrCreateTradingDay(_tradeDate, _colorLevel, 'manual');
+    if (_td && _td.id) payload.trading_day_id = _td.id;
+
+    // Also save to mood_sessions for backwards compat if color is known
     if (_tradeDate < _todayDate && _colorLevel && _colorLevel !== 'unknown') {
-      var _existingMoodForDate = getMoodForDate(_tradeDate);
-      if (!_existingMoodForDate) {
+      var _existingMood = getMoodForDate(_tradeDate);
+      if (!_existingMood) {
         try {
           await sb.from('mood_sessions').upsert({
             account_id:   currentAccountId,
@@ -2418,6 +2542,9 @@ async function loadAccountData(id, silent) {
   if (!silent) el.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
   var acc = accounts.find(function(a){return a.id===id;});
   if (!acc) return;
+  // Load trading_days for this account (Fase 2)
+  if (!silent) await loadTradingDays(id);
+  autoLockOldDays();
   // Fire all Supabase fetches in parallel — much faster than sequential awaits
   var todayStr3 = new Date().toISOString().slice(0,10);
   var _results = await Promise.all([
@@ -7974,6 +8101,8 @@ function showMoodCheck(accountId) {
             score:        score,
             level:        result.level
           }, { onConflict:'account_id,session_date' });
+          // Fase 2: also update trading_day with color from mood check
+          await updateTradingDayColor(today, result.level, 'mood_check');
         } catch(e) {}
       })();
     }
