@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774414838 -->
+<!-- v1774415287 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -6420,7 +6420,8 @@ function renderPsychologyView(subTabIntent) {
   var el = document.getElementById('main-content');
   var tabs = [
     { id: 'mind',       label: '&#9675; Psicolog&#237;a' },
-    { id: 'discipline', label: '&#8856; Discipline'     },
+    { id: 'discipline', label: '&#8856; Discipline'      },
+    { id: 'calendar',   label: '&#9635; Calendar'        },
   ];
   var tabBar = '<div style="display:flex;gap:2px;padding:14px 16px 0;border-bottom:1px solid var(--border);background:var(--surface);margin-bottom:0">'
     + tabs.map(function(t) {
@@ -6442,7 +6443,196 @@ function switchPsychTab(tab) {
 
 function _renderPsychTabContent() {
   if (_psychActiveTab === 'discipline') renderDisciplineView();
+  else if (_psychActiveTab === 'calendar') renderMentalScoreCalendar();
   else renderMindView();
+}
+
+// ── MENTAL SCORE CALENDAR VIEW ──
+function renderMentalScoreCalendar() {
+  var el = getTabEl('psych-tab-content');
+  var trades = currentTrades || [];
+
+  // State: current month being viewed
+  if (!window._calMonth) window._calMonth = new Date().getMonth();
+  if (!window._calYear)  window._calYear  = new Date().getFullYear();
+
+  var month = window._calMonth;
+  var year  = window._calYear;
+
+  // Build set of trading days (dates that have trades) for this month only
+  var monthStr = year + '-' + String(month+1).padStart(2,'0');
+  var monthTrades = trades.filter(function(t) {
+    return t.entry_time && t.entry_time.slice(0,7) === monthStr;
+  });
+
+  // Get unique trading days this month
+  var tradingDays = {};
+  monthTrades.forEach(function(t) {
+    var d = t.entry_time.slice(0,10);
+    if (!tradingDays[d]) tradingDays[d] = [];
+    tradingDays[d].push(t);
+  });
+
+  // Calculate Mental Score for each trading day in THIS month only
+  var dayScores = {};
+  Object.keys(tradingDays).forEach(function(d) {
+    var ms = calcMentalScore(d);
+    if (ms && ms.total !== null && !isNaN(ms.total)) {
+      dayScores[d] = ms;
+    }
+  });
+
+  // Monthly average (only from trading days with scores)
+  var scoredDays = Object.keys(dayScores);
+  var monthAvg = null;
+  var monthLabel = '';
+  var monthColor = 'var(--text3)';
+  if (scoredDays.length > 0) {
+    var sum = scoredDays.reduce(function(s,d){ return s + dayScores[d].total; }, 0);
+    monthAvg = Math.round(sum / scoredDays.length);
+    monthColor = monthAvg >= 75 ? 'var(--green)' : monthAvg >= 50 ? 'var(--amber)' : 'var(--red)';
+    monthLabel = monthAvg >= 90 ? 'Elite 🏆' : monthAvg >= 75 ? 'Solid ✅' : monthAvg >= 60 ? 'In progress ⚠️' : monthAvg >= 40 ? 'Needs attention 🔶' : 'Critical 🔴';
+  }
+
+  var monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  // Build calendar grid
+  var firstDay = new Date(year, month, 1).getDay(); // 0=Sun
+  // Adjust to Mon-start: Mon=0 ... Sun=6
+  var startOffset = (firstDay === 0) ? 6 : firstDay - 1;
+  var daysInMonth = new Date(year, month+1, 0).getDate();
+
+  var today = new Date().toISOString().slice(0,10);
+  var todayMonth = today.slice(0,7);
+  var isCurrentMonth = monthStr === todayMonth;
+
+  // Prevent navigating to future months
+  var canGoNext = monthStr < todayMonth;
+
+  var html = '<div style="padding:16px;display:flex;flex-direction:column;gap:16px">';
+
+  // ── Header: month nav + monthly score ──
+  html += '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 20px">';
+  html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:' + (monthAvg !== null ? '14px' : '0') + '">';
+
+  // Prev button
+  html += '<button onclick="window._calMonth=' + ((month===0)?11:month-1) + ';window._calYear=' + ((month===0)?year-1:year) + ';renderMentalScoreCalendar()" ';
+  html += 'style="padding:6px 14px;background:var(--surface2);border:1px solid var(--border2);border-radius:7px;color:var(--text2);font-size:12px;cursor:pointer;font-family:inherit">‹ Prev</button>';
+
+  // Month + year title
+  html += '<div style="text-align:center">';
+  html += '<div style="font-size:14px;font-weight:700;color:var(--text)">' + monthNames[month] + ' ' + year + '</div>';
+  html += '<div style="font-size:10px;color:var(--text3);margin-top:2px">' + scoredDays.length + ' trading day' + (scoredDays.length !== 1 ? 's' : '') + '</div>';
+  html += '</div>';
+
+  // Next button
+  html += '<button onclick="' + (canGoNext ? 'window._calMonth=' + ((month===11)?0:month+1) + ';window._calYear=' + ((month===11)?year+1:year) + ';renderMentalScoreCalendar()' : '') + '" ';
+  html += 'style="padding:6px 14px;background:var(--surface2);border:1px solid var(--border2);border-radius:7px;color:' + (canGoNext?'var(--text2)':'var(--border2)') + ';font-size:12px;cursor:' + (canGoNext?'pointer':'default') + ';font-family:inherit"' + (!canGoNext?' disabled':'') + '>Next ›</button>';
+
+  html += '</div>';
+
+  // Monthly average score
+  if (monthAvg !== null) {
+    html += '<div style="display:flex;align-items:center;gap:16px;padding:12px 16px;background:var(--surface2);border-radius:9px">';
+    html += '<div style="text-align:center;min-width:60px">';
+    html += '<div style="font-size:36px;font-weight:800;color:' + monthColor + ';letter-spacing:-2px;line-height:1">' + monthAvg + '</div>';
+    html += '<div style="font-size:9px;color:var(--text3)">/100 avg</div>';
+    html += '</div>';
+    html += '<div style="flex:1">';
+    html += '<div style="font-size:12px;font-weight:700;color:' + monthColor + ';margin-bottom:6px">' + monthLabel + '</div>';
+    html += '<div style="height:5px;background:var(--border);border-radius:3px;overflow:hidden">';
+    html += '<div style="height:100%;width:' + monthAvg + '%;background:' + monthColor + ';border-radius:3px"></div>';
+    html += '</div>';
+    html += '<div style="display:flex;gap:12px;margin-top:6px">';
+    // Best day
+    var bestDay = scoredDays.reduce(function(b,d){ return dayScores[d].total > (dayScores[b]||{total:0}).total ? d : b; }, scoredDays[0]);
+    var worstDay = scoredDays.reduce(function(b,d){ return dayScores[d].total < (dayScores[b]||{total:999}).total ? d : b; }, scoredDays[0]);
+    html += '<div style="font-size:9px;color:var(--text3)">Best: <strong style="color:var(--green)">' + dayScores[bestDay].total + '</strong> (' + bestDay.slice(5) + ')</div>';
+    html += '<div style="font-size:9px;color:var(--text3)">Worst: <strong style="color:var(--red)">' + dayScores[worstDay].total + '</strong> (' + worstDay.slice(5) + ')</div>';
+    html += '</div></div></div>';
+  } else {
+    html += '<div style="font-size:11px;color:var(--text3);text-align:center;padding:8px 0">No trading data for this month.</div>';
+  }
+
+  html += '</div>'; // end header card
+
+  // ── Calendar grid ──
+  html += '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px">';
+
+  // Day headers Mon-Sun
+  var dayHeaders = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:6px">';
+  dayHeaders.forEach(function(d) {
+    html += '<div style="font-size:9px;color:var(--text3);text-align:center;padding:4px 0;font-weight:600;text-transform:uppercase;letter-spacing:.5px">' + d + '</div>';
+  });
+  html += '</div>';
+
+  // Calendar cells
+  html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px">';
+
+  // Empty cells before first day
+  for (var e = 0; e < startOffset; e++) {
+    html += '<div style="aspect-ratio:1;border-radius:6px"></div>';
+  }
+
+  // Day cells
+  for (var day = 1; day <= daysInMonth; day++) {
+    var dateStr = year + '-' + String(month+1).padStart(2,'0') + '-' + String(day).padStart(2,'0');
+    var isToday = dateStr === today;
+    var isFuture = dateStr > today;
+    var ms = dayScores[dateStr];
+    var hasTrades = !!tradingDays[dateStr];
+
+    var bgColor, textColor, scoreDisplay;
+    if (isFuture) {
+      bgColor = 'var(--surface2)';
+      textColor = 'var(--border2)';
+      scoreDisplay = '';
+    } else if (ms) {
+      var s = ms.total;
+      bgColor = s >= 75 ? 'rgba(61,186,114,0.15)' : s >= 50 ? 'rgba(224,152,64,0.15)' : 'rgba(224,85,85,0.15)';
+      textColor = s >= 75 ? 'var(--green)' : s >= 50 ? 'var(--amber)' : 'var(--red)';
+      scoreDisplay = '<div style="font-size:11px;font-weight:800;color:' + textColor + ';line-height:1">' + s + '</div>';
+    } else if (hasTrades) {
+      // Has trades but no score (shouldn't happen but handle gracefully)
+      bgColor = 'var(--surface2)';
+      textColor = 'var(--text3)';
+      scoreDisplay = '<div style="font-size:8px;color:var(--text3)">—</div>';
+    } else {
+      // No trades this day
+      bgColor = 'var(--surface2)';
+      textColor = 'var(--text3)';
+      scoreDisplay = '';
+    }
+
+    var border = isToday ? '2px solid var(--teal)' : '1px solid transparent';
+
+    html += '<div style="aspect-ratio:1;border-radius:7px;background:' + bgColor + ';border:' + border + ';display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3px;position:relative;min-height:40px">';
+    html += '<div style="font-size:9px;color:' + textColor + ';font-weight:' + (isToday?'800':'500') + ';opacity:' + (isFuture?'.3':'1') + '">' + day + '</div>';
+    if (scoreDisplay) html += scoreDisplay;
+    html += '</div>';
+  }
+
+  html += '</div></div>'; // end grid + card
+
+  // ── Day detail: if today has a score, show it ──
+  if (dayScores[today] && isCurrentMonth) {
+    var todayMs = dayScores[today];
+    html += '<div style="background:var(--surface);border:1px solid var(--teal-bd);border-radius:12px;padding:16px">';
+    html += '<div style="font-size:9px;color:var(--teal);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Today — ' + today + '</div>';
+    html += '<div style="display:flex;align-items:center;gap:16px">';
+    html += '<div style="font-size:40px;font-weight:800;color:' + todayMs.color + ';letter-spacing:-2px;line-height:1">' + todayMs.total + '</div>';
+    html += '<div>';
+    html += '<div style="font-size:12px;font-weight:700;color:' + todayMs.color + '">' + todayMs.label + '</div>';
+    html += '<div style="display:flex;gap:10px;margin-top:6px">';
+    if (todayMs.discScore !== null) html += '<div style="font-size:10px;color:var(--text3)">Discipline <strong style="color:var(--text2)">' + todayMs.discScore + '</strong></div>';
+    if (todayMs.mindScore !== null) html += '<div style="font-size:10px;color:var(--text3)">Mind <strong style="color:var(--text2)">' + todayMs.mindScore + '</strong></div>';
+    if (todayMs.execScore !== null) html += '<div style="font-size:10px;color:var(--text3)">Execution <strong style="color:var(--text2)">' + todayMs.execScore + '</strong></div>';
+    html += '</div></div></div></div>';
+  }
+
+  html += '</div>'; // end outer wrapper
+  el.innerHTML = html;
 }
 
 // DISCIPLINE VIEW
