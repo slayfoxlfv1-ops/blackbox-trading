@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774415908 -->
+<!-- v1774416297 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -3217,7 +3217,8 @@ async function loadAccountData(id, silent) {
       var _mc = _mData.color || 'var(--text3)';
       var _ma = _mData.avg;
       out += '<div style="flex-shrink:0;text-align:center;min-width:88px">';
-      out += '<div style="font-size:8px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">This Month</div>';
+      out += '<div style="font-size:11px;color:var(--text);font-weight:700;margin-bottom:2px">Mental Score</div>';
+      out += '<div style="font-size:8px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">This Month</div>';
       out += '<div style="font-size:52px;font-weight:800;color:' + _mc + ';line-height:1;letter-spacing:-3px">' + _ma + '</div>';
       out += '<div style="font-size:9px;color:var(--text3);margin-top:4px">/100</div>';
       out += '</div>';
@@ -3276,8 +3277,19 @@ async function loadAccountData(id, silent) {
     out += '<div style="font-size:10px;font-weight:700;color:' + _clColor2 + '">' + _clLabel2 + '</div>';
     out += '</div>';
 
-    // Mood pill
+    // Mood pill — same source as Color Day banner below (todayMood with synthetic fallback)
     var _todayMoodPill = getMoodForDate(today);
+    // Apply same synthetic fallback as the rest of the dashboard
+    if (!_todayMoodPill) {
+      var _pillTrades = trades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(today); });
+      if (_pillTrades.length >= 1) {
+        var _pillPnl = _pillTrades.reduce(function(s,t){ return s+(t.pnl||0); }, 0);
+        var _pillWins = trades.filter(function(t){ return (t.pnl||0)>0; });
+        var _pillAvgWin = _pillWins.length ? _pillWins.reduce(function(s,t){return s+(t.pnl||0);},0)/_pillWins.length : 100;
+        var _pillLevel = _pillPnl > _pillAvgWin*0.3 ? 'green' : _pillPnl >= -_pillAvgWin*0.3 ? 'yellow' : 'red';
+        _todayMoodPill = { level: _pillLevel, synthetic: true };
+      }
+    }
     var _moodLabel2 = _todayMoodPill
       ? (_todayMoodPill.level==='green'?'🟢 Green':_todayMoodPill.level==='yellow'?'🟡 Yellow':_todayMoodPill.level==='red'?'🔴 Red':'⚪ Unknown')
       : '— Check';
@@ -3509,9 +3521,9 @@ async function loadAccountData(id, silent) {
   }).join('') +
   '</div>' +
   '<div style="flex-shrink:0;display:flex;flex-direction:column;gap:6px;text-align:right">' +
-  '<div style="font-size:9px;color:var(--text3)">Checklist <span style="color:'+_clColor+'">'+(_clHasItems?(_clDoneCount>0?'✓':'✗'):'—')+'</span></div>' +
-  '<div style="font-size:9px;color:var(--text3)">Mood check <span style="color:'+(moodLevel3?'var(--green)':'var(--red)')+'">'+( moodLevel3?'✓':'✗')+'</span></div>' +
-  '<div style="font-size:9px;color:var(--text3)">Rules <span style="color:'+(hasRules?'var(--green)':'var(--amber)')+'">'+( hasRules?'✓':'Not set')+'</span></div>' +
+  '<div style="font-size:9px;color:var(--text3)"><strong style="color:var(--text)">Checklist</strong> <span style="color:'+_clColor+'">'+(_clHasItems?(_clDoneCount>0?'✓':'✗'):'—')+'</span></div>' +
+  '<div style="font-size:9px;color:var(--text3)"><strong style="color:var(--text)">Mood check</strong> <span style="color:'+(moodLevel3?'var(--green)':'var(--red)')+'">'+( moodLevel3?'✓':'✗')+'</span></div>' +
+  '<div style="font-size:9px;color:var(--text3)"><strong style="color:var(--text)">Rules</strong> <span style="color:'+(hasRules?'var(--green)':'var(--amber)')+'">'+( hasRules?'✓':'Not set')+'</span></div>' +
   '</div></div>' +
 
   // ── ROW 3: Mistakes · Positives · Performance ──
