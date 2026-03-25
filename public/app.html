@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774414618 -->
+<!-- v1774414838 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -2568,7 +2568,12 @@ async function loadAccountData(id, silent) {
   currentChecklistSessions = (clRes.data || []);
   currentMoodSessions = (moodAllRes.data || []);
   // Populate currentRules from bbStore (used in status pills)
-  try { currentRules = getPersonalRules(id) || []; } catch(e) { currentRules = []; }
+  // getPersonalRules returns object {id: {label, is_active, violated}}
+  // Convert to array for .filter() usage
+  try {
+    var _rulesObj = getPersonalRules(id) || {};
+    currentRules = Object.values(_rulesObj).filter(function(r){ return r && r.label; });
+  } catch(e) { currentRules = []; }
 
   // Sync checklist items → bbStore + currentChecklistItems
   if (clItemsRes.data && clItemsRes.data[0]) {
@@ -3285,7 +3290,7 @@ async function loadAccountData(id, silent) {
     out += '</div>';
 
     // Rules pill
-    var _activeRules2 = (currentRules||[]).filter(function(r){return r.is_active;});
+    var _activeRules2 = Array.isArray(currentRules) ? currentRules.filter(function(r){return r && (r.is_active || r.active);}) : [];
     var _rulesLabel2  = _activeRules2.length ? '✓ Active' : 'Not set';
     var _rulesColor2  = _activeRules2.length ? 'var(--green)' : 'var(--text3)';
     out += '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;min-width:62px">';
