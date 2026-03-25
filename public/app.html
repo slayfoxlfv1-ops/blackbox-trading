@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774409978 -->
+<!-- v1774411151 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -4587,15 +4587,25 @@ var DISCIPLINE_TAG_PTS = {
 };
 
 // ── Behavior tag scores for Discipline (0-100 scale) ──
+// fomo/impulse/revenge: 60% weight to Discipline (system failure)
+// remaining 40% goes to Mind (emotional signal) via EMOTIONAL_DISCIPLINE_TAGS
 var BEHAVIOR_SCORE = {
   clean:           100,
-  no_confirmation:  80,
-  fomo:             50,  // psychological + rule break
-  impulse:          40,
-  overtrading:      30,
-  scaled_in:        20,
-  moved_sl:         15,
-  revenge:          10,
+  no_confirmation:  75,  // missed confirmation — system miss
+  moved_sl:         35,  // invalidated the plan
+  scaled_in:        25,  // added to a loser
+  overtrading:      45,  // exceeded session limits
+  fomo:             50,  // 60% discipline failure + 40% emotional
+  impulse:          40,  // 60% discipline failure + 40% emotional
+  revenge:          20,  // 60% discipline failure + 40% emotional
+};
+
+// Tags that also affect Mind score (emotional component)
+// These reduce emotional control score proportionally
+var EMOTIONAL_DISCIPLINE_TAGS = {
+  fomo:    { mindPenalty: 30 },  // reduces emotional control by 30pts
+  impulse: { mindPenalty: 35 },
+  revenge: { mindPenalty: 45 },  // worst emotional signal
 };
 
 // ── Emotion scores for Mind (0-100 scale) ──
@@ -5033,52 +5043,65 @@ function calcTradeExecution(trade) {
 // ── Per-trade Discipline Score (0-100) ──
 // Measures: did you follow your system?
 function calcTradeDiscipline(trade, rulesObj, checklistPct) {
-  // Behavior score from tag
   var tag = (trade.discipline_tag || 'clean').toLowerCase();
-  var behaviorScore = BEHAVIOR_SCORE[tag] !== undefined ? BEHAVIOR_SCORE[tag] : 100;
+  var rawBehavior = BEHAVIOR_SCORE[tag] !== undefined ? BEHAVIOR_SCORE[tag] : 100;
 
-  // Rules score — passed in from day-level check
-  var rulesScore = (rulesObj !== undefined && rulesObj !== null) ? rulesObj : 100;
+  // fomo/impulse/revenge: 60% weight to Discipline, 40% to Mind
+  var emoTag = EMOTIONAL_DISCIPLINE_TAGS[tag];
+  var behaviorScore = emoTag
+    ? Math.round(rawBehavior * 0.60 + 100 * 0.40)
+    : rawBehavior;
 
-  // Checklist score — passed in from day session
+  var rScore  = (rulesObj !== undefined && rulesObj !== null) ? rulesObj : 100;
   var clScore = (checklistPct !== undefined && checklistPct !== null) ? checklistPct : null;
 
   var total;
   if (clScore === null) {
-    // No checklist — weight rules(50%) + behavior(50%)
-    total = Math.round(rulesScore * 0.50 + behaviorScore * 0.50);
+    total = Math.round(rScore * 0.50 + behaviorScore * 0.50);
   } else {
-    // Full: rules(40%) + checklist(30%) + behavior(30%)
-    total = Math.round(rulesScore * 0.40 + clScore * 0.30 + behaviorScore * 0.30);
+    total = Math.round(rScore * 0.40 + clScore * 0.30 + behaviorScore * 0.30);
   }
 
   return {
-    behaviorScore: behaviorScore,
-    rulesScore:    rulesScore,
-    clScore:       clScore,
-    total:         Math.min(100, Math.max(0, total))
+    behaviorScore:  behaviorScore,
+    rulesScore:     rScore,
+    clScore:        clScore,
+    tag:            tag,
+    isEmotionalTag: !!emoTag,
+    total:          Math.min(100, Math.max(0, total))
   };
 }
 
 // ── Per-trade Mind Score (0-100) ──
-// Measures: psychological state — state + control
+// Measures: psychological state + control
+// Also captures 40% of emotional-discipline tags (fomo/impulse/revenge)
 function calcTradeMind(trade, colorDay) {
-  // Emotional state from color day
+  // Emotional STATE from color day (50%)
   var stateMap = { green: 100, yellow: 70, red: 40, unknown: 70 };
   var stateScore = stateMap[colorDay || 'unknown'] || 70;
 
-  // Emotional control from emotion tag
+  // Emotional CONTROL from emotion field (50%)
   var emo = (trade.emotion || 'neutral').toLowerCase();
   var controlScore = EMOTION_CONTROL_SCORE[emo] !== undefined ? EMOTION_CONTROL_SCORE[emo] : 70;
+
+  // Additional penalty from emotional-discipline tags (40% component)
+  var tag = (trade.discipline_tag || 'clean').toLowerCase();
+  var emoTag = EMOTIONAL_DISCIPLINE_TAGS[tag];
+  if (emoTag) {
+    // Apply 40% of the tag's mind penalty to control score
+    controlScore = Math.max(0, controlScore - Math.round(emoTag.mindPenalty * 0.40));
+  }
 
   var total = Math.round(stateScore * 0.50 + controlScore * 0.50);
 
   return {
-    stateScore:   stateScore,
-    controlScore: controlScore,
-    colorDay:     colorDay || 'unknown',
-    emotion:      emo,
-    total:        Math.min(100, Math.max(0, total))
+    stateScore:    stateScore,
+    controlScore:  controlScore,
+    colorDay:      colorDay || 'unknown',
+    emotion:       emo,
+    disciplineTag: tag,
+    hasEmoTag:     !!emoTag,
+    total:         Math.min(100, Math.max(0, total))
   };
 }
 
