@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774448918 -->
+<!-- v1774454923 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -3166,7 +3166,7 @@ async function loadAccountData(id, silent) {
     var _milestones = [
       { at:1,  label:'Primer trade',       unlock:'Diario activo' },
       { at:5,  label:'5 trades',           unlock:'Dominant emotion visible' },
-      { at:10, label:'10 trades',          unlock:'Coach IA detecta tu error principal' },
+      { at:10, label:'10 trades',          unlock:'AI Coach detects your main error' },
       { at:20, label:'20 trades',          unlock:'Full psychological analysis' },
       { at:30, label:'30 trades',          unlock:'Trader profile + time pattern' },
     ];
@@ -3577,7 +3577,7 @@ async function loadAccountData(id, silent) {
   })() +
   '</div>' +
 
-  // Performance hoy vs ayer
+  // Performance today vs yesterday
   '<div class="panel" style="padding:16px">' +
   '<div style="font-size:9px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Performance</div>' +
   '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">' +
@@ -5832,7 +5832,7 @@ async function generateRulesCoach() {
     + activeRules.map(function(r){ return '- ' + r.label + (r.value ? ' (valor: '+r.value+')' : ''); }).join('\n')
     + '\n\nViolaciones detectadas HOY:\n'
     + (violations.length ? violations.map(function(v){ return '- ' + v.rule.label + ': ' + v.detail; }).join('\n') : 'Ninguna detectada automatically')
-    + '\n\nDisciplina ultimos 20 trades: ' + Object.entries(tagCount).map(function(e){return e[0]+':'+e[1];}).join(', ')
+    + '\n\nDiscipline last 20 trades: ' + Object.entries(tagCount).map(function(e){return e[0]+':'+e[1];}).join(', ')
     + '\n\nAnalyze: 1) Which rules are followed well 2) Which fail most 3) Why they fail psychologically 4) One concrete technique for each rule violated. Direct and personalized. Max 300 words.';
 
   try {
@@ -10873,7 +10873,7 @@ var LEGAL_CONTENT = {
       },
       {
         heading: 'How we use your data',
-        body: 'Tus datos se usan exclusivamente para generar el ananalysis and metrics you see in your dashboard. The AI Coach procesa tus datos de trading para darte feedback personalizado — este procesamiento ocurre en tiempo real y no se almacena por separado.'
+        body: 'Your data is used exclusively to generate the ananalysis and metrics you see in your dashboard. The AI Coach procesa tus datos de trading para darte feedback personalizado — este procesamiento ocurre en tiempo real y no se almacena por separado.'
       },
       {
         heading: 'Tus datos son tuyos',
