@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774417846 -->
+<!-- v1774418446 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -927,6 +927,50 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
   #day-trades-panel .table-scroll {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* ── Mental Score Banner ── */
+.ms-banner-inner {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+@media (max-width: 640px) {
+  .ms-banner-inner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .ms-banner-inner > div {
+    border-left: none !important;
+    padding-left: 0 !important;
+    border-top: 1px solid var(--border);
+    padding-top: 12px !important;
+  }
+  .ms-banner-inner > div:first-child {
+    border-top: none;
+    padding-top: 0 !important;
+  }
+  /* Monthly score row on mobile: horizontal */
+  .ms-banner-inner > div:first-child {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+  /* Pills row: wrap */
+  .ms-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    border-left: none !important;
+    padding-left: 0 !important;
+    border-top: 1px solid var(--border) !important;
+    padding-top: 12px !important;
+  }
+  .ms-pills > div {
+    flex: 1;
+    min-width: 80px;
   }
 }
 
@@ -3210,7 +3254,8 @@ async function loadAccountData(id, silent) {
     var msYest = prevDay ? calcMentalScore(prevDay) : null;
     var _yestTotal = (msYest && msYest.total !== null && !isNaN(msYest.total)) ? msYest.total : null;
 
-    var out = '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px 24px;display:flex;align-items:center;gap:20px">';
+    var out = '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 20px" class="ms-banner">';
+    out += '<div class="ms-banner-inner">';
 
     // ── LEFT: Monthly score (main) ──
     if (_mData && !isNaN(_mData.avg)) {
@@ -3250,7 +3295,7 @@ async function loadAccountData(id, silent) {
     }
 
     // ── RIGHT: Today + Yesterday ──
-    out += '<div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:4px;border-left:1px solid var(--border);padding-left:20px;min-width:80px">';
+    out += '<div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:4px;border-left:1px solid var(--border);padding-left:20px;min-width:80px" class="ms-today">';
     out += '<div style="font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:2px">Today</div>';
     out += '<div style="font-size:28px;font-weight:800;color:' + _todayColor + ';letter-spacing:-1px;line-height:1">' + (_todayTotal !== null ? _todayTotal : '—') + '</div>';
     out += '<div style="font-size:9px;color:var(--text3)">' + _todayLabel + '</div>';
@@ -3265,7 +3310,7 @@ async function loadAccountData(id, silent) {
     out += '</div>';
 
     // ── FAR RIGHT: Status pills ──
-    out += '<div style="display:flex;gap:10px;flex-shrink:0">';
+    out += '<div style="display:flex;gap:10px;flex-shrink:0" class="ms-pills">';
 
     // Checklist pill
     var _clHasItems2 = (currentChecklistItems||[]).filter(function(x){return x.is_active;}).length > 0;
@@ -3299,6 +3344,7 @@ async function loadAccountData(id, silent) {
     out += '</div>';
 
     out += '</div>'; // end pills
+    out += '</div>'; // end inner
     out += '</div>'; // end banner
     return out;
   })() +
