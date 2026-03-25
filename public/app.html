@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774119806 -->
+<!-- v1774408643 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -1292,6 +1292,16 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
         <div id="historical-trade-note" style="display:none;margin-bottom:6px;padding:8px 10px;background:rgba(224,152,64,0.08);border:1px solid rgba(224,152,64,0.2);border-radius:6px;font-size:10px;color:var(--amber);line-height:1.55">
           ⏱ Historical trade — if you don't remember your exact emotion, leave <strong>Neutral</strong>. Pattro will infer the emotional state from your behavior.
         </div>
+        <div id="historical-color-day" style="display:none;margin-bottom:10px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px">
+          <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Color day — how were you feeling that day?</div>
+          <div style="display:flex;gap:8px">
+            <button type="button" class="hist-color-btn" data-level="green" onclick="setHistColorDay('green',this)" style="flex:1;padding:7px;border-radius:7px;border:1px solid var(--border2);background:var(--surface);color:var(--text3);font-size:11px;cursor:pointer;font-family:inherit">🟢 Green</button>
+            <button type="button" class="hist-color-btn" data-level="yellow" onclick="setHistColorDay('yellow',this)" style="flex:1;padding:7px;border-radius:7px;border:1px solid var(--border2);background:var(--surface);color:var(--text3);font-size:11px;cursor:pointer;font-family:inherit">🟡 Yellow</button>
+            <button type="button" class="hist-color-btn" data-level="red" onclick="setHistColorDay('red',this)" style="flex:1;padding:7px;border-radius:7px;border:1px solid var(--border2);background:var(--surface);color:var(--text3);font-size:11px;cursor:pointer;font-family:inherit">🔴 Red</button>
+            <button type="button" class="hist-color-btn" data-level="unknown" onclick="setHistColorDay('unknown',this)" style="flex:1;padding:7px;border-radius:7px;border:1px solid var(--teal-bd);background:var(--teal-bg);color:var(--teal);font-size:11px;cursor:pointer;font-family:inherit">⚪ Unknown</button>
+          </div>
+          <input type="hidden" id="t-hist-color-day" value="unknown">
+        </div>
         <select class="form-select" id="t-emotion">
           <option value="neutral" selected>😶 Neutral</option>
           <option value="calm">😌 Calm</option>
@@ -1311,6 +1321,32 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
       <div id="t-setup-tags-wrap" style="display:flex;flex-wrap:wrap;gap:6px;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;min-height:36px"></div>
       <input type="hidden" id="t-setup-tags" value="">
     </div>
+    <!-- Color Day for historical trades -->
+    <div class="form-group" id="t-colorday-wrap" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px">
+      <label class="form-label" style="margin-bottom:8px;display:block">
+        🎨 Color Day <span style="font-size:9px;color:var(--text3);font-weight:400">— how did you feel that day?</span>
+      </label>
+      <div style="display:flex;gap:8px">
+        <button type="button" class="colorday-btn" data-level="green" onclick="selectColorDay(this)"
+          style="flex:1;padding:8px;border:1px solid var(--border);border-radius:7px;background:var(--surface);font-size:11px;font-family:inherit;cursor:pointer;color:var(--text3);transition:all .15s">
+          🟢 Green
+        </button>
+        <button type="button" class="colorday-btn" data-level="yellow" onclick="selectColorDay(this)"
+          style="flex:1;padding:8px;border:1px solid var(--border);border-radius:7px;background:var(--surface);font-size:11px;font-family:inherit;cursor:pointer;color:var(--text3);transition:all .15s">
+          🟡 Yellow
+        </button>
+        <button type="button" class="colorday-btn" data-level="red" onclick="selectColorDay(this)"
+          style="flex:1;padding:8px;border:1px solid var(--border);border-radius:7px;background:var(--surface);font-size:11px;font-family:inherit;cursor:pointer;color:var(--text3);transition:all .15s">
+          🔴 Red
+        </button>
+        <button type="button" class="colorday-btn" data-level="unknown" onclick="selectColorDay(this)"
+          style="flex:1;padding:8px;border:1px solid var(--teal-bd);border-radius:7px;background:var(--teal-bg);font-size:11px;font-family:inherit;cursor:pointer;color:var(--teal);transition:all .15s">
+          — Don't remember
+        </button>
+      </div>
+      <input type="hidden" id="t-colorday" value="unknown">
+    </div>
+
     <div class="form-group" id="t-checklist-wrap" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px">
       <div style="display:flex;align-items:center;gap:10px">
         <label class="form-label" style="margin:0;flex:1;font-size:10px">✓ Checklist <span style="color:var(--text3);font-weight:400">how much did you follow today?</span></label>
@@ -1387,6 +1423,36 @@ const bbStore = {
   get: function(k) { try { return localStorage.getItem(k); } catch(e) { return null; } },
   set: function(k,v) { try { localStorage.setItem(k,v); } catch(e) {} }
 };
+
+// ── Get mood for a specific date (not just today) ──
+// Returns mood session object or null. Never falls back to today's mood.
+function getMoodForDate(dateStr) {
+  if (!dateStr) return null;
+  var d = dateStr.slice(0, 10);
+  // First check currentMoodSessions (loaded from Supabase)
+  var fromDb = (currentMoodSessions || []).find(function(s) {
+    return (s.session_date || s.date) === d;
+  });
+  if (fromDb) return fromDb;
+  // Then check localStorage for that specific date
+  try {
+    var raw = localStorage.getItem('mood_' + (currentAccountId||'') + '_' + d);
+    if (raw && raw !== 'skipped') {
+      var parsed = JSON.parse(raw);
+      if (parsed && parsed.level) return parsed;
+    }
+  } catch(e) {}
+  return null; // unknown — never return today's mood for another day
+}
+
+// ── Get checklist session for a specific date ──
+function getChecklistForDate(dateStr) {
+  if (!dateStr) return null;
+  var d = dateStr.slice(0, 10);
+  return (currentChecklistSessions || []).find(function(s) {
+    return s.session_date === d;
+  }) || null;
+}
 
 // AUTH
 function setTab(tab) {
@@ -1906,6 +1972,11 @@ function openLogModal() {
   document.getElementById('t-emotion').value = 'neutral';
 
   document.getElementById('t-notes').value = '';
+  // Reset color day selector
+  var _cdWrap = document.getElementById('t-colorday-wrap');
+  if (_cdWrap) _cdWrap.style.display = 'none';
+  var _cdInp = document.getElementById('t-colorday');
+  if (_cdInp) _cdInp.value = 'today';
   // Reset screenshot
   screenshotDataUrl = null;
   var prev = document.getElementById('screenshot-preview');
@@ -1932,14 +2003,42 @@ function openLogModal() {
   function _checkHistorical() {
     if (!_entryTimeEl2 || !_histNote) return;
     var val = _entryTimeEl2.value;
-    if (!val) { _histNote.style.display = 'none'; return; }
+    if (!val) {
+      _histNote.style.display = 'none';
+      var _hcd = document.getElementById('historical-color-day');
+      if (_hcd) _hcd.style.display = 'none';
+      return;
+    }
+    var tradeDate = val.slice(0, 10);
+    var todayDate = new Date().toISOString().slice(0, 10);
+    var isHistorical = tradeDate < todayDate;
     var diff = (Date.now() - new Date(val).getTime()) / 3600000;
     _histNote.style.display = diff > 24 ? 'block' : 'none';
+
+    // Show color day selector only for historical trades
+    var _hcd = document.getElementById('historical-color-day');
+    if (_hcd) {
+      if (isHistorical) {
+        _hcd.style.display = 'block';
+        // Pre-fill if mood already exists for that date
+        var existingMood = getMoodForDate(tradeDate);
+        var existingLevel = existingMood ? existingMood.level : 'unknown';
+        document.getElementById('t-hist-color-day').value = existingLevel;
+        // Highlight the matching button
+        var matchBtn = _hcd.querySelector('[data-level="' + existingLevel + '"]');
+        if (matchBtn) setHistColorDay(existingLevel, matchBtn);
+      } else {
+        _hcd.style.display = 'none';
+        document.getElementById('t-hist-color-day').value = 'unknown';
+      }
+    }
   }
   if (_entryTimeEl2) {
     _entryTimeEl2.removeEventListener('change', _checkHistorical);
     _entryTimeEl2.addEventListener('change', _checkHistorical);
+    _entryTimeEl2.addEventListener('change', checkHistoricalColorDay);
     _checkHistorical();
+    checkHistoricalColorDay();
   }
   // Checklist slider: show existing value if already saved today, else allow input
   var _clSlider = document.getElementById('t-checklist-pct');
@@ -1964,6 +2063,24 @@ function closeLogModal() {
   if (titleEl) titleEl.textContent = 'Log Trade';
   document.getElementById('save-trade-btn').textContent = 'Save Trade';
   document.getElementById('log-overlay').classList.remove('open');
+}
+
+function setHistColorDay(level, btn) {
+  document.getElementById('t-hist-color-day').value = level;
+  // Update button styles
+  document.querySelectorAll('.hist-color-btn').forEach(function(b) {
+    b.style.background = 'var(--surface)';
+    b.style.color = 'var(--text3)';
+    b.style.borderColor = 'var(--border2)';
+  });
+  var colors = { green:'var(--green)', yellow:'var(--amber)', red:'var(--red)', unknown:'var(--teal)' };
+  var bgs = { green:'var(--green-bg)', yellow:'var(--amber-bg)', red:'var(--red-bg)', unknown:'var(--teal-bg)' };
+  var bds = { green:'var(--green-bd)', yellow:'var(--amber-bd)', red:'var(--red-bd)', unknown:'var(--teal-bd)' };
+  if (btn) {
+    btn.style.color = colors[level] || 'var(--teal)';
+    btn.style.background = bgs[level] || 'var(--teal-bg)';
+    btn.style.borderColor = bds[level] || 'var(--teal-bd)';
+  }
 }
 
 function attachTagPillListeners(wrap, inp) {
@@ -2062,12 +2179,44 @@ async function saveTrade() {
   btn.textContent = 'Save Trade';
   screenshotDataUrl = null;
 
-  // ── Save checklist % from slider — always upsert, latest value wins ──
+  // ── Save historical color day if provided ──
+  var _histColorDay = document.getElementById('t-hist-color-day');
+  var _entryTimeForDate = document.getElementById('t-entry-time');
+  if (_histColorDay && _entryTimeForDate && _entryTimeForDate.value) {
+    var _tradeDate = _entryTimeForDate.value.slice(0, 10);
+    var _todayDate = new Date().toISOString().slice(0, 10);
+    var _colorLevel = _histColorDay.value;
+    if (_tradeDate < _todayDate && _colorLevel && _colorLevel !== 'unknown') {
+      var _existingMoodForDate = getMoodForDate(_tradeDate);
+      if (!_existingMoodForDate) {
+        try {
+          await sb.from('mood_sessions').upsert({
+            account_id:   currentAccountId,
+            user_id:      currentUser.id,
+            session_date: _tradeDate,
+            answers:      { manual: true },
+            score:        _colorLevel === 'green' ? 0 : _colorLevel === 'yellow' ? 6 : 9,
+            level:        _colorLevel
+          }, { onConflict: 'account_id,session_date' });
+          currentMoodSessions = currentMoodSessions.filter(function(s){
+            return (s.session_date||s.date) !== _tradeDate;
+          });
+          currentMoodSessions.push({ session_date: _tradeDate, level: _colorLevel, answers: { manual: true } });
+        } catch(e) { console.warn('Could not save historical color day:', e); }
+      }
+    }
+  }
+
+  // ── Save checklist % from slider — use trade's date, not today ──
   var _clSliderSave = document.getElementById('t-checklist-pct');
   if (_clSliderSave && currentAccountId) {
     var _clPct    = parseInt(_clSliderSave.value);
     if (!isNaN(_clPct)) {
-      var _clDate    = new Date().toISOString().slice(0,10);
+      // Use entry_time date if available (for historical trades), else today
+      var _entryTimeForCl = document.getElementById('t-entry-time');
+      var _clDate = (_entryTimeForCl && _entryTimeForCl.value)
+        ? _entryTimeForCl.value.slice(0,10)
+        : new Date().toISOString().slice(0,10);
       var _clVerdict = _clPct >= 80 ? 'ready' : _clPct >= 50 ? 'caution' : 'not_ready';
       var _clPayload = {
         account_id:   currentAccountId,
@@ -2082,6 +2231,35 @@ async function saveTrade() {
         currentChecklistSessions = currentChecklistSessions.filter(function(s){ return s.session_date!==_clDate; });
         currentChecklistSessions.unshift({ session_date:_clDate, score_pct:_clPct, verdict:_clVerdict, items:[] });
       } catch(e) { console.warn('Checklist save error:', e); }
+    }
+  }
+
+  // ── Save color day for historical trades ──
+  var _cdInput = document.getElementById('t-colorday');
+  var _cdVal = _cdInput ? _cdInput.value : 'today';
+  if (_cdVal && _cdVal !== 'today' && _cdVal !== 'unknown' && currentAccountId && currentUser) {
+    var _cdEntryEl = document.getElementById('t-entry-time');
+    var _cdDate = (_cdEntryEl && _cdEntryEl.value) ? _cdEntryEl.value.slice(0,10) : null;
+    if (_cdDate) {
+      // Check if mood session already exists for this date
+      var _existing = (currentMoodSessions || []).find(function(s) {
+        return (s.session_date || s.date) === _cdDate;
+      });
+      if (!_existing) {
+        // Save new mood session for that historical date
+        try {
+          await sb.from('mood_sessions').upsert({
+            account_id:   currentAccountId,
+            user_id:      currentUser.id,
+            session_date: _cdDate,
+            answers:      {},
+            score:        _cdVal === 'green' ? 1 : _cdVal === 'yellow' ? 5 : 9,
+            level:        _cdVal,
+          }, { onConflict: 'account_id,session_date' });
+          // Add to in-memory cache
+          currentMoodSessions.unshift({ session_date: _cdDate, level: _cdVal, answers: {} });
+        } catch(e) { console.warn('Color day save error:', e); }
+      }
     }
   }
 
@@ -2337,23 +2515,17 @@ async function loadAccountData(id, silent) {
   var worstDay = negVals.length ? Math.min.apply(null,negVals) : null;
 
   var disc = calcDiscipline(trades);
-  var todayMood = null;
-  try {
-    var moodRaw = bbStore.get('mood_today_' + id);
-    if (moodRaw) todayMood = JSON.parse(moodRaw);
-    var todayStr2 = new Date().toISOString().slice(0,10);
-    if (todayMood && todayMood.date !== todayStr2) todayMood = null;
-  } catch(e) {}
-  // ── Fallback Color Day for manual users: derive from today's P&L ──
+  // ── Color Day: always read from the actual date, never bleed between days ──
+  var todayMood = getMoodForDate(today);
+  // Fallback: if no real mood check, derive synthetic from today's P&L
   if (!todayMood) {
-    var _todayKey2 = new Date().toISOString().slice(0,10);
-    var _todayTrades2 = trades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(_todayKey2); });
+    var _todayTrades2 = trades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(today); });
     if (_todayTrades2.length >= 1) {
       var _todayPnl2 = _todayTrades2.reduce(function(s,t){ return s+(t.pnl||0); }, 0);
       var _avgWin2   = trades.filter(function(t){ return (t.pnl||0)>0; });
       var _avgWinVal = _avgWin2.length ? _avgWin2.reduce(function(s,t){return s+(t.pnl||0);},0)/_avgWin2.length : 100;
       var _syntheticLevel = _todayPnl2 > _avgWinVal*0.3 ? 'green' : _todayPnl2 >= -_avgWinVal*0.3 ? 'yellow' : 'red';
-      todayMood = { date: _todayKey2, level: _syntheticLevel, synthetic: true, score: _todayPnl2, answers: {} };
+      todayMood = { date: today, level: _syntheticLevel, synthetic: true, score: _todayPnl2, answers: {} };
     }
   }
   var pnlSign = netPnl>=0 ? '+' : '-';
@@ -3282,8 +3454,9 @@ function calcReadinessScore(todayMood, clSessions, trades) {
   var factors = [];
   var today = new Date().toISOString().slice(0,10);
 
-  // Mood (40%) — use real check, synthetic fallback, or emotion-derived
-  var _readMoodLevel = (todayMood && (todayMood.date === today || todayMood.synthetic)) ? todayMood.level : null;
+  // Mood (40%) — use real check for this specific date
+  var _readMoodData  = getMoodForDate(today);
+  var _readMoodLevel = _readMoodData ? _readMoodData.level : null;
   if (!_readMoodLevel) {
     // Derive from today's trade emotions
     var _rTrades = (trades||[]).filter(function(t){ return t.entry_time && t.entry_time.startsWith(today) && t.emotion; });
@@ -4465,7 +4638,7 @@ function calcDailyMindScore(dateStr) {
   var today      = dateStr || new Date().toISOString().slice(0,10);
   var allTrades  = currentTrades || [];
   var dayTrades  = allTrades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(today); });
-  var moodSess   = (currentMoodSessions || []).find(function(s){ return (s.session_date||s.date) === today; });
+  var moodSess   = getMoodForDate(today); // Always uses date-specific mood, never falls back to today
 
   // ── Sub 1: Mood check (40pts) ──
   var moodPts;
@@ -10227,6 +10400,71 @@ document.addEventListener('click', function(e) {
   if (bar && !bar.contains(e.target)) closeMobileAccMenu();
 });
 
+
+function selectColorDay(btn) {
+  var level = btn.getAttribute('data-level');
+  document.getElementById('t-colorday').value = level;
+  // Update button styles
+  document.querySelectorAll('.colorday-btn').forEach(function(b) {
+    var l = b.getAttribute('data-level');
+    var colors = { green: 'var(--green)', yellow: 'var(--amber)', red: 'var(--red)', unknown: 'var(--teal)' };
+    var bgs = { green: 'var(--green-bg)', yellow: 'var(--amber-bg)', red: 'var(--red-bg)', unknown: 'var(--teal-bg)' };
+    var bds = { green: 'var(--green-bd)', yellow: 'var(--amber-bd)', red: 'var(--red-bd)', unknown: 'var(--teal-bd)' };
+    if (l === level) {
+      b.style.color = colors[l] || 'var(--teal)';
+      b.style.background = bgs[l] || 'var(--teal-bg)';
+      b.style.borderColor = bds[l] || 'var(--teal-bd)';
+      b.style.fontWeight = '700';
+    } else {
+      b.style.color = 'var(--text3)';
+      b.style.background = 'var(--surface)';
+      b.style.borderColor = 'var(--border)';
+      b.style.fontWeight = '400';
+    }
+  });
+}
+
+function checkHistoricalColorDay() {
+  var entryEl = document.getElementById('t-entry-time');
+  var wrap = document.getElementById('t-colorday-wrap');
+  if (!entryEl || !wrap) return;
+  var val = entryEl.value;
+  if (!val) { wrap.style.display = 'none'; return; }
+  var diff = (Date.now() - new Date(val).getTime()) / 3600000;
+  // Show for trades older than 24h
+  if (diff > 24) {
+    wrap.style.display = 'block';
+    // Pre-fill with existing mood session if available
+    var tradeDate = val.slice(0,10);
+    var existingMood = (currentMoodSessions || []).find(function(s) {
+      return (s.session_date || s.date) === tradeDate;
+    });
+    if (existingMood) {
+      var btn = document.querySelector('.colorday-btn[data-level="' + existingMood.level + '"]');
+      if (btn) selectColorDay(btn);
+    } else {
+      // Reset to unknown
+      document.getElementById('t-colorday').value = 'unknown';
+      document.querySelectorAll('.colorday-btn').forEach(function(b) {
+        var l = b.getAttribute('data-level');
+        if (l === 'unknown') {
+          b.style.color = 'var(--teal)';
+          b.style.background = 'var(--teal-bg)';
+          b.style.borderColor = 'var(--teal-bd)';
+          b.style.fontWeight = '700';
+        } else {
+          b.style.color = 'var(--text3)';
+          b.style.background = 'var(--surface)';
+          b.style.borderColor = 'var(--border)';
+          b.style.fontWeight = '400';
+        }
+      });
+    }
+  } else {
+    wrap.style.display = 'none';
+    document.getElementById('t-colorday').value = 'today';
+  }
+}
 
 function openMobileDrawer() {
   var d = document.getElementById('mobile-drawer');
