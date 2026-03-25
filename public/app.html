@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774416297 -->
+<!-- v1774417258 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -2766,7 +2766,7 @@ async function loadAccountData(id, silent) {
       var hasManual = streakTrades.every(function(t){ return t.source === 'manual' || !t.source; });
       var streakText = hasManual
         ? 'Has registrado <strong>' + lossStreak + ' losing trades</strong> today. Review your session before continuing.'
-        : 'You have <strong>' + lossStreak + ' consecutive losing trades. Considerivos</strong>. Considera tomar un break antes de operar de nuevo.';
+        : 'You have <strong>' + lossStreak + ' consecutive losing trades. Considerivos</strong>. Consider taking a break before trading again.';
       alerts.push({
         type: 'danger',
         icon: '⚠',
@@ -2957,7 +2957,7 @@ async function loadAccountData(id, silent) {
     if (bdClean === bestDayTrades.length && bestDayTrades.length > 0) bdInsights.push('all your trades were clean');
     else if (bdClean > 0) bdInsights.push(bdClean + ' of ' + bestDayTrades.length + ' trades were clean');
     if (bdTopEmo === 'calm' || bdTopEmo === 'confident') bdInsights.push('operaste ' + (bdTopEmo === 'calm' ? 'tranquilo' : 'con confianza'));
-    if (bdWR >= 70) bdInsights.push('tu win rate fue ' + bdWR + '%');
+    if (bdWR >= 70) bdInsights.push('win rate was ' + bdWR + '%');
     bestDayInsight = bdInsights.length ? bdInsights.join(' · ') : 'day with good control and results';
   }
 
@@ -3050,9 +3050,9 @@ async function loadAccountData(id, silent) {
       '🛑 If you hit 2 consecutive losses, stop for the day.'
     ],
     red: [
-      '🔴 Red Day — considera no operar hoy.',
+      '🔴 Red Day — consider not trading today.',
       '📵 If you trade, reduce size to the minimum.',
-      '🧘 Trabaja primero tu estado mental antes de entrar al mercado.'
+      '🧘 Work on your mental state before entering the market.'
     ],
     null: [
       '📋 No has hecho el mood check de hoy.',
@@ -3277,24 +3277,12 @@ async function loadAccountData(id, silent) {
     out += '<div style="font-size:10px;font-weight:700;color:' + _clColor2 + '">' + _clLabel2 + '</div>';
     out += '</div>';
 
-    // Mood pill — same source as Color Day banner below (todayMood with synthetic fallback)
-    var _todayMoodPill = getMoodForDate(today);
-    // Apply same synthetic fallback as the rest of the dashboard
-    if (!_todayMoodPill) {
-      var _pillTrades = trades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(today); });
-      if (_pillTrades.length >= 1) {
-        var _pillPnl = _pillTrades.reduce(function(s,t){ return s+(t.pnl||0); }, 0);
-        var _pillWins = trades.filter(function(t){ return (t.pnl||0)>0; });
-        var _pillAvgWin = _pillWins.length ? _pillWins.reduce(function(s,t){return s+(t.pnl||0);},0)/_pillWins.length : 100;
-        var _pillLevel = _pillPnl > _pillAvgWin*0.3 ? 'green' : _pillPnl >= -_pillAvgWin*0.3 ? 'yellow' : 'red';
-        _todayMoodPill = { level: _pillLevel, synthetic: true };
-      }
-    }
-    var _moodLabel2 = _todayMoodPill
-      ? (_todayMoodPill.level==='green'?'🟢 Green':_todayMoodPill.level==='yellow'?'🟡 Yellow':_todayMoodPill.level==='red'?'🔴 Red':'⚪ Unknown')
+    // Mood pill — use todayMood from outer scope (same source as Color Day banner)
+    var _moodLabel2 = todayMood
+      ? (todayMood.level==='green'?'🟢 Green':todayMood.level==='yellow'?'🟡 Yellow':todayMood.level==='red'?'🔴 Red':'⚪ Unknown')
       : '— Check';
-    var _moodColor2 = _todayMoodPill
-      ? (_todayMoodPill.level==='green'?'var(--green)':_todayMoodPill.level==='yellow'?'var(--amber)':_todayMoodPill.level==='red'?'var(--red)':'var(--text3)')
+    var _moodColor2 = todayMood
+      ? (todayMood.level==='green'?'var(--green)':todayMood.level==='yellow'?'var(--amber)':todayMood.level==='red'?'var(--red)':'var(--text3)')
       : 'var(--text3)';
     out += '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;min-width:62px">';
     out += '<div style="font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Mood check</div>';
@@ -4847,7 +4835,7 @@ function inferTradeEmotion(trade, allDayTrades) {
     var avgPerDay = dayKeys.reduce(function(s,d){ return s + tradingDays[d]; }, 0) / dayKeys.length;
     var thisDay = trade.entry_time ? trade.entry_time.slice(0,10) : null;
     if (thisDay && tradingDays[thisDay] >= avgPerDay * 2) {
-      return { emotion: 'greedy', inferred: true, reason: 'Overtrading — 2x+ trades del promedio diario' };
+      return { emotion: 'greedy', inferred: true, reason: 'Overtrading — 2x+ trades above daily average' };
     }
   }
 
@@ -4855,7 +4843,7 @@ function inferTradeEmotion(trade, allDayTrades) {
   if (pnl > 0) {
     var allWins = allTrades.filter(function(t){ return (t.pnl||0) > 0; });
     var avgWin = allWins.length ? allWins.reduce(function(s,t){ return s+(t.pnl||0); },0)/allWins.length : pnl;
-    if (pnl >= avgWin * 1.5) return { emotion: 'confident', inferred: true, reason: 'Win grande (≥1.5× promedio)' };
+    if (pnl >= avgWin * 1.5) return { emotion: 'confident', inferred: true, reason: 'Big win (≥1.5× average)' };
     return { emotion: 'calm', inferred: true, reason: 'Trade ganador' };
   } else if (pnl < 0) {
     var allLosses = allTrades.filter(function(t){ return (t.pnl||0) < 0; });
@@ -5663,7 +5651,7 @@ function renderRulesView() {
     + '<span style="font-size:10px;color:var(--text3)">Max</span>'
     + '<input type="number" min="1" max="20" value="' + (r3.value||3) + '" id="rule-input-maxtrades" onchange="updateRuleValue(\'maxtrades\',this.value)" style="width:48px;background:transparent;border:none;color:var(--text);font-size:14px;font-weight:700;font-family:inherit;text-align:center;outline:none">'
     + '<span style="font-size:10px;color:var(--text3)">trades</span></div>'
-    + '<div style="font-size:11px;color:var(--text3)">Hoy tomaste: <span style="color:' + (todayTrades.length>=(parseInt(r3.value)||3)?'var(--red)':'var(--text)') + ';font-weight:600">' + todayTrades.length + '</span></div>'
+    + '<div style="font-size:11px;color:var(--text3)">Today: <span style="color:' + (todayTrades.length>=(parseInt(r3.value)||3)?'var(--red)':'var(--text)') + ';font-weight:600">' + todayTrades.length + '</span></div>'
     + '</div>';
   html += rCard('maxtrades','🔢','Max trades per day','Stop trading when you reach this number of trades per session', mt3, !!r3.active, violations.some(function(v){return v.rule.id==='maxtrades';}));
 
@@ -5743,9 +5731,9 @@ function renderRulesView() {
     + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
     + '<div><div style="font-size:10px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px">Analisis de cumplimiento</div>'
     + '<div style="font-size:10px;color:var(--text3);margin-top:2px">AI Coach reviews your rules and violation patterns</div></div>'
-    + '<button onclick="generateRulesCoach()" class="btn btn-solid" style="font-size:10px;padding:7px 14px">Analizar</button>'
+    + '<button onclick="generateRulesCoach()" class="btn btn-solid" style="font-size:10px;padding:7px 14px">Analyze</button>'
     + '</div>'
-    + '<div id="rules-coach-output"><div style="font-size:11px;color:var(--text3);text-align:center;padding:12px 0">Haz clic en Analizar para recibir feedback personalizado sobre tu disciplina.</div></div>'
+    + '<div id="rules-coach-output"><div style="font-size:11px;color:var(--text3);text-align:center;padding:12px 0">Click Analyze to receive personalized feedback on tu disciplina.</div></div>'
     + '</div>';
 
   html += '</div>';
@@ -5849,7 +5837,7 @@ async function generateRulesCoach() {
   if (!outEl) return;
 
   if (!rules.length) {
-    outEl.innerHTML = '<div style="font-size:11px;color:var(--text3);text-align:center;padding:16px">Agrega al menos una regla para analizar tu cumplimiento.</div>';
+    outEl.innerHTML = '<div style="font-size:11px;color:var(--text3);text-align:center;padding:16px">Add at least one rule to track your compliance.</div>';
     return;
   }
 
@@ -5863,12 +5851,12 @@ async function generateRulesCoach() {
   var tagCount = {};
   last20.forEach(function(t){ var tg = t.discipline_tag||'clean'; tagCount[tg]=(tagCount[tg]||0)+1; });
 
-  var prompt = 'Eres el coach de este trader. Estas son sus reglas personales:\n'
+  var prompt = 'Eres el coach of this trader. Estas son sus personal rules:\n'
     + activeRules.map(function(r){ return '- ' + r.label + (r.value ? ' (valor: '+r.value+')' : ''); }).join('\n')
     + '\n\nViolaciones detectadas HOY:\n'
-    + (violations.length ? violations.map(function(v){ return '- ' + v.rule.label + ': ' + v.detail; }).join('\n') : 'Ninguna detectada automaticamente')
+    + (violations.length ? violations.map(function(v){ return '- ' + v.rule.label + ': ' + v.detail; }).join('\n') : 'Ninguna detectada automatically')
     + '\n\nDisciplina ultimos 20 trades: ' + Object.entries(tagCount).map(function(e){return e[0]+':'+e[1];}).join(', ')
-    + '\n\nAnaliza: 1) Que reglas cumple bien 2) En cuales falla mas 3) Por que crees que falla en esas reglas especificas (patron psicologico) 4) Una tecnica concreta para cada regla que incumple. Directo y personalizado. Max 300 palabras.';
+    + '\n\nAnalyze: 1) Which rules are followed well 2) Which fail most 3) Whyue crees que falla en esas reglas especificas (patron psicologico) 4) Una tecnica concreta para cada regla que incumple. Directo y personalizado. Max 300 palabras.';
 
   try {
     var msg = await callCoach(prompt, 800);
@@ -6850,7 +6838,7 @@ function renderRulesTab(el) {
     + '<span style="font-size:10px;color:var(--text3)">Max</span>'
     + '<input id="rule-input-maxtrades" type="number" min="1" max="20" value="' + (r3.value||3) + '" style="width:48px;background:transparent;border:none;color:var(--text);font-size:14px;font-weight:700;font-family:inherit;text-align:center;outline:none">'
     + '<span style="font-size:10px;color:var(--text3)">trades</span></div>'
-    + '<div style="font-size:11px;color:var(--text3)">Hoy: <span style="color:' + (todayTrades.length>=(parseInt(r3.value)||3)?'var(--red)':'var(--text)') + ';font-weight:600">' + todayTrades.length + '</span></div>'
+    + '<div style="font-size:11px;color:var(--text3)">Today: <span style="color:' + (todayTrades.length>=(parseInt(r3.value)||3)?'var(--red)':'var(--text)') + ';font-weight:600">' + todayTrades.length + '</span></div>'
     + '</div>';
   html += rCard('maxtrades','🔢','Max trades per day','Stop trading when you reach this number of trades', mt3, !!r3.active, violations.some(function(v){return v.rule.id==='maxtrades';}));
 
@@ -7160,7 +7148,7 @@ async function deleteChecklistItem(idx) {
   switchDiscTab('checklist');
 }
 
-// OPERATIVA TAB
+// TRADING TAB
 function renderOperativaTab(el) {
   var trades=currentTrades||[];
   if (!trades.length) { el.innerHTML='<div class="empty-state"><div class="empty-icon">~</div><div class="empty-title">No trades yet</div></div>'; return; }
@@ -7730,7 +7718,7 @@ function buildMindView(trades) {
     // ── 3: Psychological Profile ──
   html += renderPsychProfilePanel(trades);
 
-  // ── 4: Disciplina | P&L por tipo | Patrones autosabotaje ──
+  // ── 4: Discipline | P&L by type | Self-sabotage patterns ──
   html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">';
 // Discipline breakdown
   var discColors = { clean:'#5ec26a', moved_sl:'#f0b429', scaled_loss:'#e05c5c', impulse:'#e05c5c', no_confirmation:'#f0b429', overtrading:'#e05c5c', fomo:'#e05c5c' };
@@ -7883,7 +7871,7 @@ function buildMindView(trades) {
           type: 'moved_sl',
           severity: 'high',
           title: 'You move the stop loss and lose more',
-          detail: 'Tus losses con SL movido tienen avg de $' + Math.round(Math.abs(avgMovedSLLoss)) + ' vs $' + Math.round(Math.abs(avgNL)) + ' in normal losses.',
+          detail: 'Your losses with moved SL avg $' + Math.round(Math.abs(avgMovedSLLoss)) + ' vs $' + Math.round(Math.abs(avgNL)) + ' in normal losses.',
           fix: 'Trata el SL como inviolable. Cierra si el precio llega — sin excepciones.',
           sample: movedSL.length
         });
@@ -7960,8 +7948,8 @@ function buildMindView(trades) {
     var emoWins  = tradesWithEmo.filter(function(t){ return (t.pnl||0)>0; }).length;
     var avgPnl2  = emoPnl[emo] / emoCounts[emo];
     var winRate2 = emoCounts[emo] ? Math.round(emoWins/emoCounts[emo]*100) : 0;
-    var positiveEmos = ['Tranquilo','Disciplined','Seguro','En zona'];
-    var negativeEmos = ['Ansioso','Impulsivo','Con miedo','Frustrado'];
+    var positiveEmos = ['Calm','Disciplined','Confident','In the zone'];
+    var negativeEmos = ['Anxious','Impulsive','Fearful','Frustrated'];
     var isPos = positiveEmos.includes(emo);
     var isNeg = negativeEmos.includes(emo);
     var cs = 0;
@@ -9237,7 +9225,7 @@ async function generateErrorAlert(errors, tagCount, trades, accountId) {
 
   var errorNames = errors.map(function(e){ return (errorLabels[e]||e)+' ('+tagCount[e]+'x)'; }).join(' y ');
 
-  var prompt = 'Eres el coach personal de este trader. Detectaste un patron repetido en sus ultimos 10 trades: '+ errorNames +'. '
+  var prompt = 'Eres el coach personal of this trader. Detectaste un patron repetido en sus ultimos 10 trades: '+ errorNames +'. '
     + 'Perdida acumulada en estos trades: $'+totalLoss.toFixed(0)+'. '
     + 'Habla directamente en segunda persona, con empatia pero firmeza. '
     + 'Estructura: 1) Nombra el patron especifico con datos 2) Explica el costo psicologico y financiero 3) Da UNA tecnica concreta para romperlo HOY. '
@@ -9315,7 +9303,7 @@ async function generateAutoFullAnalysis(trades, accountId, day) {
     + '2) PATRON PSICOLOGICO: El patron mental dominante que ves en sus notas y disciplina '
     + '3) PROGRESS: What has improved compared to the previous period '
     + '4) ERROR PERSISTENTE: El error que sigue repitiendo a lo largo del tiempo '
-    + '5) PLAN: 3 acciones concretas y especificas para la proxima sesion '
+    + '5) PLAN: 3 concrete actions y especificas para la proxima sesion '
     + '6) MENSAJE: Una frase poderosa y personalizada. '
     + 'Habla directo, con personalidad, como un coach real. Max 450 palabras.';
 
@@ -9488,7 +9476,7 @@ async function generateMindCoach() {
     + 'EMOCIONES → RESULTADOS:\n'+(emoSummary||'No data de emociones')+'\n\n'
     + 'MEJORES HORAS: '+hourSummary+'\n\n'
     + 'LAST NOTES:\n'+(allNotes||'No notes')+'\n\n'
-    + 'Por favor genera un analisis psicologico profundo con:\n1. DIAGNOSTICO: patron mental dominante\n2. PATRON DESTRUCTIVO: error principal\n3. FORTALEZA: lo que hace bien\n4. EMOCIONES: como afectan resultados\n5. TIEMPO: mejores y peores momentos\n6. PLAN: 3 acciones concretas esta semana\n7. MENSAJE PERSONAL: frase poderosa. Se directo con datos reales. Max 450 palabras.';
+    + 'Please generate a deep psychological analysis con:\n1. DIAGNOSTICO: patron mental dominante\n2. PATRON DESTRUCTIVO: error principal\n3. FORTALEZA: lo que hace bien\n4. EMOCIONES: como afectan resultados\n5. TIEMPO: best and worst moments\n6. PLAN: 3 concrete actions esta semana\n7. MENSAJE PERSONAL: frase poderosa. Se directo con datos reales. Max 450 palabras.';
 
   try {
     var text = await callCoach(prompt, 1000);
@@ -9511,7 +9499,7 @@ function renderReports() {
 function buildReports(allTrades) {
   var el = getTabEl('insights-tab-content');
   if (!allTrades.length) {
-    el.innerHTML = '<div class="empty-state"><div class="empty-icon">🧠</div><div class="empty-title">No trades yet</div><div class="empty-sub">Opera y registra trades para ver tu Psico Score</div></div>';
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">🧠</div><div class="empty-title">No trades yet</div><div class="empty-sub">Trade and log trades to see your Psico Score</div></div>';
     return;
   }
   el.innerHTML = renderMentalScorePanel(allTrades) + renderPsychProfilePanel(allTrades) + renderAchievementsHtml();
@@ -9592,7 +9580,7 @@ function renderPsychProfilePanel(trades) {
   if (!trades.length) return '';
 
   var tagLabels = { moved_sl:'Moved SL', scaled_in:'Scaled into loss', no_confirmation:'No confirmation', overtrading:'Overtrading', impulse:'Impulse', fomo:'FOMO' };
-  var emoLabels = { neutral:'Neutral 😶', calm:'Tranquilo 😌', confident:'Seguro 💪', anxious:'Ansioso 😰', fear:'Con miedo 😨', greedy:'Codicioso 🤑', bored:'Aburrido 😐', frustrated:'Frustrado 😤' };
+  var emoLabels = { neutral:'Neutral 😶', calm:'Calm 😌', confident:'Confident 💪', anxious:'Anxious 😰', fear:'Fearful 😨', greedy:'Greedy 🤑', bored:'Bored 😐', frustrated:'Frustrated 😤' };
 
   if (!profile) {
     return '<div class="panel" style="margin-bottom:12px"><div class="panel-head"><span class="panel-title">🔬 Psychological Profile</span></div>'
