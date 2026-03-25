@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774408950 -->
+<!-- v1774409978 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -3221,125 +3221,144 @@ async function loadAccountData(id, silent) {
   })() +
   '</div>' +
 
-  // ── ROW 0b: Auto Insights ──
+  // ── ROW 0b: Correlation-powered Insights ──
   (function(){
-    if (!trades.length) return '';
+    if (trades.length < 5) return '';
 
     var insights = [];
-    var tagCounts = {};
-    ['clean','moved_sl','scaled_in','impulse','no_confirmation','overtrading','fomo'].forEach(function(k){ tagCounts[k]=0; });
-    trades.forEach(function(t){
-      var tag = (t.discipline_tag||'clean');
-      if (tagCounts[tag] !== undefined) tagCounts[tag]++;
-    });
+    var tagLabels = {
+      moved_sl:'Moved Stop Loss', fomo:'FOMO', impulse:'Impulse trades',
+      overtrading:'Overtrading', scaled_in:'Scaling into losses',
+      no_confirmation:'No confirmation', revenge:'Revenge trading'
+    };
+    var emoLabels = {
+      calm:'Calm', confident:'Confident', neutral:'Neutral', bored:'Bored',
+      anxious:'Anxious', frustrated:'Frustrated', fear:'Fearful', greedy:'Greedy'
+    };
+    var emoEmoji = {
+      calm:'😌', confident:'💪', neutral:'😶', bored:'😐',
+      anxious:'😰', frustrated:'😤', fear:'😨', greedy:'🤑'
+    };
 
-    // ── 1. Mayor error (disciplina) ──
-    var errorTags = ['moved_sl','impulse','no_confirmation','overtrading','fomo','scaled_in'];
-    var worstTag = null, worstN = 0;
-    errorTags.forEach(function(k){ if(tagCounts[k]>worstN){ worstN=tagCounts[k]; worstTag=k; } });
-    var tagLabels = { moved_sl:'mover el stop loss', impulse:'trades impulsivos', no_confirmation:'entering without confirmation', overtrading:'overtrading', fomo:'FOMO', scaled_in:'scaling into losses' };
-    if (worstTag && worstN >= 2) {
-      var tagTrades = trades.filter(function(t){ return t.discipline_tag===worstTag; });
-      var tagPnl    = tagTrades.reduce(function(s,t){ return s+(t.pnl||0); }, 0);
-      var tagPnlStr = (tagPnl>=0?'+':'')+tagPnl.toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0});
-      var allAvg    = trades.reduce(function(s,t){return s+(t.pnl||0);},0)/trades.length;
-      var tagAvg    = tagTrades.reduce(function(s,t){return s+(t.pnl||0);},0)/tagTrades.length;
-      var pctWorse  = allAvg !== 0 ? Math.round(Math.abs((tagAvg-allAvg)/Math.abs(allAvg))*100) : 0;
+    // ── 1. Most costly behavior (ranked by total $ impact, not frequency) ──
+    var tagImpacts = calcImpactByTag(trades);
+    if (tagImpacts.length > 0) {
+      var top = tagImpacts[0];
+      var impactStr = top.totalImpact < 0
+        ? '<strong style="color:var(--red)">$' + Math.abs(top.totalImpact) + '</strong>'
+        : '+<strong style="color:var(--green)">$' + top.totalImpact + '</strong>';
+      var discDelta = top.deltaDisc;
+      var execDelta = top.deltaExec;
+      var pnlDelta  = top.deltaPnl;
+      var actionMsg = '';
+      if (top.tag === 'fomo' || top.tag === 'impulse' || top.tag === 'revenge') {
+        actionMsg = 'Stop and wait 5 minutes before the next trade when you notice this.';
+      } else if (top.tag === 'moved_sl') {
+        actionMsg = 'Set your stop before entry. Treat it as non-negotiable.';
+      } else if (top.tag === 'overtrading') {
+        actionMsg = 'Set a maximum of ' + Math.max(3, Math.round(trades.length / 20)) + ' trades/day based on your history.';
+      } else if (top.tag === 'scaled_in') {
+        actionMsg = 'When a trade moves against you, exit — never add size.';
+      }
       insights.push({
-        icon:'⚠', color:'var(--red)', bg:'rgba(224,85,85,0.07)', border:'rgba(224,85,85,0.2)',
-        label:'Most frequent error',
-        text:'Your main error is <strong>'+tagLabels[worstTag]+'</strong> — '+worstN+' trades'
-          +(tagPnl<0?', <strong style="color:var(--red)">'+tagPnlStr+'</strong> de impacto total':'')
-          +(pctWorse>10&&allAvg!==0?'. P&amp;L avg on those trades is <strong>'+pctWorse+'% worse</strong> than your average':'')+'.'
+        icon:'⚠', color:'var(--red)', bg:'rgba(224,85,85,0.06)', border:'rgba(224,85,85,0.18)',
+        label:'Most costly behavior',
+        text: '<strong>' + (tagLabels[top.tag]||top.tag) + '</strong> — ' + top.count + ' trades, ' + impactStr + ' total impact.'
+          + ' vs without it: Execution <strong style="color:'+(execDelta<0?'var(--red)':'var(--green)')+';">'+(execDelta>=0?'+':'')+execDelta+'pts</strong>'
+          + ', Discipline <strong style="color:'+(discDelta<0?'var(--red)':'var(--green)')+';">'+(discDelta>=0?'+':'')+discDelta+'pts</strong>'
+          + ', avg P&L <strong style="color:'+(pnlDelta<0?'var(--red)':'var(--green)')+';">'+(pnlDelta>=0?'+':'-')+'$'+Math.abs(pnlDelta)+'</strong>.'
+          + (actionMsg ? ' <em style="color:var(--teal)">→ ' + actionMsg + '</em>' : '')
       });
     }
 
-    // ── 2. Time pattern (Pattro) ──
-    var hourPnl = {}, hourCount = {};
-    trades.forEach(function(t){
-      if (!t.entry_time) return;
-      var h = new Date(t.entry_time).getHours();
-      hourPnl[h]   = (hourPnl[h]||0)+(t.pnl||0);
-      hourCount[h] = (hourCount[h]||0)+1;
-    });
-    var hours = Object.keys(hourPnl).filter(function(h){ return hourCount[h]>=3; });
-    if (hours.length >= 2) {
-      var bestH  = hours.reduce(function(a,b){ return (hourPnl[a]/hourCount[a])>(hourPnl[b]/hourCount[b])?a:b; });
-      var worstH = hours.reduce(function(a,b){ return (hourPnl[a]/hourCount[a])<(hourPnl[b]/hourCount[b])?a:b; });
-      if (bestH !== worstH) {
-        var fmt12 = function(h){ var hh=parseInt(h); return (hh%12||12)+(hh>=12?'pm':'am'); };
-        var bestAvg  = Math.round(hourPnl[bestH]/hourCount[bestH]);
-        var worstAvg = Math.round(hourPnl[worstH]/hourCount[worstH]);
+    // ── 2. Best & worst hours (Execution + Discipline, not just P&L) ──
+    var hourData = calcImpactByHour(trades);
+    if (hourData.length >= 2) {
+      var best  = hourData.slice().sort(function(a,b){ return b.quality - a.quality; })[0];
+      var worst = hourData.slice().sort(function(a,b){ return a.quality - b.quality; })[0];
+      if (best.hour !== worst.hour) {
+        var fmt12 = function(h){ return (h%12||12)+(h>=12?'pm':'am'); };
         insights.push({
-          icon:'◷', color:'var(--amber)', bg:'rgba(224,152,64,0.07)', border:'rgba(224,152,64,0.2)',
-          label:'Time pattern (Pattro)',
-          text:'Your best hour is <strong>'+fmt12(bestH)+'</strong> (avg <strong style="color:var(--green)">'+(bestAvg>=0?'+':'')+'$'+Math.abs(bestAvg)+'</strong>). '
-            +'Avoid trading at <strong>'+fmt12(worstH)+'</strong> — avg <strong style="color:var(--red)">'+(worstAvg>=0?'+':'')+'$'+worstAvg+'</strong> per trade.'
+          icon:'◷', color:'var(--amber)', bg:'rgba(224,152,64,0.06)', border:'rgba(224,152,64,0.18)',
+          label:'Time pattern',
+          text: 'Your best hour is <strong>' + fmt12(best.hour) + '</strong>: Exec <strong style="color:var(--green);">' + best.execution + '</strong>, Disc <strong style="color:var(--green);">' + best.discipline + '</strong>, avg <strong style="color:'+(best.avgPnl>=0?'var(--green)':'var(--red)')+'">'+(best.avgPnl>=0?'+':'')+best.avgPnl+'$</strong>.'
+          + ' Worst: <strong>' + fmt12(worst.hour) + '</strong>: Exec <strong style="color:var(--red);">' + worst.execution + '</strong>, Disc <strong style="color:var(--red);">' + worst.discipline + '</strong>, avg <strong style="color:var(--red);">' + worst.avgPnl + '$</strong>.'
+          + ' <em style="color:var(--teal)">→ Protect your worst window — stop trading at ' + fmt12(worst.hour) + '.</em>'
         });
       }
     }
 
-    // ── 3. Most costly emotion ──
-    var emoPnl = {}, emoCount = {};
-    trades.forEach(function(t){
-      if (!t.emotion) return;
-      emoPnl[t.emotion]   = (emoPnl[t.emotion]||0)+(t.pnl||0);
-      emoCount[t.emotion] = (emoCount[t.emotion]||0)+1;
-    });
-    var badEmos = ['anxious','fear','greedy','frustrated'];
-    var costlyEmo = null, costlyPnl = 0;
-    badEmos.forEach(function(e){
-      if (emoCount[e]>=2 && (emoPnl[e]||0)<costlyPnl){ costlyPnl=emoPnl[e]; costlyEmo=e; }
-    });
-    var emoLabels = { anxious:'ansioso', fear:'con miedo', greedy:'codicioso', frustrated:'frustrado' };
-    if (costlyEmo) {
-      var ceAvg = Math.round(emoPnl[costlyEmo]/emoCount[costlyEmo]);
+    // ── 3. Emotion with biggest impact on Discipline + Execution ──
+    var emoImpacts = calcImpactByEmotion(trades);
+    var worstEmo = emoImpacts.filter(function(e){ return e.avgPnl < 0 && e.deltaDisc < -10; })[0];
+    if (worstEmo) {
+      var discDropPct = Math.abs(Math.round(worstEmo.deltaDisc / (worstEmo.avgWithout.discipline || 1) * 100));
+      var pnlMultiplier = worstEmo.avgWithout.avgPnl !== 0
+        ? Math.abs(Math.round(worstEmo.avgPnl / worstEmo.avgWithout.avgPnl * 10) / 10)
+        : null;
       insights.push({
-        icon:'◈', color:'var(--teal)', bg:'rgba(62,207,207,0.07)', border:'rgba(62,207,207,0.2)',
-        label:'Most costly emotion',
-        text:'When trading <strong>'+emoLabels[costlyEmo]+'</strong> your avg is <strong style="color:var(--red)">$'+ceAvg+'</strong> per trade ('+emoCount[costlyEmo]+' trades). Consider pausing when you notice that emotion.'
+        icon:'◈', color:'var(--teal)', bg:'rgba(62,207,207,0.06)', border:'rgba(62,207,207,0.18)',
+        label:'Emotional impact',
+        text: 'When <strong>' + (emoEmoji[worstEmo.emotion]||'') + ' ' + (emoLabels[worstEmo.emotion]||worstEmo.emotion) + '</strong>:'
+          + ' Discipline drops <strong style="color:var(--red);">' + discDropPct + '%</strong>'
+          + ', Execution <strong style="color:var(--red);">' + worstEmo.deltaExec + 'pts</strong>'
+          + ', avg P&L <strong style="color:var(--red);">$' + worstEmo.avgPnl + '</strong>.'
+          + ' vs calm: <strong style="color:var(--green);">+$' + Math.abs(worstEmo.avgWithout.avgPnl) + '</strong>.'
+          + (pnlMultiplier && pnlMultiplier > 1 ? ' You lose <strong style="color:var(--red);">' + pnlMultiplier + '×</strong> more per trade.' : '')
+          + ' <em style="color:var(--teal)">→ Stop after 1 trade with this emotion.</em>'
       });
     }
 
-    // ── 4. Current streak ──
-    var sorted2 = trades.slice().sort(function(a,b){ return new Date(a.entry_time)-new Date(b.entry_time); });
-    var streak2 = 0, streakDir = null;
-    for (var si=sorted2.length-1; si>=0; si--) {
-      var sp = sorted2[si].pnl||0;
-      if (streakDir===null){ streakDir=sp>=0?'win':'loss'; streak2=1; }
-      else if ((streakDir==='win'&&sp>=0)||(streakDir==='loss'&&sp<0)) streak2++;
-      else break;
+    // ── 4. Color day correlation ──
+    var colorImpact = calcImpactByColorDay(trades);
+    if (colorImpact.green && colorImpact.red) {
+      var g = colorImpact.green, r = colorImpact.red;
+      var discDiff = g.discipline - r.discipline;
+      var pnlDiff  = g.avgPnl - r.avgPnl;
+      if (Math.abs(pnlDiff) > 50 || Math.abs(discDiff) > 15) {
+        insights.push({
+          icon:'🟢', color:'var(--green)', bg:'rgba(61,186,114,0.06)', border:'rgba(61,186,114,0.18)',
+          label:'Color day impact',
+          text: 'Green days: Discipline <strong style="color:var(--green);">' + g.discipline + '</strong>, avg <strong style="color:'+(g.avgPnl>=0?'var(--green)':'var(--red)')+'">'+(g.avgPnl>=0?'+':'')+g.avgPnl+'$</strong>.'
+          + ' Red days: Discipline <strong style="color:var(--red);">' + r.discipline + '</strong>, avg <strong style="color:var(--red);">'+r.avgPnl+'$</strong>.'
+          + ' Delta: <strong style="color:var(--green);">+'+(pnlDiff>=0?pnlDiff:pnlDiff)+'$</strong> per trade on green days.'
+          + ' <em style="color:var(--teal)">→ On red days, cut position size by 50%.</em>'
+        });
+      }
     }
-    if (streak2 >= 3) {
-      insights.push(streakDir==='win' ? {
-        icon:'↑', color:'var(--green)', bg:'rgba(61,186,114,0.07)', border:'rgba(61,186,114,0.2)',
-        label:'Winning streak',
-        text:'You have <strong>'+streak2+' consecutive winning trades.</strong> High confidence moment — maintain discipline and don\'t over-size positions.'
-      } : {
-        icon:'↓', color:'var(--red)', bg:'rgba(224,85,85,0.07)', border:'rgba(224,85,85,0.2)',
-        label:'Losing streak',
-        text:'You have <strong>'+streak2+' consecutive losses.</strong> Statistics show that revenge trades worsen outcomes. Considera tomar un descanso.'
-      });
+
+    // ── 5. Mental score correlation ──
+    var msCorr = calcMentalScorePnlCorrelation(trades);
+    if (msCorr && msCorr.high && msCorr.low && msCorr.highCount >= 3 && msCorr.lowCount >= 3) {
+      var pnlHigh = msCorr.high.avgPnl;
+      var pnlLow  = msCorr.low.avgPnl;
+      if (Math.abs(pnlHigh - pnlLow) > 50) {
+        insights.push({
+          icon:'🧠', color:'var(--teal)', bg:'rgba(62,207,207,0.06)', border:'rgba(62,207,207,0.18)',
+          label:'Mental Score correlation',
+          text: 'When Mental Score > 75: avg P&L <strong style="color:'+(pnlHigh>=0?'var(--green)':'var(--red)')+'">'+(pnlHigh>=0?'+':'')+pnlHigh+'$</strong> ('+ msCorr.highCount+' days).'
+          + ' When < 50: avg P&L <strong style="color:var(--red);">' + pnlLow + '$</strong> (' + msCorr.lowCount + ' days).'
+          + ' <em style="color:var(--teal)">→ Use your score to decide position size before trading.</em>'
+        });
+      }
     }
 
     if (!insights.length) return '';
 
     var out = '<div class="panel fade-in" style="padding:0;overflow:hidden">';
     out += '<div style="padding:12px 18px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">';
-    out += '<span style="font-size:10px;font-weight:700;color:var(--teal);letter-spacing:.3px">&#9672; Insights — What your data says</span>';
-    out += '<span style="font-size:9px;color:var(--text3)">'+trades.length+' trades analyzed</span>';
+    out += '<span style="font-size:10px;font-weight:700;color:var(--teal);letter-spacing:.3px">◈ Insights — What your data says</span>';
+    out += '<span style="font-size:9px;color:var(--text3)">' + trades.length + ' trades analyzed</span>';
     out += '</div>';
-    out += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">';
-    insights.forEach(function(ins, i2){
-      var borderR = i2 < insights.length-1 ? 'border-right:1px solid var(--border);' : '';
-      // Replace generic <strong> (white/bold) with colored ones matching ins.color
-      var coloredText = ins.text.replace(/<strong>/g, '<strong style="color:'+ins.color+'">');
-      out += '<div style="padding:14px 18px;'+borderR+'background:'+ins.bg+';border-bottom:1px solid var(--border);border-left:3px solid '+ins.color+'">';
+    out += '<div style="display:flex;flex-direction:column;gap:0">';
+    insights.forEach(function(ins, i) {
+      var borderB = i < insights.length-1 ? 'border-bottom:1px solid var(--border);' : '';
+      out += '<div style="padding:14px 18px;' + borderB + 'background:'+ins.bg+';border-left:3px solid '+ins.color+'">';
       out += '<div style="display:flex;align-items:center;gap:7px;margin-bottom:7px">';
       out += '<span style="font-size:12px;color:'+ins.color+';font-weight:800">'+ins.icon+'</span>';
       out += '<span style="font-size:9px;color:'+ins.color+';text-transform:uppercase;letter-spacing:.9px;font-weight:700;opacity:.85">'+ins.label+'</span>';
       out += '</div>';
-      out += '<div style="font-size:11px;color:var(--text2);line-height:1.7">'+coloredText+'</div>';
+      out += '<div style="font-size:11px;color:var(--text2);line-height:1.7">'+ins.text+'</div>';
       out += '</div>';
     });
     out += '</div></div>';
@@ -4555,16 +4574,41 @@ function calcRulesDisciplineScore(rulesObj, trades) {
 }
 
 // ── Discipline tag points ──
+// ── Discipline behavior scores (0-100) ──
+// Measures whether the trader followed their system
 var DISCIPLINE_TAG_PTS = {
-  // Scale: 0-30. Reflects true severity of each error in trading.
-  // clean = full marks. moved_sl = worst error (invalidates the plan).
-  clean:            30,  // 100% - perfect execution
-  no_confirmation:  24,  //  80% - minor: missed confirmation signal
-  fomo:             21,  //  70% - psychological but recoverable
-  impulse:          18,  //  60% - breaks process, more serious
-  overtrading:      15,  //  50% - destructive pattern
-  scaled_in:         9,  //  30% - adding to a loser, very serious
-  moved_sl:          6   //  20% - worst: invalidates the entire plan
+  clean:            30,
+  no_confirmation:  24,
+  fomo:             21,
+  impulse:          18,
+  overtrading:      15,
+  scaled_in:         9,
+  moved_sl:          6
+};
+
+// ── Behavior tag scores for Discipline (0-100 scale) ──
+var BEHAVIOR_SCORE = {
+  clean:           100,
+  no_confirmation:  80,
+  fomo:             50,  // psychological + rule break
+  impulse:          40,
+  overtrading:      30,
+  scaled_in:        20,
+  moved_sl:         15,
+  revenge:          10,
+};
+
+// ── Emotion scores for Mind (0-100 scale) ──
+// These measure psychological state, NOT discipline
+var EMOTION_CONTROL_SCORE = {
+  calm:        100,
+  neutral:      85,
+  confident:    75,
+  bored:        60,
+  anxious:      45,
+  fear:         35,
+  frustrated:   25,
+  greedy:       15
 };
 
 // ── Unified daily Discipline Score (0–100) ──
@@ -4643,14 +4687,14 @@ function calcDailyDisciplineScore(dateStr) {
 
 // ── Emotion points (0–100 scale, mapped to 0–40 for Mind score) ──
 var EMOTION_PTS = {
-  calm:        95,
-  neutral:     85,
-  confident:   65,
-  bored:       60,
-  anxious:     45,
-  frustrated:  30,
-  fear:        25,
-  greedy:      15
+  calm:        100,
+  neutral:      85,
+  confident:    75,
+  bored:        60,
+  anxious:      45,
+  frustrated:   25,
+  fear:         35,
+  greedy:       15
 };
 
 // ── Infer emotion from trade behavior when no emotion registered ──
@@ -4917,47 +4961,371 @@ var ENTRY_TYPE_PTS = {
   fomo:             5
 };
 
+// ── Per-trade Execution Score (0-100) ──
+// Measures: how well did you execute the technical plan?
+// Does NOT use emotion — a losing trade can score 95
 function calcTradeExecution(trade) {
-  // R:R score (40pts)
-  var rrPts = 0;
   var rr_planned  = parseFloat(trade.rr_planned)  || 0;
   var rr_achieved = parseFloat(trade.rr_achieved) || 0;
-  if (rr_planned > 0 && rr_achieved !== 0) {
-    var rrPct = rr_achieved / rr_planned;
-    if      (rrPct >= 1.00) rrPts = 40;
-    else if (rrPct >= 0.75) rrPts = 30;
-    else if (rrPct >= 0.50) rrPts = 20;
-    else if (rrPct >= 0.25) rrPts = 10;
-    else                    rrPts = 0;
-  } else {
-    rrPts = 0; // no R:R registered
+  var hasRR = rr_planned > 0 && rr_achieved !== 0;
+
+  // ── RR Score (40pts) — clamp(achieved/planned, 0→1)*100 ──
+  var rrScore = 0;
+  if (hasRR) {
+    var rrRatio = rr_achieved / rr_planned;
+    rrScore = Math.min(100, Math.max(0, rrRatio)) * 100;
   }
+  var rrPts = hasRR ? Math.round(rrScore * 0.40) : null; // null = no data
 
-  // Entry type (35pts)
+  // ── Entry Quality (35pts) ──
+  // Based on discipline tag — does the entry reflect following the plan?
   var tag = (trade.discipline_tag || 'clean').toLowerCase();
-  var entryPts = ENTRY_TYPE_PTS[tag] !== undefined ? ENTRY_TYPE_PTS[tag] : 35;
+  var entryScoreMap = {
+    clean:           100,  // followed plan perfectly
+    no_confirmation:  80,  // minor — entered without full confirmation
+    moved_sl:         70,  // entered ok, managed poorly
+    scaled_in:        60,  // entered then scaled into loss
+    overtrading:      40,  // beyond optimal frequency
+    impulse:          25,  // broke entry rules
+    fomo:             20,  // chased price
+    revenge:          10   // entered emotionally after loss
+  };
+  var entryScore = entryScoreMap[tag] !== undefined ? entryScoreMap[tag] : 100;
+  var entryPts = Math.round(entryScore * 0.35);
 
-  // Result (25pts)
-  var pnl = trade.pnl || 0;
-  var resultPts;
-  var isWinner    = pnl > 0;
-  var isBreakeven = Math.abs(pnl) <= 5;
-  var hasViolation = tag !== 'clean' && tag !== 'moved_sl' && tag !== 'scaled_in' && tag !== 'no_confirmation';
-  // moved_sl/scaled_in/no_confirmation = discipline error but not "emotional" violation for result scoring
-  var isEmotionalViolation = (tag === 'impulse' || tag === 'fomo' || tag === 'overtrading');
+  // ── Exit Quality (25pts) ──
+  // Did you exit according to plan? Use RR ratio as proxy
+  var exitScore = 70; // default neutral if no data
+  if (hasRR) {
+    var rrR = rr_achieved / rr_planned;
+    if (rrR >= 1.0)       exitScore = 100; // hit target or beyond
+    else if (rrR >= 0.8)  exitScore = 85;  // close to target
+    else if (rrR >= 0.5)  exitScore = 65;  // took some profit early
+    else if (rrR >= 0.25) exitScore = 45;  // exited too early
+    else                  exitScore = 25;  // barely any R:R captured
+  }
+  var exitPts = Math.round(exitScore * 0.25);
 
-  if (isWinner)         resultPts = 25;
-  else if (isBreakeven) resultPts = 15;
-  else if (!isEmotionalViolation) resultPts = 10; // loser within plan
-  else                  resultPts = 0;  // loser with emotional violation
+  // ── Total ──
+  var totalPts, availablePts;
+  if (rrPts === null) {
+    // No RR data — weight Entry + Exit over 60%
+    availablePts = 60;
+    totalPts = Math.round((entryPts + exitPts) / 60 * 100);
+  } else {
+    availablePts = 100;
+    totalPts = rrPts + entryPts + exitPts;
+  }
+  totalPts = Math.min(100, Math.max(0, totalPts));
 
   return {
-    rrPts:     rrPts,
-    entryPts:  entryPts,
-    resultPts: resultPts,
-    total:     rrPts + entryPts + resultPts
+    rrScore:    hasRR ? Math.round(rrScore) : null,
+    entryScore: entryScore,
+    exitScore:  exitScore,
+    rrPts:      rrPts,
+    entryPts:   entryPts,
+    exitPts:    exitPts,
+    total:      totalPts,
+    hasRR:      hasRR
   };
 }
+
+// ── Per-trade Discipline Score (0-100) ──
+// Measures: did you follow your system?
+function calcTradeDiscipline(trade, rulesObj, checklistPct) {
+  // Behavior score from tag
+  var tag = (trade.discipline_tag || 'clean').toLowerCase();
+  var behaviorScore = BEHAVIOR_SCORE[tag] !== undefined ? BEHAVIOR_SCORE[tag] : 100;
+
+  // Rules score — passed in from day-level check
+  var rulesScore = (rulesObj !== undefined && rulesObj !== null) ? rulesObj : 100;
+
+  // Checklist score — passed in from day session
+  var clScore = (checklistPct !== undefined && checklistPct !== null) ? checklistPct : null;
+
+  var total;
+  if (clScore === null) {
+    // No checklist — weight rules(50%) + behavior(50%)
+    total = Math.round(rulesScore * 0.50 + behaviorScore * 0.50);
+  } else {
+    // Full: rules(40%) + checklist(30%) + behavior(30%)
+    total = Math.round(rulesScore * 0.40 + clScore * 0.30 + behaviorScore * 0.30);
+  }
+
+  return {
+    behaviorScore: behaviorScore,
+    rulesScore:    rulesScore,
+    clScore:       clScore,
+    total:         Math.min(100, Math.max(0, total))
+  };
+}
+
+// ── Per-trade Mind Score (0-100) ──
+// Measures: psychological state — state + control
+function calcTradeMind(trade, colorDay) {
+  // Emotional state from color day
+  var stateMap = { green: 100, yellow: 70, red: 40, unknown: 70 };
+  var stateScore = stateMap[colorDay || 'unknown'] || 70;
+
+  // Emotional control from emotion tag
+  var emo = (trade.emotion || 'neutral').toLowerCase();
+  var controlScore = EMOTION_CONTROL_SCORE[emo] !== undefined ? EMOTION_CONTROL_SCORE[emo] : 70;
+
+  var total = Math.round(stateScore * 0.50 + controlScore * 0.50);
+
+  return {
+    stateScore:   stateScore,
+    controlScore: controlScore,
+    colorDay:     colorDay || 'unknown',
+    emotion:      emo,
+    total:        Math.min(100, Math.max(0, total))
+  };
+}
+
+// ── Per-trade Mental Score (composite) ──
+function calcTradeMentalScore(trade, rulesScore, checklistPct, colorDay) {
+  var exec = calcTradeExecution(trade);
+  var disc = calcTradeDiscipline(trade, rulesScore, checklistPct);
+  var mind = calcTradeMind(trade, colorDay);
+  var total = Math.round(disc.total * 0.40 + mind.total * 0.35 + exec.total * 0.25);
+  return {
+    execution:  exec.total,
+    discipline: disc.total,
+    mind:       mind.total,
+    total:      Math.min(100, Math.max(0, total)),
+    exec:       exec,
+    disc:       disc,
+    mind_obj:   mind
+  };
+}
+
+// ══════════════════════════════════════════════════════════════
+// CORRELATION ENGINE
+// For each dimension: split trades into WITH vs WITHOUT,
+// compute avg scores, calculate impact delta
+// ══════════════════════════════════════════════════════════════
+
+// ── Helper: get scores for a single trade ──
+function getTradeScores(trade) {
+  var colorDay = 'unknown';
+  var moodForDay = getMoodForDate(trade.entry_time ? trade.entry_time.slice(0,10) : null);
+  if (moodForDay) colorDay = moodForDay.level || 'unknown';
+
+  var exec = calcTradeExecution(trade);
+  var disc = calcTradeDiscipline(trade, 100, null); // simplified: no rules/checklist per-trade
+  var mind = calcTradeMind(trade, colorDay);
+  var pnl  = trade.pnl || 0;
+
+  // R multiple (risk-normalized P&L)
+  var rr_p = parseFloat(trade.rr_planned) || 0;
+  var rr_a = parseFloat(trade.rr_achieved) || 0;
+  var rMultiple = rr_p > 0 ? rr_a : null;
+
+  return {
+    execution:  exec.total,
+    discipline: disc.total,
+    mind:       mind.total,
+    pnl:        pnl,
+    rMultiple:  rMultiple,
+    win:        pnl > 0
+  };
+}
+
+// ── Helper: average a set of trade score objects ──
+function avgScores(tradeScoreArr) {
+  if (!tradeScoreArr.length) return null;
+  var n = tradeScoreArr.length;
+  var sum = { execution:0, discipline:0, mind:0, pnl:0, wins:0, rMultiples:[] };
+  tradeScoreArr.forEach(function(s) {
+    sum.execution  += s.execution;
+    sum.discipline += s.discipline;
+    sum.mind       += s.mind;
+    sum.pnl        += s.pnl;
+    if (s.win) sum.wins++;
+    if (s.rMultiple !== null) sum.rMultiples.push(s.rMultiple);
+  });
+  var avgR = sum.rMultiples.length ? sum.rMultiples.reduce(function(a,b){return a+b;},0)/sum.rMultiples.length : null;
+  return {
+    count:      n,
+    execution:  Math.round(sum.execution / n),
+    discipline: Math.round(sum.discipline / n),
+    mind:       Math.round(sum.mind / n),
+    avgPnl:     Math.round(sum.pnl / n),
+    totalPnl:   Math.round(sum.pnl),
+    winRate:    Math.round(sum.wins / n * 100),
+    avgR:       avgR !== null ? Math.round(avgR * 100) / 100 : null
+  };
+}
+
+// ── 1. Impact by behavior tag ──
+// Returns array sorted by total impact (frequency × avg loss)
+function calcImpactByTag(trades) {
+  if (!trades || trades.length < 5) return [];
+
+  var errorTags = ['moved_sl','fomo','impulse','overtrading','scaled_in','no_confirmation','revenge'];
+  var results = [];
+
+  errorTags.forEach(function(tag) {
+    var withTag    = trades.filter(function(t){ return (t.discipline_tag||'clean') === tag; });
+    var withoutTag = trades.filter(function(t){ return (t.discipline_tag||'clean') !== tag; });
+
+    if (withTag.length < 2) return; // not enough data
+
+    var withScores    = withTag.map(getTradeScores);
+    var withoutScores = withoutTag.map(getTradeScores);
+
+    var avgWith    = avgScores(withScores);
+    var avgWithout = avgScores(withoutScores);
+    if (!avgWith || !avgWithout) return;
+
+    var totalImpact = avgWith.totalPnl; // total $ lost on this tag
+    var impactPerTrade = avgWith.avgPnl - avgWithout.avgPnl; // vs without
+
+    results.push({
+      tag:           tag,
+      count:         withTag.length,
+      avgWith:       avgWith,
+      avgWithout:    avgWithout,
+      deltaExec:     avgWith.execution  - avgWithout.execution,
+      deltaDisc:     avgWith.discipline - avgWithout.discipline,
+      deltaMind:     avgWith.mind       - avgWithout.mind,
+      deltaPnl:      Math.round(impactPerTrade),
+      totalImpact:   Math.round(totalImpact),
+      impactScore:   Math.abs(totalImpact) * withTag.length // rank by total damage
+    });
+  });
+
+  // Sort by total impact (most damaging first)
+  results.sort(function(a,b){ return Math.abs(b.totalImpact) - Math.abs(a.totalImpact); });
+  return results;
+}
+
+// ── 2. Impact by emotion ──
+function calcImpactByEmotion(trades) {
+  if (!trades || trades.length < 5) return [];
+
+  var emotions = ['calm','confident','neutral','bored','anxious','frustrated','fear','greedy'];
+  var results = [];
+
+  emotions.forEach(function(emo) {
+    var withEmo    = trades.filter(function(t){ return (t.emotion||'neutral') === emo; });
+    var withoutEmo = trades.filter(function(t){ return (t.emotion||'neutral') !== emo; });
+
+    if (withEmo.length < 3) return;
+
+    var avgWith    = avgScores(withEmo.map(getTradeScores));
+    var avgWithout = avgScores(withoutEmo.map(getTradeScores));
+    if (!avgWith || !avgWithout) return;
+
+    results.push({
+      emotion:       emo,
+      count:         withEmo.length,
+      avgWith:       avgWith,
+      avgWithout:    avgWithout,
+      deltaExec:     avgWith.execution  - avgWithout.execution,
+      deltaDisc:     avgWith.discipline - avgWithout.discipline,
+      deltaPnl:      Math.round(avgWith.avgPnl - avgWithout.avgPnl),
+      totalPnl:      Math.round(avgWith.totalPnl),
+      avgPnl:        Math.round(avgWith.avgPnl)
+    });
+  });
+
+  // Sort: negative P&L emotions first
+  results.sort(function(a,b){ return a.avgPnl - b.avgPnl; });
+  return results;
+}
+
+// ── 3. Impact by hour ──
+function calcImpactByHour(trades) {
+  if (!trades || trades.length < 5) return [];
+
+  var hourMap = {};
+  trades.forEach(function(t) {
+    if (!t.entry_time) return;
+    var h = new Date(t.entry_time).getHours();
+    if (!hourMap[h]) hourMap[h] = [];
+    hourMap[h].push(t);
+  });
+
+  var results = [];
+  Object.keys(hourMap).forEach(function(h) {
+    var ts = hourMap[h];
+    if (ts.length < 3) return;
+    var scores = avgScores(ts.map(getTradeScores));
+    if (!scores) return;
+    results.push({
+      hour:       parseInt(h),
+      count:      ts.length,
+      execution:  scores.execution,
+      discipline: scores.discipline,
+      mind:       scores.mind,
+      avgPnl:     scores.avgPnl,
+      totalPnl:   scores.totalPnl,
+      winRate:    scores.winRate,
+      quality:    Math.round((scores.execution + scores.discipline) / 2) // composite quality
+    });
+  });
+
+  results.sort(function(a,b){ return a.hour - b.hour; });
+  return results;
+}
+
+// ── 4. Impact by color day ──
+function calcImpactByColorDay(trades) {
+  if (!trades || trades.length < 5) return {};
+
+  var groups = { green:[], yellow:[], red:[], unknown:[] };
+  trades.forEach(function(t) {
+    var d = t.entry_time ? t.entry_time.slice(0,10) : null;
+    var mood = getMoodForDate(d);
+    var level = mood ? (mood.level || 'unknown') : 'unknown';
+    if (groups[level]) groups[level].push(t);
+  });
+
+  var result = {};
+  ['green','yellow','red'].forEach(function(level) {
+    var ts = groups[level];
+    if (!ts.length) return;
+    var scores = avgScores(ts.map(getTradeScores));
+    if (!scores) return;
+    result[level] = {
+      count:      ts.length,
+      execution:  scores.execution,
+      discipline: scores.discipline,
+      mind:       scores.mind,
+      avgPnl:     scores.avgPnl,
+      totalPnl:   scores.totalPnl,
+      winRate:    scores.winRate
+    };
+  });
+
+  return result;
+}
+
+// ── 5. Mental Score correlation with P&L ──
+function calcMentalScorePnlCorrelation(trades) {
+  if (!trades || trades.length < 10) return null;
+
+  var high = [], mid = [], low = [];
+  trades.forEach(function(t) {
+    var d = t.entry_time ? t.entry_time.slice(0,10) : null;
+    if (!d) return;
+    var ms = calcMentalScore(d);
+    if (!ms || ms.total === null) return;
+    if (ms.total >= 75)      high.push(t);
+    else if (ms.total >= 50) mid.push(t);
+    else                     low.push(t);
+  });
+
+  return {
+    high: high.length ? avgScores(high.map(getTradeScores)) : null,
+    mid:  mid.length  ? avgScores(mid.map(getTradeScores))  : null,
+    low:  low.length  ? avgScores(low.map(getTradeScores))  : null,
+    highCount: high.length, midCount: mid.length, lowCount: low.length
+  };
+}
+
+
 
 // ── Unified daily Execution Score (0–100) ──
 function calcDailyExecutionScore(dateStr) {
