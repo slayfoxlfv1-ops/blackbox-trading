@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774412018 -->
+<!-- v1774412229 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -3255,9 +3255,42 @@ async function loadAccountData(id, silent) {
     }
     out += '</div>';
 
-    // ── FAR RIGHT: Checklist + Mood + Rules status ──
+    // ── FAR RIGHT: Checklist + Mood + Rules status pills ──
     out += '<div style="display:flex;gap:10px;flex-shrink:0">';
 
+    // Checklist pill
+    var _clHasItems2 = (currentChecklistItems||[]).filter(function(x){return x.is_active;}).length > 0;
+    var _clToday2 = (currentChecklistSessions||[]).find(function(s){return s.session_date===today;});
+    var _clLabel2 = !_clHasItems2 ? 'Not set' : _clToday2 ? '✓ Done' : '✗ Pending';
+    var _clColor2 = !_clHasItems2 ? 'var(--text3)' : _clToday2 ? 'var(--green)' : 'var(--amber)';
+    out += '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;min-width:62px">';
+    out += '<div style="font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Checklist</div>';
+    out += '<div style="font-size:10px;font-weight:700;color:'+_clColor2+'">'+_clLabel2+'</div>';
+    out += '</div>';
+
+    // Mood pill
+    var _todayMood2 = getMoodForDate(today);
+    var _moodLabel2 = _todayMood2 ? (_todayMood2.level==='green'?'🟢 Green':_todayMood2.level==='yellow'?'🟡 Yellow':_todayMood2.level==='red'?'🔴 Red':'⚪ Unknown') : '— Check';
+    var _moodColor2 = _todayMood2 ? (_todayMood2.level==='green'?'var(--green)':_todayMood2.level==='yellow'?'var(--amber)':_todayMood2.level==='red'?'var(--red)':'var(--text3)') : 'var(--text3)';
+    out += '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;min-width:62px">';
+    out += '<div style="font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Mood check</div>';
+    out += '<div style="font-size:10px;font-weight:700;color:'+_moodColor2+'">'+_moodLabel2+'</div>';
+    out += '</div>';
+
+    // Rules pill
+    var _activeRules2 = (currentRules||[]).filter(function(r){return r.is_active;});
+    var _rulesLabel2 = _activeRules2.length ? '✓ Active' : 'Not set';
+    var _rulesColor2 = _activeRules2.length ? 'var(--green)' : 'var(--text3)';
+    out += '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;min-width:62px">';
+    out += '<div style="font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Rules</div>';
+    out += '<div style="font-size:10px;font-weight:700;color:'+_rulesColor2+'">'+_rulesLabel2+'</div>';
+    out += '</div>';
+
+    out += '</div>'; // end FAR RIGHT
+    out += '</div>'; // end main banner
+
+    return out;
+  })() +
 
   // ── ROW 0b: Correlation-powered Insights ──
   (function(){
