@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774456919 -->
+<!-- v1774471621 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -5621,7 +5621,7 @@ function renderRulesView() {
   html += '<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;gap:18px">'
     + '<div style="text-align:center;flex-shrink:0">'
     + '<div style="font-size:38px;font-weight:800;color:' + dcolor + ';line-height:1;font-family:inherit">' + dscore.score + '</div>'
-    + '<div style="font-size:9px;color:var(--text3);margin-top:3px;text-transform:uppercase;letter-spacing:.8px">score hoy</div>'
+    + '<div style="font-size:9px;color:var(--text3);margin-top:3px;text-transform:uppercase;letter-spacing:.8px">score today</div>'
     + '</div>'
     + '<div style="flex:1">'
     + '<div style="height:5px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-bottom:8px">'
@@ -5629,7 +5629,7 @@ function renderRulesView() {
     + '<div style="font-size:12px;color:var(--text2);font-weight:600">' + dlabel + '</div>'
     + '<div style="font-size:10px;color:var(--text3);margin-top:2px">'
     + activeCount + ' rule' + (activeCount!==1?'s':'') + ' active'
-    + (activeCount<3?' · <span style="color:var(--amber)">activa ' + (3-activeCount) + ' mas para score completo</span>':'')
+    + (activeCount<3?' · <span style="color:var(--amber)">activa ' + (3-activeCount) + ' more to complete score</span>':'')
     + ' · ' + violations.length + ' violation' + (violations.length!==1?'s':'') + ' today'
     + '</div></div></div>';
 
@@ -6729,7 +6729,7 @@ function renderDisciplineView() {
   el.innerHTML='<div class="tab-bar fade-in">'+
     '<button class="tab-btn '+(activeTab==='rules'?'active':'')+'" onclick="switchDiscTab(\'rules\')">Rules</button>'+
     '<button class="tab-btn '+(activeTab==='checklist'?'active':'')+'" onclick="switchDiscTab(\'checklist\')">Checklist</button>'+
-    '<button class="tab-btn '+(activeTab==='operativa'?'active':'')+'" onclick="switchDiscTab(\'operativa\')">Trading</button>'+
+    '<button class="tab-btn '+(activeTab==='execution'?'active':'')+'" onclick="switchDiscTab(\'operativa\')">Trading</button>'+
     '</div><div id="disc-tab-content"></div>';
   switchDiscTab(activeTab);
 }
@@ -6743,7 +6743,7 @@ function switchDiscTab(tab) {
   if (!el) return;
   if (tab==='rules')     { initRulesTemp(); renderRulesTab(el); }
   if (tab==='checklist') renderChecklistTab(el);
-  if (tab==='operativa') renderOperativaTab(el);
+  if (tab==='execution') renderOperativaTab(el);
 }
 
 function renderRulesTab(el) {
@@ -9674,7 +9674,7 @@ async function generateMindCoach() {
     + 'EMOCIONES → RESULTADOS:\n'+(emoSummary||'No data de emociones')+'\n\n'
     + 'MEJORES HORAS: '+hourSummary+'\n\n'
     + 'LAST NOTES:\n'+(allNotes||'No notes')+'\n\n'
-    + 'Please generate a deep psychological analysis con:\n1. DIAGNOSTICO: patron mental dominante\n2. PATRON DESTRUCTIVO: error principal\n3. FORTALEZA: lo que hace bien\n4. EMOCIONES: como afectan resultados\n5. TIEMPO: best and worst moments\n6. PLAN: 3 concrete actions esta semana\n7. MENSAJE PERSONAL: frase poderosa. Se directo con datos reales. Max 450 palabras.';
+    + 'Please generate a deep psychological analysis con:\n1. DIAGNOSTICO: patron mental dominante\n2. PATRON DESTRUCTIVO: error principal\n3. FORTALEZA: lo que hace bien\n4. EMOCIONES: how they affect results\n5. TIEMPO: best and worst moments\n6. PLAN: 3 concrete actions esta semana\n7. PERSONAL MESSAGE: powerful phrase. Be direct con datos reales. Max 450 palabras.';
 
   try {
     var text = await callCoach(prompt, 1000);

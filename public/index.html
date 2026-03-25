@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774454202 -->
+<!-- v1774471554 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -791,7 +791,7 @@ var TRANSLATIONS = {
     pain_p:"Most traders have a solid edge. They lose because of what happens between trades — the decisions driven by fear, frustration, and impulse that they can't see in real time.",
   },
   es: {
-    nav_how:'Cómo funciona', nav_pricing:'Precios', nav_login:'Entrar', nav_cta:'Registrarse →',
+    nav_how:'Cómo funciona', nav_pricing:'Precios', nav_login:'Login', nav_cta:'Sign Up →',
     hero_badge:'Motor de Psicología Trading',
     hero_trust:'$15/mes · Cancela cuando quieras',
     hero_cta:'Analizar mis trades →', hero_cta2:'Ver cómo funciona',
@@ -907,6 +907,10 @@ function applyTranslations(lang) {
     if (t[key] !== undefined) el.innerHTML = t[key];
   });
   document.documentElement.lang = lang;
+  // Re-add animation classes destroyed by innerHTML swap
+  document.querySelectorAll('.hero .fu').forEach(function(el) {
+    el.classList.add('in');
+  });
 }
 
 
