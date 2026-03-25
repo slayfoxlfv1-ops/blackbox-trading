@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774412792 -->
+<!-- v1774413415 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -1541,10 +1541,12 @@ function getMoodForDate(dateStr) {
   if (!dateStr) return null;
   var d = dateStr.slice(0, 10);
   // 1. Check trading_days cache (Fase 2 — most authoritative)
-  var td = getTradingDay(d);
-  if (td && td.color_day && td.color_day !== 'unknown') {
-    return { session_date: d, level: td.color_day, source: td.color_source };
-  }
+  try {
+    var td = getTradingDay(d);
+    if (td && td.color_day && td.color_day !== 'unknown') {
+      return { session_date: d, level: td.color_day, source: td.color_source };
+    }
+  } catch(e) {}
   // 2. Check currentMoodSessions (Supabase mood_sessions)
   var fromDb = (currentMoodSessions || []).find(function(s) {
     return (s.session_date || s.date) === d;
@@ -3445,7 +3447,7 @@ async function loadAccountData(id, silent) {
   '<div class="panel" style="padding:16px;cursor:pointer" onclick=\'navigateTo(\'psychology\')\'>' +
   '<div style="font-size:9px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Mind</div>' +
   '<div style="display:flex;align-items:baseline;gap:4px;margin-bottom:8px">' +
-  '<span style="font-size:36px;font-weight:800;color:'+(mindData.total>=75?'var(--green)':mindData.total>=50?'var(--amber)':'var(--red)')+'">'+mindData.total+'</span>' +
+  '<span style="font-size:36px;font-weight:800;color:'+(mindData.total!==null&&mindData.total>=75?'var(--green)':mindData.total!==null&&mindData.total>=50?'var(--amber)':'var(--red)')+'">'+((mindData.total!==null&&!isNaN(mindData.total))?mindData.total:'—')+'</span>' +
   '<span style="font-size:10px;color:var(--text3)">/100</span></div>' +
   '<div style="font-size:10px;color:var(--text2);font-weight:600;margin-bottom:8px">'+mindData.label+'</div>' +
   '<div style="display:flex;flex-direction:column;gap:4px">' +
@@ -3458,7 +3460,7 @@ async function loadAccountData(id, silent) {
   '<div class="panel" style="padding:16px;cursor:pointer" onclick=\'navigateTo(\'psychology\')\'>' +
   '<div style="font-size:9px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Discipline</div>' +
   '<div style="display:flex;align-items:baseline;gap:4px;margin-bottom:8px">' +
-  '<span style="font-size:36px;font-weight:800;color:'+(discData.total>=75?'var(--green)':discData.total>=50?'var(--amber)':'var(--red)')+'">'+discData.total+'</span>' +
+  '<span style="font-size:36px;font-weight:800;color:'+(discData.total!==null&&discData.total>=75?'var(--green)':discData.total!==null&&discData.total>=50?'var(--amber)':'var(--red)')+'">'+discData.total+'</span>' +
   '<span style="font-size:10px;color:var(--text3)">/100</span></div>' +
   '<div style="font-size:10px;color:var(--text2);font-weight:600;margin-bottom:8px">'+discData.label+'</div>' +
   '<div style="display:flex;flex-direction:column;gap:4px">' +
@@ -5014,8 +5016,8 @@ function calcDailyMindScore(dateStr) {
 
   var label = total >= 90 ? 'Elite mindset 🏆'
             : total >= 70 ? 'Solid mindset 🧘'
-            : total >= 50 ? 'Estable ⚠️'
-            : total >= 30 ? 'En riesgo 🔶'
+            : total >= 50 ? 'Stable ⚠️'
+            : total >= 30 ? 'At risk 🔶'
             : 'Critical state 🔴';
 
   return {
@@ -5438,10 +5440,20 @@ function calcDailyExecutionScore(dateStr) {
 
   var execResults = dayTrades.map(calcTradeExecution);
 
-  var avgRR     = Math.round(execResults.reduce(function(s,e){ return s+e.rrPts; },0)    / execResults.length);
-  var avgEntry  = Math.round(execResults.reduce(function(s,e){ return s+e.entryPts; },0) / execResults.length);
-  var avgResult = Math.round(execResults.reduce(function(s,e){ return s+e.resultPts; },0)/ execResults.length);
-  var total     = Math.min(100, avgRR + avgEntry + avgResult);
+  // Handle null rrPts (when no R:R data available)
+  var rrResults = execResults.filter(function(e){ return e.rrPts !== null; });
+  var avgRR     = rrResults.length
+    ? Math.round(rrResults.reduce(function(s,e){ return s+(e.rrPts||0); },0) / rrResults.length)
+    : null;
+  var avgEntry  = Math.round(execResults.reduce(function(s,e){ return s+(e.entryPts||0); },0) / execResults.length);
+  var avgResult = Math.round(execResults.reduce(function(s,e){ return s+(e.exitPts||e.resultPts||0); },0) / execResults.length);
+  var total;
+  if (avgRR !== null && !isNaN(avgRR)) {
+    total = Math.round(avgRR + avgEntry + avgResult);
+  } else {
+    total = Math.round((avgEntry + avgResult) / 60 * 100);
+  }
+  total = Math.min(100, Math.max(0, isNaN(total) ? 0 : total));
 
   var label = total >= 90 ? 'Perfect execution 🎯'
             : total >= 70 ? 'Good execution ✅'
@@ -5466,6 +5478,17 @@ function calcDailyExecutionScore(dateStr) {
 // ── Mental Score (0–100) = Discipline(40%) + Mind(35%) + Execution(25%) ──
 function calcMentalScore(dateStr) {
   var today = dateStr || new Date().toISOString().slice(0,10);
+
+  // Only score days with actual trades — return null for empty days
+  var dayTrades = (currentTrades || []).filter(function(t) {
+    return t.entry_time && t.entry_time.startsWith(today);
+  });
+  if (!dayTrades.length) {
+    return { total: null, label: 'No trades', color: 'var(--text3)',
+             discScore: null, mindScore: null, execScore: null,
+             discLabel: '—', mindLabel: '—', execLabel: 'No trades' };
+  }
+
   var disc  = calcDailyDisciplineScore(today);
   var mind  = calcDailyMindScore(today);
   var exec  = calcDailyExecutionScore(today);
@@ -5476,9 +5499,8 @@ function calcMentalScore(dateStr) {
 
   var total;
   if (execScore === null) {
-    // No trades — weight only discipline + mind over 75%
     total = Math.round(discScore * 0.40 + mindScore * 0.35);
-    total = Math.round(total / 0.75); // scale to 100
+    total = Math.round(total / 0.75);
   } else {
     total = Math.round(discScore * 0.40 + mindScore * 0.35 + execScore * 0.25);
   }
