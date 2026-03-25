@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774418446 -->
+<!-- v1774444807 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -931,42 +931,27 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
 }
 
 /* ── Mental Score Banner ── */
-.ms-banner-inner {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
 @media (max-width: 640px) {
-  .ms-banner-inner {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
+  .ms-banner {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
   }
-  .ms-banner-inner > div {
-    border-left: none !important;
-    padding-left: 0 !important;
-    border-top: 1px solid var(--border);
-    padding-top: 12px !important;
-  }
-  .ms-banner-inner > div:first-child {
-    border-top: none;
-    padding-top: 0 !important;
-  }
-  /* Monthly score row on mobile: horizontal */
-  .ms-banner-inner > div:first-child {
-    display: flex;
-    gap: 16px;
-    align-items: center;
-  }
-  /* Pills row: wrap */
-  .ms-pills {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
+  .ms-today {
     border-left: none !important;
     padding-left: 0 !important;
     border-top: 1px solid var(--border) !important;
     padding-top: 12px !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+  }
+  .ms-pills {
+    border-left: none !important;
+    padding-left: 0 !important;
+    border-top: 1px solid var(--border) !important;
+    padding-top: 12px !important;
+    flex-wrap: wrap !important;
   }
   .ms-pills > div {
     flex: 1;
@@ -1333,9 +1318,7 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
       </div>
       <div class="form-group">
         <label class="form-label">Emotion</label>
-        <div id="historical-trade-note" style="display:none;margin-bottom:6px;padding:8px 10px;background:rgba(224,152,64,0.08);border:1px solid rgba(224,152,64,0.2);border-radius:6px;font-size:10px;color:var(--amber);line-height:1.55">
-          ⏱ Historical trade — if you don't remember your exact emotion, leave <strong>Neutral</strong>. Pattro will infer the emotional state from your behavior.
-        </div>
+
         <div id="historical-color-day" style="display:none;margin-bottom:10px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px">
           <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Color day — how were you feeling that day?</div>
           <div style="display:flex;gap:8px">
@@ -3254,8 +3237,7 @@ async function loadAccountData(id, silent) {
     var msYest = prevDay ? calcMentalScore(prevDay) : null;
     var _yestTotal = (msYest && msYest.total !== null && !isNaN(msYest.total)) ? msYest.total : null;
 
-    var out = '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 20px" class="ms-banner">';
-    out += '<div class="ms-banner-inner">';
+    var out = '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:20px;flex-wrap:wrap" class="ms-banner">';
 
     // ── LEFT: Monthly score (main) ──
     if (_mData && !isNaN(_mData.avg)) {
@@ -3322,13 +3304,10 @@ async function loadAccountData(id, silent) {
     out += '<div style="font-size:10px;font-weight:700;color:' + _clColor2 + '">' + _clLabel2 + '</div>';
     out += '</div>';
 
-    // Mood pill — use todayMood from outer scope (same source as Color Day banner)
-    var _moodLabel2 = todayMood
-      ? (todayMood.level==='green'?'🟢 Green':todayMood.level==='yellow'?'🟡 Yellow':todayMood.level==='red'?'🔴 Red':'⚪ Unknown')
-      : '— Check';
-    var _moodColor2 = todayMood
-      ? (todayMood.level==='green'?'var(--green)':todayMood.level==='yellow'?'var(--amber)':todayMood.level==='red'?'var(--red)':'var(--text3)')
-      : 'var(--text3)';
+    // Mood pill — use moodLevel3 which is the exact same variable
+    // used by the Color Day banner and lower mood check display
+    var _moodLabel2 = moodLevel3==='green'?'🟢 Green':moodLevel3==='yellow'?'🟡 Yellow':moodLevel3==='red'?'🔴 Red':todayMood?'⚪ Unknown':'— Check';
+    var _moodColor2 = moodLevel3==='green'?'var(--green)':moodLevel3==='yellow'?'var(--amber)':moodLevel3==='red'?'var(--red)':'var(--text3)';
     out += '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;min-width:62px">';
     out += '<div style="font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Mood check</div>';
     out += '<div style="font-size:10px;font-weight:700;color:' + _moodColor2 + '">' + _moodLabel2 + '</div>';
@@ -3344,8 +3323,7 @@ async function loadAccountData(id, silent) {
     out += '</div>';
 
     out += '</div>'; // end pills
-    out += '</div>'; // end inner
-    out += '</div>'; // end banner
+    out += '</div>'; // end ms-banner
     return out;
   })() +
 
