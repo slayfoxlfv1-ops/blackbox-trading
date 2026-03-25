@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774412229 -->
+<!-- v1774412792 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -3156,31 +3156,19 @@ async function loadAccountData(id, silent) {
   el.innerHTML = '<div class="fade-in" style="padding:16px;display:flex;flex-direction:column;gap:12px">' +
   _progressBanner +
 
-  // ── ROW 0: Mental Score banner — Monthly (main) + Today ──
+  // ── ROW 0: Mental Score — Monthly (main) + Today ──
   (function(){
     var _now2    = new Date();
+    var today    = _now2.toISOString().slice(0,10);
+
+    // Monthly trades
     var _mStart  = new Date(_now2.getFullYear(), _now2.getMonth(), 1);
     var _mTrades = trades.filter(function(t){
       return t.entry_time && new Date(t.entry_time) >= _mStart;
     });
-    var _mData = calcPeriodMentalScore(_mTrades);
+    var _mData = calcPeriodMentalScore(_mTrades) || null;
 
-    // Today score
-    var today = _now2.toISOString().slice(0,10);
-    var ms = calcMentalScore(today);
-
-    // Yesterday = last day with actual trades
-    var prevDay = null;
-    var _sorted = trades.slice().sort(function(a,b){
-      return new Date(b.entry_time) - new Date(a.entry_time);
-    });
-    for (var _i=0; _i<_sorted.length; _i++) {
-      var d2s = (_sorted[_i].entry_time||'').slice(0,10);
-      if (d2s && d2s < today) { prevDay = d2s; break; }
-    }
-    var msYest = prevDay ? calcMentalScore(prevDay) : null;
-
-    // Monthly trend vs previous month
+    // Previous month for trend
     var _pmStart = new Date(_now2.getFullYear(), _now2.getMonth()-1, 1);
     var _pmEnd   = new Date(_now2.getFullYear(), _now2.getMonth(), 0);
     var _pmTrades = trades.filter(function(t){
@@ -3188,107 +3176,120 @@ async function loadAccountData(id, silent) {
       var d = new Date(t.entry_time);
       return d >= _pmStart && d <= _pmEnd;
     });
-    var _pmData = calcPeriodMentalScore(_pmTrades);
-    var _mTrend = (_mData && _pmData) ? _mData.avg - _pmData.avg : 0;
+    var _pmData = calcPeriodMentalScore(_pmTrades) || null;
+    var _mTrend = (_mData && _pmData && !isNaN(_mData.avg) && !isNaN(_pmData.avg))
+      ? (_mData.avg - _pmData.avg) : 0;
     var _mTrendColor = _mTrend > 3 ? 'var(--green)' : _mTrend < -3 ? 'var(--red)' : 'var(--text3)';
     var _mTrendArrow = _mTrend > 3 ? '↑' : _mTrend < -3 ? '↓' : '→';
 
-    // Today display
-    var _todayTotal = (ms && ms.total !== null) ? ms.total : '—';
-    var _todayColor = (ms && ms.total !== null) ? ms.color : 'var(--text3)';
-    var _todayWidth = (ms && ms.total !== null) ? ms.total : 0;
+    // Today score
+    var ms = calcMentalScore(today);
+    var _todayTotal = (ms && ms.total !== null && !isNaN(ms.total)) ? ms.total : null;
+    var _todayColor = _todayTotal !== null ? ms.color : 'var(--text3)';
+    var _todayLabel = _todayTotal !== null ? ms.label : 'No trades';
 
-    // Yesterday display
-    var _yestTotal = (msYest && msYest.total !== null) ? msYest.total : null;
+    // Yesterday = last day with actual trades (not calendar day)
+    var prevDay = null;
+    var _sorted = trades.slice().sort(function(a,b){
+      return new Date(b.entry_time||0) - new Date(a.entry_time||0);
+    });
+    for (var _i=0; _i<_sorted.length; _i++) {
+      var d2s = (_sorted[_i].entry_time||'').slice(0,10);
+      if (d2s && d2s < today) { prevDay = d2s; break; }
+    }
+    var msYest = prevDay ? calcMentalScore(prevDay) : null;
+    var _yestTotal = (msYest && msYest.total !== null && !isNaN(msYest.total)) ? msYest.total : null;
 
-    var out = '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px 24px;display:flex;align-items:center;gap:20px;margin-bottom:0">';
+    var out = '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px 24px;display:flex;align-items:center;gap:20px">';
 
     // ── LEFT: Monthly score (main) ──
-    if (_mData) {
-      out += '<div style="flex-shrink:0;text-align:center;min-width:92px">';
+    if (_mData && !isNaN(_mData.avg)) {
+      var _mc = _mData.color || 'var(--text3)';
+      var _ma = _mData.avg;
+      out += '<div style="flex-shrink:0;text-align:center;min-width:88px">';
       out += '<div style="font-size:8px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">This Month</div>';
-      out += '<div style="font-size:52px;font-weight:800;color:'+_mData.color+';line-height:1;letter-spacing:-3px">'+_mData.avg+'</div>';
+      out += '<div style="font-size:52px;font-weight:800;color:' + _mc + ';line-height:1;letter-spacing:-3px">' + _ma + '</div>';
       out += '<div style="font-size:9px;color:var(--text3);margin-top:4px">/100</div>';
       out += '</div>';
-      // Progress bar
+
       out += '<div style="flex:1;min-width:0">';
       out += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">';
-      out += '<span style="font-size:11px;font-weight:700;color:'+_mData.color+'">'+_mData.label+'</span>';
-      if (_pmData) {
-        out += '<span style="font-size:10px;color:'+_mTrendColor+';font-weight:700">'+(_mTrend>0?'+':'')+_mTrend+' '+_mTrendArrow+' vs last month</span>';
+      out += '<span style="font-size:11px;font-weight:700;color:' + _mc + '">' + (_mData.label||'') + '</span>';
+      if (_pmData && !isNaN(_mTrend)) {
+        out += '<span style="font-size:10px;color:' + _mTrendColor + ';font-weight:700">'
+          + (_mTrend > 0 ? '+' : '') + _mTrend + ' ' + _mTrendArrow + ' vs last month</span>';
       }
       out += '</div>';
-      // Bar
       out += '<div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:10px">';
-      out += '<div style="height:100%;width:'+_mData.avg+'%;background:'+_mData.color+';border-radius:3px;transition:width .4s"></div>';
+      out += '<div style="height:100%;width:' + _ma + '%;background:' + _mc + ';border-radius:3px;transition:width .4s"></div>';
       out += '</div>';
-      // Sub-scores row
+      // Sub-scores
+      var _ss = _mData.scores || [];
+      var _dAvg = _ss.length ? Math.round(_ss.reduce(function(s,x){return s+(x.discScore||0);},0)/_ss.length) : '—';
+      var _mAvg = _ss.length ? Math.round(_ss.reduce(function(s,x){return s+(x.mindScore||0);},0)/_ss.length) : '—';
+      var _eAvg = _ss.length ? Math.round(_ss.reduce(function(s,x){return s+(x.execScore||0);},0)/_ss.length) : '—';
       out += '<div style="display:flex;gap:12px">';
-      out += '<div style="font-size:10px;color:var(--text3)">Discipline <strong style="color:var(--text2)">' + (_mData.scores && _mData.scores.length ? Math.round(_mData.scores.reduce(function(s,x){return s+(x.discScore||0);},0)/_mData.scores.length) : '—') + '</strong></div>';
-      out += '<div style="font-size:10px;color:var(--text3)">Mind <strong style="color:var(--text2)">' + (_mData.scores && _mData.scores.length ? Math.round(_mData.scores.reduce(function(s,x){return s+(x.mindScore||0);},0)/_mData.scores.length) : '—') + '</strong></div>';
-      out += '<div style="font-size:10px;color:var(--text3)">Execution <strong style="color:var(--text2)">' + (_mData.scores && _mData.scores.length ? Math.round(_mData.scores.reduce(function(s,x){return s+(x.execScore||0);},0)/_mData.scores.length) : '—') + '</strong></div>';
-      out += '<div style="font-size:10px;color:var(--text3)">' + _mData.days + ' active days</div>';
-      out += '</div>';
-      out += '</div>';
+      out += '<div style="font-size:10px;color:var(--text3)">Discipline <strong style="color:var(--text2)">' + _dAvg + '</strong></div>';
+      out += '<div style="font-size:10px;color:var(--text3)">Mind <strong style="color:var(--text2)">' + _mAvg + '</strong></div>';
+      out += '<div style="font-size:10px;color:var(--text3)">Execution <strong style="color:var(--text2)">' + _eAvg + '</strong></div>';
+      out += '<div style="font-size:10px;color:var(--text3)">' + (_mData.days||0) + ' active days</div>';
+      out += '</div></div>';
     } else {
-      out += '<div style="flex:1;font-size:11px;color:var(--text3)">No trades this month yet.</div>';
+      out += '<div style="flex:1;font-size:11px;color:var(--text3);padding:8px 0">No trades this month yet.</div>';
     }
 
-    // ── RIGHT: Today + Yesterday column ──
+    // ── RIGHT: Today + Yesterday ──
     out += '<div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:4px;border-left:1px solid var(--border);padding-left:20px;min-width:80px">';
-    // Today
     out += '<div style="font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:2px">Today</div>';
-    out += '<div style="font-size:28px;font-weight:800;color:'+_todayColor+';letter-spacing:-1px;line-height:1">'+_todayTotal+'</div>';
-    if (ms && ms.total !== null) {
-      out += '<div style="font-size:9px;color:var(--text3)">'+ms.label+'</div>';
-    } else {
-      out += '<div style="font-size:9px;color:var(--text3)">No trades</div>';
-    }
-    // Yesterday
+    out += '<div style="font-size:28px;font-weight:800;color:' + _todayColor + ';letter-spacing:-1px;line-height:1">' + (_todayTotal !== null ? _todayTotal : '—') + '</div>';
+    out += '<div style="font-size:9px;color:var(--text3)">' + _todayLabel + '</div>';
     if (_yestTotal !== null) {
-      var _diff = (ms && ms.total !== null) ? ms.total - _yestTotal : null;
-      var _diffColor = _diff > 0 ? 'var(--green)' : _diff < 0 ? 'var(--red)' : 'var(--text3)';
-      out += '<div style="margin-top:6px;font-size:9px;color:var(--text3)">Yesterday: <strong style="color:var(--text2)">'+_yestTotal+'</strong></div>';
+      var _diff = _todayTotal !== null ? (_todayTotal - _yestTotal) : null;
+      var _diffColor = _diff === null ? 'var(--text3)' : _diff > 0 ? 'var(--green)' : _diff < 0 ? 'var(--red)' : 'var(--text3)';
+      out += '<div style="margin-top:6px;font-size:9px;color:var(--text3)">Yesterday: <strong style="color:var(--text2)">' + _yestTotal + '</strong></div>';
       if (_diff !== null) {
-        out += '<div style="font-size:9px;color:'+_diffColor+';font-weight:700">'+(_diff>0?'↑ +':_diff<0?'↓ ':'→ ')+Math.abs(_diff)+' pts</div>';
+        out += '<div style="font-size:9px;color:' + _diffColor + ';font-weight:700">' + (_diff>0?'↑ +':_diff<0?'↓ ':'→ ') + Math.abs(_diff) + ' pts</div>';
       }
     }
     out += '</div>';
 
-    // ── FAR RIGHT: Checklist + Mood + Rules status pills ──
+    // ── FAR RIGHT: Status pills ──
     out += '<div style="display:flex;gap:10px;flex-shrink:0">';
 
     // Checklist pill
     var _clHasItems2 = (currentChecklistItems||[]).filter(function(x){return x.is_active;}).length > 0;
-    var _clToday2 = (currentChecklistSessions||[]).find(function(s){return s.session_date===today;});
-    var _clLabel2 = !_clHasItems2 ? 'Not set' : _clToday2 ? '✓ Done' : '✗ Pending';
-    var _clColor2 = !_clHasItems2 ? 'var(--text3)' : _clToday2 ? 'var(--green)' : 'var(--amber)';
+    var _clToday2    = (currentChecklistSessions||[]).find(function(s){return s.session_date===today;});
+    var _clLabel2    = !_clHasItems2 ? 'Not set' : _clToday2 ? '✓ Done' : '✗ Pending';
+    var _clColor2    = !_clHasItems2 ? 'var(--text3)' : _clToday2 ? 'var(--green)' : 'var(--amber)';
     out += '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;min-width:62px">';
     out += '<div style="font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Checklist</div>';
-    out += '<div style="font-size:10px;font-weight:700;color:'+_clColor2+'">'+_clLabel2+'</div>';
+    out += '<div style="font-size:10px;font-weight:700;color:' + _clColor2 + '">' + _clLabel2 + '</div>';
     out += '</div>';
 
     // Mood pill
-    var _todayMood2 = getMoodForDate(today);
-    var _moodLabel2 = _todayMood2 ? (_todayMood2.level==='green'?'🟢 Green':_todayMood2.level==='yellow'?'🟡 Yellow':_todayMood2.level==='red'?'🔴 Red':'⚪ Unknown') : '— Check';
-    var _moodColor2 = _todayMood2 ? (_todayMood2.level==='green'?'var(--green)':_todayMood2.level==='yellow'?'var(--amber)':_todayMood2.level==='red'?'var(--red)':'var(--text3)') : 'var(--text3)';
+    var _todayMoodPill = getMoodForDate(today);
+    var _moodLabel2 = _todayMoodPill
+      ? (_todayMoodPill.level==='green'?'🟢 Green':_todayMoodPill.level==='yellow'?'🟡 Yellow':_todayMoodPill.level==='red'?'🔴 Red':'⚪ Unknown')
+      : '— Check';
+    var _moodColor2 = _todayMoodPill
+      ? (_todayMoodPill.level==='green'?'var(--green)':_todayMoodPill.level==='yellow'?'var(--amber)':_todayMoodPill.level==='red'?'var(--red)':'var(--text3)')
+      : 'var(--text3)';
     out += '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;min-width:62px">';
     out += '<div style="font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Mood check</div>';
-    out += '<div style="font-size:10px;font-weight:700;color:'+_moodColor2+'">'+_moodLabel2+'</div>';
+    out += '<div style="font-size:10px;font-weight:700;color:' + _moodColor2 + '">' + _moodLabel2 + '</div>';
     out += '</div>';
 
     // Rules pill
     var _activeRules2 = (currentRules||[]).filter(function(r){return r.is_active;});
-    var _rulesLabel2 = _activeRules2.length ? '✓ Active' : 'Not set';
-    var _rulesColor2 = _activeRules2.length ? 'var(--green)' : 'var(--text3)';
+    var _rulesLabel2  = _activeRules2.length ? '✓ Active' : 'Not set';
+    var _rulesColor2  = _activeRules2.length ? 'var(--green)' : 'var(--text3)';
     out += '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;min-width:62px">';
     out += '<div style="font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Rules</div>';
-    out += '<div style="font-size:10px;font-weight:700;color:'+_rulesColor2+'">'+_rulesLabel2+'</div>';
+    out += '<div style="font-size:10px;font-weight:700;color:' + _rulesColor2 + '">' + _rulesLabel2 + '</div>';
     out += '</div>';
 
-    out += '</div>'; // end FAR RIGHT
-    out += '</div>'; // end main banner
-
+    out += '</div>'; // end pills
+    out += '</div>'; // end banner
     return out;
   })() +
 
