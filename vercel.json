@@ -85,5 +85,18 @@
         }
       ]
     }
+  ],
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "pattro.com"
+        }
+      ],
+      "destination": "https://www.pattro.com/:path*",
+      "permanent": true
+    }
   ]
 }
