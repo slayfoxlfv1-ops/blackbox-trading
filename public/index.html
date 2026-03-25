@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774473957 -->
+<!-- v1774476729 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -911,21 +911,28 @@ function applyTranslations(lang) {
 }
 
 
-// ── Scroll animations + Init (runs after DOM ready) ──
-document.addEventListener('DOMContentLoaded', function() {
-  // Hero elements are visible via CSS (.hero .fu rule) — no JS needed
-  // Observe non-hero .fu elements for scroll animation
+// ── Scroll animations (hero visible via CSS, only observe below-fold) ──
+window.addEventListener('load', function() {
   var observer = new IntersectionObserver(function(entries) {
     entries.forEach(function(e) {
       if (e.isIntersecting) { e.target.classList.add('in'); observer.unobserve(e.target); }
     });
   }, { threshold: 0.1 });
   document.querySelectorAll('.fu').forEach(function(el) { observer.observe(el); });
+});
 
-  // Init lang
-  (function() {
-    var saved = 'en';
-    try { saved = localStorage.getItem('pattro_lang') || 'en'; } catch(e) {}
-    currentLang = saved;
-    var lbl = document.getElementById('lang-label');
-    if (lbl) lbl.textC
+// ── Init lang ──
+(function() {
+  var saved = 'en';
+  try { saved = localStorage.getItem('pattro_lang') || 'en'; } catch(e) {}
+  currentLang = saved;
+  var lbl = document.getElementById('lang-label');
+  if (lbl) lbl.textContent = saved.toUpperCase();
+  if (saved !== 'en') applyTranslations(saved);
+  document.querySelectorAll('.lang-opt').forEach(function(o) {
+    o.classList.toggle('active', o.textContent.trim().includes(saved === 'en' ? 'English' : 'Español'));
+  });
+})();
+</script>
+</body>
+</html>
