@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774473298 -->
+<!-- v1774473957 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -928,7 +928,4 @@ document.addEventListener('DOMContentLoaded', function() {
     try { saved = localStorage.getItem('pattro_lang') || 'en'; } catch(e) {}
     currentLang = saved;
     var lbl = document.getElementById('lang-label');
-    if (lbl) lbl.textContent = saved.toUpperCase();
-    if (saved !== 'en') applyTranslations(saved);
-    document.querySelectorAll('.lang-opt').forEach(function(o) {
-    
+    if (lbl) lbl.textC
