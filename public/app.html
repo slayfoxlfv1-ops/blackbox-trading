@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774413415 -->
+<!-- v1774414618 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -1382,7 +1382,7 @@ const SUPABASE_URL = 'https://qljuusxpzsiqxnpfpdgg.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFsanV1c3hwenNpcXhucGZwZGdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1OTQ5NzUsImV4cCI6MjA4ODE3MDk3NX0.rUEwuG4zFE_EpAM4s3hWqVF81xiW9q_MSwQKKXYZmlk';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let currentUser = null, accounts = [], currentAccountId = null, currentTrades = null, currentChecklistSessions = [], currentMoodSessions = [], currentView = 'dashboard', authTab = 'login', editingTradeId = null;
+let currentUser = null, accounts = [], currentAccountId = null, currentTrades = null, currentChecklistSessions = [], currentMoodSessions = [], currentChecklistItems = [], currentRules = [], currentView = 'dashboard', authTab = 'login', editingTradeId = null;
 let _tradesLoadedForAccount = null; // tracks which account trades are loaded for
 let tlFilters = { date:'', ticker:'', result:'all' };
 // Achievement toasts tracked per-day in localStorage (see _achKey below)
@@ -2567,11 +2567,14 @@ async function loadAccountData(id, silent) {
   _tradesLoadedForAccount = id;
   currentChecklistSessions = (clRes.data || []);
   currentMoodSessions = (moodAllRes.data || []);
+  // Populate currentRules from bbStore (used in status pills)
+  try { currentRules = getPersonalRules(id) || []; } catch(e) { currentRules = []; }
 
-  // Sync checklist items → bbStore
+  // Sync checklist items → bbStore + currentChecklistItems
   if (clItemsRes.data && clItemsRes.data[0]) {
     if (clItemsRes.data[0].items) {
       bbStore.set('checklist_' + id, JSON.stringify(clItemsRes.data[0].items));
+      try { currentChecklistItems = JSON.parse(clItemsRes.data[0].items); } catch(e) { currentChecklistItems = []; }
     }
     if (clItemsRes.data[0].setup_tags) {
       try {
