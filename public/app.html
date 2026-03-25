@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774411151 -->
+<!-- v1774412018 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -3156,70 +3156,108 @@ async function loadAccountData(id, silent) {
   el.innerHTML = '<div class="fade-in" style="padding:16px;display:flex;flex-direction:column;gap:12px">' +
   _progressBanner +
 
-  // ── ROW 0: Mental Score banner ──
-  '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px 24px;display:flex;align-items:center;gap:24px">' +
-  '<div style="flex-shrink:0;text-align:center">' +
-  '<div style="font-size:9px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Mental Score</div>' +
-  '<div style="font-size:56px;font-weight:800;color:'+ms.color+';line-height:1;letter-spacing:-2px">'+ms.total+'</div>' +
-  '<div style="font-size:10px;color:var(--text3);margin-top:2px">/100</div>' +
-  '</div>' +
-  '<div style="flex:1;min-width:0">' +
-  '<div style="height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-bottom:10px">' +
-  '<div style="height:100%;width:'+ms.total+'%;background:'+ms.color+';border-radius:3px;transition:width .6s"></div></div>' +
-  '<div style="display:flex;align-items:center;gap:0;margin-bottom:6px"><span style="font-size:13px;font-weight:700;color:var(--text)">'+ms.label+'</span>'+_dqBadge+'</div>' +
-  (_dqNote ? '<div style="font-size:10px;color:var(--text3);margin-bottom:8px;font-style:italic">'+_dqNote+'</div>' : '') +
-  '<div style="display:flex;gap:16px;flex-wrap:wrap">' +
-  '<span style="font-size:11px;color:var(--text3)">Discipline <b style="color:'+(ms.discScore>=75?'var(--green)':ms.discScore>=50?'var(--amber)':'var(--red)')+'">'+ms.discScore+'</b></span>' +
-  '<span style="font-size:11px;color:var(--text3)">Mind <b style="color:'+(ms.mindScore>=75?'var(--green)':ms.mindScore>=50?'var(--amber)':'var(--red)')+'">'+ms.mindScore+'</b></span>' +
-  '<span style="font-size:11px;color:var(--text3)">Execution <b style="color:'+(ms.execScore!==null?(ms.execScore>=75?'var(--green)':ms.execScore>=50?'var(--amber)':'var(--red)'):'var(--text3)')+'">'+( ms.execScore!==null?ms.execScore:'—')+'</b></span>' +
-  '</div>' +
-  (msYest ? (function(){
-    var diff = ms.total - msYest.total;
-    var arrow = diff > 0 ? '↑' : diff < 0 ? '↓' : '→';
-    var clr = diff > 0 ? 'var(--green)' : diff < 0 ? 'var(--red)' : 'var(--text3)';
-    return '<div style="margin-top:8px;display:flex;align-items:center;gap:8px">'
-      + '<span style="font-size:10px;color:var(--text3)">Yesterday: <b style="color:var(--text2)">'+msYest.total+'</b></span>'
-      + '<span style="font-size:11px;color:var(--text3)">→</span>'
-      + '<span style="font-size:10px;color:var(--text3)">Today: <b style="color:'+ms.color+'">'+ms.total+'</b></span>'
-      + '<span style="font-size:12px;font-weight:800;color:'+clr+'">'+arrow+' '+(diff>0?'+':'')+diff+'</span>'
-      + '</div>';
-  })() : '') +
-  '</div></div>' +
-  '<div style="display:flex;gap:10px;flex-shrink:0">' +
-  '<div style="text-align:center;padding:10px 14px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">' +
-  '<div style="font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px">Checklist</div>' +
-  '<div style="font-size:11px;font-weight:700;color:'+_clColor+'">'+_clLabel+'</div></div>' +
-  '<div style="text-align:center;padding:10px 14px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">' +
-  '<div style="font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px">Rules</div>' +
-  '<div style="font-size:11px;font-weight:700;color:'+(hasRules?'var(--green)':'var(--amber)')+'">'+( hasRules?'✓ Active':'No rules')+'</div></div>' +
-  '</div>' +
-  // ── Trader Profile square ──
+  // ── ROW 0: Mental Score banner — Monthly (main) + Today ──
   (function(){
-    var _tw = trades.length;
-    var _wn = trades.filter(function(t){return (t.pnl||0)>0;});
-    var _ls = trades.filter(function(t){return (t.pnl||0)<0;});
-    var _wr = _tw ? Math.round(_wn.length/_tw*100) : 0;
-    var _aw = _wn.length ? Math.round(_wn.reduce(function(s,t){return s+(t.pnl||0);},0)/_wn.length) : 0;
-    var _al = _ls.length ? Math.round(Math.abs(_ls.reduce(function(s,t){return s+(t.pnl||0);},0)/_ls.length)) : 0;
-    var _rr = _al>0 ? (_aw/_al).toFixed(1) : '—';
-    var _cp = _tw ? Math.round(trades.filter(function(t){return (t.discipline_tag||'clean')==='clean';}).length/_tw*100) : 100;
-    var _ec={}; trades.forEach(function(t){if(t.emotion)_ec[t.emotion]=(_ec[t.emotion]||0)+1;});
-    var _ek=Object.keys(_ec); var _te=_ek.length?_ek.sort(function(a,b){return _ec[b]-_ec[a];})[0]:null;
-    var _ee={calm:'😌',confident:'💪',anxious:'😰',fear:'😨',greedy:'🤑',bored:'😐',frustrated:'😤',neutral:'😶'};
-    var _pt = _wr>=60&&_cp>=70?'Disciplined':_wr>=60&&_cp<70?'High WR, low discipline':_wr<40&&_cp>=70?'Disciplined, low WR':'Developing';
-    var _pc = _wr>=60&&_cp>=70?'var(--green)':_wr>=40?'var(--amber)':'var(--red)';
-    return '<div style="flex-shrink:0;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;min-width:160px">'
-      + '<div style="font-size:8px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px">Profile</div>'
-      + '<div style="font-size:11px;font-weight:700;color:'+_pc+';margin-bottom:8px">'+_pt+'</div>'
-      + '<div style="display:flex;flex-direction:column;gap:3px">'
-      + '<div style="display:flex;justify-content:space-between;gap:12px"><span style="font-size:9px;color:var(--text2);font-weight:500">Win Rate</span><span style="font-size:9px;font-weight:600;color:'+(_wr>=60?'var(--green)':_wr>=40?'var(--amber)':'var(--red)')+'">'+_wr+'%</span></div>'
-      + '<div style="display:flex;justify-content:space-between;gap:12px"><span style="font-size:9px;color:var(--text2);font-weight:500">R:R</span><span style="font-size:9px;font-weight:600;color:var(--text)">'+_rr+'</span></div>'
-      + '<div style="display:flex;justify-content:space-between;gap:12px"><span style="font-size:9px;color:var(--text2);font-weight:500">Clean</span><span style="font-size:9px;font-weight:600;color:'+(_cp>=70?'var(--green)':_cp>=50?'var(--amber)':'var(--red)')+'">'+_cp+'%</span></div>'
-      + (_te?'<div style="display:flex;justify-content:space-between;gap:12px"><span style="font-size:9px;color:var(--text2);font-weight:500">Emotion</span><span style="font-size:9px">'+(_ee[_te]||'')+' '+_te+'</span></div>':'')
-      + '<div style="display:flex;justify-content:space-between;gap:12px"><span style="font-size:9px;color:var(--text2);font-weight:500">Trades</span><span style="font-size:9px;font-weight:600;color:var(--text)">'+_tw+'</span></div>'
-      + '</div></div>';
-  })() +
-  '</div>' +
+    var _now2    = new Date();
+    var _mStart  = new Date(_now2.getFullYear(), _now2.getMonth(), 1);
+    var _mTrades = trades.filter(function(t){
+      return t.entry_time && new Date(t.entry_time) >= _mStart;
+    });
+    var _mData = calcPeriodMentalScore(_mTrades);
+
+    // Today score
+    var today = _now2.toISOString().slice(0,10);
+    var ms = calcMentalScore(today);
+
+    // Yesterday = last day with actual trades
+    var prevDay = null;
+    var _sorted = trades.slice().sort(function(a,b){
+      return new Date(b.entry_time) - new Date(a.entry_time);
+    });
+    for (var _i=0; _i<_sorted.length; _i++) {
+      var d2s = (_sorted[_i].entry_time||'').slice(0,10);
+      if (d2s && d2s < today) { prevDay = d2s; break; }
+    }
+    var msYest = prevDay ? calcMentalScore(prevDay) : null;
+
+    // Monthly trend vs previous month
+    var _pmStart = new Date(_now2.getFullYear(), _now2.getMonth()-1, 1);
+    var _pmEnd   = new Date(_now2.getFullYear(), _now2.getMonth(), 0);
+    var _pmTrades = trades.filter(function(t){
+      if (!t.entry_time) return false;
+      var d = new Date(t.entry_time);
+      return d >= _pmStart && d <= _pmEnd;
+    });
+    var _pmData = calcPeriodMentalScore(_pmTrades);
+    var _mTrend = (_mData && _pmData) ? _mData.avg - _pmData.avg : 0;
+    var _mTrendColor = _mTrend > 3 ? 'var(--green)' : _mTrend < -3 ? 'var(--red)' : 'var(--text3)';
+    var _mTrendArrow = _mTrend > 3 ? '↑' : _mTrend < -3 ? '↓' : '→';
+
+    // Today display
+    var _todayTotal = (ms && ms.total !== null) ? ms.total : '—';
+    var _todayColor = (ms && ms.total !== null) ? ms.color : 'var(--text3)';
+    var _todayWidth = (ms && ms.total !== null) ? ms.total : 0;
+
+    // Yesterday display
+    var _yestTotal = (msYest && msYest.total !== null) ? msYest.total : null;
+
+    var out = '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px 24px;display:flex;align-items:center;gap:20px;margin-bottom:0">';
+
+    // ── LEFT: Monthly score (main) ──
+    if (_mData) {
+      out += '<div style="flex-shrink:0;text-align:center;min-width:92px">';
+      out += '<div style="font-size:8px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">This Month</div>';
+      out += '<div style="font-size:52px;font-weight:800;color:'+_mData.color+';line-height:1;letter-spacing:-3px">'+_mData.avg+'</div>';
+      out += '<div style="font-size:9px;color:var(--text3);margin-top:4px">/100</div>';
+      out += '</div>';
+      // Progress bar
+      out += '<div style="flex:1;min-width:0">';
+      out += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">';
+      out += '<span style="font-size:11px;font-weight:700;color:'+_mData.color+'">'+_mData.label+'</span>';
+      if (_pmData) {
+        out += '<span style="font-size:10px;color:'+_mTrendColor+';font-weight:700">'+(_mTrend>0?'+':'')+_mTrend+' '+_mTrendArrow+' vs last month</span>';
+      }
+      out += '</div>';
+      // Bar
+      out += '<div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:10px">';
+      out += '<div style="height:100%;width:'+_mData.avg+'%;background:'+_mData.color+';border-radius:3px;transition:width .4s"></div>';
+      out += '</div>';
+      // Sub-scores row
+      out += '<div style="display:flex;gap:12px">';
+      out += '<div style="font-size:10px;color:var(--text3)">Discipline <strong style="color:var(--text2)">' + (_mData.scores && _mData.scores.length ? Math.round(_mData.scores.reduce(function(s,x){return s+(x.discScore||0);},0)/_mData.scores.length) : '—') + '</strong></div>';
+      out += '<div style="font-size:10px;color:var(--text3)">Mind <strong style="color:var(--text2)">' + (_mData.scores && _mData.scores.length ? Math.round(_mData.scores.reduce(function(s,x){return s+(x.mindScore||0);},0)/_mData.scores.length) : '—') + '</strong></div>';
+      out += '<div style="font-size:10px;color:var(--text3)">Execution <strong style="color:var(--text2)">' + (_mData.scores && _mData.scores.length ? Math.round(_mData.scores.reduce(function(s,x){return s+(x.execScore||0);},0)/_mData.scores.length) : '—') + '</strong></div>';
+      out += '<div style="font-size:10px;color:var(--text3)">' + _mData.days + ' active days</div>';
+      out += '</div>';
+      out += '</div>';
+    } else {
+      out += '<div style="flex:1;font-size:11px;color:var(--text3)">No trades this month yet.</div>';
+    }
+
+    // ── RIGHT: Today + Yesterday column ──
+    out += '<div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:4px;border-left:1px solid var(--border);padding-left:20px;min-width:80px">';
+    // Today
+    out += '<div style="font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:2px">Today</div>';
+    out += '<div style="font-size:28px;font-weight:800;color:'+_todayColor+';letter-spacing:-1px;line-height:1">'+_todayTotal+'</div>';
+    if (ms && ms.total !== null) {
+      out += '<div style="font-size:9px;color:var(--text3)">'+ms.label+'</div>';
+    } else {
+      out += '<div style="font-size:9px;color:var(--text3)">No trades</div>';
+    }
+    // Yesterday
+    if (_yestTotal !== null) {
+      var _diff = (ms && ms.total !== null) ? ms.total - _yestTotal : null;
+      var _diffColor = _diff > 0 ? 'var(--green)' : _diff < 0 ? 'var(--red)' : 'var(--text3)';
+      out += '<div style="margin-top:6px;font-size:9px;color:var(--text3)">Yesterday: <strong style="color:var(--text2)">'+_yestTotal+'</strong></div>';
+      if (_diff !== null) {
+        out += '<div style="font-size:9px;color:'+_diffColor+';font-weight:700">'+(_diff>0?'↑ +':_diff<0?'↓ ':'→ ')+Math.abs(_diff)+' pts</div>';
+      }
+    }
+    out += '</div>';
+
+    // ── FAR RIGHT: Checklist + Mood + Rules status ──
+    out += '<div style="display:flex;gap:10px;flex-shrink:0">';
+
 
   // ── ROW 0b: Correlation-powered Insights ──
   (function(){
@@ -3764,9 +3802,11 @@ function calcPeriodMentalScore(tradesInPeriod) {
   var dayList = Object.keys(days).sort();
   if (!dayList.length) return null;
 
-  // Keep day-score pairs together so indexOf stays correct after filter
+  // Only include days with actual trade scores (filter out null/NaN)
   var scorePairs = dayList.map(function(d) { return { day: d, score: calcMentalScore(d) }; })
-                          .filter(function(p){ return p.score.total !== null; });
+                          .filter(function(p){
+                            return p.score && p.score.total !== null && !isNaN(p.score.total);
+                          });
   if (!scorePairs.length) return null;
   var scores  = scorePairs.map(function(p){ return p.score; });
   var dayList = scorePairs.map(function(p){ return p.day; }); // re-align
@@ -3778,9 +3818,11 @@ function calcPeriodMentalScore(tradesInPeriod) {
   var worst    = worstPair.score;
   var bestDay  = bestPair.day;
   var worstDay = worstPair.day;
-  var trend = scores.length >= 3
-    ? (scores.slice(-3).reduce(function(s,x){return s+x.total;},0)/3) - (scores.slice(0,3).reduce(function(s,x){return s+x.total;},0)/3)
+  var validScores = scores.filter(function(x){ return x.total !== null && !isNaN(x.total); });
+  var trend = validScores.length >= 3
+    ? (validScores.slice(-3).reduce(function(s,x){return s+x.total;},0)/3) - (validScores.slice(0,3).reduce(function(s,x){return s+x.total;},0)/3)
     : 0;
+  trend = isNaN(trend) ? 0 : trend;
 
   var label = avg >= 90 ? 'Elite trader 🏆' : avg >= 75 ? 'Solid performance ✅' : avg >= 60 ? 'In progress ⚠️' : avg >= 40 ? 'Needs attention 🔶' : 'Critical state 🔴';
   var color = avg >= 75 ? 'var(--green)' : avg >= 50 ? 'var(--amber)' : 'var(--red)';
@@ -9196,39 +9238,52 @@ function renderMentalScorePanel(allTrades, period) {
   if (!weekly && !monthly) return '';
 
   function scoreCard(label, data, trades) {
-    if (!data) return '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:16px;text-align:center"><div style="font-size:10px;color:var(--text3)">'+label+'</div><div style="font-size:11px;color:var(--text3);margin-top:8px">No data suficientes</div></div>';
-    var trendArrow = data.trend > 3 ? '↑' : data.trend < -3 ? '↓' : '→';
-    var trendColor = data.trend > 3 ? 'var(--green)' : data.trend < -3 ? 'var(--red)' : 'var(--text3)';
+    var noDataHtml = '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:16px;text-align:center">'
+      + '<div style="font-size:10px;color:var(--text3)">'+label+'</div>'
+      + '<div style="font-size:11px;color:var(--text3);margin-top:8px">No trades</div>'
+      + '</div>';
+    if (!data) return noDataHtml;
 
-    // Mini sparkline of daily scores
-    var spark = '';
-    if (data.scores.length > 1) {
-      var W=120, H=28, mn=Math.min.apply(null,data.scores.map(function(s){return s.total;})), mx=Math.max.apply(null,data.scores.map(function(s){return s.total;}));
-      var range = mx - mn || 1;
-      var pts = data.scores.map(function(s,i){
-        var x = Math.round(i/(data.scores.length-1)*W);
-        var y = Math.round(H - (s.total-mn)/range*H);
-        return x+','+y;
-      }).join(' ');
-      var lineColor = data.avg >= 75 ? '#5a9e72' : data.avg >= 50 ? '#9e8050' : '#9e5a5a';
-      spark = '<svg width="'+W+'" height="'+H+'" style="margin:8px auto;display:block"><polyline points="'+pts+'" fill="none" stroke="'+lineColor+'" stroke-width="1.5" stroke-linejoin="round"/></svg>';
+    // Safe display helper — shows '—' for null/NaN/undefined
+    var safe = function(v) {
+      if (v === null || v === undefined || isNaN(v)) return '—';
+      return v;
+    };
+
+    var avg   = safe(data.avg);
+    var best  = safe(data.best);
+    var worst = safe(data.worst);
+    var trend = data.trend || 0;
+    var trendStr = avg === '—' ? '' : (trend > 3 ? '↑ +'+trend : trend < -3 ? '↓ '+trend : '→ '+trend);
+    var trendColor = trend > 3 ? 'var(--green)' : trend < -3 ? 'var(--red)' : 'var(--text3)';
+    var color = (avg !== '—') ? (avg >= 75 ? 'var(--green)' : avg >= 50 ? 'var(--amber)' : 'var(--red)') : 'var(--text3)';
+
+    var html = '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:14px 16px">';
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">';
+    html += '<div style="font-size:10px;color:var(--text3)">'+label+'</div>';
+    if (trendStr) html += '<div style="font-size:9px;color:'+trendColor+';font-weight:700">'+trendStr+'</div>';
+    html += '</div>';
+    // Big score
+    html += '<div style="display:flex;align-items:flex-end;gap:6px;margin-bottom:8px">';
+    html += '<div style="font-size:36px;font-weight:800;color:'+color+';letter-spacing:-2px;line-height:1">'+(avg !== '—' ? avg : '—')+'</div>';
+    if (avg !== '—') html += '<div style="font-size:10px;color:var(--text3);margin-bottom:6px">/100</div>';
+    html += '</div>';
+    // Progress bar
+    if (avg !== '—') {
+      html += '<div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:10px">';
+      html += '<div style="height:100%;width:'+avg+'%;background:'+color+';border-radius:2px"></div>';
+      html += '</div>';
     }
-
-    return '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:16px">'
-      +'<div style="font-size:9px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">'+label+'</div>'
-      +'<div style="display:flex;align-items:flex-end;gap:8px;margin-bottom:4px">'
-      +'<div style="font-size:38px;font-weight:800;color:'+data.color+';line-height:1;letter-spacing:-2px">'+data.avg+'</div>'
-      +'<div style="font-size:11px;color:'+trendColor+';font-weight:700;margin-bottom:6px">'+trendArrow+' '+(Math.abs(data.trend)||'—')+'</div>'
-      +'</div>'
-      +'<div style="font-size:9px;color:var(--text3);margin-bottom:6px">'+data.label+'</div>'
-      +spark
-      +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px">'
-      +'<div style="text-align:center"><div style="font-size:16px;font-weight:700;color:var(--green)">'+data.best+'</div><div style="font-size:8px;color:var(--text3)">Best day</div></div>'
-      +'<div style="text-align:center"><div style="font-size:16px;font-weight:700;color:var(--red)">'+data.worst+'</div><div style="font-size:8px;color:var(--text3)">Worst day</div></div>'
-      +'<div style="text-align:center"><div style="font-size:16px;font-weight:700;color:var(--text)">'+data.days+'</div><div style="font-size:8px;color:var(--text3)">Active days</div></div>'
-      +'</div>'
-      +'</div>';
+    // Best / Worst / Days
+    html += '<div style="display:flex;gap:8px;flex-wrap:wrap">';
+    if (best !== '—') html += '<div style="font-size:9px;color:var(--text3)">Best <strong style="color:var(--green)">'+best+'</strong></div>';
+    if (worst !== '—') html += '<div style="font-size:9px;color:var(--text3)">Worst <strong style="color:var(--red)">'+worst+'</strong></div>';
+    if (data.days) html += '<div style="font-size:9px;color:var(--text3)">'+data.days+' days</div>';
+    html += '</div>';
+    html += '</div>';
+    return html;
   }
+
 
   return '<div class="panel" style="margin-bottom:12px">'
     +'<div class="panel-head"><span class="panel-title">◈ Mental Score</span><span class="panel-cap" style="font-size:9px;color:var(--text3)">Average of your active days</span></div>'
