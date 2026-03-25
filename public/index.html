@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774471554 -->
+<!-- v1774472069 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -245,6 +245,7 @@ footer{border-top:1px solid var(--border);padding:22px 48px;display:flex;align-i
 
 /* ── ANIMATIONS ── */
 .fu{opacity:0;transform:translateY(18px);transition:opacity .55s ease,transform .55s ease}
+.hero .fu{opacity:1;transform:none}
 .fu.in{opacity:1;transform:none}
 .d1{transition-delay:.05s}.d2{transition-delay:.12s}.d3{transition-delay:.18s}
 .d4{transition-delay:.24s}.d5{transition-delay:.3s}.d6{transition-delay:.4s}
@@ -791,7 +792,7 @@ var TRANSLATIONS = {
     pain_p:"Most traders have a solid edge. They lose because of what happens between trades — the decisions driven by fear, frustration, and impulse that they can't see in real time.",
   },
   es: {
-    nav_how:'Cómo funciona', nav_pricing:'Precios', nav_login:'Login', nav_cta:'Sign Up →',
+    nav_how:'Cómo funciona', nav_pricing:'Precios', nav_login:'Entrar', nav_cta:'Registrarse →',
     hero_badge:'Motor de Psicología Trading',
     hero_trust:'$15/mes · Cancela cuando quieras',
     hero_cta:'Analizar mis trades →', hero_cta2:'Ver cómo funciona',
@@ -907,31 +908,33 @@ function applyTranslations(lang) {
     if (t[key] !== undefined) el.innerHTML = t[key];
   });
   document.documentElement.lang = lang;
-  // Re-add animation classes destroyed by innerHTML swap
-  document.querySelectorAll('.hero .fu').forEach(function(el) {
-    el.classList.add('in');
-  });
 }
 
 
-// ── Scroll animations ──
-// Add 'in' class to hero elements immediately (above fold)
-document.querySelectorAll('.hero .fu').forEach(function(el) {
-  el.classList.add('in');
-});
-var observer = new IntersectionObserver(function(entries) {
-  entries.forEach(function(e) {
-    if (e.isIntersecting) { e.target.classList.add('in'); observer.unobserve(e.target); }
-  });
-}, { threshold: 0.1 });
-document.querySelectorAll('.fu:not(.in)').forEach(function(el) { observer.observe(el); });
+// ── Scroll animations + Init (runs after DOM ready) ──
+document.addEventListener('DOMContentLoaded', function() {
+  // Hero elements are visible via CSS (.hero .fu rule) — no JS needed
+  // Observe non-hero .fu elements for scroll animation
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (e.isIntersecting) { e.target.classList.add('in'); observer.unobserve(e.target); }
+    });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.fu').forEach(function(el) { observer.observe(el); });
 
-// ── Init lang ──
-(function() {
-  var saved = 'en';
-  try { saved = localStorage.getItem('pattro_lang') || 'en'} catch(e) {}
-  currentLang = saved;
-  var lbl = document.getElementById('lang-label');
-  if (lbl) lbl.textContent = saved.toUpperCase();
-  if (saved !== 'en') applyTranslations(saved);
-  document.querySelectorAll('.lang-opt').forEach(function
+  // Init lang
+  (function() {
+    var saved = 'en';
+    try { saved = localStorage.getItem('pattro_lang') || 'en'; } catch(e) {}
+    currentLang = saved;
+    var lbl = document.getElementById('lang-label');
+    if (lbl) lbl.textContent = saved.toUpperCase();
+    if (saved !== 'en') applyTranslations(saved);
+    document.querySelectorAll('.lang-opt').forEach(function(o) {
+      o.classList.toggle('active', o.textContent.trim().includes(saved === 'en' ? 'English' : 'Español'));
+    });
+  })();
+});
+</script>
+</body>
+</html>
