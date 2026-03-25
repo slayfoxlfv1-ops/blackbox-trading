@@ -149,7 +149,7 @@ select.input{cursor:pointer}
 
     <!-- ── Terms ── -->
     <div class="terms">
-      By signing up, you agree to our <a href="/terms" target="_blank">Terms of Use</a> and <a href="/privacy" target="_blank">Privacy Policy</a>.<br><br>
+      By signing up, you agree to our <a href="/terms" target="_blank">Terms of Use</a>, <a href="/privacy" target="_blank">Privacy Policy</a> and <a href="/refund" target="_blank">Refund Policy</a>.<br><br>
       <strong style="color:var(--text2)">Important:</strong> All sales are final — no refunds. If you have any issues, please contact our support team. Your information may be used by Pattro to send you product updates, tips, and important account notifications.
     </div>
 
@@ -333,7 +333,7 @@ async function handleRegister() {
 
     // Initialize Paddle.js with live environment
     Paddle.Initialize({
-      token: 'PADDLE_CLIENT_TOKEN_PLACEHOLDER',
+      token: 'apikey_01km3xgy5brrscmd4x93wzrrhp',
       eventCallback: function(data) {
         if (data.name === 'checkout.completed') {
           // Payment successful — redirect to dashboard
@@ -344,7 +344,7 @@ async function handleRegister() {
 
     // Open Paddle checkout overlay
     Paddle.Checkout.open({
-      items: [{ priceId: 'PADDLE_PRICE_ID_PLACEHOLDER', quantity: 1 }],
+      items: [{ priceId: 'pri_01km3xarg0ej4zgt24cwn4p55j', quantity: 1 }],
       customer: {
         email: email
       },

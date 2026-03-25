@@ -27,6 +27,10 @@
     {
       "source": "/reset-password",
       "destination": "/reset-password.html"
+    },
+    {
+      "source": "/refund",
+      "destination": "/refund.html"
     }
   ],
   "headers": [
