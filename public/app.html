@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774471621 -->
+<!-- v1774489320 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -8560,161 +8560,241 @@ async function autoCoachCheck(trades, accountId) {
 // ONBOARDING GUIDE — shows once, step by step, never again
 // ══════════════════════════════════════════════════════════════
 
-function checkAndShowOnboardingGuide() {
-  try {
-    if (localStorage.getItem('bb_onboarding_done')) return;
-  } catch(e) {}
-  setTimeout(showOnboardingGuide, 600);
+// ─────────────────────────────────────────────────────────────
+// PATTRO TOUR v2 — Spotlight + Step-by-step guide
+// ─────────────────────────────────────────────────────────────
+
+var _tourStep = 0;
+var _tourActive = false;
+
+var TOUR_STEPS = [
+  {
+    key:'welcome', target:null,
+    title:'Welcome to Pattro 👋',
+    subtitle:'Your Trading Psychology Engine',
+    body:'Pattro is not a regular trading journal. It tracks your emotions, behavior and patterns across every trade — so you can see <strong>exactly</strong> what is costing you money and fix it.<br><br>This tour takes about 3 minutes and walks you through every section of the app. You can skip it anytime and come back from <strong>Settings → Help</strong>.',
+    tip:null, cta:'Start the tour →'
+  },
+  {
+    key:'add_account', target:'.add-acc-btn', nav:'dashboard',
+    title:'Step 1 — Add your trading account',
+    subtitle:'One account = one funded or real account',
+    body:'Click <strong>"+ Add account"</strong> in the sidebar to create your first account. Each account represents a real trading account — for example "Topstep Funded #1" or "Personal Account".<br><br>You can add as many accounts as you need and switch between them freely. Every account has its own trades, rules, checklist, and analysis — the data is completely independent.',
+    tip:'💡 If you have multiple funded accounts active at the same time, create one for each. This keeps the psychology data accurate and separate.',
+    cta:'Next →'
+  },
+  {
+    key:'log_trade', target:'#log-btn', nav:'dashboard',
+    title:'Step 2 — Log Trade',
+    subtitle:'The most important button in the app',
+    body:'After every trade click <strong>"+ Log Trade"</strong> to record it. Here is what each field means:<br><br><strong>R:R Planned</strong> — your intended risk/reward before entering. If you risk $100 to make $200, that is 2.0.<br><br><strong>R:R Achieved</strong> — what actually happened. The gap between planned and achieved reveals your execution quality.<br><br><strong>Emotion</strong> — how you felt when you took the trade. This is the most important psychological field — Pattro correlates your emotional state with your P&L over time.<br><br><strong>Discipline tag</strong> — was it a clean trade? Options: Clean, FOMO, Impulse, Overtrading, Moved SL, No confirmation. Be honest — this builds your Discipline Score.<br><br><strong>Checklist slider</strong> — how much of your pre-trade checklist did you complete? 0–100%.<br><br><strong>Color Day</strong> — on historical trades you can record how your session felt that day.',
+    tip:'💡 Even filling just P&L and emotion gives Pattro enough to generate useful insights. The more fields you fill, the more accurate the analysis.',
+    cta:'Next →'
+  },
+  {
+    key:'dashboard', target:'.nav-item[data-view="dashboard"]', nav:'dashboard',
+    title:'Step 3 — Dashboard',
+    subtitle:'Your daily trading headquarters',
+    body:'The Dashboard is your daily summary. Once you start logging trades, here is what you will find:<br><br><strong>Mental Score</strong> — your overall psychological performance for the day (0–100), updated after every trade.<br><br><strong>Color Day</strong> — Green, Yellow or Red based on your mood check and session P&L, with specific recommendations for each state.<br><br><strong>What your data says</strong> — three key insights: Most Costly Behavior, Time Pattern (your best and worst trading hours), and Emotional Impact (which emotion costs you the most money).<br><br><strong>Mistakes & Positives</strong> — real-time detection of revenge trades, FOMO, overtrading, and clean executions.<br><br><strong>Performance panels</strong> — weekly and monthly Mental Score trends, current streaks, best day.',
+    tip:'💡 The Dashboard updates live as you log trades. No refresh needed.',
+    cta:'Next →'
+  },
+  {
+    key:'trades', target:'.nav-item[data-view="trades"]', nav:'trades',
+    title:'Step 4 — Trades',
+    subtitle:'Your complete trade history',
+    body:'The Trades section has two views:<br><br><strong>Trade Log</strong> — a full list of all your trades with filters, search, and inline editing. You can see notes, screenshots, edit any trade, and review your complete history.<br><br><strong>Calendar</strong> — the same trades in a monthly calendar. Each day shows its result with a color. Click any day to see all trades from that session with full details.',
+    tip:'💡 You can edit any trade directly from the Trade Log — click the edit icon on any row.',
+    cta:'Next →'
+  },
+  {
+    key:'psychology', target:'.nav-item[data-view="psychology"]', nav:'psychology',
+    title:'Step 5 — Psychology',
+    subtitle:'The most important section in Pattro',
+    body:'This is where all the psychological analysis lives. It has three tabs:<br><br><strong>Psychology</strong> — your AI Coach (generates a full diagnosis with 15+ trades), daily and weekly Mind Score, and your Psychological Profile: dominant pattern, main saboteur, and a concrete action plan.<br><br><strong>Discipline</strong> — your Rules and Checklist (covered in the next two steps).<br><br><strong>Calendar</strong> — a monthly calendar of your Mind Score. Click any day to review your full psychological state for that session.',
+    tip:'💡 The AI Coach becomes significantly more accurate with 15+ trades. With 30+ days of data you will see clear patterns in your psychology.',
+    cta:'Next →'
+  },
+  {
+    key:'rules', target:'.nav-item[data-view="psychology"]', nav:'psychology',
+    tab:function(){ if(typeof switchPsychTab==='function') switchPsychTab('discipline'); setTimeout(function(){ if(typeof switchDiscTab==='function') switchDiscTab('rules'); },300); },
+    title:'Step 6 — Rules',
+    subtitle:'Your fixed trading boundaries',
+    body:'Rules define your hard limits as a trader. They are <strong>fixed categories</strong> — you cannot add or remove them, but you set the values for each one.<br><br>Examples: maximum daily loss, maximum consecutive losses, allowed trading hours, maximum trades per day.<br><br>Pattro automatically detects when you break a rule and flags it in your Discipline Score. The more rules you activate and respect, the higher your score.',
+    tip:'⚠️ Always keep your rules active. A trader with no rules has no discipline score — and no way to improve.',
+    cta:'Next →'
+  },
+  {
+    key:'checklist', target:'.nav-item[data-view="psychology"]', nav:'psychology',
+    tab:function(){ if(typeof switchPsychTab==='function') switchPsychTab('discipline'); setTimeout(function(){ if(typeof switchDiscTab==='function') switchDiscTab('checklist'); },300); },
+    title:'Step 7 — Checklist',
+    subtitle:'Your personal pre-trade conditions',
+    body:'Unlike Rules, the Checklist is <strong>fully customizable</strong>. Add the specific conditions you need to verify before every trade — for example:<br><br>• "Stop loss defined before entry"<br>• "Minimum R:R of 1.5"<br>• "No trading in the first 15 minutes"<br>• "I have identified a clear setup"<br><br>Before each session you rate how well you completed it using the 0–100% slider in the Log Trade form. This directly affects your Discipline Score.',
+    tip:'⚠️ The checklist and rules are the foundation of your discipline score. Set them up before logging your first trade.',
+    cta:'Next →'
+  },
+  {
+    key:'insights', target:'.nav-item[data-view="insights"]', nav:'insights',
+    title:'Step 8 — Insights',
+    subtitle:'Weekly coaching and achievements',
+    body:'The Insights section has two parts:<br><br><strong>Weekly AI Coach</strong> — every week Pattro generates a full analysis: what worked, what did not, your dominant pattern this week, and 3 specific actions to take next week. The more trades you have, the more precise the diagnosis.<br><br><strong>Achievements & Streaks</strong> — your long-term consistency tracked as milestones and streaks. Streaks track consecutive days of clean behavior (checklist completed, rules respected, no tilt). Milestones are permanent achievements unlocked once.',
+    tip:'💡 Achievements are not decoration — they directly reflect your real consistency as a trader.',
+    cta:'Next →'
+  },
+  {
+    key:'settings', target:'.nav-item[data-view="settings"]', nav:'settings',
+    title:'Step 9 — Settings',
+    subtitle:'Everything you need to configure',
+    body:'Settings has six sections:<br><br><strong>Profile</strong> — change your username and password.<br><br><strong>Plan & Subscription</strong> — view your current plan, days remaining, and manage your subscription.<br><br><strong>Connect Platforms</strong> — download the Pattro Chrome extension for TopstepX. Once installed, trades are captured automatically every time you close a position.<br><br><strong>Setup Tags</strong> — create your personal trade setup labels (e.g., "ICT BOS", "Supply Zone"). These appear in Log Trade and help you analyze which setups perform best.<br><br><strong>Extension Behavior</strong> — configure notifications, trade blocking, and lock behavior once the extension is connected.<br><br><strong>Help</strong> — come back to this tour anytime.',
+    tip:'💡 Set up your Setup Tags before logging trades — it makes the pattern analysis much more specific.',
+    cta:'Next →'
+  },
+  {
+    key:'done', target:null,
+    title:"You're all set! 🚀",
+    subtitle:'Start logging and Pattro does the rest',
+    body:'Here is your quick-start checklist:<br><br>✅ Create your trading account (sidebar → "+ Add account")<br>✅ Set your Rules (Psychology → Discipline → Rules)<br>✅ Set your Checklist (Psychology → Discipline → Checklist)<br>✅ Add your Setup Tags (Settings → Setup Tags)<br>✅ Log your first trade (top bar → "+ Log Trade")<br>✅ Do your daily mood check (it will appear automatically)<br><br>With <strong>15+ trades</strong> the AI Coach generates your full psychological profile. With <strong>30+ days</strong> you will see clear patterns in your behavior.',
+    tip:'💡 You can return to this guide anytime from Settings → Help.',
+    cta:'Start using Pattro!'
+  }
+];
+
+function _tourSpotlight(selector) {
+  var sp = document.getElementById('tour-sp');
+  if (sp) sp.remove();
+  if (!selector) return null;
+  var el = document.querySelector(selector);
+  if (!el) return null;
+  var r   = el.getBoundingClientRect();
+  var pad = 8;
+  sp = document.createElement('div');
+  sp.id = 'tour-sp';
+  sp.style.cssText = 'position:fixed;z-index:99997;pointer-events:none;border-radius:10px;'
+    + 'box-shadow:0 0 0 9999px rgba(0,0,0,.78);border:2px solid #3ecfcf;transition:all .3s;'
+    + 'top:'+(r.top-pad)+'px;left:'+(r.left-pad)+'px;'
+    + 'width:'+(r.width+pad*2)+'px;height:'+(r.height+pad*2)+'px';
+  document.body.appendChild(sp);
+  el.scrollIntoView({ behavior:'smooth', block:'center' });
+  return el;
+}
+
+function _tourRemoveSp() {
+  var sp = document.getElementById('tour-sp');
+  if (sp) sp.remove();
+}
+
+function _tourPos(el) {
+  if (!el) return 'top:50%;left:50%;transform:translate(-50%,-50%)';
+  var r  = el.getBoundingClientRect();
+  var tw = 420;
+  var vw = window.innerWidth;
+  var vh = window.innerHeight;
+  var lx = r.right + 20;
+  if (lx + tw > vw - 16) lx = r.left - tw - 20;
+  if (lx < 16) lx = Math.max(16, (vw - tw) / 2);
+  var ty = Math.max(16, Math.min(r.top, vh - 560));
+  return 'top:'+ty+'px;left:'+lx+'px;transform:none';
+}
+
+function _tourRender() {
+  var s      = TOUR_STEPS[_tourStep];
+  var isLast = _tourStep === TOUR_STEPS.length - 1;
+  var isFirst= _tourStep === 0;
+
+  // Navigate
+  if (s.nav && typeof navigateTo === 'function') navigateTo(s.nav);
+
+  // Tab switch
+  if (s.tab) setTimeout(s.tab, 400);
+
+  // Spotlight
+  var spEl = null;
+  if (s.target) {
+    setTimeout(function() {
+      spEl = _tourSpotlight(s.target);
+      var tt = document.getElementById('tour-tt');
+      if (tt && spEl) { tt.style.cssText = tt.style.cssText.replace(/top:[^;]+;left:[^;]+;transform:[^;]+/, _tourPos(spEl)); }
+    }, 450);
+  } else {
+    _tourRemoveSp();
+  }
+
+  // Progress dots
+  var dots = TOUR_STEPS.map(function(_,i) {
+    return '<div style="width:'+(i===_tourStep?'18px':'6px')+';height:6px;border-radius:3px;flex-shrink:0;'
+      +'background:'+(i===_tourStep?'#3ecfcf':i<_tourStep?'rgba(62,207,207,.3)':'#26262e')+';transition:all .3s"></div>';
+  }).join('');
+
+  var existing = document.getElementById('tour-tt');
+  if (existing) existing.remove();
+
+  var tt = document.createElement('div');
+  tt.id = 'tour-tt';
+  tt.style.cssText = 'position:fixed;z-index:99999;width:420px;max-width:calc(100vw - 32px);'
+    + 'max-height:85vh;overflow-y:auto;background:#111113;border:1px solid #26262e;'
+    + 'border-top:3px solid #3ecfcf;border-radius:14px;padding:24px;'
+    + 'box-shadow:0 24px 80px rgba(0,0,0,.9);font-family:Geist Mono,monospace;'
+    + 'animation:tourFadeIn .25s cubic-bezier(.16,1,.3,1);'
+    + 'top:50%;left:50%;transform:translate(-50%,-50%)';
+
+  tt.innerHTML =
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">'
+    +'<div style="display:flex;gap:4px;flex-wrap:wrap;max-width:280px">'+dots+'</div>'
+    +'<span style="font-size:9px;color:#9898a6">'+(_tourStep+1)+' / '+TOUR_STEPS.length+'</span>'
+    +'</div>'
+    +'<div style="margin-bottom:16px">'
+    +'<div style="font-size:16px;font-weight:800;color:#eeeef0;letter-spacing:-.3px;margin-bottom:3px">'+s.title+'</div>'
+    +'<div style="font-size:10px;color:#9898a6;letter-spacing:.3px">'+s.subtitle+'</div>'
+    +'</div>'
+    +'<div style="font-size:11px;color:#9898a6;line-height:1.85;margin-bottom:'+(s.tip?'0':'20px')+'">'+s.body+'</div>'
+    +(s.tip?'<div style="margin:14px 0 20px;padding:10px 13px;background:rgba(62,207,207,.06);border:1px solid rgba(62,207,207,.2);border-radius:8px;font-size:10px;color:#3ecfcf;line-height:1.6">'+s.tip+'</div>':'')
+    +'<div style="display:flex;gap:8px;margin-top:4px">'
+    +(!isFirst?'<button id="tbk" style="flex:1;padding:10px;border:1px solid #26262e;border-radius:9px;background:none;color:#9898a6;font-size:11px;cursor:pointer;font-family:inherit">← Back</button>':'')
+    +'<button id="tnx" style="flex:2;padding:10px;border:none;border-radius:9px;background:'+(isLast?'#3dba72':'#3ecfcf')+';color:#0a0a0b;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:.3px">'+s.cta+'</button>'
+    +'</div>'
+    +(!isLast?'<div style="text-align:center;margin-top:10px"><button id="tsk" style="background:none;border:none;color:#52525e;font-size:9px;cursor:pointer;font-family:inherit;text-transform:uppercase;letter-spacing:.5px">Skip tour</button></div>':'');
+
+  document.body.appendChild(tt);
+
+  tt.querySelector('#tnx').addEventListener('click', function() {
+    if (isLast) { _tourDone(true); } else { _tourStep++; _tourRender(); }
+  });
+  var bk = tt.querySelector('#tbk');
+  if (bk) bk.addEventListener('click', function() { if(_tourStep>0){_tourStep--;_tourRender();} });
+  var sk = tt.querySelector('#tsk');
+  if (sk) sk.addEventListener('click', function() { _tourDone(false); });
+}
+
+function _tourDone(completed) {
+  _tourActive = false;
+  _tourRemoveSp();
+  var tt = document.getElementById('tour-tt');
+  if (tt) tt.remove();
+  try { localStorage.setItem('pattro_tour_done','1'); } catch(e) {}
+  if (completed && typeof currentAccountId!=='undefined' && currentAccountId) {
+    setTimeout(function(){ if(typeof checkAndShowMoodCheck==='function') checkAndShowMoodCheck(currentAccountId); }, 500);
+  }
 }
 
 function showOnboardingGuide() {
-  var existing = document.getElementById('onboarding-overlay');
-  if (existing) existing.remove();
-
-  var steps = [
-    {
-      icon: '👋',
-      title: 'Welcome to Pattro',
-      subtitle: 'Your Trading Psychology Engine',
-      content: 'Pattro is not a normal journal. Its goal is to help you understand <strong>why you make bad decisions</strong> — not just track how much you won or lost.<br><br>It tracks your psychology, detects error patterns, calculates your daily mental state and gives you real feedback on your discipline as a trader.<br><br>This guide takes a few minutes and covers everything you need to know.',
-      tip: null
-    },
-    {
-      icon: '🏦',
-      title: 'Step 1 — Create your trading account',
-      subtitle: 'One account = one real trading account',
-      content: 'An <strong>account</strong> in Pattro represents your real trading account (e.g., "Funded Account #1", "Paper Trading"). You can have multiple and switch between them from the sidebar.<br><br>Click <strong>"+ Add account"</strong> in the sidebar to get started. Each account has its own trades, rules, checklist and settings.',
-      tip: '💡 If you have multiple active funded accounts, create one for each — this keeps the data separate and the analysis accurate.'
-    },
-    {
-      icon: '🔌',
-      title: 'Step 2A — Chrome Extension (recommended)',
-      subtitle: 'Automatic capture from TopstepX',
-      content: 'If you trade on <strong>TopstepX</strong>, install the Pattro Chrome extension. Once connected:<br><br>• Trades are detected and saved <strong>automatically</strong> when they close<br>• A popup appears to log your emotion, discipline and notes<br>• If you break a rule, the extension <strong>blocks your screen for 15 minutes</strong> so you can reset<br>• Shows your session P&L on screen in real time',
-      tip: '💡 Download the extension from Settings → Extension. Then install it in Chrome as an unpacked extension.'
-    },
-    {
-      icon: '✍️',
-      title: 'Step 2B — Manual logging',
-      subtitle: 'If you don\'t use TopstepX or prefer to do it yourself',
-      content: 'Use the <strong>"+ Log Trade"</strong> button in the top bar after each trade. Here\'s what each field means:<br><br><strong>📐 R:R Planned</strong> — before entering, what was your risk/reward ratio? If you risked $100 to make $200, your planned R:R is 2.0. This reflects your intention.<br><br><strong>📐 R:R Achieved</strong> — what actually happened? If you closed at $150 profit, your achieved R:R is 1.5. The gap between planned and achieved reveals execution quality.<br><br><strong>😶 Emotion</strong> — how you felt when you took the trade. This is the most important field psychologically. Pattro correlates your emotional state with your results over time. Calm and neutral trades usually outperform anxious or greedy ones — the data will show you your own pattern (Pattro).<br><br><strong>⚡ Discipline tag</strong> — was it a clean trade or did something go wrong? Options: Clean, FOMO, Impulse, Overtrading, Scaled into loss, Moved SL, No confirmation. Be honest — this data builds your discipline score.<br><br><strong>🏷 Setup tags</strong> — your personal trade setup labels (e.g., "ICT BOS", "Supply zone"). Define them in Settings.',
-      tip: '💡 Even if you only fill in P&L and emotion, Pattro can already generate useful insights. The more fields you complete, the more accurate the analysis.'
-    },
-    {
-      icon: '📋',
-      title: 'Step 3 — Checklist & Rules',
-      subtitle: 'Without this, the analysis is incomplete',
-      content: 'In <strong>Discipline → Checklist</strong> you create your pre-trade checklist. Examples: "SL defined before entry", "R:R minimum 1.5", "No trading in the first 30 minutes".<br><br>In <strong>Rules</strong> you define your limits: allowed trading hours, max trades per day, max consecutive losses, etc.<br><br>Pattro uses these rules to calculate your daily discipline and alert you when you break them.',
-      tip: '💡 The system automatically detects if you trade outside your hours, exceed your loss limit or skip the checklist.'
-    },
-    {
-      icon: '🧠',
-      title: 'Step 4 — Daily mental check',
-      subtitle: 'Your internal state affects your results',
-      content: 'Every morning before trading, Pattro asks 4 questions: sleep quality, stress level, concentration and financial pressure.<br><br>Over time the system detects if your worst trading days coincide with poor sleep or high stress. This appears in the <strong>Mind</strong> view.<br><br>You can answer it from the dashboard or from the extension.',
-      tip: '💡 With 2 weeks of data you\'ll see clear correlations between your mental state and your P&L.'
-    },
-    {
-      icon: '📊',
-      title: 'Dashboard views',
-      subtitle: 'Each one has a concrete purpose',
-      content: '<strong>Overview</strong> — daily summary: P&L, Mental Score, active alerts and achievements<br><strong>Trade Log</strong> — all your trades with filters, editing and search<br><strong>Calendar</strong> — monthly view, one day = one color based on result<br><strong>Discipline</strong> — daily checklist, operations and weekly AI Coach<br><strong>Mind</strong> — deep psychology: mood, emotional patterns, streaks<br><strong>Rules</strong> — configure your personal trading rules<br><strong>Performance</strong> — your weekly/monthly Mental Score and psychological profile<br><strong>Settings</strong> — accounts, tags, extension and configuration',
-      tip: null
-    },
-    {
-      icon: '🔢',
-      title: 'How your scores are calculated',
-      subtitle: 'No black boxes — every number has a clear meaning',
-      content: '<strong>Mental Score (0–100)</strong> — your overall psychological performance for the day. It combines:<br>• <strong>Discipline (40%)</strong> — did you complete the checklist? Did you respect your rules? Were your trades tagged "clean"?<br>• <strong>Mind (35%)</strong> — how was your internal state? Comes from your daily mental check (sleep, stress, focus, financial pressure)<br>• <strong>Execution (25%)</strong> — how close was your achieved R:R to your planned R:R? Did you stick to your plan?<br><br><strong>Why 40% discipline?</strong> Because research shows discipline is the strongest predictor of long-term trading performance — more than strategy or market knowledge.<br><br><strong>What if I have no mood check?</strong> Pattro infers your mental state from your trade behavior — revenge trades, overtrading and tilt are detected automatically from timing and P&L patterns.<br><br><strong>Data quality badges</strong> — if your data is incomplete, your Mental Score shows a badge: ◑ Partial (some data missing) or ~ Inferred (estimated from behavior). A complete day shows no badge.',
-      tip: '💡 A Mental Score of 75+ means you\'re trading professionally that day, regardless of whether you made or lost money.'
-    },
-    {
-      icon: '🏆',
-      title: 'Streaks & Achievements',
-      subtitle: 'Your long-term progress',
-      content: 'In <strong>Performance</strong> you\'ll see two types of recognition:<br><br><strong>Streaks</strong> — consecutive days doing something right: completing the checklist, respecting rules, avoiding tilt. They reset if you fail a day.<br><br><strong>Milestones</strong> — permanent achievements unlocked once: first clean trade, 10 impulse-free trades, perfect week, etc.<br><br>They\'re not decoration — they reflect your real consistency as a trader.',
-      tip: '💡 The hardest milestones (Perfect Week, Elite Month) require consistency in checklist, rules and mental state simultaneously.'
-    },
-    {
-      icon: '🚀',
-      title: 'All set!',
-      subtitle: 'With 15 trades you\'ll see your full psychological profile',
-      content: 'The more trades you log, the more accurate the analysis. With <strong>15+ trades</strong> the AI Coach can generate your full psychological profile: dominant pattern, main saboteur, best trading hours and a concrete work plan.<br><br>With <strong>30+ days</strong> you\'ll see clearer trends about which internal conditions make you perform better or worse.',
-      tip: '💡 You can return to this guide anytime from Settings → "View step-by-step guide".'
-    }
-  ];
-
-  var currentStep = 0;
-
-  var overlay = document.createElement('div');
-  overlay.id = 'onboarding-overlay';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:99999;display:flex;align-items:center;justify-content:center;font-family:Geist,sans-serif;backdrop-filter:blur(6px)';
-
-  function renderStep() {
-    var s = steps[currentStep];
-    var isLast = currentStep === steps.length - 1;
-    var isFirst = currentStep === 0;
-
-    var dotsHtml = steps.map(function(_, i) {
-      return '<div style="width:' + (i === currentStep ? '20px' : '6px') + ';height:6px;border-radius:3px;background:' + (i === currentStep ? '#5a9e9e' : 'var(--border2)') + ';transition:all .3s"></div>';
-    }).join('');
-
-    overlay.innerHTML = '<div style="background:var(--surface);border:1px solid var(--border2);border-radius:18px;padding:32px;width:500px;max-width:92vw;max-height:88vh;overflow-y:auto;animation:fadeIn .2s ease">'
-      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">'
-      + '<div style="display:flex;gap:5px;align-items:center">' + dotsHtml + '</div>'
-      + '<div style="font-size:9px;color:var(--text3)">' + (currentStep+1) + ' / ' + steps.length + '</div>'
-      + '</div>'
-      + '<div style="text-align:center;margin-bottom:24px">'
-      + '<div style="font-size:44px;margin-bottom:12px">' + s.icon + '</div>'
-      + '<div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px">' + s.title + '</div>'
-      + '<div style="font-size:11px;color:var(--text3)">' + s.subtitle + '</div>'
-      + '</div>'
-      + '<div style="font-size:11px;color:var(--text2);line-height:1.8;margin-bottom:' + (s.tip ? '0' : '24px') + '">' + s.content + '</div>'
-      + (s.tip ? '<div style="margin:14px 0 24px;padding:10px 14px;background:#1e2a1e;border:1px solid var(--green-bd);border-radius:8px;font-size:10px;color:var(--green);line-height:1.6">' + s.tip + '</div>' : '')
-      + '<div style="display:grid;grid-template-columns:' + (isFirst ? '1fr' : '1fr 2fr') + ';gap:8px">'
-      + (isFirst ? '' : '<button id="ob-back" style="padding:11px;border:1px solid var(--border);border-radius:9px;background:none;color:var(--text3);font-size:11px;cursor:pointer;font-family:inherit">← Previous</button>')
-      + '<button id="ob-next" style="padding:11px;border:none;border-radius:9px;background:' + (isLast ? 'var(--green)' : '#5a9e9e') + ';color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">'
-      + (isLast ? 'Start using Pattro! 🚀' : 'Next →') + '</button>'
-      + '</div>'
-      + (!isLast ? '<div style="text-align:center;margin-top:10px"><button id="ob-skip" style="background:none;border:none;color:var(--text3);font-size:9px;cursor:pointer;font-family:inherit">Skip guide</button></div>' : '')
-      + '</div>';
-
-    // Attach events AFTER setting innerHTML — search within overlay container
-    var nextBtn = overlay.querySelector('#ob-next');
-    var backBtn = overlay.querySelector('#ob-back');
-    var skipBtn = overlay.querySelector('#ob-skip');
-
-    if (nextBtn) nextBtn.addEventListener('click', function() {
-      if (isLast) {
-        try { localStorage.setItem('bb_onboarding_done', '1'); } catch(e) {}
-        overlay.remove();
-        // Now show mood check if needed
-        if (currentAccountId) setTimeout(function() { checkAndShowMoodCheck(currentAccountId); }, 400);
-      } else {
-        currentStep++;
-        renderStep();
-      }
-    });
-
-    if (backBtn) backBtn.addEventListener('click', function() {
-      currentStep--;
-      renderStep();
-    });
-
-    if (skipBtn) skipBtn.addEventListener('click', function() {
-      try { localStorage.setItem('bb_onboarding_done', '1'); } catch(e) {}
-      overlay.remove();
-      if (currentAccountId) setTimeout(function() { checkAndShowMoodCheck(currentAccountId); }, 400);
-    });
+  _tourActive = true;
+  _tourStep   = 0;
+  if (!document.getElementById('tour-css')) {
+    var st = document.createElement('style');
+    st.id  = 'tour-css';
+    st.textContent = '@keyframes tourFadeIn{from{opacity:0;transform:translate(-50%,-48%) scale(.97)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}';
+    document.head.appendChild(st);
   }
-
-  document.body.appendChild(overlay); // append BEFORE first renderStep so querySelector works
-  renderStep();
+  _tourRender();
 }
 
-// Allow re-opening from Settings
+function checkAndShowOnboardingGuide() {
+  try { if(localStorage.getItem('pattro_tour_done')||localStorage.getItem('bb_onboarding_done')) return; } catch(e) {}
+  setTimeout(showOnboardingGuide, 900);
+}
+
 function resetOnboardingGuide() {
-  try { localStorage.removeItem('bb_onboarding_done'); } catch(e) {}
+  try { localStorage.removeItem('pattro_tour_done'); localStorage.removeItem('bb_onboarding_done'); } catch(e) {}
   showOnboardingGuide();
 }
 
@@ -10479,9 +10559,11 @@ function renderSettings() {
     '<div style="font-size:9px;color:var(--text3);margin-top:4px">Pattro v0.5 · 2026</div>'+
     '</div></div>'+
     '<div class="panel" style="margin-bottom:12px"><div class="panel-head"><span class="panel-title">Help</span></div>'+
-    '<div style="padding:18px;display:flex;flex-direction:column;gap:10px">'+
-    '<div style="font-size:11px;color:var(--text2)">First time using Pattro or need to review how it works?</div>'+
-    '<button onclick="resetOnboardingGuide()" style="padding:10px 18px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left">📖 View step-by-step guide</button>'+
+    '<div style="padding:18px;display:flex;flex-direction:column;gap:12px">'+
+    '<div style="font-size:12px;font-weight:700;color:var(--text)">App Guide</div>'+
+    '<div style="font-size:11px;color:var(--text2);line-height:1.7">The interactive tour walks you through every section of Pattro — what each view does, what each field means, and how to get the most out of the app.</div>'+
+    '<button onclick="resetOnboardingGuide()" style="padding:11px 18px;background:var(--teal);border:none;border-radius:9px;color:#0a0a0b;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:.3px">▶ Start the tour again</button>'+
+    '<div style="font-size:10px;color:var(--text3);line-height:1.6">Covers: accounts, Log Trade fields, Dashboard, Trades, Psychology, Rules, Checklist, Insights and Settings.</div>'+
     '</div></div>'+
     '</div>';
   setTimeout(function(){ initSettingsTags(); initExtSettings(); loadPlanPanel(); }, 50);
