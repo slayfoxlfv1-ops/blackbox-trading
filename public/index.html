@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774563977 -->
+<!-- v1774564182 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -931,4 +931,10 @@ window.addEventListener('load', function() {
   var lbl = document.getElementById('lang-label');
   if (lbl) lbl.textContent = saved.toUpperCase();
   if (saved !== 'en') applyTranslations(saved);
-  document.querySelectorAll('.lang-opt').forEach(function
+  document.querySelectorAll('.lang-opt').forEach(function(o) {
+    o.classList.toggle('active', o.textContent.trim().includes(saved === 'en' ? 'English' : 'Español'));
+  });
+})();
+</script>
+</body>
+</html>
