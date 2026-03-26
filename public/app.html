@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774489320 -->
+<!-- v1774490191 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -4311,31 +4311,8 @@ function buildOnboardingScreen(acc) {
   }).join('');
 
   return '<div class="fade-in" style="max-width:600px;margin:32px auto;padding:0 16px">'
-    + '<div style="text-align:center;margin-bottom:28px">'
-    + '<div style="font-size:38px;margin-bottom:12px;letter-spacing:-2px;color:var(--text3)">&#9672;</div>'
-    + '<div style="font-size:20px;font-weight:800;color:var(--text);margin-bottom:8px;letter-spacing:-.3px">Start building your edge</div>'
-    + '<div style="font-size:12px;color:var(--text3);line-height:1.8;max-width:400px;margin:0 auto">La mayoria de traders saben <em>que</em> hacen mal.<br>Pattro te muestra <strong style="color:var(--text)">cuando, como y por que</strong> lo hacen.</div>'
-    + '</div>'
-    + '<div class="panel" style="padding:20px;margin-bottom:16px">'
-    + '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px">Your path to insights</div>'
-    + milestonesHtml
-    + '<div style="margin-top:14px;padding:12px 14px;background:rgba(90,158,158,0.08);border:1px solid rgba(90,158,158,0.25);border-radius:8px">'
-    + '<div style="font-size:10px;color:#5a9e9e;font-weight:600;margin-bottom:4px">Where to start</div>'
-    + '<div style="font-size:10px;color:var(--text3);line-height:1.7">Log your first trade con <strong style="color:var(--text)">+ Log Trade</strong> en la barra superior, o instala la extension para TopstepX y captura trades automaticamente.</div>'
-    + '</div></div>'
-    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
-    + '<div class="panel" style="padding:14px;cursor:pointer" onclick="navigateTo(\'psychology\')">'
-    + '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">Step 1</div>'
-    + '<div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:4px">&#128203; Configura tu checklist</div>'
-    + '<div style="font-size:9px;color:var(--text3);line-height:1.5">The questions you review before each session. Define your own.</div>'
-    + '</div>'
-    + '<div class="panel" style="padding:14px;cursor:pointer" onclick="navigateTo(\'psychology\')">'
-    + '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">Step 2</div>'
-    + '<div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:4px">&#9878; Define your rules</div>'
-    + '<div style="font-size:9px;color:var(--text3);line-height:1.5">Daily loss limit, max drawdown, trading hours. The system monitors them for you.</div>'
-    + '</div>'
-    + '</div>'
-    + '</div>';
+    + '<div style="text-align:center;margin-bottom:28px;padding:8px 0 4px">'    + '<div style="position:relative;width:44px;height:44px;margin:0 auto 16px;flex-shrink:0"><span style="font-family:Georgia,serif;font-size:40px;font-weight:700;color:var(--text);line-height:1;position:absolute;left:0;bottom:0">P</span><span style="position:absolute;top:0;right:0;width:10px;height:10px;border-radius:50%;background:var(--teal)"></span></div>'    + '<div style="font-size:22px;font-weight:800;color:var(--text);margin-bottom:10px;letter-spacing:-.5px;line-height:1.2">Stop losing money<br>because of your psychology.</div>'    + '<div style="font-size:12px;color:var(--text3);line-height:1.8;max-width:380px;margin:0 auto">Pattro detects your trading mistakes automatically and tells you <strong style="color:var(--text)">exactly what to fix</strong> — revenge trading, FOMO, overtrading, emotional patterns.</div>'    + '<button onclick="resetOnboardingGuide()" style="margin-top:18px;padding:10px 24px;background:var(--teal);border:none;border-radius:9px;color:#0a0a0b;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:.3px">▶ Take the app tour</button>'    + '</div>'    + '<div class="panel" style="padding:20px;margin-bottom:16px">'    + '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px">Your path to insights</div>'    + milestonesHtml    + '<div style="margin-top:14px;padding:12px 14px;background:var(--teal-bg);border:1px solid var(--teal-bd);border-radius:8px">'    + '<div style="font-size:10px;color:var(--teal);font-weight:700;margin-bottom:4px">Where to start</div>'    + '<div style="font-size:10px;color:var(--text3);line-height:1.7">Log your first trade with <strong style="color:var(--text)">+ Log Trade</strong> in the top bar, or install the Chrome extension for TopstepX to capture trades automatically.</div>'    + '</div></div>'    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'    + '<div class="panel" style="padding:14px;cursor:pointer;border-color:var(--border2)" onclick="navigateTo(\'psychology\')">'    + '<div style="font-size:9px;color:var(--teal);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;font-weight:700">Step 1</div>'    + '<div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:4px">📋 Set up your checklist</div>'    + '<div style="font-size:9px;color:var(--text3);line-height:1.5">The conditions you review before each session. Fully customizable.</div>'    + '</div>'    + '<div class="panel" style="padding:14px;cursor:pointer;border-color:var(--border2)" onclick="navigateTo(\'psychology\')">'    + '<div style="font-size:9px;color:var(--teal);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;font-weight:700">Step 2</div>'    + '<div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:4px">⚖ Define your rules</div>'    + '<div style="font-size:9px;color:var(--text3);line-height:1.5">Daily loss limit, max drawdown, trading hours. Pattro monitors them automatically.</div>'    + '</div>'    + '</div>'    + '</div>';
++ '</div>';
 }
 
 
