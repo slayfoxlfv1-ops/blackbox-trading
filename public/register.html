@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774566000 -->
+<!-- v1774566889 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -102,9 +102,10 @@ select.input{cursor:pointer}
       <div class="field-error" id="err-password-confirm"></div>
     </div>
     <div class="field">
-      <label class="label">Username</label>
-      <input class="input" id="r-username" type="text" placeholder="Username is required" autocomplete="username">
+      <label class="label">Username <span>letters, numbers, _ and -</span></label>
+      <input class="input" id="r-username" type="text" placeholder="e.g. john_doe" autocomplete="username" oninput="validateUsername(this.value)">
       <div class="field-error" id="err-username"></div>
+      <div style="font-size:10px;color:#52525e;margin-top:4px">Only letters, numbers, _ and - · No spaces or special characters</div>
     </div>
 
     <!-- ── Personal info ── -->
@@ -239,7 +240,7 @@ function validate() {
     { id: 'r-email',    err: 'err-email',    msg: 'Email is required',    check: function(v){ return v && v.includes('@'); }, emsg: 'Enter a valid email' },
     { id: 'r-password', err: 'err-password', msg: 'Password is required', check: function(v){ return v && v.length >= 8; },   emsg: 'Password must be at least 8 characters' },
     { id: 'r-password-confirm', err: 'err-password-confirm', msg: 'Please confirm your password', check: function(v){ return v === document.getElementById('r-password').value; }, emsg: 'Passwords do not match' },
-    { id: 'r-username', err: 'err-username', msg: 'Username is required', check: function(v){ return v && v.length >= 3; },   emsg: 'Username must be at least 3 characters' },
+    { id: 'r-username', err: 'err-username', msg: 'Username is required', check: function(v){ return v && v.length >= 3 && /^[a-zA-Z0-9_-]+$/.test(v); }, emsg: 'Username must be at least 3 characters and can only contain letters, numbers, _ and -' },
     { id: 'r-first',    err: 'err-first',    msg: 'First name is required', check: function(v){ return !!v; }, emsg: 'First name is required' },
     { id: 'r-last',     err: 'err-last',     msg: 'Last name is required',  check: function(v){ return !!v; }, emsg: 'Last name is required' },
     { id: 'r-country',  err: 'err-country',  msg: 'Please select a country', check: function(v){ return !!v; }, emsg: 'Please select a country' },
@@ -384,6 +385,20 @@ async function handleRegister() {
 }
 
 
+
+// ── Username real-time validation ──
+function validateUsername(val) {
+  var errEl = document.getElementById('err-username');
+  if (!errEl) return;
+  if (!val) { errEl.textContent = ''; return; }
+  if (!/^[a-zA-Z0-9_-]+$/.test(val)) {
+    errEl.textContent = 'Only letters, numbers, _ and - are allowed';
+  } else if (val.length < 3) {
+    errEl.textContent = 'Minimum 3 characters';
+  } else {
+    errEl.textContent = '';
+  }
+}
 
 // ── Toggle password visibility ──
 function togglePwd(inputId, eyeId) {
