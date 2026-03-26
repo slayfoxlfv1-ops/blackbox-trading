@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1773980457 -->
+<!-- v1774566000 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -83,8 +83,23 @@ select.input{cursor:pointer}
     </div>
     <div class="field">
       <label class="label">Password <span>(min 8 characters)</span></label>
-      <input class="input" id="r-password" type="password" placeholder="Create a password" autocomplete="new-password">
+      <div style="position:relative">
+        <input class="input" id="r-password" type="password" placeholder="Create a password" autocomplete="new-password" style="padding-right:42px">
+        <button type="button" onclick="togglePwd('r-password','eye1')" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:0;display:flex;align-items:center;color:#fff;opacity:.7" tabindex="-1">
+          <svg id="eye1" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
       <div class="field-error" id="err-password"></div>
+    </div>
+    <div class="field">
+      <label class="label">Confirm password</label>
+      <div style="position:relative">
+        <input class="input" id="r-password-confirm" type="password" placeholder="Repeat your password" autocomplete="new-password" style="padding-right:42px">
+        <button type="button" onclick="togglePwd('r-password-confirm','eye2')" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:0;display:flex;align-items:center;color:#fff;opacity:.7" tabindex="-1">
+          <svg id="eye2" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+      <div class="field-error" id="err-password-confirm"></div>
     </div>
     <div class="field">
       <label class="label">Username</label>
@@ -223,6 +238,7 @@ function validate() {
   var fields = [
     { id: 'r-email',    err: 'err-email',    msg: 'Email is required',    check: function(v){ return v && v.includes('@'); }, emsg: 'Enter a valid email' },
     { id: 'r-password', err: 'err-password', msg: 'Password is required', check: function(v){ return v && v.length >= 8; },   emsg: 'Password must be at least 8 characters' },
+    { id: 'r-password-confirm', err: 'err-password-confirm', msg: 'Please confirm your password', check: function(v){ return v === document.getElementById('r-password').value; }, emsg: 'Passwords do not match' },
     { id: 'r-username', err: 'err-username', msg: 'Username is required', check: function(v){ return v && v.length >= 3; },   emsg: 'Username must be at least 3 characters' },
     { id: 'r-first',    err: 'err-first',    msg: 'First name is required', check: function(v){ return !!v; }, emsg: 'First name is required' },
     { id: 'r-last',     err: 'err-last',     msg: 'Last name is required',  check: function(v){ return !!v; }, emsg: 'Last name is required' },
@@ -245,7 +261,8 @@ async function handleRegister() {
   if (!validate()) return;
 
   var email    = document.getElementById('r-email').value.trim();
-  var password = document.getElementById('r-password').value;
+  var password        = document.getElementById('r-password').value;
+  var passwordConfirm = document.getElementById('r-password-confirm').value;
   var username = document.getElementById('r-username').value.trim();
   var first    = document.getElementById('r-first').value.trim();
   var last     = document.getElementById('r-last').value.trim();
@@ -367,6 +384,21 @@ async function handleRegister() {
 }
 
 
+
+// ── Toggle password visibility ──
+function togglePwd(inputId, eyeId) {
+  var inp = document.getElementById(inputId);
+  var eye = document.getElementById(eyeId);
+  if (!inp) return;
+  var isHidden = inp.type === 'password';
+  inp.type = isHidden ? 'text' : 'password';
+  // Switch between open/closed eye icon
+  if (eye) {
+    eye.innerHTML = isHidden
+      ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>'
+      : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+  }
+}
 </script>
 </body>
 </html>
