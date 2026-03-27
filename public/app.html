@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774589543 -->
+<!-- v1774589949 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -1811,6 +1811,27 @@ function closeBugToast() {
   localStorage.setItem('pattro_bug_toast_seen', '1');
 }
 
+// Show error message from URL params on login screen
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  var err = params.get('error');
+  if (err) {
+    var msgs = {
+      'subscription': 'Your account does not have an active subscription. Please complete your payment to access Pattro.',
+      'incomplete':   'Your registration was not completed. Please register again.'
+    };
+    // Wait for DOM then show message
+    var interval = setInterval(function() {
+      var errEl = document.getElementById('auth-error');
+      if (errEl) {
+        errEl.style.color = 'var(--amber, #e09840)';
+        errEl.textContent = msgs[err] || 'Please log in to continue.';
+        clearInterval(interval);
+      }
+    }, 100);
+  }
+})();
+
 sb.auth.onAuthStateChange(function(event, session) {
   // TOKEN_REFRESHED fires silently every hour — ignore it to prevent page reset
   // Only act on INITIAL_SESSION (page load) and SIGNED_IN (actual login)
@@ -1841,10 +1862,15 @@ function checkPlanAndShow() {
     .single()
     .then(function(result) {
       var profile = result.data;
+
+      // No profile = incomplete registration
       if (!profile) {
-        window.location.href = '/login';
+        sb.auth.signOut().then(function() {
+          window.location.href = '/login?error=incomplete';
+        });
         return;
       }
+
       window._userPlan    = profile.plan || 'free';
       window._planExpires = profile.plan_expires_at || null;
       window._username    = profile.username || '';
@@ -1856,10 +1882,14 @@ function checkPlanAndShow() {
       var isLifetime = plan === 'lifetime';
 
       if (!isPro && !isLifetime) {
-        _showPaywall();
-      } else {
-        showApp();
+        // Sign out and redirect — don't leave active session for free users
+        sb.auth.signOut().then(function() {
+          window.location.href = '/login?error=subscription';
+        });
+        return;
       }
+
+      showApp();
     })
     .catch(function() {
       showApp(); // network error — don't block
