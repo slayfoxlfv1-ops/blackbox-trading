@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774587267 -->
+<!-- v1774587901 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -1643,6 +1643,7 @@ function setTab(tab) {
 }
 
 async function authSubmit() {
+  (async function() {
   var email = document.getElementById('auth-email').value.trim();
   var pass  = document.getElementById('auth-pass').value;
   var name  = document.getElementById('auth-name').value.trim();
@@ -1665,6 +1666,7 @@ async function authSubmit() {
       document.getElementById('auth-btn').textContent = 'Create Account';
     }
   }
+  })();
 }
 
 async function signOut() {
@@ -2015,8 +2017,11 @@ function showWelcomeIfNew() {
 }
 
 function showApp() {
-  // If app is already visible, don't reinitialize (prevents scroll reset on token refresh)
   var appEl = document.getElementById('app');
+  // Remove paywall if present
+  var pw = document.getElementById('paywall-screen');
+  if (pw) pw.remove();
+  // If app already visible, don't reinitialize (prevents scroll reset on token refresh)
   if (appEl && appEl.style.display === 'flex') return;
 
   document.getElementById('auth-screen').style.display = 'none';
