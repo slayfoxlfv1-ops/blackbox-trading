@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774634509 -->
+<!-- v1774635092 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -2943,8 +2943,8 @@ async function loadAccountData(id, silent) {
       var streakTrades = sortedByExit.slice(0, lossStreak);
       var hasManual = streakTrades.every(function(t){ return t.source === 'manual' || !t.source; });
       var streakText = hasManual
-        ? 'Has registrado <strong>' + lossStreak + ' losing trades</strong> today. Review your session before continuing.'
-        : 'You have <strong>' + lossStreak + ' consecutive losing trades. Considerivos</strong>. Consider taking a break before trading again.';
+        ? 'You have <strong>' + lossStreak + ' consecutive losses</strong> today. Review your session before continuing.'
+        : 'You have <strong>' + lossStreak + ' consecutive losing trades</strong>. Consider taking a break before trading again.';
       alerts.push({
         type: 'danger',
         icon: '⚠',
@@ -2957,9 +2957,15 @@ async function loadAccountData(id, silent) {
       alerts.push({
         type: 'warn',
         icon: '↻',
-        text: 'Error repetido: <strong>' + (errorLabels[topError]||topError) + '</strong> aparece ' + topErrorCount + ' times in your last 10 trades.',
+        text: 'Repeated error: <strong>' + (errorLabels[topError]||topError) + '</strong> detected ' + topErrorCount + ' times in your last 10 trades.',
         action: 'psychology'
       });
+      // Also show dashboard toast
+      setTimeout(function() {
+        showAlertToast('↻', 'Repeated error detected',
+          (errorLabels[topError]||topError) + ' appears ' + topErrorCount + ' times in your last 10 trades. Go to Psychology to review.',
+          'var(--amber)', 'rgba(224,152,64,0.3)', 'repeat_error_' + (topError||'') + '_' + currentAccountId);
+      }, 2000);
     }
 
     if (lastMsg && lastMsg.type === 'weekly') {
@@ -7731,12 +7737,17 @@ function buildMindView(trades) {
 
   // ── ALERT: current loss streak ──
   if (currentLossStreak >= 2) {
-    html += '<div style="background:#2e0d0d;border:1px solid #5c1e1e;border-left:4px solid var(--red);border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:12px">'
-      + '<span style="font-size:24px">⚠️</span>'
-      + '<div style="flex:1"><div style="font-weight:700;color:var(--red);font-size:13px">'+currentLossStreak+' consecutive losses today</div>'
-      + '<div style="font-size:11px;color:var(--text3);margin-top:3px">Take a break. Revenge trading after consecutive losses is the fastest way to blow an account.</div></div>'
-      + '<span onclick="dismissOverviewAlert(\'mind_loss_streak_'+currentAccountId+'_'+new Date().toISOString().slice(0,10)+'\')" style="font-size:18px;color:var(--text3);cursor:pointer;padding:0 4px;flex-shrink:0" title="Close">×</span>'
-      + '</div>';
+    var _lsKey = 'mind_loss_streak_' + currentAccountId + '_' + new Date().toISOString().slice(0,10);
+    var _lsDismissed = false;
+    try { _lsDismissed = JSON.parse(sessionStorage.getItem('bb_dismissed_alerts')||'{}')[_lsKey]; } catch(e) {}
+    if (!_lsDismissed) {
+      html += '<div id="' + _lsKey + '" style="background:#2e0d0d;border:1px solid #5c1e1e;border-left:4px solid var(--red);border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:12px">'
+        + '<span style="font-size:24px">⚠️</span>'
+        + '<div style="flex:1"><div style="font-weight:700;color:var(--red);font-size:13px">'+currentLossStreak+' consecutive losses today</div>'
+        + '<div style="font-size:11px;color:var(--text3);margin-top:3px">Take a break. Revenge trading after consecutive losses is the fastest way to blow an account.</div></div>'
+        + '<span onclick="dismissOverviewAlert(\'' + _lsKey + '\')" style="font-size:20px;color:var(--text3);cursor:pointer;padding:0 6px;flex-shrink:0;line-height:1" title="Close">×</span>'
+        + '</div>';
+    }
   }
 
   
