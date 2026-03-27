@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774584806 -->
+<!-- v1774585722 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -280,7 +280,11 @@ async function handleRegister() {
   // ── Sign up with Supabase Auth ──
   var { data: authData, error: authError } = await sb.auth.signUp({ email, password });
   if (authError) {
-    errEl.textContent = authError.message;
+    if (authError.message && authError.message.toLowerCase().includes('already registered')) {
+      errEl.innerHTML = 'This email is already registered. <a href="/login" style="color:var(--teal)">Log in instead →</a>';
+    } else {
+      errEl.textContent = authError.message;
+    }
     btn.disabled = false; btn.textContent = 'Continue';
     return;
   }
@@ -356,18 +360,28 @@ async function handleRegister() {
       paddleCfg = await cfgResp.json();
       if (!paddleCfg.token || !paddleCfg.priceId) throw new Error('Missing config');
     } catch(e) {
-      errEl.textContent = 'Payment system unavailable. Please try again.';
-      btn.disabled = false; btn.textContent = 'Continue';
+      errEl.innerHTML = 'Your account was created but payment could not be opened.<br>'
+        + 'Please <a href="/login" style="color:var(--teal)">log in</a> and go to Settings → Plan to complete your subscription.';
+      btn.disabled = false; btn.textContent = 'Try again';
       return;
     }
 
     // Initialize Paddle.js with server-provided token
     Paddle.Initialize({
+      environment: 'production',
       token: paddleCfg.token,
       eventCallback: function(data) {
         if (data.name === 'checkout.completed') {
           // Payment successful — redirect to dashboard
           window.location.href = '/dashboard?payment=success';
+        }
+        if (data.name === 'checkout.error') {
+          console.error('[Paddle] Checkout error:', data);
+        }
+        if (data.name === 'checkout.closed') {
+          // User closed checkout without paying
+          btn.disabled = false;
+          btn.textContent = 'Complete payment →';
         }
       }
     });
