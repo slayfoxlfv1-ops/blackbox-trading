@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774492432 -->
+<!-- v1774587080 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -1855,26 +1855,81 @@ sb.auth.onAuthStateChange(function(event, session) {
   }
 });
 
-async function checkPlanAndShow() {
-  // NOTE: Plan check temporarily open during beta while Paddle integration is pending
-  // All registered users get access — payment enforcement will be re-enabled with Paddle
+async async function checkPlanAndShow() {
   try {
     var { data: profile } = await sb.from('profiles')
-      .select('plan, plan_expires_at')
+      .select('plan, plan_expires_at, username')
       .eq('id', currentUser.id)
       .single();
 
-    // Update plan in memory for UI display
-    if (profile) {
-      window._userPlan = profile.plan || 'free';
-      window._planExpires = profile.plan_expires_at || null;
+    if (!profile) {
+      // No profile found — send to register
+      window.location.href = '/register';
+      return;
     }
+
+    window._userPlan     = profile.plan || 'free';
+    window._planExpires  = profile.plan_expires_at || null;
+    window._username     = profile.username || '';
+
+    var plan    = profile.plan || 'free';
+    var expires = profile.plan_expires_at ? new Date(profile.plan_expires_at) : null;
+    var now     = new Date();
+
+    // ── Plan enforcement ──
+    // Allow: pro with valid expiry, lifetime, or free trial within 3 days of account creation
+    var isPro      = plan === 'pro' && expires && expires > now;
+    var isLifetime = plan === 'lifetime';
+
+    if (!isPro && !isLifetime) {
+      // Not a paying user — show paywall
+      _showPaywall();
+      return;
+    }
+
   } catch(e) {
     console.warn('[Pattro] Profile fetch error:', e.message);
+    // On error, show paywall to be safe
+    _showPaywall();
+    return;
   }
 
-  // Always show app — plan enforcement re-enabled when Paddle is live
   showApp();
+}
+
+function _showPaywall() {
+  // Hide app and auth screen
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('auth-screen').style.display = 'none';
+  var mn = document.getElementById('mobile-nav');
+  if (mn) mn.style.display = 'none';
+
+  // Remove existing paywall if any
+  var existing = document.getElementById('paywall-screen');
+  if (existing) existing.remove();
+
+  // Build paywall screen
+  var pw = document.createElement('div');
+  pw.id = 'paywall-screen';
+  pw.style.cssText = 'position:fixed;inset:0;background:#0a0a0b;display:flex;align-items:center;justify-content:center;z-index:99990;font-family:Geist Mono,monospace;padding:20px';
+
+  pw.innerHTML =
+    '<div style="background:#111113;border:1px solid #26262e;border-top:3px solid #3ecfcf;border-radius:16px;padding:40px 36px;width:100%;max-width:420px;text-align:center">'
+    // Logo
+    + '<div style="position:relative;width:44px;height:44px;margin:0 auto 24px">'
+    + '<span style="font-family:Georgia,serif;font-size:40px;font-weight:700;color:#eeeef0;line-height:1;position:absolute;left:0;bottom:0">P</span>'
+    + '<span style="position:absolute;top:0;right:0;width:10px;height:10px;border-radius:50%;background:#3ecfcf"></span>'
+    + '</div>'
+    // Title
+    + '<div style="font-size:20px;font-weight:800;color:#eeeef0;margin-bottom:10px;letter-spacing:-.3px">Subscription required</div>'
+    + '<div style="font-size:12px;color:#9898a6;line-height:1.8;margin-bottom:28px">Your account does not have an active subscription.<br>Complete your payment to access Pattro.</div>'
+    // CTA
+    + '<a href="/register" style="display:block;padding:13px;background:#3ecfcf;border-radius:9px;color:#0a0a0b;font-size:12px;font-weight:800;text-decoration:none;letter-spacing:.3px;margin-bottom:12px">Complete payment →</a>'
+    // Logout
+    + '<button onclick="sb.auth.signOut().then(function(){window.location.href='/login';})" style="background:none;border:none;color:#52525e;font-size:11px;cursor:pointer;font-family:inherit">Sign out</button>'
+    + '</div>';
+
+  document.body.appendChild(pw);
 }
 
 
