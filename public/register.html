@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774575470 -->
+<!-- v1774584806 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -363,7 +363,6 @@ async function handleRegister() {
 
     // Initialize Paddle.js with server-provided token
     Paddle.Initialize({
-      environment: 'production',
       token: paddleCfg.token,
       eventCallback: function(data) {
         if (data.name === 'checkout.completed') {
