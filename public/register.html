@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774566889 -->
+<!-- v1774575470 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -349,10 +349,22 @@ async function handleRegister() {
     // Needs payment — create Paddle checkout
     btn.textContent = 'Opening payment...';
 
-    // Initialize Paddle.js with live environment
+    // Fetch Paddle config from server (token never exposed in source)
+    let paddleCfg;
+    try {
+      const cfgResp = await fetch('/api/paddle-config');
+      paddleCfg = await cfgResp.json();
+      if (!paddleCfg.token || !paddleCfg.priceId) throw new Error('Missing config');
+    } catch(e) {
+      errEl.textContent = 'Payment system unavailable. Please try again.';
+      btn.disabled = false; btn.textContent = 'Continue';
+      return;
+    }
+
+    // Initialize Paddle.js with server-provided token
     Paddle.Initialize({
       environment: 'production',
-      token: 'apikey_01km3xgy5brrscmd4x93wzrrhp',
+      token: paddleCfg.token,
       eventCallback: function(data) {
         if (data.name === 'checkout.completed') {
           // Payment successful — redirect to dashboard
@@ -363,7 +375,7 @@ async function handleRegister() {
 
     // Open Paddle checkout overlay
     Paddle.Checkout.open({
-      items: [{ priceId: 'pri_01km3xarg0ej4zgt24cwn4p55j', quantity: 1 }],
+      items: [{ priceId: paddleCfg.priceId, quantity: 1 }],
       customer: {
         email: email
       },
@@ -372,10 +384,10 @@ async function handleRegister() {
         user_id: userId
       },
       settings: {
-        successUrl: 'https://pattro.com/dashboard?payment=success',
+        successUrl: 'https://www.pattro.com/dashboard?payment=success',
         displayMode: 'overlay',
         theme: 'dark',
-        locale: 'es'
+        locale: 'en'
       }
     });
 
