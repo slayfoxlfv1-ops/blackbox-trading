@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774630598 -->
+<!-- v1774633509 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -2793,6 +2793,7 @@ async function loadAccountData(id, silent) {
 
   var disc = calcDiscipline(trades);
   // ── Color Day: always read from the actual date, never bleed between days ──
+  var today = new Date().toISOString().slice(0,10);
   var todayMood = getMoodForDate(today);
   // Fallback: if no real mood check, derive synthetic from today's P&L
   if (!todayMood) {
