@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774633509 -->
+<!-- v1774634509 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -1792,6 +1792,43 @@ function showBugToast() {
     '<button class="bug-toast-btn" onclick="closeBugToast();openContactSupport()">Send feedback →</button>'+
     '</div>';
   document.body.insertAdjacentHTML('beforeend', html);
+}
+
+// ── Alert Toast (bottom-right popup with X to dismiss) ──
+function showAlertToast(icon, title, message, color, borderColor, dismissKey) {
+  if (dismissKey) {
+    try {
+      if (localStorage.getItem('alert_dismissed_' + dismissKey + '_' + new Date().toISOString().slice(0,10))) return;
+    } catch(e) {}
+  }
+  var toastId = 'alert-toast-' + (dismissKey || 'default');
+  var prev = document.getElementById(toastId);
+  if (prev) prev.remove();
+  var toast = document.createElement('div');
+  toast.id = toastId;
+  toast.style.cssText = 'position:fixed;bottom:24px;right:24px;width:320px;max-width:calc(100vw - 32px);'
+    + 'background:var(--surface);border:1px solid ' + (borderColor || 'rgba(224,85,85,0.3)') + ';'
+    + 'border-left:4px solid ' + (color || 'var(--red)') + ';'
+    + 'border-radius:10px;padding:14px 16px;box-shadow:0 8px 32px rgba(0,0,0,.6);'
+    + 'z-index:9998;animation:toastIn .4s ease;font-family:Geist Mono,monospace;'
+    + 'display:flex;gap:12px;align-items:flex-start';
+  var key = 'alert_dismissed_' + (dismissKey || '') + '_' + new Date().toISOString().slice(0,10);
+  toast.innerHTML = '<span style="font-size:22px;flex-shrink:0">' + icon + '</span>'
+    + '<div style="flex:1"><div style="font-size:12px;font-weight:700;color:' + (color || 'var(--red)') + ';margin-bottom:3px">' + title + '</div>'
+    + '<div style="font-size:10px;color:var(--text3);line-height:1.6">' + message + '</div></div>'
+    + '<button id="' + toastId + '-x" style="background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;margin-top:-2px">×</button>';
+  document.body.appendChild(toast);
+  document.getElementById(toastId + '-x').addEventListener('click', function() {
+    toast.style.animation = 'toastOut .3s ease forwards';
+    setTimeout(function() { if (toast.parentNode) toast.remove(); }, 300);
+    if (dismissKey) { try { localStorage.setItem(key, '1'); } catch(e) {} }
+  });
+  setTimeout(function() {
+    if (toast.parentNode) {
+      toast.style.animation = 'toastOut .3s ease forwards';
+      setTimeout(function() { if (toast.parentNode) toast.remove(); }, 300);
+    }
+  }, 12000);
 }
 
 function closeBugToast() {
@@ -4678,7 +4715,7 @@ function checkRuleViolations(rulesObj, trades) {
     var maxStreak = 0;
     sorted4.forEach(function(t){ if ((t.pnl||0)<0){ streak++; maxStreak=Math.max(maxStreak,streak); } else { streak=0; } });
     if (maxStreak >= lossLimit) {
-      violations.push({ rule:{id:'maxlosses', label:'Max ' + lossLimit + ' consecutive losses'}, detail: 'Alcanzaste ' + maxStreak + ' consecutive losses' });
+      violations.push({ rule:{id:'maxlosses', label:'Max ' + lossLimit + ' consecutive losses'}, detail: 'You hit ' + maxStreak + ' consecutive losses' });
     }
   }
 
@@ -4922,7 +4959,7 @@ function inferTradeEmotion(trade, allDayTrades) {
     if ((prev.pnl || 0) < 0) {
       var prevExit = prev.exit_time || prev.entry_time;
       var gap = (new Date(trade.entry_time) - new Date(prevExit)) / 60000;
-      if (gap >= 0 && gap < 5) return { emotion: 'frustrated', inferred: true, reason: 'Revenge trade detectado' };
+      if (gap >= 0 && gap < 5) return { emotion: 'frustrated', inferred: true, reason: 'Revenge trade detected' };
     }
   }
 
@@ -7661,6 +7698,13 @@ function buildMindView(trades) {
     else if (_p > 0) { if (currentLossStreak===0) currentWinStreak++; else break; }
     else break;
   }
+  if (currentLossStreak >= 2) {
+    setTimeout(function() {
+      showAlertToast('🛑', currentLossStreak + ' consecutive losses today',
+        'Take a break. Revenge trading after consecutive losses is the fastest way to blow an account.',
+        'var(--red)', 'rgba(224,85,85,0.3)', 'loss_streak_' + currentAccountId);
+    }, 1200);
+  }
 
   // P&L by discipline tag
   var discPnl = {};
@@ -7690,7 +7734,7 @@ function buildMindView(trades) {
     html += '<div style="background:#2e0d0d;border:1px solid #5c1e1e;border-left:4px solid var(--red);border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:12px">'
       + '<span style="font-size:24px">⚠️</span>'
       + '<div style="flex:1"><div style="font-weight:700;color:var(--red);font-size:13px">'+currentLossStreak+' consecutive losses today</div>'
-      + '<div style="font-size:11px;color:var(--text3);margin-top:3px">Considera tomarte un descanso. El revenge trading es el mayor destructor de cuentas.</div></div>'
+      + '<div style="font-size:11px;color:var(--text3);margin-top:3px">Take a break. Revenge trading after consecutive losses is the fastest way to blow an account.</div></div>'
       + '<span onclick="dismissOverviewAlert(\'mind_loss_streak_'+currentAccountId+'_'+new Date().toISOString().slice(0,10)+'\')" style="font-size:18px;color:var(--text3);cursor:pointer;padding:0 4px;flex-shrink:0" title="Close">×</span>'
       + '</div>';
   }
