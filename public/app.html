@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774587080 -->
+<!-- v1774587267 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -1855,7 +1855,8 @@ sb.auth.onAuthStateChange(function(event, session) {
   }
 });
 
-async async function checkPlanAndShow() {
+async function checkPlanAndShow() {
+  (async function() {
   try {
     var { data: profile } = await sb.from('profiles')
       .select('plan, plan_expires_at, username')
@@ -1895,6 +1896,7 @@ async async function checkPlanAndShow() {
   }
 
   showApp();
+  })();
 }
 
 function _showPaywall() {
