@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774585722 -->
+<!-- v1774586338 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -273,140 +273,177 @@ async function handleRegister() {
   var zip      = document.getElementById('r-zip').value.trim();
   var state    = document.getElementById('r-state').value.trim();
   var code     = document.getElementById('r-code').value.trim().toUpperCase();
+  var fullName = first + ' ' + last;
 
   btn.disabled = true;
-  btn.textContent = 'Creating account...';
+  btn.textContent = 'Checking...';
 
-  // ── Sign up with Supabase Auth ──
-  var { data: authData, error: authError } = await sb.auth.signUp({ email, password });
-  if (authError) {
-    if (authError.message && authError.message.toLowerCase().includes('already registered')) {
-      errEl.innerHTML = 'This email is already registered. <a href="/login" style="color:var(--teal)">Log in instead →</a>';
-    } else {
-      errEl.textContent = authError.message;
-    }
-    btn.disabled = false; btn.textContent = 'Continue';
-    return;
-  }
-
-  var userId = authData.user.id;
-
-  // ── If valid promo code: mark as used + set lifetime plan ──
-  // plan starts as 'free' — upgrades to 'pro' after Paddle payment
-  // 'lifetime' for F&F promo codes (we'll add this to the constraint)
-  var plan = 'free';
-  var planExpires = null;
-
+  // ── PROMO CODE PATH — free lifetime access ──
   if (validCode) {
+    btn.textContent = 'Creating account...';
+
+    var { data: authData, error: authError } = await sb.auth.signUp({ email, password });
+    if (authError) {
+      if (authError.message && authError.message.toLowerCase().includes('already registered')) {
+        errEl.innerHTML = 'This email is already registered. <a href="/login" style="color:var(--teal)">Log in instead →</a>';
+      } else {
+        errEl.textContent = authError.message;
+      }
+      btn.disabled = false; btn.textContent = 'Continue';
+      return;
+    }
+
+    var userId = authData.user.id;
+
     // Mark promo code as used
     await sb.from('promo_codes').update({
       used: true,
       used_by: userId,
       used_at: new Date().toISOString()
     }).eq('id', validCode);
-    plan = 'free'; // Will be updated to 'lifetime' after constraint fix
-    planExpires = null;
+
+    // Save profile with free/lifetime plan
+    await sb.from('profiles').upsert({
+      id:               userId,
+      email:            email,
+      username:         username,
+      full_name:        fullName,
+      legal_first_name: first,
+      legal_last_name:  last,
+      country:          country,
+      street_address:   address,
+      city:             city,
+      zip_code:         zip,
+      state_region:     state,
+      referral_code:    code || null,
+      plan:             'free',
+      plan_expires_at:  null
+    });
+
+    // Send welcome email
+    try {
+      fetch('/api/welcome-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, name: fullName })
+      });
+    } catch(e) {}
+
+    btn.textContent = '✓ Access granted!';
+    setTimeout(function() {
+      window.location.href = '/login?registered=1&plan=lifetime';
+    }, 1200);
+    return;
   }
 
-  // ── Save profile ──
-  var { error: profileError } = await sb.from('profiles').upsert({
-    id:               userId,
-    email:            email,
-    username:         username,
-    full_name:        first + ' ' + last,
-    legal_first_name: first,
-    legal_last_name:  last,
-    country:          country,
-    street_address:   address,
-    city:             city,
-    zip_code:         zip,
-    state_region:     state,
-    referral_code:    code || null,
-    plan:             plan,
-    plan_expires_at:  planExpires
-  });
+  // ── PAYMENT PATH — Paddle first, account after ──
+  btn.textContent = 'Opening payment...';
 
-  if (profileError) {
-    errEl.textContent = 'Error saving profile: ' + profileError.message;
+  // Fetch Paddle config from server
+  let paddleCfg;
+  try {
+    const cfgResp = await fetch('/api/paddle-config');
+    paddleCfg = await cfgResp.json();
+    if (!paddleCfg.token || !paddleCfg.priceId) throw new Error('Missing config');
+  } catch(e) {
+    errEl.textContent = 'Payment system unavailable. Please try again.';
     btn.disabled = false; btn.textContent = 'Continue';
     return;
   }
 
-  // ── Send welcome email (fire and forget) ──
-  try {
-    fetch('/api/welcome-email', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: email, name: fullName || email })
-    });
-  } catch(e) { /* non-critical */ }
+  // Store form data to use after payment completes
+  window._pendingRegistration = {
+    email, password, username, fullName,
+    first, last, country, address, city, zip, state
+  };
 
-  // ── Route based on plan ──
-  btn.textContent = validCode ? '✓ Access granted!' : 'Account created!';
+  // Initialize Paddle.js
+  Paddle.Initialize({
+    token: paddleCfg.token,
+    eventCallback: async function(data) {
 
-  if (validCode) {
-    // F&F code — go to login directly (free lifetime access)
-    setTimeout(function() {
-      window.location.href = '/login?registered=1&plan=lifetime';
-    }, 1200);
-  } else {
-    // Needs payment — create Paddle checkout
-    btn.textContent = 'Opening payment...';
+      if (data.name === 'checkout.completed') {
+        var pending = window._pendingRegistration;
+        if (!pending) return;
+        window._pendingRegistration = null;
 
-    // Fetch Paddle config from server (token never exposed in source)
-    let paddleCfg;
-    try {
-      const cfgResp = await fetch('/api/paddle-config');
-      paddleCfg = await cfgResp.json();
-      if (!paddleCfg.token || !paddleCfg.priceId) throw new Error('Missing config');
-    } catch(e) {
-      errEl.innerHTML = 'Your account was created but payment could not be opened.<br>'
-        + 'Please <a href="/login" style="color:var(--teal)">log in</a> and go to Settings → Plan to complete your subscription.';
-      btn.disabled = false; btn.textContent = 'Try again';
-      return;
-    }
+        // ── NOW create the Supabase account ──
+        var { data: authData, error: authError } = await sb.auth.signUp({
+          email:    pending.email,
+          password: pending.password
+        });
 
-    // Initialize Paddle.js with server-provided token
-    Paddle.Initialize({
-      environment: 'production',
-      token: paddleCfg.token,
-      eventCallback: function(data) {
-        if (data.name === 'checkout.completed') {
-          // Payment successful — redirect to dashboard
+        if (authError) {
+          // Account already exists — just log them in and redirect
           window.location.href = '/dashboard?payment=success';
+          return;
         }
-        if (data.name === 'checkout.error') {
-          console.error('[Paddle] Checkout error:', data);
-        }
-        if (data.name === 'checkout.closed') {
-          // User closed checkout without paying
-          btn.disabled = false;
-          btn.textContent = 'Complete payment →';
-        }
-      }
-    });
 
-    // Open Paddle checkout overlay
-    Paddle.Checkout.open({
-      items: [{ priceId: paddleCfg.priceId, quantity: 1 }],
-      customer: {
-        email: email
-      },
-      customData: {
-        email:   email,
-        user_id: userId
-      },
-      settings: {
-        successUrl: 'https://www.pattro.com/dashboard?payment=success',
-        displayMode: 'overlay',
-        theme: 'dark',
-        locale: 'en'
-      }
-    });
+        var userId = authData.user.id;
 
-    btn.disabled = false;
-    btn.textContent = 'Continue';
-  }
+        // Calculate expiry 1 month from now
+        var expires = new Date();
+        expires.setMonth(expires.getMonth() + 1);
+
+        // Save profile with pro plan
+        await sb.from('profiles').upsert({
+          id:               userId,
+          email:            pending.email,
+          username:         pending.username,
+          full_name:        pending.fullName,
+          legal_first_name: pending.first,
+          legal_last_name:  pending.last,
+          country:          pending.country,
+          street_address:   pending.address,
+          city:             pending.city,
+          zip_code:         pending.zip,
+          state_region:     pending.state,
+          plan:             'pro',
+          plan_expires_at:  expires.toISOString()
+        });
+
+        // Send welcome email
+        try {
+          fetch('/api/welcome-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: pending.email, name: pending.fullName })
+          });
+        } catch(e) {}
+
+        window.location.href = '/dashboard?payment=success';
+      }
+
+      if (data.name === 'checkout.closed') {
+        // User closed without paying — no account created
+        btn.disabled = false;
+        btn.textContent = 'Continue';
+        errEl.textContent = 'Payment was not completed. No account has been created.';
+      }
+
+      if (data.name === 'checkout.error') {
+        btn.disabled = false;
+        btn.textContent = 'Continue';
+        errEl.textContent = 'Payment error. Please try again.';
+      }
+    }
+  });
+
+  // Open Paddle checkout overlay
+  Paddle.Checkout.open({
+    items: [{ priceId: paddleCfg.priceId, quantity: 1 }],
+    customer: { email: email },
+    customData: { email: email },
+    settings: {
+      successUrl:  'https://www.pattro.com/dashboard?payment=success',
+      displayMode: 'overlay',
+      theme:       'dark',
+      locale:      'en'
+    }
+  });
+
+  btn.disabled = false;
+  btn.textContent = 'Continue';
 }
 
 
