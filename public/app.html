@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774588116 -->
+<!-- v1774588348 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -1839,21 +1839,22 @@ sb.auth.onAuthStateChange(function(event, session) {
 
   if (session && session.user) {
     currentUser = session.user;
-    // Only initialize app if not already showing (prevents re-render on tab focus)
-    if (document.getElementById('app').style.display === 'none' ||
-        document.getElementById('app').style.display === '') {
+    // Run plan check unless app is already fully loaded
+    var appEl = document.getElementById('app');
+    var appVisible = appEl && appEl.style.display === 'flex';
+    var paywallVisible = !!document.getElementById('paywall-screen');
+    if (!appVisible || paywallVisible) {
       checkPlanAndShow();
     }
   } else {
     currentUser = null;
-    if (window.location.pathname === '/dashboard' || window.location.pathname === '/app.html') {
-      var _mn3 = document.getElementById('mobile-nav'); if (_mn3) _mn3.style.display = 'none';
-      window.location.href = '/login';
-    } else {
-      document.getElementById('auth-screen').style.display = 'flex';
-      var _mn = document.getElementById('mobile-nav'); if (_mn) _mn.style.display = 'none';
-      document.getElementById('app').style.display = 'none';
-    }
+    // Not logged in — redirect to login
+    var _mn3 = document.getElementById('mobile-nav');
+    if (_mn3) _mn3.style.display = 'none';
+    document.getElementById('auth-screen').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+    var pw = document.getElementById('paywall-screen');
+    if (pw) pw.remove();
   }
 });
 
@@ -2021,10 +2022,11 @@ function showApp() {
   // Remove paywall if present
   var pw = document.getElementById('paywall-screen');
   if (pw) pw.remove();
+  // Always hide auth-screen
+  var authEl = document.getElementById('auth-screen');
+  if (authEl) authEl.style.display = 'none';
   // If app already visible, don't reinitialize (prevents scroll reset on token refresh)
   if (appEl && appEl.style.display === 'flex') return;
-
-  document.getElementById('auth-screen').style.display = 'none';
   appEl.style.display = 'flex';
   var mNav = document.getElementById('mobile-nav');
   if (mNav) mNav.style.display = '';
