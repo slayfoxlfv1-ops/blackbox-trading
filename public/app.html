@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774635092 -->
+<!-- v1774635650 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -6530,7 +6530,7 @@ function renderPsychologyView(subTabIntent) {
   else if (subTabIntent === 'mind') _psychActiveTab = 'mind';
   var el = document.getElementById('main-content');
   var tabs = [
-    { id: 'mind',       label: '&#9675; Psicolog&#237;a' },
+    { id: 'mind',       label: '&#9675; Psychology' },
     { id: 'discipline', label: '&#8856; Discipline'      },
     { id: 'calendar',   label: '&#9635; Calendar'        },
   ];
@@ -8071,8 +8071,8 @@ function buildMindView(trades) {
     var emoWins  = tradesWithEmo.filter(function(t){ return (t.pnl||0)>0; }).length;
     var avgPnl2  = emoPnl[emo] / emoCounts[emo];
     var winRate2 = emoCounts[emo] ? Math.round(emoWins/emoCounts[emo]*100) : 0;
-    var positiveEmos = ['Calm','Disciplined','Confident','In the zone'];
-    var negativeEmos = ['Anxious','Impulsive','Fearful','Frustrated'];
+    var positiveEmos = ['calm','confident'];
+    var negativeEmos = ['anxious','fear','frustrated','greedy'];
     var isPos = positiveEmos.includes(emo);
     var isNeg = negativeEmos.includes(emo);
     var cs = 0;
@@ -8097,7 +8097,7 @@ function buildMindView(trades) {
       var isBad  = d.calibScore < -10;
       var barColor   = isGood ? 'var(--green)' : isBad ? 'var(--red)' : 'var(--amber)';
       var labelColor = barColor;
-      var label      = isGood ? '✓ Preciso' : isBad ? '✗ Descalibrado' : '~ Neutral';
+      var label      = isGood ? '✓ Accurate' : isBad ? '✗ Miscalibrated' : '~ Neutral';
       html += '<div style="background:var(--surface2);border-radius:8px;padding:10px 12px">'
         + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
         + '<div><div style="font-size:11px;color:var(--text);font-weight:600">'+emo+'</div>'
