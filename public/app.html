@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774589949 -->
+<!-- v1774627877 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -1052,15 +1052,7 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
 <div id="cal-tip-global" style="display:none;position:fixed;background:var(--surface3);border:1px solid var(--border2);border-radius:8px;padding:10px;width:200px;z-index:99999;box-shadow:0 8px 24px rgba(0,0,0,.7);pointer-events:none;font-family:'Geist Mono',monospace;font-size:9px;"></div>
 
 <!-- AUTH -->
-<div id="auth-screen" style="display:flex;position:fixed;inset:0;background:#0a0a0b;align-items:center;justify-content:center;z-index:9998">
-  <div style="text-align:center">
-    <div style="position:relative;width:44px;height:44px;margin:0 auto 16px">
-      <span style="font-family:Georgia,serif;font-size:40px;font-weight:700;color:#eeeef0;line-height:1;position:absolute;left:0;bottom:0">P</span>
-      <span style="position:absolute;top:0;right:0;width:10px;height:10px;border-radius:50%;background:#3ecfcf"></span>
-    </div>
-    <div style="font-size:10px;color:#52525e;letter-spacing:2px;font-family:monospace">LOADING...</div>
-  </div>
-</div>
+<div id="auth-screen" style="display:none"></div>
 
 <!-- APP -->
 <div class="layout" id="app" style="display:none;flex-direction:row">
@@ -1811,21 +1803,20 @@ function closeBugToast() {
   localStorage.setItem('pattro_bug_toast_seen', '1');
 }
 
-// Show error message from URL params on login screen
+// Show error from URL on login screen
 (function() {
   var params = new URLSearchParams(window.location.search);
   var err = params.get('error');
   if (err) {
     var msgs = {
-      'subscription': 'Your account does not have an active subscription. Please complete your payment to access Pattro.',
-      'incomplete':   'Your registration was not completed. Please register again.'
+      subscription: 'Your account does not have an active subscription. Please complete your payment.',
+      incomplete:   'Your registration was not completed. Please register again.'
     };
-    // Wait for DOM then show message
     var interval = setInterval(function() {
-      var errEl = document.getElementById('auth-error');
-      if (errEl) {
-        errEl.style.color = 'var(--amber, #e09840)';
-        errEl.textContent = msgs[err] || 'Please log in to continue.';
+      var el = document.getElementById('auth-error');
+      if (el) {
+        el.style.color = '#e09840';
+        el.textContent = msgs[err] || 'Please log in to continue.';
         clearInterval(interval);
       }
     }, 100);
@@ -1843,6 +1834,7 @@ sb.auth.onAuthStateChange(function(event, session) {
 
   if (session && session.user) {
     currentUser = session.user;
+    // Only initialize app if not already showing (prevents re-render on tab focus)
     if (document.getElementById('app').style.display === 'none' ||
         document.getElementById('app').style.display === '') {
       checkPlanAndShow();
@@ -1851,84 +1843,35 @@ sb.auth.onAuthStateChange(function(event, session) {
     currentUser = null;
     var _mn3 = document.getElementById('mobile-nav'); if (_mn3) _mn3.style.display = 'none';
     window.location.href = '/login';
-    return;
   }
 });
 
-function checkPlanAndShow() {
+async function checkPlanAndShow() {
   sb.from('profiles')
     .select('plan, plan_expires_at, username')
     .eq('id', currentUser.id)
     .single()
     .then(function(result) {
       var profile = result.data;
-
-      // No profile = incomplete registration
       if (!profile) {
-        sb.auth.signOut().then(function() {
-          window.location.href = '/login?error=incomplete';
-        });
+        sb.auth.signOut().then(function() { window.location.href = '/login?error=incomplete'; });
         return;
       }
-
       window._userPlan    = profile.plan || 'free';
       window._planExpires = profile.plan_expires_at || null;
       window._username    = profile.username || '';
-
       var plan    = profile.plan || 'free';
       var expires = profile.plan_expires_at ? new Date(profile.plan_expires_at) : null;
       var now     = new Date();
       var isPro      = plan === 'pro' && expires && expires > now;
       var isLifetime = plan === 'lifetime';
-
       if (!isPro && !isLifetime) {
-        // Sign out and redirect — don't leave active session for free users
-        sb.auth.signOut().then(function() {
-          window.location.href = '/login?error=subscription';
-        });
+        sb.auth.signOut().then(function() { window.location.href = '/login?error=subscription'; });
         return;
       }
-
       showApp();
     })
-    .catch(function() {
-      showApp(); // network error — don't block
-    });
-}
-
-function _showPaywall() {
-  // Hide app and auth screen
-  document.getElementById('app').style.display = 'none';
-  document.getElementById('auth-screen').style.display = 'none';
-  var mn = document.getElementById('mobile-nav');
-  if (mn) mn.style.display = 'none';
-
-  // Remove existing paywall if any
-  var existing = document.getElementById('paywall-screen');
-  if (existing) existing.remove();
-
-  // Build paywall screen
-  var pw = document.createElement('div');
-  pw.id = 'paywall-screen';
-  pw.style.cssText = 'position:fixed;inset:0;background:#0a0a0b;display:flex;align-items:center;justify-content:center;z-index:99990;font-family:Geist Mono,monospace;padding:20px';
-
-  pw.innerHTML =
-    '<div style="background:#111113;border:1px solid #26262e;border-top:3px solid #3ecfcf;border-radius:16px;padding:40px 36px;width:100%;max-width:420px;text-align:center">'
-    // Logo
-    + '<div style="position:relative;width:44px;height:44px;margin:0 auto 24px">'
-    + '<span style="font-family:Georgia,serif;font-size:40px;font-weight:700;color:#eeeef0;line-height:1;position:absolute;left:0;bottom:0">P</span>'
-    + '<span style="position:absolute;top:0;right:0;width:10px;height:10px;border-radius:50%;background:#3ecfcf"></span>'
-    + '</div>'
-    // Title
-    + '<div style="font-size:20px;font-weight:800;color:#eeeef0;margin-bottom:10px;letter-spacing:-.3px">Subscription required</div>'
-    + '<div style="font-size:12px;color:#9898a6;line-height:1.8;margin-bottom:28px">Your account does not have an active subscription.<br>Complete your payment to access Pattro.</div>'
-    // CTA
-    + '<a href="/register" style="display:block;padding:13px;background:#3ecfcf;border-radius:9px;color:#0a0a0b;font-size:12px;font-weight:800;text-decoration:none;letter-spacing:.3px;margin-bottom:12px">Complete payment →</a>'
-    // Logout
-    + '<button onclick="sb.auth.signOut().then(function(){window.location.href=\"/login\";})" style="background:none;border:none;color:#52525e;font-size:11px;cursor:pointer;font-family:inherit">Sign out</button>'
-    + '</div>';
-
-  document.body.appendChild(pw);
+    .catch(function() { showApp(); }); // network error — don't block
 }
 
 
@@ -2017,7 +1960,6 @@ function showApp() {
   if (pw) pw.remove();
   var authEl = document.getElementById('auth-screen');
   if (authEl) authEl.style.display = 'none';
-  // If app already visible, don't reinitialize (prevents scroll reset on token refresh)
   if (appEl && appEl.style.display === 'flex') return;
   appEl.style.display = 'flex';
   var mNav = document.getElementById('mobile-nav');
@@ -2443,8 +2385,8 @@ async function saveTrade() {
     entry_price:    parseFloat(document.getElementById('t-entry').value) || 0,
     exit_price:     parseFloat(document.getElementById('t-exit').value)  || null,
     pnl:            parseFloat(document.getElementById('t-pnl').value)   || 0,
-    rr_planned:     parseInt(document.getElementById('t-rr-plan').value)     || null,
-    rr_achieved:    parseInt(document.getElementById('t-rr-achieved').value) || null,
+    rr_planned:     parseFloat(document.getElementById('t-rr-plan').value)     || null,
+    rr_achieved:    parseFloat(document.getElementById('t-rr-achieved').value) || null,
     emotion:        document.getElementById('t-emotion').value,
     moved_sl:       disc === 'moved_sl',
     scaled_in_loss: disc === 'scaled_in',
@@ -2461,7 +2403,7 @@ async function saveTrade() {
   var res;
   if (editingTradeId) {
     res = await sb.from('trades').update(payload).eq('id', editingTradeId);
-    editingTradeId = null;
+    // editingTradeId cleared after screenshot save
   } else {
     payload.account_id = currentAccountId;
     payload.user_id    = currentUser.id;
@@ -2482,6 +2424,7 @@ async function saveTrade() {
       var scKey = null;
       if (editingTradeId) {
         scKey = 'sc_' + editingTradeId;
+        editingTradeId = null;
       } else if (res.data && res.data[0]) {
         scKey = 'sc_' + res.data[0].id;
       } else {
@@ -2510,26 +2453,7 @@ async function saveTrade() {
     var _td = await getOrCreateTradingDay(_tradeDate, _colorLevel, 'manual');
     if (_td && _td.id) payload.trading_day_id = _td.id;
 
-    // Also save to mood_sessions for backwards compat if color is known
-    if (_tradeDate < _todayDate && _colorLevel && _colorLevel !== 'unknown') {
-      var _existingMood = getMoodForDate(_tradeDate);
-      if (!_existingMood) {
-        try {
-          await sb.from('mood_sessions').upsert({
-            account_id:   currentAccountId,
-            user_id:      currentUser.id,
-            session_date: _tradeDate,
-            answers:      { manual: true },
-            score:        _colorLevel === 'green' ? 0 : _colorLevel === 'yellow' ? 6 : 9,
-            level:        _colorLevel
-          }, { onConflict: 'account_id,session_date' });
-          currentMoodSessions = currentMoodSessions.filter(function(s){
-            return (s.session_date||s.date) !== _tradeDate;
-          });
-          currentMoodSessions.push({ session_date: _tradeDate, level: _colorLevel, answers: { manual: true } });
-        } catch(e) { console.warn('Could not save historical color day:', e); }
-      }
-    }
+    // Color day saved via second mood_sessions upsert block below
   }
 
   // ── Save checklist % from slider — use trade's date, not today ──
@@ -8878,6 +8802,28 @@ function resetOnboardingGuide() {
   showOnboardingGuide();
 }
 
+function _showPaywall() {
+  var appEl = document.getElementById('app');
+  if (appEl) appEl.style.display = 'none';
+  var authEl = document.getElementById('auth-screen');
+  if (authEl) authEl.style.display = 'none';
+  var mn = document.getElementById('mobile-nav');
+  if (mn) mn.style.display = 'none';
+  var existing = document.getElementById('paywall-screen');
+  if (existing) existing.remove();
+  var pw = document.createElement('div');
+  pw.id = 'paywall-screen';
+  pw.style.cssText = 'position:fixed;inset:0;background:#0a0a0b;display:flex;align-items:center;justify-content:center;z-index:99990;font-family:Geist Mono,monospace;padding:20px';
+  pw.innerHTML = '<div style="background:#111113;border:1px solid #26262e;border-top:3px solid #3ecfcf;border-radius:16px;padding:40px 36px;width:100%;max-width:420px;text-align:center">'
+    + '<div style="position:relative;width:44px;height:44px;margin:0 auto 24px"><span style="font-family:Georgia,serif;font-size:40px;font-weight:700;color:#eeeef0;line-height:1;position:absolute;left:0;bottom:0">P</span><span style="position:absolute;top:0;right:0;width:10px;height:10px;border-radius:50%;background:#3ecfcf"></span></div>'
+    + '<div style="font-size:20px;font-weight:800;color:#eeeef0;margin-bottom:10px;letter-spacing:-.3px">Subscription required</div>'
+    + '<div style="font-size:12px;color:#9898a6;line-height:1.8;margin-bottom:28px">Your account does not have an active subscription.<br>Complete your payment to access Pattro.</div>'
+    + '<a href="/register" style="display:block;padding:13px;background:#3ecfcf;border-radius:9px;color:#0a0a0b;font-size:12px;font-weight:800;text-decoration:none;letter-spacing:.3px;margin-bottom:12px">Complete payment →</a>'
+    + '<button onclick="sb.auth.signOut().then(function(){window.location.href=\"/login\";})" style="background:none;border:none;color:#52525e;font-size:11px;cursor:pointer;font-family:inherit">Sign out</button>'
+    + '</div>';
+  document.body.appendChild(pw);
+}
+
 function checkAndShowMoodCheck(accountId) {
   if (document.getElementById('onboarding-overlay')) return;
   if (document.getElementById('mood-overlay')) return;
@@ -8897,7 +8843,7 @@ function checkAndShowMoodCheck(accountId) {
       showMoodCheck(accountId); // show on error too
     });
 }
-function showMoodCheck(accountId) {
+async function showMoodCheck(accountId) {
   var existing = document.getElementById('mood-overlay');
   if (existing) existing.remove();
 
