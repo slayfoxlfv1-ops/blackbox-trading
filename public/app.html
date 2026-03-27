@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774588580 -->
+<!-- v1774589027 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -1052,32 +1052,7 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
 <div id="cal-tip-global" style="display:none;position:fixed;background:var(--surface3);border:1px solid var(--border2);border-radius:8px;padding:10px;width:200px;z-index:99999;box-shadow:0 8px 24px rgba(0,0,0,.7);pointer-events:none;font-family:'Geist Mono',monospace;font-size:9px;"></div>
 
 <!-- AUTH -->
-<div id="auth-screen" class="auth-screen">
-  <div class="auth-box">
-    <div class="auth-logo" style="display:flex;align-items:center;gap:10px;margin-bottom:4px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="28" height="28" style="flex-shrink:0"><rect width="120" height="120" rx="26" fill="#0d1117"/><text x="60" y="95" text-anchor="middle" font-family="Georgia,serif" font-size="82" font-weight="700" fill="#ffffff">P</text><circle cx="103" cy="14" r="12" fill="#3ecfcf"/></svg><span>pattro</span></div>
-    <div class="auth-sub">TRADING JOURNAL</div>
-    <div class="auth-tabs">
-      <button class="auth-tab active" onclick="setTab('login')">Sign In</button>
-      <button class="auth-tab" onclick="setTab('register')">Sign Up</button>
-    </div>
-    <form id="auth-form" autocomplete="on" onsubmit="authSubmit();return false;" style="display:contents">
-    <div id="auth-register-name" class="form-group" style="display:none">
-      <label class="form-label">Full Name</label>
-      <input class="form-input" id="auth-name" type="text" placeholder="Your name" autocomplete="name">
-    </div>
-    <div class="form-group">
-      <label class="form-label">Email</label>
-      <input class="form-input" id="auth-email" type="email" placeholder="you@email.com" autocomplete="email">
-    </div>
-    <div class="form-group">
-      <label class="form-label">Password</label>
-      <input class="form-input" id="auth-pass" type="password" placeholder="password" autocomplete="current-password">
-    </div>
-    <div class="auth-error" id="auth-error"></div>
-    <button class="btn-primary" type="submit" id="auth-btn">Sign In</button>
-    </form>
-  </div>
-</div>
+<div id="auth-screen" style="display:none"></div>
 
 <!-- APP -->
 <div class="layout" id="app" style="display:none;flex-direction:row">
@@ -1845,14 +1820,8 @@ sb.auth.onAuthStateChange(function(event, session) {
     }
   } else {
     currentUser = null;
-    if (window.location.pathname === '/dashboard' || window.location.pathname === '/app.html') {
-      var _mn3 = document.getElementById('mobile-nav'); if (_mn3) _mn3.style.display = 'none';
-      window.location.href = '/login';
-    } else {
-      document.getElementById('auth-screen').style.display = 'flex';
-      var _mn = document.getElementById('mobile-nav'); if (_mn) _mn.style.display = 'none';
-      document.getElementById('app').style.display = 'none';
-    }
+    var _mn3 = document.getElementById('mobile-nav'); if (_mn3) _mn3.style.display = 'none';
+    window.location.href = '/login';
   }
 });
 
