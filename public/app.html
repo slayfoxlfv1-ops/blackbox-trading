@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774588348 -->
+<!-- v1774588580 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -1839,67 +1839,59 @@ sb.auth.onAuthStateChange(function(event, session) {
 
   if (session && session.user) {
     currentUser = session.user;
-    // Run plan check unless app is already fully loaded
-    var appEl = document.getElementById('app');
-    var appVisible = appEl && appEl.style.display === 'flex';
-    var paywallVisible = !!document.getElementById('paywall-screen');
-    if (!appVisible || paywallVisible) {
+    if (document.getElementById('app').style.display === 'none' ||
+        document.getElementById('app').style.display === '') {
       checkPlanAndShow();
     }
   } else {
     currentUser = null;
-    // Not logged in — redirect to login
-    var _mn3 = document.getElementById('mobile-nav');
-    if (_mn3) _mn3.style.display = 'none';
-    document.getElementById('auth-screen').style.display = 'flex';
-    document.getElementById('app').style.display = 'none';
-    var pw = document.getElementById('paywall-screen');
-    if (pw) pw.remove();
+    if (window.location.pathname === '/dashboard' || window.location.pathname === '/app.html') {
+      var _mn3 = document.getElementById('mobile-nav'); if (_mn3) _mn3.style.display = 'none';
+      window.location.href = '/login';
+    } else {
+      document.getElementById('auth-screen').style.display = 'flex';
+      var _mn = document.getElementById('mobile-nav'); if (_mn) _mn.style.display = 'none';
+      document.getElementById('app').style.display = 'none';
+    }
   }
 });
 
 async function checkPlanAndShow() {
-  (async function() {
-  try {
-    var { data: profile } = await sb.from('profiles')
-      .select('plan, plan_expires_at, username')
-      .eq('id', currentUser.id)
-      .single();
+  sb.from('profiles')
+    .select('plan, plan_expires_at, username')
+    .eq('id', currentUser.id)
+    .single()
+    .then(function(result) {
+      var profile = result.data;
 
-    if (!profile) {
-      // No profile found — send to register
-      window.location.href = '/register';
-      return;
-    }
+      if (!profile) {
+        window.location.href = '/register';
+        return;
+      }
 
-    window._userPlan     = profile.plan || 'free';
-    window._planExpires  = profile.plan_expires_at || null;
-    window._username     = profile.username || '';
+      window._userPlan    = profile.plan || 'free';
+      window._planExpires = profile.plan_expires_at || null;
+      window._username    = profile.username || '';
 
-    var plan    = profile.plan || 'free';
-    var expires = profile.plan_expires_at ? new Date(profile.plan_expires_at) : null;
-    var now     = new Date();
+      var plan    = profile.plan || 'free';
+      var expires = profile.plan_expires_at ? new Date(profile.plan_expires_at) : null;
+      var now     = new Date();
 
-    // ── Plan enforcement ──
-    // Allow: pro with valid expiry, lifetime, or free trial within 3 days of account creation
-    var isPro      = plan === 'pro' && expires && expires > now;
-    var isLifetime = plan === 'lifetime';
+      var isPro      = plan === 'pro' && expires && expires > now;
+      var isLifetime = plan === 'lifetime';
 
-    if (!isPro && !isLifetime) {
-      // Not a paying user — show paywall
-      _showPaywall();
-      return;
-    }
+      if (!isPro && !isLifetime) {
+        _showPaywall();
+        return;
+      }
 
-  } catch(e) {
-    console.warn('[Pattro] Profile fetch error:', e.message);
-    // On error, show paywall to be safe
-    _showPaywall();
-    return;
-  }
-
-  showApp();
-  })();
+      showApp();
+    })
+    .catch(function(e) {
+      console.warn('[Pattro] Profile fetch error:', e.message);
+      // On error show app — don't lock out due to network issue
+      showApp();
+    });
 }
 
 function _showPaywall() {
