@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774627877 -->
+<!-- v1774629468 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -3606,7 +3606,7 @@ async function loadAccountData(id, silent) {
     '<span style="font-size:10px;color:var(--text3)">/100</span></div>' +
     '<div style="font-size:10px;color:var(--text2);font-weight:600;margin-bottom:8px">'+execData.label+'</div>' +
     '<div style="display:flex;flex-direction:column;gap:4px">' +
-    '<div style="display:flex;justify-content:space-between"><span style="font-size:9px;color:var(--text3)">R:R</span><span style="font-size:9px;color:var(--text2)">'+execData.rrPts+'/40</span></div>' +
+    '<div style="display:flex;justify-content:space-between"><span style="font-size:9px;color:var(--text3)">R:R</span><span style="font-size:9px;color:var(--text2)">'+(execData.rrPts !== null ? execData.rrPts+'/40' : '— (no R:R)')+'</span></div>' +
     '<div style="display:flex;justify-content:space-between"><span style="font-size:9px;color:var(--text3)">Entry</span><span style="font-size:9px;color:var(--text2)">'+execData.entryPts+'/35</span></div>' +
     '<div style="display:flex;justify-content:space-between"><span style="font-size:9px;color:var(--text3)">Result</span><span style="font-size:9px;color:var(--text2)">'+execData.resultPts+'/25</span></div>' +
     '</div>'
@@ -4742,7 +4742,7 @@ function checkRuleViolations(rulesObj, trades) {
 function calcRulesDisciplineScore(rulesObj, trades) {
   var r = rulesObj || {};
   var activeRules = Object.keys(r).filter(function(k){ return r[k] && r[k].active; });
-  if (!activeRules.length) return { score: 100, violations: [], activeCount: 0 }; // no rules = no violations = perfect
+  if (!activeRules.length) return { score: 50, violations: [], activeCount: 0 }; // no rules = neutral
   var violations = checkRuleViolations(rulesObj, trades);
   var violatedIds = violations.map(function(v){ return v.rule.id; });
   var score;
@@ -5042,8 +5042,8 @@ function calcDailyMindScore(dateStr) {
     total       = avgTotal;
     // Map back to legacy fields for display compatibility
     moodPts     = Math.round(avgState * 0.40);   // state → mood pts (max 40)
-    emotionPts  = Math.round(avgControl * 0.40); // control → emotion pts (max 40)
-    behaviorPts = 20; // legacy field — no longer primary, kept for display
+    emotionPts  = Math.round(avgEmo * 0.40); // emotion score (max 40)
+    behaviorPts = Math.round(avgBehav * 0.20); // actual behavior score (max 20)
 
     // Behavior details for display
     var revengeCount = dayTrades.filter(function(t){ return (t.discipline_tag||'') === 'revenge'; }).length;
@@ -5742,7 +5742,7 @@ function renderRulesView() {
 
   // ── Rule 7: No Red Day ──
   var r7 = rules.redday || {};
-  var tMd = (currentMoodSessions||[]).find(function(s){return (s.session_date||s.date)===today;});
+  var tMd = getMoodForDate(today);
   var rdClr = tMd?(tMd.level==='green'?'var(--green)':tMd.level==='yellow'?'var(--amber)':'var(--red)'):'var(--text3)';
   var rdTxt = tMd?(tMd.level==='green'?'Green Day — you can trade':tMd.level==='yellow'?'Yellow Day — trade carefully':'Red Day — do NOT trade today'):'No mood check today';
   var rd7 = '<div style="display:flex;align-items:center;gap:8px">'
@@ -6929,7 +6929,7 @@ function renderRulesTab(el) {
 
   // Rule 7
   var r7 = rules.redday || {};
-  var tMd = (currentMoodSessions||[]).find(function(s){return (s.session_date||s.date)===today;});
+  var tMd = getMoodForDate(today);
   var rdClr = tMd?(tMd.level==='green'?'var(--green)':tMd.level==='yellow'?'var(--amber)':'var(--red)'):'var(--text3)';
   var rdTxt = tMd?(tMd.level==='green'?'Green Day — you can trade':tMd.level==='yellow'?'Yellow Day — trade carefully':'Red Day — do NOT trade today'):'No mood check today';
   var rd7 = '<div style="display:flex;align-items:center;gap:8px">'
@@ -7294,7 +7294,7 @@ function renderOperativaTab(el) {
       var worst = itemStats.filter(function(s){return s.impact > 30;})[0];
       var insightHtml = worst
         ? '<div style="margin-bottom:14px;padding:10px 14px;border-radius:8px;background:var(--red-bg);border:1px solid var(--red-bd);font-size:10px;color:var(--text2);line-height:1.6">'
-          + '<strong style="color:var(--red)">⚠ Most critical item:</strong> When you DON\'T check <em>"'+worst.text+'"</em>, your daily P&L drops $'+Math.abs(worst.impact)+' y tu WR cae de '+worst.avgMarkedWr+'% a '+worst.avgUnmarkedWr+'%.'
+          + '<strong style="color:var(--red)">⚠ Most critical item:</strong> When you DON\'T check <em>"'+worst.text+'"</em>, your daily P&L drops $'+Math.abs(worst.impact)+' and WR drops from '+worst.avgMarkedWr+'% a '+worst.avgUnmarkedWr+'%.'
           + '</div>'
         : '';
 
@@ -7319,7 +7319,7 @@ function renderOperativaTab(el) {
         + '<div style="padding:14px 18px">'
         + insightHtml
         + '<div style="display:grid;grid-template-columns:1fr auto auto auto;gap:10px;padding:0 0 6px;border-bottom:1px solid var(--border2)">'
-        + ['Item del checklist','✓ Cuando marcas','✗ Cuando omites',''].map(function(h){return '<div style="font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">'+h+'</div>';}).join('')
+        + ['Checklist item','✓ Cuando marcas','✗ Cuando omites',''].map(function(h){return '<div style="font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">'+h+'</div>';}).join('')
         + '</div>'
         + rows
         + '</div></div>';
