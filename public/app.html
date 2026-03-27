@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774629468 -->
+<!-- v1774630116 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -6734,7 +6734,7 @@ function switchDiscTab(tab) {
   if (!el) return;
   if (tab==='rules')     { initRulesTemp(); renderRulesTab(el); }
   if (tab==='checklist') renderChecklistTab(el);
-  if (tab==='execution') renderOperativaTab(el);
+  if (tab==='execution' || tab==='operativa') renderOperativaTab(el);
 }
 
 function renderRulesTab(el) {
@@ -8983,7 +8983,17 @@ async function showMoodCheck(accountId) {
           }, { onConflict:'account_id,session_date' });
           // Fase 2: also update trading_day with color from mood check
           await updateTradingDayColor(today, result.level, 'mood_check');
-        } catch(e) {}
+          // Update in-memory mood sessions so dashboard shows without reload
+          currentMoodSessions = (currentMoodSessions || []).filter(function(s) {
+            return (s.session_date || s.date) !== today;
+          });
+          currentMoodSessions.unshift({
+            session_date: today,
+            level:        result.level,
+            score:        score,
+            answers:      state
+          });
+        } catch(e) { console.warn('[MoodCheck] Save error:', e); }
       })();
     }
 
@@ -8999,7 +9009,13 @@ async function showMoodCheck(accountId) {
     closeBtn.textContent = 'Got it, let\'s start';
     closeBtn.setAttribute('type','button');
     closeBtn.style.cssText = 'width:100%;padding:11px;background:'+result.color+';border:none;border-radius:9px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit';
-    closeBtn.addEventListener('click', function(){ overlay.remove(); });
+    closeBtn.addEventListener('click', function() {
+    overlay.remove();
+    // Re-render dashboard to show updated color day
+    if (typeof currentView !== 'undefined' && currentView === 'dashboard') {
+      setTimeout(function() { loadAccountData(currentAccountId, true); }, 200);
+    }
+  });
     card.appendChild(closeBtn);
   });
 
