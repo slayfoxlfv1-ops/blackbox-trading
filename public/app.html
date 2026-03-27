@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774589027 -->
+<!-- v1774589365 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -1052,7 +1052,15 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
 <div id="cal-tip-global" style="display:none;position:fixed;background:var(--surface3);border:1px solid var(--border2);border-radius:8px;padding:10px;width:200px;z-index:99999;box-shadow:0 8px 24px rgba(0,0,0,.7);pointer-events:none;font-family:'Geist Mono',monospace;font-size:9px;"></div>
 
 <!-- AUTH -->
-<div id="auth-screen" style="display:none"></div>
+<div id="auth-screen" style="display:flex;position:fixed;inset:0;background:#0a0a0b;align-items:center;justify-content:center;z-index:9998">
+  <div style="text-align:center">
+    <div style="position:relative;width:44px;height:44px;margin:0 auto 16px">
+      <span style="font-family:Georgia,serif;font-size:40px;font-weight:700;color:#eeeef0;line-height:1;position:absolute;left:0;bottom:0">P</span>
+      <span style="position:absolute;top:0;right:0;width:10px;height:10px;border-radius:50%;background:#3ecfcf"></span>
+    </div>
+    <div style="font-size:10px;color:#52525e;letter-spacing:2px;font-family:monospace">LOADING...</div>
+  </div>
+</div>
 
 <!-- APP -->
 <div class="layout" id="app" style="display:none;flex-direction:row">
@@ -1822,22 +1830,21 @@ sb.auth.onAuthStateChange(function(event, session) {
     currentUser = null;
     var _mn3 = document.getElementById('mobile-nav'); if (_mn3) _mn3.style.display = 'none';
     window.location.href = '/login';
+    return;
   }
 });
 
-async function checkPlanAndShow() {
+function checkPlanAndShow() {
   sb.from('profiles')
     .select('plan, plan_expires_at, username')
     .eq('id', currentUser.id)
     .single()
     .then(function(result) {
       var profile = result.data;
-
       if (!profile) {
-        window.location.href = '/register';
+        window.location.href = '/login';
         return;
       }
-
       window._userPlan    = profile.plan || 'free';
       window._planExpires = profile.plan_expires_at || null;
       window._username    = profile.username || '';
@@ -1845,21 +1852,17 @@ async function checkPlanAndShow() {
       var plan    = profile.plan || 'free';
       var expires = profile.plan_expires_at ? new Date(profile.plan_expires_at) : null;
       var now     = new Date();
-
       var isPro      = plan === 'pro' && expires && expires > now;
       var isLifetime = plan === 'lifetime';
 
       if (!isPro && !isLifetime) {
         _showPaywall();
-        return;
+      } else {
+        showApp();
       }
-
-      showApp();
     })
-    .catch(function(e) {
-      console.warn('[Pattro] Profile fetch error:', e.message);
-      // On error show app — don't lock out due to network issue
-      showApp();
+    .catch(function() {
+      showApp(); // network error — don't block
     });
 }
 
@@ -1980,10 +1983,8 @@ function showWelcomeIfNew() {
 
 function showApp() {
   var appEl = document.getElementById('app');
-  // Remove paywall if present
   var pw = document.getElementById('paywall-screen');
   if (pw) pw.remove();
-  // Always hide auth-screen
   var authEl = document.getElementById('auth-screen');
   if (authEl) authEl.style.display = 'none';
   // If app already visible, don't reinitialize (prevents scroll reset on token refresh)
