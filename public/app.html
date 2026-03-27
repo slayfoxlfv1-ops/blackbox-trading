@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774630116 -->
+<!-- v1774630598 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -2724,6 +2724,23 @@ async function loadAccountData(id, silent) {
       level: moodFromDb.level
     }));
     try { localStorage.setItem('mood_' + id + '_' + todayStr3, JSON.stringify(moodFromDb)); } catch(e) {}
+    // Update _tradingDaysCache so getMoodForDate finds today's mood immediately
+    if (moodFromDb.level && moodFromDb.level !== 'unknown') {
+      if (!_tradingDaysCache[todayStr3]) {
+        _tradingDaysCache[todayStr3] = { session_date: todayStr3, color_day: moodFromDb.level, color_source: 'mood_check' };
+      } else if (!_tradingDaysCache[todayStr3].color_day || _tradingDaysCache[todayStr3].color_day === 'unknown') {
+        _tradingDaysCache[todayStr3].color_day    = moodFromDb.level;
+        _tradingDaysCache[todayStr3].color_source = 'mood_check';
+      }
+    }
+    // Ensure today is in currentMoodSessions
+    var _hasToday = (currentMoodSessions || []).some(function(s) {
+      return (s.session_date || s.date) === todayStr3;
+    });
+    if (!_hasToday) {
+      currentMoodSessions = currentMoodSessions || [];
+      currentMoodSessions.unshift(moodFromDb);
+    }
   }
   // Cache screenshot_url from DB into bbStore so extension-imported photos show up
   trades.forEach(function(t) {
@@ -9011,9 +9028,12 @@ async function showMoodCheck(accountId) {
     closeBtn.style.cssText = 'width:100%;padding:11px;background:'+result.color+';border:none;border-radius:9px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit';
     closeBtn.addEventListener('click', function() {
     overlay.remove();
-    // Re-render dashboard to show updated color day
+    // Re-render dashboard to show updated color day — delay to ensure DB write committed
     if (typeof currentView !== 'undefined' && currentView === 'dashboard') {
-      setTimeout(function() { loadAccountData(currentAccountId, true); }, 200);
+      setTimeout(function() { loadAccountData(currentAccountId, true); }, 800);
+    } else {
+      // If not on dashboard, still reload data silently
+      setTimeout(function() { loadAccountData(currentAccountId, true); }, 800);
     }
   });
     card.appendChild(closeBtn);
