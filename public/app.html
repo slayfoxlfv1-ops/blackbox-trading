@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774749068 -->
+<!-- v1774749332 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -649,9 +649,10 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
   #log-overlay > div {
     width: 100% !important;
     max-width: 100% !important;
-    min-height: 100vh !important;
-    border-radius: 0 !important;
-    margin: 0 !important;
+    max-height: 92vh !important;
+    overflow-y: auto !important;
+    border-radius: 12px !important;
+    margin: 0 auto !important;
   }
 
   /* ── Nav items — smaller text ── */
@@ -1242,9 +1243,12 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
 </div>
 
 <!-- LOG TRADE MODAL -->
-<div class="overlay modal-overlay" id="log-overlay">
-  <div class="modal">
-    <div class="modal-title">Log Trade</div>
+<div class="overlay modal-overlay" id="log-overlay" onclick="if(event.target===this)closeLogModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title" style="display:flex;align-items:center;justify-content:space-between">
+      <span>Log Trade</span>
+      <button onclick="closeLogModal()" style="background:none;border:none;color:var(--text3);font-size:22px;cursor:pointer;line-height:1;padding:0 2px;font-family:inherit" title="Close (Esc)">×</button>
+    </div>
     <div class="modal-body-scroll">
     <div class="form-row">
       <div class="form-group">
@@ -11174,15 +11178,7 @@ async function saveNoteModal() {
   renderTradeLogTable(currentTrades);
 }
 
-// Close Log Trade modal when clicking outside (on backdrop)
-document.addEventListener('click', function(e) {
-  var logOverlay = document.getElementById('log-overlay');
-  if (logOverlay && logOverlay.classList.contains('open') && e.target === logOverlay) {
-    closeLogModal();
-  }
-});
-
-document.addEventListener('keydown', function(e) {
+document.addEventListener('keyup', function(e) {
   if (e.key !== 'Escape') return;
   // Close note/trade detail modal
   closeNoteModal();
