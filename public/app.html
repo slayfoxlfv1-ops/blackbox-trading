@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774749332 -->
+<!-- v1774749726 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -2452,10 +2452,14 @@ function openLogModal() {
 
 function closeLogModal() {
   editingTradeId = null;
-  var titleEl = document.querySelector('#log-overlay .modal-title');
+  var overlay = document.getElementById('log-overlay');
+  if (!overlay) return;
+  overlay.classList.remove('open');
+  // Reset title regardless of querySelector
+  var titleEl = overlay.querySelector('.modal-title span') || overlay.querySelector('.modal-title');
   if (titleEl) titleEl.textContent = 'Log Trade';
-  document.getElementById('save-trade-btn').textContent = 'Save Trade';
-  document.getElementById('log-overlay').classList.remove('open');
+  var saveBtn = document.getElementById('save-trade-btn');
+  if (saveBtn) saveBtn.textContent = 'Save Trade';
 }
 
 function setHistColorDay(level, btn) {
@@ -10768,32 +10772,7 @@ function renderSettings() {
     '<div style="padding:18px">'+
     '<div class="stat-row" style="padding:10px 0">'  +'<span class="stat-key">TopstepX</span>'  +'<span style="font-size:9px;color:var(--green);background:var(--green-bg);border:1px solid var(--green-bd);padding:2px 8px;border-radius:4px;font-weight:600">✓ Active — Chrome Extension</span>'  +'</div>'  +'<div style="margin-top:8px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;font-size:10px;color:var(--text3);line-height:1.7">'  +'Coming soon: TradingView · Tradeify · Apex Trader · FTMO · NinjaTrader<br>'  +'<span style="font-size:9px">We\'re working on connecting more platforms. If you use another, let us know.</span>'  +'</div>'+
     '</div></div>'+
-    '<div class="panel" style="margin-bottom:12px"><div class="panel-head"><span class="panel-title">Setup Tags</span><span style="font-size:10px;color:var(--text3)">Customize your setup tags</span></div>'    + '<div style="padding:18px">'    + '<div id="settings-tags-list" style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px"></div>'    + '<div style="display:flex;gap:7px;align-items:center">'    + '<input id="new-tag-input" class="form-input" type="text" placeholder="New tag (e.g. ICT BOS)" style="flex:1">'    + '<button onclick="addSetupTag()" style="padding:8px 14px;background:#5a9e9e;border:none;border-radius:7px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">+ Add</button>'    + '</div>'    + '</div></div>'    + '<div class="panel" style="margin-bottom:12px"><div class="panel-head"><span class="panel-title">🔌 Extension — Behavior</span></div>'+
-    '<div style="padding:18px;display:flex;flex-direction:column;gap:16px">'+
-    '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px">'+
-    '<div><div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px">Preventive block (15 min)</div>'+
-    '<div style="font-size:10px;color:var(--text3);line-height:1.5">When you commit a serious violation the extension blocks TopstepX for 15 minutes.</div></div>'+
-    '<div id="lock-toggle" onclick="toggleExtSetting(\'preventiveLock\')" style="cursor:pointer;flex-shrink:0">'+
-    '<div id="lock-toggle-track" style="width:38px;height:22px;border-radius:11px;position:relative;transition:background .2s">'+
-    '<div id="lock-toggle-thumb" style="width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.4)"></div></div>'+
-    '<div id="lock-toggle-lbl" style="font-size:8px;font-weight:700;text-align:center;margin-top:3px"></div></div></div>'+
-    '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px">'+
-    '<div><div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px">Real-time alerts</div>'+
-    '<div style="font-size:10px;color:var(--text3);line-height:1.5">Notifications for minor violations, 80% DLL reached, 2 consecutive losses.</div></div>'+
-    '<div id="alerts-toggle" onclick="toggleExtSetting(\'realtimeAlerts\')" style="cursor:pointer;flex-shrink:0">'+
-    '<div id="alerts-toggle-track" style="width:38px;height:22px;border-radius:11px;position:relative;transition:background .2s">'+
-    '<div id="alerts-toggle-thumb" style="width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.4)"></div></div>'+
-    '<div id="alerts-toggle-lbl" style="font-size:8px;font-weight:700;text-align:center;margin-top:3px"></div></div></div>'+
-    '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px">'+
-    '<div><div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px">Out-of-session alert</div>'+
-    '<div style="font-size:10px;color:var(--text3);line-height:1.5">Alerts you when you open TopstepX outside your configured trading hours.</div></div>'+
-    '<div id="session-alert-toggle" onclick="toggleExtSetting(\'sessionAlert\')" style="cursor:pointer;flex-shrink:0">'+
-    '<div id="session-alert-toggle-track" style="width:38px;height:22px;border-radius:11px;position:relative;transition:background .2s">'+
-    '<div id="session-alert-toggle-thumb" style="width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.4)"></div></div>'+
-    '<div id="session-alert-toggle-lbl" style="font-size:8px;font-weight:700;text-align:center;margin-top:3px"></div></div></div>'+
-    '<div style="font-size:9px;color:var(--text3);padding:8px;background:var(--surface2);border-radius:7px">⚙️ Changes automatically synced with the extension.</div>'+
-    '</div></div>'+
-    '<div class="panel" style="margin-bottom:12px"><div class="panel-head"><span class="panel-title">Legal</span></div>'+
+    '<div class="panel" style="margin-bottom:12px"><div class="panel-head"><span class="panel-title">Setup Tags</span><span style="font-size:10px;color:var(--text3)">Customize your setup tags</span></div>'    + '<div style="padding:18px">'    + '<div id="settings-tags-list" style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px"></div>'    + '<div style="display:flex;gap:7px;align-items:center">'    + '<input id="new-tag-input" class="form-input" type="text" placeholder="New tag (e.g. ICT BOS)" style="flex:1">'    + '<button onclick="addSetupTag()" style="padding:8px 14px;background:#5a9e9e;border:none;border-radius:7px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">+ Add</button>'    + '</div>'    + '</div></div>'    + '<div class="panel" style="margin-bottom:12px"><div class="panel-head"><span class="panel-title">Legal</span></div>'+
     '<div style="padding:18px;display:flex;flex-direction:column;gap:8px">'+
     '<a href="/terms" target="_blank" style="font-size:12px;color:#5a9e9e;text-decoration:none">📄 Terms of Service</a>'+
     '<a href="/privacy" target="_blank" style="font-size:12px;color:#5a9e9e;text-decoration:none">🔒 Privacy Policy</a>'+
@@ -11189,7 +11168,9 @@ document.addEventListener('keyup', function(e) {
   if (accModal && accModal.classList.contains('open')) closeModal();
   // Close Log Trade modal
   var logModal = document.getElementById('log-overlay');
-  if (logModal && logModal.classList.contains('open')) closeLogModal();
+  if (logModal && (logModal.classList.contains('open') || logModal.style.display === 'flex')) {
+    closeLogModal();
+  }
   // Close delete modal
   var delModal = document.getElementById('del-overlay');
   if (delModal && delModal.classList.contains('open')) delModal.classList.remove('open');
