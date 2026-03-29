@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774745652 -->
+<!-- v1774748831 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -1299,21 +1299,11 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">R:R Planned</label>
-        <select class="form-select" id="t-rr-plan" onchange="validateRRvsPnl()">
-          <option value="0">0</option><option value="1">1</option><option value="2">2</option>
-          <option value="3" selected>3</option><option value="4">4</option><option value="5">5</option>
-          <option value="6">6</option><option value="7">7</option><option value="8">8</option>
-          <option value="9">9</option><option value="10">10</option>
-        </select>
+        <input class="form-input" id="t-rr-plan" type="number" min="0" max="20" step="0.5" placeholder="2" value="2" onchange="validateRRvsPnl()" oninput="validateRRvsPnl()">
       </div>
       <div class="form-group">
         <label class="form-label">R:R Achieved</label>
-        <select class="form-select" id="t-rr-achieved" onchange="validateRRvsPnl()">
-          <option value="0">0</option><option value="1" selected>1</option><option value="2">2</option>
-          <option value="3">3</option><option value="4">4</option><option value="5">5</option>
-          <option value="6">6</option><option value="7">7</option><option value="8">8</option>
-          <option value="9">9</option><option value="10">10</option>
-        </select>
+        <input class="form-input" id="t-rr-achieved" type="number" min="0" max="20" step="0.5" placeholder="1.5" value="1" onchange="validateRRvsPnl()" oninput="validateRRvsPnl()">
       </div>
     </div>
     <div class="form-row">
@@ -2306,8 +2296,8 @@ function validatePnlVsCalc(manualPnl, calcPnl) {
 
 function validateRRvsPnl() {
   var pnlEl  = document.getElementById('t-pnl');
-  var rrPlan = parseInt(document.getElementById('t-rr-plan').value) || 0;
-  var rrAch  = parseInt(document.getElementById('t-rr-achieved').value) || 0;
+  var rrPlan = parseFloat(document.getElementById('t-rr-plan').value) || 0;
+  var rrAch  = parseFloat(document.getElementById('t-rr-achieved').value) || 0;
   var warnEl = document.getElementById('t-pnl-warning');
   if (!pnlEl || !warnEl) return;
   var pnl = parseFloat(pnlEl.value);
