@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774748831 -->
+<!-- v1774749068 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -11173,6 +11173,14 @@ async function saveNoteModal() {
   closeNoteModal();
   renderTradeLogTable(currentTrades);
 }
+
+// Close Log Trade modal when clicking outside (on backdrop)
+document.addEventListener('click', function(e) {
+  var logOverlay = document.getElementById('log-overlay');
+  if (logOverlay && logOverlay.classList.contains('open') && e.target === logOverlay) {
+    closeLogModal();
+  }
+});
 
 document.addEventListener('keydown', function(e) {
   if (e.key !== 'Escape') return;
