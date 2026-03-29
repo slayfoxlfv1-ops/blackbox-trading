@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774636393 -->
+<!-- v1774745652 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -1250,13 +1250,13 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
       <div class="form-group">
         <label class="form-label">Ticker</label>
         <div style="display:flex;gap:6px">
-          <input class="form-input" id="t-ticker" type="text" placeholder="NQ, ES, MNQ..." style="flex:1" oninput="filterTickerSuggestions(this.value)">
+          <input class="form-input" id="t-ticker" type="text" placeholder="NQ, ES, MNQ..." onblur="autoCalcPnl()" style="flex:1" oninput="filterTickerSuggestions(this.value)">
         </div>
         <div id="ticker-suggestions" style="display:none;position:absolute;z-index:300;background:var(--surface3);border:1px solid var(--border2);border-radius:8px;margin-top:4px;max-height:200px;overflow-y:auto;width:200px;box-shadow:0 8px 24px rgba(0,0,0,.5)"></div>
       </div>
       <div class="form-group">
         <label class="form-label">Side</label>
-        <select class="form-select" id="t-side">
+        <select class="form-select" id="t-side" onchange="autoCalcPnl()">
           <option value="long">Long</option>
           <option value="short">Short</option>
         </select>
@@ -1265,21 +1265,25 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">Entry Price</label>
-        <input class="form-input" id="t-entry" type="number" step="0.01" placeholder="21500.00">
+        <input class="form-input" id="t-entry" type="number" step="0.01" placeholder="21500.00" oninput="autoCalcPnl()">
       </div>
       <div class="form-group">
         <label class="form-label">Exit Price</label>
-        <input class="form-input" id="t-exit" type="number" step="0.01" placeholder="21550.00">
+        <input class="form-input" id="t-exit" type="number" step="0.01" placeholder="21550.00" oninput="autoCalcPnl()">
       </div>
     </div>
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">Quantity</label>
-        <input class="form-input" id="t-qty" type="number" placeholder="1" value="1">
+        <input class="form-input" id="t-qty" type="number" placeholder="1" value="1" oninput="autoCalcPnl()">
       </div>
       <div class="form-group">
-        <label class="form-label">P&amp;L ($)</label>
-        <input class="form-input" id="t-pnl" type="number" placeholder="-560 or 800">
+        <label class="form-label" style="display:flex;align-items:center;justify-content:space-between">
+          P&amp;L ($)
+          <span id="t-pnl-auto-lbl" style="font-size:8px;color:var(--teal);display:none">auto-calculated</span>
+        </label>
+        <input class="form-input" id="t-pnl" type="number" placeholder="-560 or 800" oninput="onPnlInput()">
+        <div id="t-pnl-warning" style="display:none;font-size:9px;color:var(--amber);margin-top:4px;line-height:1.5"></div>
       </div>
     </div>
     <div class="form-row">
@@ -1295,7 +1299,7 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">R:R Planned</label>
-        <select class="form-select" id="t-rr-plan">
+        <select class="form-select" id="t-rr-plan" onchange="validateRRvsPnl()">
           <option value="0">0</option><option value="1">1</option><option value="2">2</option>
           <option value="3" selected>3</option><option value="4">4</option><option value="5">5</option>
           <option value="6">6</option><option value="7">7</option><option value="8">8</option>
@@ -1304,7 +1308,7 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
       </div>
       <div class="form-group">
         <label class="form-label">R:R Achieved</label>
-        <select class="form-select" id="t-rr-achieved">
+        <select class="form-select" id="t-rr-achieved" onchange="validateRRvsPnl()">
           <option value="0">0</option><option value="1" selected>1</option><option value="2">2</option>
           <option value="3">3</option><option value="4">4</option><option value="5">5</option>
           <option value="6">6</option><option value="7">7</option><option value="8">8</option>
@@ -2232,8 +2236,107 @@ async function deleteAccount() {
 }
 
 // LOG TRADE MODAL
+
+// ── Auto PnL calculation + validation ──
+function autoCalcPnl() {
+  var ticker  = (document.getElementById('t-ticker').value || '').toUpperCase().trim();
+  var side    = document.getElementById('t-side').value;
+  var entry   = parseFloat(document.getElementById('t-entry').value);
+  var exit    = parseFloat(document.getElementById('t-exit').value);
+  var qty     = parseInt(document.getElementById('t-qty').value) || 1;
+  var pnlEl   = document.getElementById('t-pnl');
+  var autoLbl = document.getElementById('t-pnl-auto-lbl');
+  var warnEl  = document.getElementById('t-pnl-warning');
+  if (!pnlEl) return;
+  if (warnEl) warnEl.style.display = 'none';
+
+  if (ticker && entry > 0 && exit > 0 && qty > 0) {
+    var autoPnl = calcAutoPrice(ticker, side, entry, exit, qty);
+    if (autoPnl !== null) {
+      if (!pnlEl.dataset.manualOverride) {
+        pnlEl.value = autoPnl;
+        if (autoLbl) autoLbl.style.display = 'inline';
+        pnlEl.style.borderColor = 'var(--teal)';
+      } else {
+        validatePnlVsCalc(parseFloat(pnlEl.value), autoPnl);
+      }
+    }
+  }
+  validateRRvsPnl();
+}
+
+function onPnlInput() {
+  var pnlEl   = document.getElementById('t-pnl');
+  var autoLbl = document.getElementById('t-pnl-auto-lbl');
+  if (!pnlEl) return;
+  pnlEl.dataset.manualOverride = pnlEl.value ? '1' : '';
+  if (autoLbl) autoLbl.style.display = 'none';
+  pnlEl.style.borderColor = '';
+  var ticker = (document.getElementById('t-ticker').value || '').toUpperCase().trim();
+  var side   = document.getElementById('t-side').value;
+  var entry  = parseFloat(document.getElementById('t-entry').value);
+  var exit   = parseFloat(document.getElementById('t-exit').value);
+  var qty    = parseInt(document.getElementById('t-qty').value) || 1;
+  if (ticker && entry > 0 && exit > 0 && qty > 0) {
+    var autoPnl = calcAutoPrice(ticker, side, entry, exit, qty);
+    if (autoPnl !== null) validatePnlVsCalc(parseFloat(pnlEl.value), autoPnl);
+  }
+  validateRRvsPnl();
+}
+
+function validatePnlVsCalc(manualPnl, calcPnl) {
+  var warnEl = document.getElementById('t-pnl-warning');
+  if (!warnEl || isNaN(manualPnl) || isNaN(calcPnl)) return;
+  var diff = Math.abs(manualPnl - calcPnl);
+  var pct  = calcPnl !== 0 ? diff / Math.abs(calcPnl) * 100 : 0;
+  if (pct > 15) {
+    warnEl.style.display = 'block';
+    warnEl.style.color   = 'var(--red)';
+    warnEl.innerHTML = '⚠ Discrepancy: calculated <strong>' + (calcPnl>=0?'+':'') + '$' + calcPnl.toFixed(2)
+      + '</strong> vs entered <strong>' + (manualPnl>=0?'+':'') + '$' + manualPnl.toFixed(2)
+      + '</strong> (' + Math.round(pct) + '% diff) — check prices or quantity.';
+  } else if (pct > 5) {
+    warnEl.style.display = 'block';
+    warnEl.style.color   = 'var(--amber)';
+    warnEl.innerHTML = '~ Small difference vs calculated (<strong>' + Math.round(pct) + '%</strong>) — fees or rounding.';
+  } else {
+    warnEl.style.display = 'none';
+  }
+}
+
+function validateRRvsPnl() {
+  var pnlEl  = document.getElementById('t-pnl');
+  var rrPlan = parseInt(document.getElementById('t-rr-plan').value) || 0;
+  var rrAch  = parseInt(document.getElementById('t-rr-achieved').value) || 0;
+  var warnEl = document.getElementById('t-pnl-warning');
+  if (!pnlEl || !warnEl) return;
+  var pnl = parseFloat(pnlEl.value);
+  if (isNaN(pnl) || rrPlan <= 0) return;
+  var existing = warnEl.innerHTML || '';
+  var extra = '';
+  if (rrAch > 0 && pnl < 0) {
+    extra = '<br>⚠ R:R Achieved > 0 but P&L is negative — check R:R values.';
+  } else if (rrAch === 0 && pnl > 0) {
+    extra = '<br>⚠ R:R Achieved = 0 but P&L is positive — did you enter R:R achieved?';
+  }
+  if (extra && !existing.includes(extra.trim())) {
+    warnEl.style.display = 'block';
+    warnEl.innerHTML = existing + extra;
+  }
+}
+
+function resetPnlField() {
+  var pnlEl   = document.getElementById('t-pnl');
+  var autoLbl = document.getElementById('t-pnl-auto-lbl');
+  var warnEl  = document.getElementById('t-pnl-warning');
+  if (pnlEl)  { pnlEl.value = ''; delete pnlEl.dataset.manualOverride; pnlEl.style.borderColor = ''; }
+  if (autoLbl) autoLbl.style.display = 'none';
+  if (warnEl)  { warnEl.style.display = 'none'; warnEl.innerHTML = ''; }
+}
+
 function openLogModal() {
   editingTradeId = null;
+  resetPnlField();
   // Reset all fields
   document.getElementById('t-ticker').value = '';
   document.getElementById('t-side').value = 'long';
@@ -2421,7 +2524,21 @@ async function saveTrade() {
     quantity:       parseInt(document.getElementById('t-qty').value)    || 1,
     entry_price:    parseFloat(document.getElementById('t-entry').value) || 0,
     exit_price:     parseFloat(document.getElementById('t-exit').value)  || null,
-    pnl:            parseFloat(document.getElementById('t-pnl').value)   || 0,
+    // Use auto-calculated PnL if available and no manual override, else use manual
+    pnl: (function() {
+      var pnlEl    = document.getElementById('t-pnl');
+      var manualPnl = parseFloat(pnlEl ? pnlEl.value : '') || 0;
+      // Try auto-calculation from prices
+      var autoTicker = document.getElementById('t-ticker').value.toUpperCase().trim();
+      var autoSide   = document.getElementById('t-side').value;
+      var autoEntry  = parseFloat(document.getElementById('t-entry').value);
+      var autoExit   = parseFloat(document.getElementById('t-exit').value);
+      var autoQty    = parseInt(document.getElementById('t-qty').value) || 1;
+      var autoPnl    = calcAutoPrice(autoTicker, autoSide, autoEntry, autoExit, autoQty);
+      // If auto-calc available and user hasn't manually overridden, use auto
+      if (autoPnl !== null && !(pnlEl && pnlEl.dataset.manualOverride)) return autoPnl;
+      return manualPnl;
+    })(),
     rr_planned:     parseFloat(document.getElementById('t-rr-plan').value)     || null,
     rr_achieved:    parseFloat(document.getElementById('t-rr-achieved').value) || null,
     emotion:        document.getElementById('t-emotion').value,
@@ -5162,51 +5279,59 @@ function calcTradeExecution(trade) {
   var rr_achieved = parseFloat(trade.rr_achieved) || 0;
   var hasRR = rr_planned > 0 && rr_achieved !== 0;
 
-  // ── RR Score (40pts) — clamp(achieved/planned, 0→1)*100 ──
+  var entry_price = parseFloat(trade.entry_price) || 0;
+  var exit_price  = parseFloat(trade.exit_price)  || 0;
+  var hasPrices   = entry_price > 0 && exit_price > 0;
+
+  // ── RR Score (40pts) — based purely on R:R ratio ──
   var rrScore = 0;
   if (hasRR) {
     var rrRatio = rr_achieved / rr_planned;
     rrScore = Math.min(100, Math.max(0, rrRatio)) * 100;
   }
-  var rrPts = hasRR ? Math.round(rrScore * 0.40) : null; // null = no data
+  var rrPts = hasRR ? Math.round(rrScore * 0.40) : null;
 
   // ── Entry Quality (35pts) ──
-  // Based on discipline tag — does the entry reflect following the plan?
+  // Based on: was the entry technically sound?
+  // Uses discipline_tag ONLY for plan-following aspects (no_confirmation, impulse, fomo)
+  // Does NOT penalize for emotional tags (those go to Mind score)
   var tag = (trade.discipline_tag || 'clean').toLowerCase();
   var entryScoreMap = {
-    clean:           100,  // followed plan perfectly
-    no_confirmation:  80,  // minor — entered without full confirmation
-    moved_sl:         70,  // entered ok, managed poorly
-    scaled_in:        60,  // entered then scaled into loss
-    overtrading:      40,  // beyond optimal frequency
-    impulse:          25,  // broke entry rules
-    fomo:             20,  // chased price
-    revenge:          10   // entered emotionally after loss
+    clean:           100,  // entered at planned level
+    no_confirmation:  70,  // entered without setup confirmation — technical miss
+    moved_sl:         85,  // entry ok, stop management issue (not entry quality)
+    scaled_in:        65,  // added to loser — poor entry management
+    overtrading:      60,  // frequency issue, not entry quality per-se
+    impulse:          40,  // broke entry rules — affects execution
+    fomo:             35,  // chased price — directly impacts entry price
+    revenge:          50   // emotional, but entry quality varies — neutral penalty
+    // Note: revenge is mild here because the execution quality depends on price,
+    // not emotion. The emotion penalty is fully in Mind score.
   };
   var entryScore = entryScoreMap[tag] !== undefined ? entryScoreMap[tag] : 100;
-  var entryPts = Math.round(entryScore * 0.35);
+  var entryPts   = Math.round(entryScore * 0.35);
 
   // ── Exit Quality (25pts) ──
-  // Did you exit according to plan? Use RR ratio as proxy
-  var exitScore = 70; // default neutral if no data
+  // Primarily based on R:R achievement — did you let the trade reach its target?
+  var exitScore = 70; // neutral default when no data
   if (hasRR) {
     var rrR = rr_achieved / rr_planned;
     if (rrR >= 1.0)       exitScore = 100; // hit target or beyond
-    else if (rrR >= 0.8)  exitScore = 85;  // close to target
-    else if (rrR >= 0.5)  exitScore = 65;  // took some profit early
+    else if (rrR >= 0.8)  exitScore = 85;  // very close to target
+    else if (rrR >= 0.5)  exitScore = 65;  // took partial profits
     else if (rrR >= 0.25) exitScore = 45;  // exited too early
-    else                  exitScore = 25;  // barely any R:R captured
+    else                  exitScore = 25;  // barely any R captured
   }
+  // Adjust for moved_sl — if SL was moved, exit quality suffers regardless of RR
+  if (tag === 'moved_sl') exitScore = Math.min(exitScore, 60);
   var exitPts = Math.round(exitScore * 0.25);
 
   // ── Total ──
-  var totalPts, availablePts;
+  var totalPts;
   if (rrPts === null) {
-    // No RR data — weight Entry + Exit over 60%
-    availablePts = 60;
+    // No RR: scale entry+exit to 100
     totalPts = Math.round((entryPts + exitPts) / 60 * 100);
   } else {
-    availablePts = 100;
     totalPts = rrPts + entryPts + exitPts;
   }
   totalPts = Math.min(100, Math.max(0, totalPts));
@@ -5219,7 +5344,8 @@ function calcTradeExecution(trade) {
     entryPts:   entryPts,
     exitPts:    exitPts,
     total:      totalPts,
-    hasRR:      hasRR
+    hasRR:      hasRR,
+    tag:        tag
   };
 }
 
@@ -5265,15 +5391,18 @@ function calcTradeMind(trade, colorDay) {
 
   // ── 2. Behavior tag — mental signals (30%) ──
   var tag = (trade.discipline_tag || 'clean').toLowerCase();
+  // Behavior tag → Mind impact
+  // These are stronger than before because we reduced the Execution penalty
+  // for emotional tags. The psychological cost must be captured somewhere.
   var behaviorMindMap = {
     clean:           100,  // full psychological control
-    no_confirmation:  80,  // minor — missed signal
-    moved_sl:         60,  // fear of loss
-    scaled_in:        45,  // desperation / averaging down
+    no_confirmation:  75,  // minor lapse — didn't follow signal
+    moved_sl:         55,  // fear of loss / discipline failure
+    scaled_in:        40,  // averaging down = desperation
     overtrading:      30,  // compulsion, loss of judgment
-    impulse:          25,  // broke emotional control
-    fomo:             20,  // fear-driven entry
-    revenge:          10,  // worst: emotional breakdown
+    impulse:          20,  // broke emotional control — strong penalty
+    fomo:             15,  // fear-driven entry — strong penalty
+    revenge:           5,  // worst: emotional breakdown — maximum penalty
   };
   var behaviorMindScore = behaviorMindMap[tag] !== undefined ? behaviorMindMap[tag] : 70;
 
@@ -10897,7 +11026,7 @@ function imgError(img, url) {
 // NOTE MODAL
 function openNoteModal(tradeId) {
   // Always fetch fresh data from Supabase so extension-saved fields appear immediately
-  sb.from('trades').select('*').eq('id', tradeId).limit(1).then(function(res) {
+  sb.from('trades').select('*').eq('id', tradeId).eq('user_id', currentUser.id).limit(1).then(function(res) {
     if (res.data && res.data[0]) {
       // Update currentTrades with fresh data
       currentTrades = currentTrades.filter(function(x){ return String(x.id) !== String(tradeId); });
@@ -11045,7 +11174,7 @@ async function saveNoteModal() {
   var notes    = document.getElementById('note-modal-text').value;
   var btn = document.querySelector('#note-modal-overlay .btn-solid');
   if (btn) btn.textContent = '...';
-  var res = await sb.from('trades').update({notes: notes}).eq('id', id);
+  var res = await sb.from('trades').update({notes: notes}).eq('id', id).eq('user_id', currentUser.id);
   if (res.error) { alert('Error: ' + res.error.message); if (btn) btn.textContent = 'Save Note'; return; }
   // Update in memory
   var t = currentTrades.find(function(x){return x.id===id;});
@@ -11097,6 +11226,21 @@ function closeLightbox() {
 
 
 // TICKER MAP - instrument to TradingView symbol
+
+// ── Point values for auto PnL calculation ──
+var FUTURES_PV = {
+  'ES':50,'MES':5,'NQ':20,'MNQ':2,'YM':5,'MYM':0.5,
+  'RTY':50,'M2K':5,'CL':1000,'MCL':100,'GC':100,'MGC':10,
+  'SI':5000,'ZN':1000,'ZB':1000,'ZC':50,'ZS':50,'6E':125000
+};
+
+function calcAutoPrice(ticker, side, entry, exit, qty) {
+  if (!ticker || !entry || !exit || !qty) return null;
+  var pv = FUTURES_PV[ticker.toUpperCase()];
+  if (!pv) return null; // non-futures: can't auto-calculate
+  var diff = side === 'long' ? exit - entry : entry - exit;
+  return Math.round(diff * qty * pv * 100) / 100;
+}
 var TICKER_MAP = {
   // E-mini Futures (verified symbols for TV Advanced Chart)
   "ES":     { tv: "ES1!", label: "E-mini S&P 500" },
