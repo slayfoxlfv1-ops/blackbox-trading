@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774899622 -->
+<!-- v1774899998 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -8097,10 +8097,10 @@ function buildMindView(trades) {
   html += '</div>'; // end grid
   html += '</div>'; // end panel
 
-  // ── 2: Mind Score Today (card rico) + Mental Score Semana/Mes (panel completo) ──
+  // ── 2: Mind (today) + Mental Score week/month ──
   html += '<div class="panel" style="padding:20px">'
     + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">'
-    + '<div style="font-size:10px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px">Mind Score Today</div>'
+    + '<div style="font-size:10px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px">Mind</div>'
     + '<div style="font-size:9px;color:var(--text3);margin-top:2px">Psychological state only · not the same as Mental Score</div>'
     + '<div style="font-size:9px;color:var(--text3)">' + (mindData.hasTrades ? mindData.tradeCount + ' trade' + (mindData.tradeCount!==1?'s':'') + ' today' : 'No trades today') + '</div>'
     + '</div>'
@@ -8994,7 +8994,7 @@ var TOUR_STEPS = [
     key:'psychology', target:'.nav-item[data-view="psychology"]', nav:'psychology',
     title:'Step 5 — Psychology',
     subtitle:'The most important section in Pattro',
-    body:'This is where all the psychological analysis lives. It has three tabs:<br><br><strong>Psychology</strong> — your AI Coach (generates a full diagnosis with 15+ trades), daily and weekly Mind Score, and your Psychological Profile: dominant pattern, main saboteur, and a concrete action plan.<br><br><strong>Discipline</strong> — your Rules and Checklist (covered in the next two steps).<br><br><strong>Calendar</strong> — a monthly calendar of your Mind Score. Click any day to review your full psychological state for that session.',
+    body:'This is where all the psychological analysis lives. It has three tabs:<br><br><strong>Psychology</strong> — your AI Coach (generates a full diagnosis with 15+ trades), daily and weekly Mind score, and your Psychological Profile: dominant pattern, main saboteur, and a concrete action plan.<br><br><strong>Discipline</strong> — your Rules and Checklist (covered in the next two steps).<br><br><strong>Calendar</strong> — a monthly calendar of your Mind score. Click any day to review your full psychological state for that session.',
     tip:'💡 The AI Coach becomes significantly more accurate with 15+ trades. With 30+ days of data you will see clear patterns in your psychology.',
     cta:'Next →'
   },
