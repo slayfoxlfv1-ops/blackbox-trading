@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774883265 -->
+<!-- v1774883558 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -2646,7 +2646,7 @@ async function saveTrade() {
     var _cdDate = (_cdEntryEl && _cdEntryEl.value) ? _cdEntryEl.value.slice(0,10) : null;
     if (_cdDate) {
       // Check if mood session already exists for this date
-      var _existing = (currentMoodSessions || []).find(function(s) {
+      var _existing = (currentMoodSessions || []).find(async function(s) {
         return (s.session_date || s.date) === _cdDate;
       });
       if (!_existing) {
@@ -7822,7 +7822,7 @@ function generateMindCoachMonthly() {
   markCoachUsed(currentAccountId||'', 'monthly', avail.monthly.key);
   generateMindCoach();
 }
-function generateCoachAnalysis() {
+async function generateCoachAnalysis() {
   incCoachConsultCount();
   coachLoading = true;
   var tabEl = document.getElementById("disc-tab-content");
