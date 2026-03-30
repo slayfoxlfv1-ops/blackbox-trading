@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774881433 -->
+<!-- v1774882569 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -7154,8 +7154,8 @@ function renderRulesTab(el) {
     + '<button id="save-rules-btn" onclick="saveRulesConfig()" style="padding:11px 32px;font-size:13px;font-weight:700;background:#5a9e9e;border:none;border-radius:8px;color:#fff;cursor:pointer;font-family:inherit;letter-spacing:.3px">Save rules</button></div>';
 
   html += '</div>';
+  html += renderRulesCostAnalysis(trades, saved);
   el.innerHTML = html;
-
   // ── Attach event listeners (no inline JS) ──
 
   // Helper: snapshot all numeric inputs into _rulesTemp before re-rendering
@@ -7585,18 +7585,48 @@ function renderRendimientoView() {
   out += '<div class="panel" style="padding:0;overflow:hidden">';
   out += '<div class="panel-head"><span class="panel-title">✦ Weekly Coach</span><span class="panel-cap" style="color:var(--amber)">Performance analysis · powered by Claude</span></div>';
   out += '<div style="padding:18px" id="insights-coach-wrap">';
-  var isFriday = now.getDay() === 5;
-  if (!isFriday) {
-    out += '<div style="background:var(--amber-bg);border:1px solid var(--amber-bd);border-radius:8px;padding:10px 14px;font-size:11px;color:var(--text2);margin-bottom:14px">The weekly Coach is generated automatically every <strong>Friday</strong>. You can request it manually abajo.</div>';
-  }
-  out += '<div id="coach-output" style="min-height:60px">';
+  var _insAvail = getCoachAvailability(currentAccountId||'', currentTrades||[]);
+  var _iw = _insAvail.weekly;
+  var _im = _insAvail.monthly;
+
+  out += '<div id="coach-output" style="min-height:40px;margin-bottom:14px">';
   out += coachAnalysis
     ? '<div style="font-size:12px;color:var(--text2);line-height:1.8;white-space:pre-wrap">'+coachAnalysis+'</div>'
-    : '<div style="font-size:11px;color:var(--text3);text-align:center;padding:20px 0">No analysis yet. Click to generate the weekly analysis.</div>';
+    : '<div style="font-size:11px;color:var(--text3);padding:12px 0">No analysis yet for this period.</div>';
   out += '</div>';
-  out += '<div style="margin-top:14px;display:flex;gap:8px">';
-  out += '<button class="btn btn-solid" id="coach-btn" onclick="generateCoachAnalysis()">' + (coachLoading?'Analyzing...':'⚡ Analyze week') + '</button>';
-  if (coachAnalysis) out += '<button class="btn btn-ghost" onclick="coachAnalysis=null;renderRendimientoView()">Clear</button>';
+
+  out += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">';
+
+  // Weekly button
+  out += '<div style="background:var(--surface2);border-radius:9px;padding:12px">';
+  out += '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Weekly · min 5 trades</div>';
+  if (_iw.used) {
+    out += '<div style="font-size:10px;color:var(--text3);text-align:center">✓ Done — available next week</div>';
+  } else if (_iw.tradeCount < _iw.minRequired) {
+    var _wNeed = _iw.minRequired - _iw.tradeCount;
+    out += '<div style="font-size:10px;color:var(--text2);text-align:center"><strong style="color:var(--amber)">' + _wNeed + ' more trades</strong> this week</div>';
+    out += '<div style="font-size:9px;color:var(--text3);text-align:center;margin-top:4px">' + _iw.tradeCount + ' / ' + _iw.minRequired + '</div>';
+  } else {
+    out += '<button class="btn btn-solid" style="width:100%" onclick="generateCoachWeekly()">⚡ Week complete — analyze</button>';
+  }
+  out += '</div>';
+
+  // Monthly button
+  out += '<div style="background:var(--surface2);border-radius:9px;padding:12px">';
+  out += '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Monthly · min 15 trades</div>';
+  if (_im.used) {
+    out += '<div style="font-size:10px;color:var(--text3);text-align:center">✓ Done — available next month</div>';
+  } else if (_im.tradeCount < _im.minRequired) {
+    var _mNeed = _im.minRequired - _im.tradeCount;
+    out += '<div style="font-size:10px;color:var(--text2);text-align:center"><strong style="color:var(--amber)">' + _mNeed + ' more trades</strong> this month</div>';
+    out += '<div style="font-size:9px;color:var(--text3);text-align:center;margin-top:4px">' + _im.tradeCount + ' / ' + _im.minRequired + '</div>';
+  } else {
+    out += '<button class="btn btn-solid" style="width:100%" onclick="generateCoachMonthly()">⚡ Month complete — analyze</button>';
+  }
+  out += '</div>';
+
+  out += '</div>';
+  if (coachAnalysis) out += '<div style="margin-top:10px"><button class="btn btn-ghost" onclick="coachAnalysis=null;renderRendimientoView()">Clear</button></div>';
   out += '</div></div></div>';
 
   // ── Achievements ──
@@ -7842,6 +7872,23 @@ function buildMindView(trades) {
     }, 1200);
   }
 
+  // ── Rules violation toast (dashboard) ──
+  (function() {
+    var _rulesObj  = getPersonalRules(currentAccountId || '');
+    var _active    = Object.keys(_rulesObj).filter(function(k){ return _rulesObj[k] && _rulesObj[k].active; });
+    if (!_active.length) return;
+    var _rulesViol = checkRuleViolations(_rulesObj, todayOnlyTrades);
+    if (!_rulesViol || !_rulesViol.length) return;
+    var _dismissKey = 'rules_viol_' + currentAccountId + '_' + todayOnlyStr;
+    setTimeout(function() {
+      showAlertToast('⊘',
+        _rulesViol.length + ' rule' + (_rulesViol.length > 1 ? 's' : '') + ' violated today',
+        _rulesViol.map(function(v){ return '• ' + v.rule.label + (v.detail ? ': ' + v.detail : ''); }).join('
+'),
+        'var(--amber)', 'rgba(224,152,64,0.3)', _dismissKey);
+    }, 1800);
+  })();
+
   // P&L by discipline tag
   var discPnl = {};
   tagged.forEach(function(t) {
@@ -7894,27 +7941,42 @@ function buildMindView(trades) {
     { val:'custom',   lbl:'Custom' }
   ];
 
-  var _coachTradeCount = trades.length;
-  var _coachReady = _coachTradeCount >= 20;
-  var _coachNeed  = Math.max(0, 20 - _coachTradeCount);
-  var _coachPct   = Math.min(100, Math.round(_coachTradeCount / 20 * 100));
+  var _coachAvail = getCoachAvailability(acctId2, trades);
+  var _cw = _coachAvail.weekly;
+  var _cm = _coachAvail.monthly;
+
+  function _coachBtn(type, avail, label, fn, key) {
+    if (avail.used) {
+      return '<div style="font-size:10px;color:var(--text3);padding:7px 12px;background:var(--surface2);border-radius:8px;text-align:center">'
+        + '✓ ' + label + ' analysis done — available again next ' + type + '</div>';
+    }
+    if (avail.tradeCount < avail.minRequired) {
+      var need = avail.minRequired - avail.tradeCount;
+      var pct  = Math.round(avail.tradeCount / avail.minRequired * 100);
+      return '<div style="text-align:center">'
+        + '<div style="font-size:10px;color:var(--text2);margin-bottom:6px"><strong style="color:var(--amber)">' + need + ' more trades</strong> needed for ' + label.toLowerCase() + ' analysis</div>'
+        + '<div style="width:100%;height:5px;background:var(--surface3);border-radius:3px;overflow:hidden;margin-bottom:4px">'
+        + '<div style="height:100%;width:' + pct + '%;background:var(--amber);border-radius:3px"></div></div>'
+        + '<div style="font-size:9px;color:var(--text3)">' + avail.tradeCount + ' / ' + avail.minRequired + ' trades this ' + type + '</div>'
+        + '</div>';
+    }
+    return '<button class="btn btn-solid" style="width:100%" onclick="' + fn + '()">⚡ ' + label + ' — analyze now</button>';
+  }
 
   html += '<div class="panel" style="padding:20px">'
-    + '<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;gap:12px">'
-    + '<div>'
-    + '<div style="font-size:10px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px">AI Coach — Psychological analysis</div>'
-    + '<div style="font-size:11px;color:var(--text3);margin-top:3px">Trend: 2 days · week · prev week · month · prev month</div>'
+    + '<div style="margin-bottom:14px">'
+    + '<div style="font-size:10px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px">AI Coach — Psychological analysis</div>'
+    + '<div style="font-size:10px;color:var(--text3)">Weekly · 5 trades min · once per week &nbsp;|&nbsp; Monthly · 15 trades min · once per month</div>'
     + '</div>'
-    + (_coachReady
-        ? '<button class="btn btn-solid" id="mind-coach-btn" style="white-space:nowrap;flex-shrink:0" onclick="generateMindCoach()">'
-          + (mindCoachLoading ? '<span class="spinner" style="width:12px;height:12px;margin-right:6px"></span>Analyzing...' : '⚡ Analyze now')
-          + '</button>'
-        : '<div style="text-align:right">'
-          + '<div style="font-size:10px;color:var(--text2);font-weight:600;margin-bottom:6px">Necesito <strong style="color:var(--amber)">' + _coachNeed + ' more trades</strong></div>'
-          + '<div style="width:140px;height:6px;background:var(--surface3);border-radius:3px;overflow:hidden">'
-          + '<div style="height:100%;width:' + _coachPct + '%;background:var(--amber);border-radius:3px;transition:width .5s"></div></div>'
-          + '<div style="font-size:9px;color:var(--text3);margin-top:4px">' + _coachTradeCount + ' / 20 trades</div>'
-          + '</div>')
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">'
+    + '<div style="background:var(--surface2);border-radius:9px;padding:12px">'
+    + '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Weekly</div>'
+    + _coachBtn("week", _cw, "Week", "generateMindCoachWeekly", _cw.key)
+    + '</div>'
+    + '<div style="background:var(--surface2);border-radius:9px;padding:12px">'
+    + '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Monthly</div>'
+    + _coachBtn("month", _cm, "Month", "generateMindCoachMonthly", _cm.key)
+    + '</div></div>'
     + '</div>'
     + '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:11px;margin-bottom:14px">'
     + '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:9px">Automatic analysis frequency</div>'
@@ -8676,6 +8738,62 @@ function saveCoachMemory(accountId, mem) {
 }
 
 // ── Coach frequency settings ──
+
+// ── Coach availability logic ──
+function getCoachAvailability(accountId, trades) {
+  var now   = new Date();
+  var today = now.toISOString().slice(0,10);
+
+  // ── Week key: ISO week (Mon-Sun) ──
+  var weekStart = new Date(now);
+  var day = weekStart.getDay() || 7; // 1=Mon..7=Sun
+  weekStart.setDate(weekStart.getDate() - day + 1);
+  var weekKey = weekStart.toISOString().slice(0,10);
+
+  // ── Month key ──
+  var monthKey = today.slice(0,7); // YYYY-MM
+
+  // Stored usage
+  var used = {};
+  try { used = JSON.parse(bbStore.get('coach_used_' + accountId) || '{}'); } catch(e) {}
+
+  // Week trades count
+  var weekTrades = trades.filter(function(t) {
+    return t.entry_time && t.entry_time >= weekStart.toISOString().slice(0,10);
+  });
+
+  // Month trades count
+  var monthTrades = trades.filter(function(t) {
+    return t.entry_time && t.entry_time.startsWith(monthKey);
+  });
+
+  var weeklyUsed  = used['weekly_'  + weekKey]  === true;
+  var monthlyUsed = used['monthly_' + monthKey] === true;
+
+  return {
+    weekly: {
+      available:   weekTrades.length >= 5 && !weeklyUsed,
+      used:        weeklyUsed,
+      tradeCount:  weekTrades.length,
+      minRequired: 5,
+      key:         weekKey
+    },
+    monthly: {
+      available:   monthTrades.length >= 15 && !monthlyUsed,
+      used:        monthlyUsed,
+      tradeCount:  monthTrades.length,
+      minRequired: 15,
+      key:         monthKey
+    }
+  };
+}
+
+function markCoachUsed(accountId, type, key) {
+  var used = {};
+  try { used = JSON.parse(bbStore.get('coach_used_' + accountId) || '{}'); } catch(e) {}
+  used[type + '_' + key] = true;
+  bbStore.set('coach_used_' + accountId, JSON.stringify(used));
+}
 function getCoachFrequency(accountId) {
   try { return JSON.parse(bbStore.get('coach_freq_' + accountId) || 'null') || { mode: 'biweekly' }; } catch(e) { return { mode: 'biweekly' }; }
 }
