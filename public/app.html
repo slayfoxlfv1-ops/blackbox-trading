@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774876698 -->
+<!-- v1774881433 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -2331,6 +2331,9 @@ function resetPnlField() {
 function openLogModal() {
   editingTradeId = null;
   resetPnlField();
+  // Clear inline style set by closeLogModal before opening
+  var _ov = document.getElementById('log-overlay');
+  if (_ov) _ov.style.display = '';
   // Reset all fields
   document.getElementById('t-ticker').value = '';
   document.getElementById('t-side').value = 'long';
@@ -2455,7 +2458,7 @@ function closeLogModal() {
   var overlay = document.getElementById('log-overlay');
   if (!overlay) return;
   overlay.classList.remove('open');
-  // Reset title regardless of querySelector
+  overlay.style.display = 'none'; // belt-and-suspenders: force hide
   var titleEl = overlay.querySelector('.modal-title span') || overlay.querySelector('.modal-title');
   if (titleEl) titleEl.textContent = 'Log Trade';
   var saveBtn = document.getElementById('save-trade-btn');
@@ -2715,7 +2718,7 @@ function openEditTrade(id) {
   if (titleEl) titleEl.textContent = 'Edit Trade';
   document.getElementById('save-trade-btn').textContent = 'Save Changes';
   editingTradeId = id;
-  document.getElementById('log-overlay').classList.add('open');
+  (function(){ var _ov2=document.getElementById('log-overlay'); if(_ov2){_ov2.style.display='';_ov2.classList.add('open');} })();
   // On edit: show checklist for that trade's day, read-only
   var _clSliderE = document.getElementById('t-checklist-pct');
   if (_clSliderE) {
