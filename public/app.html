@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774882569 -->
+<!-- v1774883265 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -6928,6 +6928,126 @@ function switchDiscTab(tab) {
   if (tab==='execution' || tab==='operativa') renderOperativaTab(el);
 }
 
+
+// ── Rules & behavior cost analysis ──
+function renderRulesCostAnalysis(trades, rulesObj) {
+  if (!trades || trades.length < 3) return '';
+  var r = rulesObj || {};
+  var TAG_LABELS = {
+    fomo:'FOMO', impulse:'Impulse', revenge:'Revenge',
+    moved_sl:'Moved SL', scaled_in:'Scaled into loss',
+    overtrading:'Overtrading', no_confirmation:'No confirmation'
+  };
+  var COST_TAGS = ['fomo','impulse','revenge','moved_sl','scaled_in','overtrading','no_confirmation'];
+
+  // ── Behavior tag P&L cost ──
+  var tagCost = {};
+  var cleanTrades = trades.filter(function(t){ return (t.discipline_tag||'clean') === 'clean'; });
+  var avgCleanPnl = cleanTrades.length
+    ? cleanTrades.reduce(function(s,t){ return s+(t.pnl||0); },0) / cleanTrades.length : 0;
+
+  COST_TAGS.forEach(function(tag) {
+    var tagged = trades.filter(function(t){ return (t.discipline_tag||'clean') === tag; });
+    if (!tagged.length) return;
+    var totalPnl = tagged.reduce(function(s,t){ return s+(t.pnl||0); },0);
+    var avgPnl   = totalPnl / tagged.length;
+    tagCost[tag] = {
+      count:      tagged.length,
+      totalPnl:   Math.round(totalPnl * 100) / 100,
+      avgPnl:     Math.round(avgPnl * 100) / 100,
+      costVsClean: Math.round((avgPnl - avgCleanPnl) * 100) / 100
+    };
+  });
+
+  // Sort: most costly first
+  var sortedTags = Object.keys(tagCost).sort(function(a,b){
+    return tagCost[a].totalPnl - tagCost[b].totalPnl;
+  });
+
+  // ── Personal rule violation frequency ──
+  var ruleStats = {};
+  var activeRules = Object.keys(r).filter(function(k){ return r[k] && r[k].active; });
+
+  if (activeRules.length > 0) {
+    // Group trades by day
+    var dayMap = {};
+    trades.forEach(function(t) {
+      var d = t.entry_time ? t.entry_time.slice(0,10) : null;
+      if (!d) return;
+      if (!dayMap[d]) dayMap[d] = [];
+      dayMap[d].push(t);
+    });
+
+    Object.keys(dayMap).forEach(function(d) {
+      var dayTrades = dayMap[d];
+      var viols = checkRuleViolations(r, dayTrades);
+      var violIds = viols.map(function(v){ return v.rule.id || v.rule.label; });
+      var dayPnl  = dayTrades.reduce(function(s,t){ return s+(t.pnl||0); },0);
+
+      viols.forEach(function(v) {
+        var id = v.rule.id || v.rule.label;
+        if (!ruleStats[id]) ruleStats[id] = { label:v.rule.label, count:0, violDayPnls:[], cleanDayPnls:[] };
+        ruleStats[id].count++;
+      });
+      Object.keys(ruleStats).forEach(function(id) {
+        if (violIds.indexOf(id) !== -1) ruleStats[id].violDayPnls.push(dayPnl);
+        else ruleStats[id].cleanDayPnls.push(dayPnl);
+      });
+    });
+  }
+
+  if (!sortedTags.length && !Object.keys(ruleStats).length) return '';
+
+  var html = '<div class="panel" style="margin-top:16px"><div class="panel-head">'
+    + '<span class="panel-title">📊 Rule & Behavior Cost</span>'
+    + '<span class="panel-cap" style="color:var(--text3)">All-time · what is costing you money</span>'
+    + '</div><div style="padding:16px 18px">';
+
+  if (sortedTags.length) {
+    html += '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;font-weight:700">Behavior patterns vs clean trades</div>';
+    html += '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px">';
+    sortedTags.forEach(function(tag) {
+      var s = tagCost[tag];
+      var expensive = s.totalPnl < 0;
+      var pnlColor  = s.totalPnl >= 0 ? 'var(--green)' : 'var(--red)';
+      var diffColor = s.costVsClean >= 0 ? 'var(--green)' : 'var(--red)';
+      var diffText  = (s.costVsClean >= 0 ? '+' : '') + '$' + s.costVsClean.toFixed(0) + ' vs clean avg/trade';
+      html += '<div style="background:var(--surface2);border-radius:8px;padding:10px 12px;border-left:3px solid '+(expensive?'var(--red)':'var(--green)') + '">'
+        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">'
+        + '<div style="font-size:11px;font-weight:600;color:var(--text)">' + (TAG_LABELS[tag]||tag) + '</div>'
+        + '<div style="text-align:right">'
+        + '<div style="font-size:13px;font-weight:700;color:' + pnlColor + '">'+(s.totalPnl>=0?'+':'')+'$'+Math.abs(s.totalPnl).toFixed(0)+'</div>'
+        + '<div style="font-size:9px;color:var(--text3)">'+s.count+' trades · avg '+(s.avgPnl>=0?'+':'')+'$'+s.avgPnl.toFixed(0)+'</div>'
+        + '</div></div>'
+        + '<div style="font-size:9px;color:'+diffColor+'">'+diffText+'</div>'
+        + '</div>';
+    });
+    html += '</div>';
+  }
+
+  var ruleKeys = Object.keys(ruleStats).sort(function(a,b){ return ruleStats[b].count - ruleStats[a].count; });
+  if (ruleKeys.length) {
+    html += '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;font-weight:700">Personal rules — most broken</div>';
+    html += '<div style="display:flex;flex-direction:column;gap:4px">';
+    ruleKeys.forEach(function(id, i) {
+      var s = ruleStats[id];
+      var avgViol  = s.violDayPnls.length  ? Math.round(s.violDayPnls.reduce(function(a,b){return a+b;},0)/s.violDayPnls.length)   : null;
+      var avgClean = s.cleanDayPnls.length ? Math.round(s.cleanDayPnls.reduce(function(a,b){return a+b;},0)/s.cleanDayPnls.length) : null;
+      var badge = i === 0 ? '<span style="font-size:8px;padding:2px 6px;border-radius:4px;background:var(--red-bg);color:var(--red);margin-left:6px">most broken</span>' : '';
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--surface2);border-radius:7px">'
+        + '<div style="font-size:11px;color:var(--text)">' + s.label + badge + '</div>'
+        + '<div style="text-align:right">'
+        + '<div style="font-size:11px;font-weight:700;color:var(--red)">' + s.count + 'x</div>'
+        + (avgViol !== null && avgClean !== null
+          ? '<div style="font-size:9px;color:var(--text3)">viol days avg $'+avgViol+' vs $'+avgClean+' clean</div>' : '')
+        + '</div></div>';
+    });
+    html += '</div>';
+  }
+
+  html += '</div></div>';
+  return html;
+}
 function renderRulesTab(el) {
   if (!_rulesTemp) initRulesTemp();
   var rules  = _rulesTemp;
@@ -7154,9 +7274,8 @@ function renderRulesTab(el) {
     + '<button id="save-rules-btn" onclick="saveRulesConfig()" style="padding:11px 32px;font-size:13px;font-weight:700;background:#5a9e9e;border:none;border-radius:8px;color:#fff;cursor:pointer;font-family:inherit;letter-spacing:.3px">Save rules</button></div>';
 
   html += '</div>';
-  html += renderRulesCostAnalysis(trades, saved);
-  el.innerHTML = html;
-  // ── Attach event listeners (no inline JS) ──
+  try { html += renderRulesCostAnalysis(trades, saved); } catch(e) { console.warn('Cost analysis error:', e); }
+  el.innerHTML = html;  // ── Attach event listeners (no inline JS) ──
 
   // Helper: snapshot all numeric inputs into _rulesTemp before re-rendering
   function snapshotInputs() {
@@ -7585,7 +7704,7 @@ function renderRendimientoView() {
   out += '<div class="panel" style="padding:0;overflow:hidden">';
   out += '<div class="panel-head"><span class="panel-title">✦ Weekly Coach</span><span class="panel-cap" style="color:var(--amber)">Performance analysis · powered by Claude</span></div>';
   out += '<div style="padding:18px" id="insights-coach-wrap">';
-  var _insAvail = getCoachAvailability(currentAccountId||'', currentTrades||[]);
+  var _insAvail; try { _insAvail = getCoachAvailability(currentAccountId||'', currentTrades||[]); } catch(e) { _insAvail = { weekly:{available:false,used:false,tradeCount:0,minRequired:5,key:''}, monthly:{available:false,used:false,tradeCount:0,minRequired:15,key:''} }; }
   var _iw = _insAvail.weekly;
   var _im = _insAvail.monthly;
 
@@ -7678,7 +7797,32 @@ function renderCoachTab(el) {
     '</div></div></div>';
 }
 
-async function generateCoachAnalysis() {
+async 
+function generateCoachWeekly() {
+  var avail = getCoachAvailability(currentAccountId||'', currentTrades||[]);
+  if (!avail.weekly.available) return;
+  markCoachUsed(currentAccountId||'', 'weekly', avail.weekly.key);
+  generateCoachAnalysis();
+}
+function generateCoachMonthly() {
+  var avail = getCoachAvailability(currentAccountId||'', currentTrades||[]);
+  if (!avail.monthly.available) return;
+  markCoachUsed(currentAccountId||'', 'monthly', avail.monthly.key);
+  generateCoachAnalysis();
+}
+function generateMindCoachWeekly() {
+  var avail = getCoachAvailability(currentAccountId||'', currentTrades||[]);
+  if (!avail.weekly.available) return;
+  markCoachUsed(currentAccountId||'', 'weekly', avail.weekly.key);
+  generateMindCoach();
+}
+function generateMindCoachMonthly() {
+  var avail = getCoachAvailability(currentAccountId||'', currentTrades||[]);
+  if (!avail.monthly.available) return;
+  markCoachUsed(currentAccountId||'', 'monthly', avail.monthly.key);
+  generateMindCoach();
+}
+function generateCoachAnalysis() {
   incCoachConsultCount();
   coachLoading = true;
   var tabEl = document.getElementById("disc-tab-content");
@@ -7931,16 +8075,6 @@ function buildMindView(trades) {
   // ── 1: Coach IA ──
 // ── ROW 5: AI Coach ──
   var acctId2   = currentAccountId || '';
-  var coachFreq = getCoachFrequency(acctId2);
-  var freqMode  = coachFreq.mode || 'biweekly';
-  var freqOpts  = [
-    { val:'daily',    lbl:'Every day' },
-    { val:'biweekly', lbl:'Wed and Fri' },
-    { val:'weekly',   lbl:'Weekly' },
-    { val:'monthly',  lbl:'Monthly' },
-    { val:'custom',   lbl:'Custom' }
-  ];
-
   var _coachAvail = getCoachAvailability(acctId2, trades);
   var _cw = _coachAvail.weekly;
   var _cm = _coachAvail.monthly;
@@ -8741,51 +8875,31 @@ function saveCoachMemory(accountId, mem) {
 
 // ── Coach availability logic ──
 function getCoachAvailability(accountId, trades) {
-  var now   = new Date();
-  var today = now.toISOString().slice(0,10);
-
-  // ── Week key: ISO week (Mon-Sun) ──
-  var weekStart = new Date(now);
-  var day = weekStart.getDay() || 7; // 1=Mon..7=Sun
-  weekStart.setDate(weekStart.getDate() - day + 1);
-  var weekKey = weekStart.toISOString().slice(0,10);
-
-  // ── Month key ──
-  var monthKey = today.slice(0,7); // YYYY-MM
-
-  // Stored usage
-  var used = {};
-  try { used = JSON.parse(bbStore.get('coach_used_' + accountId) || '{}'); } catch(e) {}
-
-  // Week trades count
-  var weekTrades = trades.filter(function(t) {
-    return t.entry_time && t.entry_time >= weekStart.toISOString().slice(0,10);
-  });
-
-  // Month trades count
-  var monthTrades = trades.filter(function(t) {
-    return t.entry_time && t.entry_time.startsWith(monthKey);
-  });
-
-  var weeklyUsed  = used['weekly_'  + weekKey]  === true;
-  var monthlyUsed = used['monthly_' + monthKey] === true;
-
-  return {
-    weekly: {
-      available:   weekTrades.length >= 5 && !weeklyUsed,
-      used:        weeklyUsed,
-      tradeCount:  weekTrades.length,
-      minRequired: 5,
-      key:         weekKey
-    },
-    monthly: {
-      available:   monthTrades.length >= 15 && !monthlyUsed,
-      used:        monthlyUsed,
-      tradeCount:  monthTrades.length,
-      minRequired: 15,
-      key:         monthKey
-    }
-  };
+  try {
+    var now      = new Date();
+    var today    = now.toISOString().slice(0,10);
+    var weekStart = new Date(now);
+    var day = weekStart.getDay() || 7;
+    weekStart.setDate(weekStart.getDate() - day + 1);
+    var weekKey  = weekStart.toISOString().slice(0,10);
+    var monthKey = today.slice(0,7);
+    var used = {};
+    try { used = JSON.parse(bbStore.get('coach_used_' + (accountId||'')) || '{}'); } catch(e2) {}
+    var safeT = Array.isArray(trades) ? trades : [];
+    var weekTrades  = safeT.filter(function(t){ return t.entry_time && t.entry_time.slice(0,10) >= weekKey; });
+    var monthTrades = safeT.filter(function(t){ return t.entry_time && t.entry_time.startsWith(monthKey); });
+    var weeklyUsed  = used['weekly_'  + weekKey]  === true;
+    var monthlyUsed = used['monthly_' + monthKey] === true;
+    return {
+      weekly:  { available: weekTrades.length  >= 5  && !weeklyUsed,  used: weeklyUsed,  tradeCount: weekTrades.length,  minRequired: 5,  key: weekKey  },
+      monthly: { available: monthTrades.length >= 15 && !monthlyUsed, used: monthlyUsed, tradeCount: monthTrades.length, minRequired: 15, key: monthKey }
+    };
+  } catch(e) {
+    return {
+      weekly:  { available: false, used: false, tradeCount: 0, minRequired: 5,  key: '' },
+      monthly: { available: false, used: false, tradeCount: 0, minRequired: 15, key: '' }
+    };
+  }
 }
 
 function markCoachUsed(accountId, type, key) {
