@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774899167 -->
+<!-- v1774899622 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -3573,7 +3573,7 @@ async function loadAccountData(id, silent) {
 
     // ── RIGHT: Today + Yesterday ──
     out += '<div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:4px;border-left:1px solid var(--border);padding-left:20px;min-width:80px" class="ms-today">';
-    out += '<div style="font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:2px">Today</div>';
+    out += '<div style="font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:2px">Mental Score · Today</div>';
     out += '<div style="font-size:28px;font-weight:800;color:' + _todayColor + ';letter-spacing:-1px;line-height:1">' + (_todayTotal !== null ? _todayTotal : '—') + '</div>';
     out += '<div style="font-size:9px;color:var(--text3)">' + _todayLabel + '</div>';
     if (_yestTotal !== null) {
@@ -8101,6 +8101,7 @@ function buildMindView(trades) {
   html += '<div class="panel" style="padding:20px">'
     + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">'
     + '<div style="font-size:10px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px">Mind Score Today</div>'
+    + '<div style="font-size:9px;color:var(--text3);margin-top:2px">Psychological state only · not the same as Mental Score</div>'
     + '<div style="font-size:9px;color:var(--text3)">' + (mindData.hasTrades ? mindData.tradeCount + ' trade' + (mindData.tradeCount!==1?'s':'') + ' today' : 'No trades today') + '</div>'
     + '</div>'
     + '<div style="display:flex;align-items:center;gap:20px">'
@@ -10282,7 +10283,7 @@ function renderMentalScorePanel(allTrades, period) {
 
 
   return '<div class="panel" style="margin-bottom:12px">'
-    +'<div class="panel-head"><span class="panel-title">◈ Mental Score</span><span class="panel-cap" style="font-size:9px;color:var(--text3)">Average of your active days</span></div>'
+    +'<div class="panel-head"><span class="panel-title">◈ Mental Score</span><span class="panel-cap" style="font-size:9px;color:var(--text3)">Disc + Mind + Execution · avg of active days</span></div>'
     +'<div style="padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px">'
     +scoreCard('This week', weekly, weekTrades)
     +scoreCard('This month', monthly, monthTrades)
