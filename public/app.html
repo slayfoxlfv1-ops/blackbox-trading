@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774896632 -->
+<!-- v1774897116 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -2634,17 +2634,20 @@ async function saveTrade() {
         account_id:   currentAccountId,
         user_id:      currentUser.id,
         session_date: _clDate,
-        items:        [],
+        items:        {},
         score_pct:    _clPct,
         verdict:      _clVerdict,
-        source:       'manual_trade',
         updated_at:   new Date().toISOString()
       };
       try {
-        await sb.from('checklist_sessions').upsert(_clPayload, { onConflict: 'account_id,session_date' });
-        currentChecklistSessions = currentChecklistSessions.filter(function(s){ return s.session_date!==_clDate; });
-        currentChecklistSessions.unshift({ session_date:_clDate, score_pct:_clPct, verdict:_clVerdict, items:[] });
-      } catch(e) { console.warn('Checklist save error:', e); }
+        var _clRes = await sb.from('checklist_sessions').upsert(_clPayload, { onConflict: 'account_id,session_date' });
+        if (_clRes && _clRes.error) {
+          console.error('[Pattro] Checklist save failed:', _clRes.error.message, JSON.stringify(_clRes.error));
+        } else {
+          currentChecklistSessions = currentChecklistSessions.filter(function(s){ return s.session_date!==_clDate; });
+          currentChecklistSessions.unshift({ session_date:_clDate, score_pct:_clPct, verdict:_clVerdict, items:{} });
+        }
+      } catch(e) { console.warn('Checklist save error:', e);
     }
   }
 
