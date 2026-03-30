@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774883866 -->
+<!-- v1774884441 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -4827,7 +4827,7 @@ function checkRuleViolations(rulesObj, trades) {
   if (r.maxtrades && r.maxtrades.active) {
     var limit = parseInt(r.maxtrades.value) || 3;
     if (todayTrades.length > limit) {
-      violations.push({ rule:{id:'maxtrades', label:'Maximum ' + limit + ' trades/day'}, detail: 'Tomaste ' + todayTrades.length + ' trades (limit: ' + limit + ')' });
+      violations.push({ rule:{id:'maxtrades', label:'Maximum ' + limit + ' trades/day'}, detail: 'You took ' + todayTrades.length + ' trades (limit: ' + limit + ')' });
     }
   }
 
@@ -4910,7 +4910,7 @@ function checkRuleViolations(rulesObj, trades) {
     var maxLoss   = parseFloat(r.maxdailyloss.value) || 100;
     var todayPnl  = todayTrades.reduce(function(s,t){ return s + (t.pnl||0); }, 0);
     if (todayPnl < -Math.abs(maxLoss)) {
-      violations.push({ rule:{id:'maxdailyloss', label:'Max loss $' + maxLoss + '/day'}, detail: 'Perdiste $' + Math.abs(todayPnl).toFixed(0) + ' (limit: $' + maxLoss + ')' });
+      violations.push({ rule:{id:'maxdailyloss', label:'Max loss $' + maxLoss + '/day'}, detail: 'Lost $' + Math.abs(todayPnl).toFixed(0) + ' (limit: $' + maxLoss + ')' });
     }
   }
 
@@ -5838,7 +5838,7 @@ function renderRulesView() {
       + '<div style="flex:1;min-width:0">'
       + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">'
       + '<span style="font-size:13px;font-weight:600;color:var(--text)">' + title + '</span>'
-      + (isViolated ? '<span style="font-size:8px;color:var(--red);font-weight:700;background:var(--red-bg);padding:2px 7px;border-radius:8px;border:1px solid var(--red-bd)">INCUMPLIDA HOY</span>' : '')
+      + (isViolated ? '<span style="font-size:8px;color:var(--red);font-weight:700;background:var(--red-bg);padding:2px 7px;border-radius:8px;border:1px solid var(--red-bd)">VIOLATED HOY</span>' : '')
       + '</div>'
       + '<div style="font-size:10px;color:var(--text3);margin-bottom:12px">' + desc + '</div>'
       + cfgHtml
@@ -5904,7 +5904,7 @@ function renderRulesView() {
     + '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:4px 8px;display:flex;align-items:center;gap:6px">'
     + '<span style="font-size:10px;color:var(--text3)">Max</span>'
     + '<input type="number" min="1" max="10" value="' + (r4.value||2) + '" id="rule-input-maxlosses" onchange="updateRuleValue(\'maxlosses\',this.value)" style="width:48px;background:transparent;border:none;color:var(--text);font-size:14px;font-weight:700;font-family:inherit;text-align:center;outline:none">'
-    + '<span style="font-size:10px;color:var(--text3)">perdidas seguidas</span></div>'
+    + '<span style="font-size:10px;color:var(--text3)">consecutive losses</span></div>'
     + '<div style="font-size:11px;color:var(--text3)">Max streak today: <span style="color:' + (ms4>=(parseInt(r4.value)||2)?'var(--red)':'var(--text)') + ';font-weight:600">' + ms4 + '</span></div>'
     + '</div>';
   html += rCard('maxlosses','🛑','Max consecutive losses','Stop trading when you chain this number of consecutive losses', ml4, !!r4.active, violations.some(function(v){return v.rule.id==='maxlosses';}));
@@ -6933,117 +6933,68 @@ function switchDiscTab(tab) {
 function renderRulesCostAnalysis(trades, rulesObj) {
   if (!trades || trades.length < 3) return '';
   var r = rulesObj || {};
-  var TAG_LABELS = {
-    fomo:'FOMO', impulse:'Impulse', revenge:'Revenge',
-    moved_sl:'Moved SL', scaled_in:'Scaled into loss',
-    overtrading:'Overtrading', no_confirmation:'No confirmation'
-  };
-  var COST_TAGS = ['fomo','impulse','revenge','moved_sl','scaled_in','overtrading','no_confirmation'];
-
-  // ── Behavior tag P&L cost ──
-  var tagCost = {};
-  var cleanTrades = trades.filter(function(t){ return (t.discipline_tag||'clean') === 'clean'; });
-  var avgCleanPnl = cleanTrades.length
-    ? cleanTrades.reduce(function(s,t){ return s+(t.pnl||0); },0) / cleanTrades.length : 0;
-
-  COST_TAGS.forEach(function(tag) {
-    var tagged = trades.filter(function(t){ return (t.discipline_tag||'clean') === tag; });
-    if (!tagged.length) return;
-    var totalPnl = tagged.reduce(function(s,t){ return s+(t.pnl||0); },0);
-    var avgPnl   = totalPnl / tagged.length;
-    tagCost[tag] = {
-      count:      tagged.length,
-      totalPnl:   Math.round(totalPnl * 100) / 100,
-      avgPnl:     Math.round(avgPnl * 100) / 100,
-      costVsClean: Math.round((avgPnl - avgCleanPnl) * 100) / 100
-    };
-  });
-
-  // Sort: most costly first
-  var sortedTags = Object.keys(tagCost).sort(function(a,b){
-    return tagCost[a].totalPnl - tagCost[b].totalPnl;
-  });
-
-  // ── Personal rule violation frequency ──
-  var ruleStats = {};
   var activeRules = Object.keys(r).filter(function(k){ return r[k] && r[k].active; });
+  if (!activeRules.length) return '';
 
-  if (activeRules.length > 0) {
-    // Group trades by day
-    var dayMap = {};
-    trades.forEach(function(t) {
-      var d = t.entry_time ? t.entry_time.slice(0,10) : null;
-      if (!d) return;
-      if (!dayMap[d]) dayMap[d] = [];
-      dayMap[d].push(t);
+  // Build day map
+  var dayMap = {};
+  trades.forEach(function(t) {
+    var d = t.entry_time ? t.entry_time.slice(0,10) : null;
+    if (!d) return;
+    if (!dayMap[d]) dayMap[d] = [];
+    dayMap[d].push(t);
+  });
+
+  // Count violations per rule across all days
+  var ruleStats = {};
+  Object.keys(dayMap).forEach(function(d) {
+    var dayTrades = dayMap[d];
+    var viols = [];
+    try { viols = checkRuleViolations(r, dayTrades); } catch(e) { return; }
+    var violIds  = viols.map(function(v){ return v.rule ? (v.rule.id || v.rule.label) : ''; });
+    var dayPnl   = dayTrades.reduce(function(s,t){ return s+(t.pnl||0); }, 0);
+
+    viols.forEach(function(v) {
+      if (!v.rule) return;
+      var id = v.rule.id || v.rule.label;
+      if (!ruleStats[id]) ruleStats[id] = { label:v.rule.label, count:0, violDaysPnl:[], cleanDaysPnl:[] };
+      ruleStats[id].count++;
     });
 
-    Object.keys(dayMap).forEach(function(d) {
-      var dayTrades = dayMap[d];
-      var viols = checkRuleViolations(r, dayTrades);
-      var violIds = viols.map(function(v){ return v.rule.id || v.rule.label; });
-      var dayPnl  = dayTrades.reduce(function(s,t){ return s+(t.pnl||0); },0);
-
-      viols.forEach(function(v) {
-        var id = v.rule.id || v.rule.label;
-        if (!ruleStats[id]) ruleStats[id] = { label:v.rule.label, count:0, violDayPnls:[], cleanDayPnls:[] };
-        ruleStats[id].count++;
-      });
-      Object.keys(ruleStats).forEach(function(id) {
-        if (violIds.indexOf(id) !== -1) ruleStats[id].violDayPnls.push(dayPnl);
-        else ruleStats[id].cleanDayPnls.push(dayPnl);
-      });
+    // Tag each rule: was this day a violation day for that rule?
+    Object.keys(ruleStats).forEach(function(id) {
+      if (violIds.indexOf(id) >= 0) ruleStats[id].violDaysPnl.push(dayPnl);
+      else ruleStats[id].cleanDaysPnl.push(dayPnl);
     });
-  }
-
-  if (!sortedTags.length && !Object.keys(ruleStats).length) return '';
-
-  var html = '<div class="panel" style="margin-top:16px"><div class="panel-head">'
-    + '<span class="panel-title">📊 Rule & Behavior Cost</span>'
-    + '<span class="panel-cap" style="color:var(--text3)">All-time · what is costing you money</span>'
-    + '</div><div style="padding:16px 18px">';
-
-  if (sortedTags.length) {
-    html += '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;font-weight:700">Behavior patterns vs clean trades</div>';
-    html += '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px">';
-    sortedTags.forEach(function(tag) {
-      var s = tagCost[tag];
-      var expensive = s.totalPnl < 0;
-      var pnlColor  = s.totalPnl >= 0 ? 'var(--green)' : 'var(--red)';
-      var diffColor = s.costVsClean >= 0 ? 'var(--green)' : 'var(--red)';
-      var diffText  = (s.costVsClean >= 0 ? '+' : '') + '$' + s.costVsClean.toFixed(0) + ' vs clean avg/trade';
-      html += '<div style="background:var(--surface2);border-radius:8px;padding:10px 12px;border-left:3px solid '+(expensive?'var(--red)':'var(--green)') + '">'
-        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">'
-        + '<div style="font-size:11px;font-weight:600;color:var(--text)">' + (TAG_LABELS[tag]||tag) + '</div>'
-        + '<div style="text-align:right">'
-        + '<div style="font-size:13px;font-weight:700;color:' + pnlColor + '">'+(s.totalPnl>=0?'+':'')+'$'+Math.abs(s.totalPnl).toFixed(0)+'</div>'
-        + '<div style="font-size:9px;color:var(--text3)">'+s.count+' trades · avg '+(s.avgPnl>=0?'+':'')+'$'+s.avgPnl.toFixed(0)+'</div>'
-        + '</div></div>'
-        + '<div style="font-size:9px;color:'+diffColor+'">'+diffText+'</div>'
-        + '</div>';
-    });
-    html += '</div>';
-  }
+  });
 
   var ruleKeys = Object.keys(ruleStats).sort(function(a,b){ return ruleStats[b].count - ruleStats[a].count; });
-  if (ruleKeys.length) {
-    html += '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;font-weight:700">Personal rules — most broken</div>';
-    html += '<div style="display:flex;flex-direction:column;gap:4px">';
-    ruleKeys.forEach(function(id, i) {
-      var s = ruleStats[id];
-      var avgViol  = s.violDayPnls.length  ? Math.round(s.violDayPnls.reduce(function(a,b){return a+b;},0)/s.violDayPnls.length)   : null;
-      var avgClean = s.cleanDayPnls.length ? Math.round(s.cleanDayPnls.reduce(function(a,b){return a+b;},0)/s.cleanDayPnls.length) : null;
-      var badge = i === 0 ? '<span style="font-size:8px;padding:2px 6px;border-radius:4px;background:var(--red-bg);color:var(--red);margin-left:6px">most broken</span>' : '';
-      html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--surface2);border-radius:7px">'
-        + '<div style="font-size:11px;color:var(--text)">' + s.label + badge + '</div>'
-        + '<div style="text-align:right">'
-        + '<div style="font-size:11px;font-weight:700;color:var(--red)">' + s.count + 'x</div>'
-        + (avgViol !== null && avgClean !== null
-          ? '<div style="font-size:9px;color:var(--text3)">viol days avg $'+avgViol+' vs $'+avgClean+' clean</div>' : '')
-        + '</div></div>';
-    });
-    html += '</div>';
-  }
+  if (!ruleKeys.length) return '';
+
+  var html = '<div class="panel" style="margin-top:16px"><div class="panel-head">'
+    + '<span class="panel-title">📊 Rule Cost Analysis</span>'
+    + '<span class="panel-cap" style="color:var(--text3)">Which rules cost you money when broken</span>'
+    + '</div><div style="padding:16px 18px">';
+
+  ruleKeys.forEach(function(id, i) {
+    var s = ruleStats[id];
+    var avgViol  = s.violDaysPnl.length  ? Math.round(s.violDaysPnl.reduce(function(a,b){return a+b;},0)  / s.violDaysPnl.length)  : null;
+    var avgClean = s.cleanDaysPnl.length ? Math.round(s.cleanDaysPnl.reduce(function(a,b){return a+b;},0) / s.cleanDaysPnl.length) : null;
+    var cost     = (avgViol !== null && avgClean !== null) ? (avgViol - avgClean) : null;
+    var costColor = cost === null ? 'var(--text3)' : cost >= 0 ? 'var(--green)' : 'var(--red)';
+    var badge    = i === 0 ? '<span style="font-size:8px;padding:2px 6px;border-radius:4px;background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd);margin-left:6px">most broken</span>' : '';
+    html += '<div style="padding:10px 0;border-bottom:1px solid var(--border)">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">'
+      + '<div style="font-size:11px;font-weight:600;color:var(--text)">' + s.label + badge + '</div>'
+      + '<div style="font-size:12px;font-weight:700;color:var(--red)">' + s.count + 'x broken</div>'
+      + '</div>'
+      + '<div style="display:flex;gap:16px;font-size:10px;color:var(--text3)">'
+      + (avgViol  !== null ? '<span>Avg P&L when broken: <strong style="color:' + (avgViol>=0?'var(--green)':'var(--red)') + '">' + (avgViol>=0?'+':'') + '$' + avgViol + '</strong></span>' : '')
+      + (avgClean !== null ? '<span>vs clean days: <strong style="color:' + (avgClean>=0?'var(--green)':'var(--red)') + '">' + (avgClean>=0?'+':'') + '$' + avgClean + '</strong></span>' : '')
+      + (cost !== null ? '<span>Impact: <strong style="color:' + costColor + '">' + (cost>=0?'+':'') + '$' + cost + '/day</strong></span>' : '')
+      + '</div>'
+      + '</div>';
+  });
 
   html += '</div></div>';
   return html;
@@ -7139,7 +7090,7 @@ function renderRulesTab(el) {
       + '<div style="flex:1;min-width:0">'
       + '<div style="display:flex;align-items:center;gap:7px">'
       + '<span style="font-size:12px;font-weight:600;color:var(--text)">' + title + '</span>'
-      + (isViolated ? '<span style="font-size:8px;color:var(--red);font-weight:700;background:var(--red-bg);padding:1px 6px;border-radius:6px">INCUMPLIDA</span>' : '')
+      + (isViolated ? '<span style="font-size:8px;color:var(--red);font-weight:700;background:var(--red-bg);padding:1px 6px;border-radius:6px">VIOLATED</span>' : '')
       + '</div>'
       + '<div style="font-size:10px;color:var(--text3);margin-top:1px">' + desc + '</div>'
       + '</div>'
@@ -7211,7 +7162,7 @@ function renderRulesTab(el) {
     + '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:4px 8px;display:flex;align-items:center;gap:6px">'
     + '<span style="font-size:10px;color:var(--text3)">Max</span>'
     + '<input id="rule-input-maxlosses" type="number" min="1" max="10" value="' + (r4.value||2) + '" style="width:48px;background:transparent;border:none;color:var(--text);font-size:14px;font-weight:700;font-family:inherit;text-align:center;outline:none">'
-    + '<span style="font-size:10px;color:var(--text3)">perdidas seguidas</span></div>'
+    + '<span style="font-size:10px;color:var(--text3)">consecutive losses</span></div>'
     + '<div style="font-size:11px;color:var(--text3)">Streak today: <span style="color:' + (ms4>=(parseInt(r4.value)||2)?'var(--red)':'var(--text)') + ';font-weight:600">' + ms4 + '</span></div>'
     + '</div>';
   html += rCard('maxlosses','🛑','Max consecutive losses','Stop trading when you chain this number of consecutive losses', ml4, !!r4.active, violations.some(function(v){return v.rule.id==='maxlosses';}));
@@ -7797,8 +7748,7 @@ function renderCoachTab(el) {
     '</div></div></div>';
 }
 
-async 
-function generateCoachWeekly() {
+async function generateCoachWeekly() {
   var avail = getCoachAvailability(currentAccountId||'', currentTrades||[]);
   if (!avail.weekly.available) return;
   markCoachUsed(currentAccountId||'', 'weekly', avail.weekly.key);
@@ -8095,42 +8045,6 @@ function buildMindView(trades) {
     }
     return '<button class="btn btn-solid" style="width:100%" onclick="' + fn + '()">⚡ ' + label + ' — analyze now</button>';
   }
-
-  html += '<div class="panel" style="padding:20px">'
-    + '<div style="margin-bottom:14px">'
-    + '<div style="font-size:10px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px">AI Coach — Psychological analysis</div>'
-    + '<div style="font-size:10px;color:var(--text3)">Weekly · 5 trades min · once per week &nbsp;|&nbsp; Monthly · 15 trades min · once per month</div>'
-    + '</div>'
-    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">'
-    + '<div style="background:var(--surface2);border-radius:9px;padding:12px">'
-    + '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Weekly</div>'
-    + _coachBtn("week", _cw, "Week", "generateMindCoachWeekly", _cw.key)
-    + '</div>'
-    + '<div style="background:var(--surface2);border-radius:9px;padding:12px">'
-    + '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Monthly</div>'
-    + _coachBtn("month", _cm, "Month", "generateMindCoachMonthly", _cm.key)
-    + '</div></div>'
-    + '</div>'
-    + '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:11px;margin-bottom:14px">'
-    + '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:9px">Automatic analysis frequency</div>'
-    + '<div style="display:flex;gap:5px;flex-wrap:wrap">'
-    + freqOpts.map(function(o) {
-        var isActive = freqMode === o.val;
-        return '<button onclick="setCoachFrequency(\'' + o.val + '\')" style="padding:5px 11px;border-radius:20px;border:1px solid '
-          + (isActive ? '#5a9e9e;background:#1e2a2a;color:#5a9e9e' : 'var(--border);background:transparent;color:var(--text3)')
-          + ';font-size:10px;cursor:pointer;font-family:inherit">' + o.lbl + '</button>';
-      }).join('')
-    + '</div>'
-    + (freqMode === 'custom'
-        ? '<div style="margin-top:9px;display:flex;align-items:center;gap:8px">'
-          + '<span style="font-size:10px;color:var(--text3)">Cada</span>'
-          + '<input id="custom-freq-days" type="number" min="1" max="30" value="' + (coachFreq.customDays||7) + '" style="width:50px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-size:12px;font-family:inherit;text-align:center">'
-          + '<span style="font-size:10px;color:var(--text3)">days</span>'
-          + '<button onclick="saveCustomFreqDays()" style="padding:4px 10px;background:#5a9e9e;border:none;border-radius:6px;color:#fff;font-size:10px;cursor:pointer;font-family:inherit">Save</button>'
-          + '</div>'
-        : '')
-    + '</div>'
-    + '<div id="mind-coach-output">';
 
   if (mindCoachAnalysis) {
     html += '<div style="font-size:13px;color:var(--text2);line-height:1.8;white-space:pre-wrap;background:var(--surface2);border-radius:8px;padding:16px">' + mindCoachAnalysis + '</div>'
