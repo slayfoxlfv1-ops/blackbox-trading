@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774749726 -->
+<!-- v1774876698 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -1243,8 +1243,8 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
 </div>
 
 <!-- LOG TRADE MODAL -->
-<div class="overlay modal-overlay" id="log-overlay" onclick="if(event.target===this)closeLogModal()">
-  <div class="modal" onclick="event.stopPropagation()">
+<div class="overlay modal-overlay" id="log-overlay" onclick="if(event.target===this)closeLogModal()" onkeyup="if(event.key==='Escape')closeLogModal()">
+  <div class="modal" onclick="event.stopPropagation()" onkeyup="if(event.key==='Escape'){event.stopPropagation();closeLogModal();}">
     <div class="modal-title" style="display:flex;align-items:center;justify-content:space-between">
       <span>Log Trade</span>
       <button onclick="closeLogModal()" style="background:none;border:none;color:var(--text3);font-size:22px;cursor:pointer;line-height:1;padding:0 2px;font-family:inherit" title="Close (Esc)">×</button>
@@ -11156,6 +11156,24 @@ async function saveNoteModal() {
   closeNoteModal();
   renderTradeLogTable(currentTrades);
 }
+
+
+// Esc capture-phase listener — fires before inputs consume the event
+document.addEventListener('keydown', function(e) {
+  if (e.key !== 'Escape') return;
+  var logModal = document.getElementById('log-overlay');
+  if (logModal && logModal.classList.contains('open')) {
+    e.preventDefault();
+    closeLogModal();
+    return;
+  }
+  var accModal = document.getElementById('modal-overlay');
+  if (accModal && accModal.classList.contains('open')) { closeModal(); return; }
+  var delModal = document.getElementById('del-overlay');
+  if (delModal && delModal.classList.contains('open')) { delModal.classList.remove('open'); return; }
+  closeNoteModal();
+  closeLightbox();
+}, true); // true = capture phase — runs before any element handles the event
 
 document.addEventListener('keyup', function(e) {
   if (e.key !== 'Escape') return;
