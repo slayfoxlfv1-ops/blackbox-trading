@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774885387 -->
+<!-- v1774894473 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -2443,8 +2443,8 @@ function openLogModal() {
   if (_clSlider) {
     var _today0  = new Date().toISOString().slice(0,10);
     var _todayCl = (currentChecklistSessions||[]).find(function(s){ return s.session_date===_today0; });
-    // Always editable — pre-fill with existing value if any, otherwise 100%
-    var _prefill = _todayCl ? _todayCl.score_pct : 100;
+    // Pre-fill with existing checklist value if saved today, else 0
+    var _prefill = _todayCl ? _todayCl.score_pct : 0;
     _clSlider.value    = _prefill;
     _clSlider.disabled = false;
     _clSlider.style.opacity = '1';
@@ -2615,7 +2615,12 @@ async function saveTrade() {
   var _clSliderSave = document.getElementById('t-checklist-pct');
   if (_clSliderSave && currentAccountId) {
     var _clPct    = parseInt(_clSliderSave.value);
-    if (!isNaN(_clPct)) {
+    // Only save checklist if user explicitly set a value (> 0) or if there's already a session for that day
+    var _clEntryEl2 = document.getElementById('t-entry-time');
+    var _clDate2 = (_clEntryEl2 && _clEntryEl2.value) ? _clEntryEl2.value.slice(0,10) : new Date().toISOString().slice(0,10);
+    var _existingCl = (currentChecklistSessions||[]).find(function(s){ return s.session_date===_clDate2; });
+    var _shouldSaveCl = !isNaN(_clPct) && (_clPct > 0 || _existingCl);
+    if (_shouldSaveCl) {
       // Use entry_time date if available (for historical trades), else today
       var _entryTimeForCl = document.getElementById('t-entry-time');
       var _clDate = (_entryTimeForCl && _entryTimeForCl.value)
@@ -2725,14 +2730,14 @@ function openEditTrade(id) {
     var _entryEl   = document.getElementById('t-entry-time');
     var _tradeDayK = _entryEl && _entryEl.value ? _entryEl.value.slice(0,10) : new Date().toISOString().slice(0,10);
     var _clForDay  = (currentChecklistSessions||[]).find(function(s){ return s.session_date===_tradeDayK; });
-    var _prefillE  = _clForDay ? _clForDay.score_pct : 100;
+    var _prefillE  = _clForDay ? _clForDay.score_pct : 0;
     _clSliderE.value    = _prefillE;
     _clSliderE.disabled = false;
     _clSliderE.style.opacity = '1';
     var _clDispE = document.getElementById('t-checklist-pct-display');
     var _clNoteE = document.getElementById('t-checklist-note');
     if (_clDispE) { _clDispE.textContent = _prefillE+'%'; _clDispE.style.color = _prefillE>=80?'var(--green)':_prefillE>=50?'var(--amber)':'var(--red)'; }
-    if (_clNoteE) _clNoteE.textContent = _clForDay ? 'Today\'s value: '+_clForDay.score_pct+'% — you can adjust it' : 'No checklist for this day';
+    if (_clNoteE) _clNoteE.textContent = _clForDay ? 'Saved value: '+_clForDay.score_pct+'% — you can adjust it' : 'No checklist for this day';
   }
 }
 
