@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774894473 -->
+<!-- v1774894723 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -1386,9 +1386,10 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
         <label class="form-label" style="margin:0;flex:1;font-size:10px">✓ Checklist <span style="color:var(--text3);font-weight:400">how much did you follow today?</span></label>
         <span id="t-checklist-pct-display" style="font-size:13px;font-weight:800;color:var(--green);min-width:38px;text-align:right">100%</span>
       </div>
-      <input type="range" id="t-checklist-pct" min="0" max="100" step="10" value="100"
+      <input type="range" id="t-checklist-pct" min="0" max="100" step="10" value="0"
         style="width:100%;accent-color:var(--green);cursor:pointer;margin-top:6px;display:block"
-        oninput="updateChecklistDisplay(this.value)">
+        data-user-changed="0"
+        oninput="this.dataset.userChanged='1';updateChecklistDisplay(this.value)">
       <div id="t-checklist-note" style="font-size:9px;color:var(--text3);margin-top:4px">Will be saved as the day's checklist along with this trade</div>
     </div>
     <div class="form-group">
@@ -2441,6 +2442,7 @@ function openLogModal() {
   var _clDisp   = document.getElementById('t-checklist-pct-display');
   var _clNote   = document.getElementById('t-checklist-note');
   if (_clSlider) {
+    _clSlider.dataset.userChanged = '0'; // reset tracking
     var _today0  = new Date().toISOString().slice(0,10);
     var _todayCl = (currentChecklistSessions||[]).find(function(s){ return s.session_date===_today0; });
     // Pre-fill with existing checklist value if saved today, else 0
@@ -2619,7 +2621,9 @@ async function saveTrade() {
     var _clEntryEl2 = document.getElementById('t-entry-time');
     var _clDate2 = (_clEntryEl2 && _clEntryEl2.value) ? _clEntryEl2.value.slice(0,10) : new Date().toISOString().slice(0,10);
     var _existingCl = (currentChecklistSessions||[]).find(function(s){ return s.session_date===_clDate2; });
-    var _shouldSaveCl = !isNaN(_clPct) && (_clPct > 0 || _existingCl);
+    // Only save checklist if the user explicitly moved the slider in this session
+    var _userChangedCl = _clSliderSave.dataset.userChanged === '1';
+    var _shouldSaveCl = !isNaN(_clPct) && _userChangedCl;
     if (_shouldSaveCl) {
       // Use entry_time date if available (for historical trades), else today
       var _entryTimeForCl = document.getElementById('t-entry-time');
@@ -2731,6 +2735,7 @@ function openEditTrade(id) {
     var _tradeDayK = _entryEl && _entryEl.value ? _entryEl.value.slice(0,10) : new Date().toISOString().slice(0,10);
     var _clForDay  = (currentChecklistSessions||[]).find(function(s){ return s.session_date===_tradeDayK; });
     var _prefillE  = _clForDay ? _clForDay.score_pct : 0;
+    _clSliderE.dataset.userChanged = '0'; // reset — user hasn't changed yet
     _clSliderE.value    = _prefillE;
     _clSliderE.disabled = false;
     _clSliderE.style.opacity = '1';
