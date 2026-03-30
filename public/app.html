@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774899998 -->
+<!-- v1774901949 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -3517,6 +3517,18 @@ async function loadAccountData(id, silent) {
     // Today score
     var ms = calcMentalScore(today);
     var _todayTotal = (ms && ms.total !== null && !isNaN(ms.total)) ? ms.total : null;
+    // Expose scores for extension bridge
+    if (ms && ms.total !== null) {
+      var _mindD = calcDailyMindScore(today);
+      var _discD = calcDailyDisciplineScore(today);
+      var _execD = calcDailyExecutionScore(today);
+      window.__pattroScores = {
+        mental: ms.total, mind: _mindD.total,
+        discipline: _discD.total, execution: _execD.total,
+        colorDay: _mindD.moodLevel, tradeCount: (currentTrades||[]).filter(function(t){ return t.entry_time && t.entry_time.startsWith(today); }).length
+      };
+      window.postMessage({ type: 'PATTRO_SCORES', scores: window.__pattroScores }, '*');
+    }
     var _todayColor = _todayTotal !== null ? ms.color : 'var(--text3)';
     var _todayLabel = _todayTotal !== null ? ms.label : 'No trades';
 
