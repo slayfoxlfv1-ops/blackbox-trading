@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774884441 -->
+<!-- v1774885387 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -8021,40 +8021,62 @@ function buildMindView(trades) {
   }
 
   
-  // ── 1: Coach IA ──
-// ── ROW 5: AI Coach ──
-  var acctId2   = currentAccountId || '';
+  // ── AI Coach — Psychological analysis ──
+  var acctId2     = currentAccountId || '';
   var _coachAvail = getCoachAvailability(acctId2, trades);
   var _cw = _coachAvail.weekly;
   var _cm = _coachAvail.monthly;
 
-  function _coachBtn(type, avail, label, fn, key) {
-    if (avail.used) {
-      return '<div style="font-size:10px;color:var(--text3);padding:7px 12px;background:var(--surface2);border-radius:8px;text-align:center">'
-        + '✓ ' + label + ' analysis done — available again next ' + type + '</div>';
-    }
-    if (avail.tradeCount < avail.minRequired) {
-      var need = avail.minRequired - avail.tradeCount;
-      var pct  = Math.round(avail.tradeCount / avail.minRequired * 100);
-      return '<div style="text-align:center">'
-        + '<div style="font-size:10px;color:var(--text2);margin-bottom:6px"><strong style="color:var(--amber)">' + need + ' more trades</strong> needed for ' + label.toLowerCase() + ' analysis</div>'
-        + '<div style="width:100%;height:5px;background:var(--surface3);border-radius:3px;overflow:hidden;margin-bottom:4px">'
-        + '<div style="height:100%;width:' + pct + '%;background:var(--amber);border-radius:3px"></div></div>'
-        + '<div style="font-size:9px;color:var(--text3)">' + avail.tradeCount + ' / ' + avail.minRequired + ' trades this ' + type + '</div>'
-        + '</div>';
-    }
-    return '<button class="btn btn-solid" style="width:100%" onclick="' + fn + '()">⚡ ' + label + ' — analyze now</button>';
-  }
+  html += '<div class="panel" style="padding:20px">';
+  html += '<div style="margin-bottom:14px">';
+  html += '<div style="font-size:10px;color:var(--text);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px">AI Coach — Psychological analysis</div>';
+  html += '<div style="font-size:10px;color:var(--text3)">Weekly · 5 trades min · once per week &nbsp;|&nbsp; Monthly · 15 trades min · once per month</div>';
+  html += '</div>';
 
   if (mindCoachAnalysis) {
-    html += '<div style="font-size:13px;color:var(--text2);line-height:1.8;white-space:pre-wrap;background:var(--surface2);border-radius:8px;padding:16px">' + mindCoachAnalysis + '</div>'
-      + '<button class="btn btn-ghost" style="margin-top:10px;font-size:11px" onclick="mindCoachAnalysis=\'\';renderMindView()">Clear</button>';
+    html += '<div style="font-size:12px;color:var(--text2);line-height:1.8;white-space:pre-wrap;background:var(--surface2);border-radius:8px;padding:14px;margin-bottom:12px">' + mindCoachAnalysis + '</div>';
+    html += '<button class="btn btn-ghost" style="font-size:11px;margin-bottom:14px" onclick="mindCoachAnalysis=\'\';renderMindView()">Clear</button>';
   } else {
-    html += '<div style="font-size:11px;color:var(--text3);text-align:center;padding:24px 0">Press "Analyze now" to receive a diagnosis based on your historical evolution.</div>';
+    html += '<div style="font-size:11px;color:var(--text3);margin-bottom:14px">Get personalized psychological feedback based on your trading patterns and emotional data.</div>';
   }
-  html += '</div></div>';
 
-  
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">';
+
+  // Weekly
+  html += '<div style="background:var(--surface2);border-radius:9px;padding:12px">';
+  html += '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Weekly · min 5 trades</div>';
+  if (_cw.used) {
+    html += '<div style="font-size:10px;color:var(--text3);text-align:center;padding:4px 0">✓ Done — available next week</div>';
+  } else if (_cw.tradeCount < _cw.minRequired) {
+    var _cwNeed = _cw.minRequired - _cw.tradeCount;
+    var _cwPct  = Math.round(_cw.tradeCount / _cw.minRequired * 100);
+    html += '<div style="font-size:10px;color:var(--text2);text-align:center;margin-bottom:6px"><strong style="color:var(--amber)">' + _cwNeed + ' more trades</strong> this week</div>';
+    html += '<div style="height:4px;background:var(--surface3);border-radius:2px;overflow:hidden;margin-bottom:4px"><div style="height:100%;width:' + _cwPct + '%;background:var(--amber);border-radius:2px"></div></div>';
+    html += '<div style="font-size:9px;color:var(--text3);text-align:center">' + _cw.tradeCount + ' / ' + _cw.minRequired + '</div>';
+  } else {
+    html += (mindCoachLoading ? '<div style="font-size:10px;color:var(--text3);text-align:center">Analyzing...</div>' : '<button class="btn btn-solid" style="width:100%;font-size:11px" onclick="generateMindCoachWeekly()">⚡ Week complete — analyze</button>');
+  }
+  html += '</div>';
+
+  // Monthly
+  html += '<div style="background:var(--surface2);border-radius:9px;padding:12px">';
+  html += '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Monthly · min 15 trades</div>';
+  if (_cm.used) {
+    html += '<div style="font-size:10px;color:var(--text3);text-align:center;padding:4px 0">✓ Done — available next month</div>';
+  } else if (_cm.tradeCount < _cm.minRequired) {
+    var _cmNeed = _cm.minRequired - _cm.tradeCount;
+    var _cmPct  = Math.round(_cm.tradeCount / _cm.minRequired * 100);
+    html += '<div style="font-size:10px;color:var(--text2);text-align:center;margin-bottom:6px"><strong style="color:var(--amber)">' + _cmNeed + ' more trades</strong> this month</div>';
+    html += '<div style="height:4px;background:var(--surface3);border-radius:2px;overflow:hidden;margin-bottom:4px"><div style="height:100%;width:' + _cmPct + '%;background:var(--amber);border-radius:2px"></div></div>';
+    html += '<div style="font-size:9px;color:var(--text3);text-align:center">' + _cm.tradeCount + ' / ' + _cm.minRequired + '</div>';
+  } else {
+    html += (mindCoachLoading ? '<div style="font-size:10px;color:var(--text3);text-align:center">Analyzing...</div>' : '<button class="btn btn-solid" style="width:100%;font-size:11px" onclick="generateMindCoachMonthly()">⚡ Month complete — analyze</button>');
+  }
+  html += '</div>';
+
+  html += '</div>'; // end grid
+  html += '</div>'; // end panel
+
   // ── 2: Mind Score Today (card rico) + Mental Score Semana/Mes (panel completo) ──
   html += '<div class="panel" style="padding:20px">'
     + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">'
@@ -11051,8 +11073,12 @@ async function saveProfile() {
   else { msg.style.color='var(--green)'; msg.textContent='Profile saved'; document.getElementById('user-name').textContent=name||currentUser.email.split('@')[0]; document.getElementById('user-avatar').textContent=(name||'?').charAt(0).toUpperCase(); }
 }
 
-document.getElementById('auth-email').addEventListener('keydown', function(e) { if(e.key==='Enter') authSubmit(); });
-document.getElementById('auth-pass').addEventListener('keydown', function(e) { if(e.key==='Enter') authSubmit(); });
+(function(){
+  var _em = document.getElementById('auth-email');
+  var _pw = document.getElementById('auth-pass');
+  if (_em) _em.addEventListener('keydown', function(e) { if(e.key==='Enter') authSubmit(); });
+  if (_pw) _pw.addEventListener('keydown', function(e) { if(e.key==='Enter') authSubmit(); });
+})();
 
 // Auto-retry broken Supabase storage images with auth token
 document.addEventListener('error', function(e) {
