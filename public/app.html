@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774883558 -->
+<!-- v1774883866 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -8027,8 +8027,7 @@ function buildMindView(trades) {
     setTimeout(function() {
       showAlertToast('⊘',
         _rulesViol.length + ' rule' + (_rulesViol.length > 1 ? 's' : '') + ' violated today',
-        _rulesViol.map(function(v){ return '• ' + v.rule.label + (v.detail ? ': ' + v.detail : ''); }).join('
-'),
+        _rulesViol.map(function(v){ return '• ' + (v.rule&&v.rule.label||'Rule') + (v.detail ? ': ' + v.detail : ''); }).join(' | '),
         'var(--amber)', 'rgba(224,152,64,0.3)', _dismissKey);
     }, 1800);
   })();
