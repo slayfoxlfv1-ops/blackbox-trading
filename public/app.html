@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774897116 -->
+<!-- v1774897409 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -2647,7 +2647,7 @@ async function saveTrade() {
           currentChecklistSessions = currentChecklistSessions.filter(function(s){ return s.session_date!==_clDate; });
           currentChecklistSessions.unshift({ session_date:_clDate, score_pct:_clPct, verdict:_clVerdict, items:{} });
         }
-      } catch(e) { console.warn('Checklist save error:', e);
+      } catch(e) { console.warn('Checklist save error:', e); }
     }
   }
 
