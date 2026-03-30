@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774895867 -->
+<!-- v1774896632 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -1417,7 +1417,7 @@ const SUPABASE_URL = 'https://qljuusxpzsiqxnpfpdgg.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFsanV1c3hwenNpcXhucGZwZGdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1OTQ5NzUsImV4cCI6MjA4ODE3MDk3NX0.rUEwuG4zFE_EpAM4s3hWqVF81xiW9q_MSwQKKXYZmlk';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let currentUser = null, accounts = [], currentAccountId = null, currentTrades = null, currentChecklistSessions = [], currentMoodSessions = [], currentChecklistItems = [], currentRules = [], currentView = 'dashboard', authTab = 'login', editingTradeId = null;
+let currentUser = null, accounts = [], currentAccountId = null, currentTrades = null, currentChecklistSessions = [], currentMoodSessions = [], currentChecklistItems = [], currentRules = [], currentView = 'dashboard', authTab = 'login', editingTradeId = null, _checklistOriginalValue = null;
 let _tradesLoadedForAccount = null; // tracks which account trades are loaded for
 let tlFilters = { date:'', ticker:'', result:'all' };
 // Achievement toasts tracked per-day in localStorage (see _achKey below)
@@ -2620,26 +2620,25 @@ async function saveTrade() {
   if (_clSliderSave && currentAccountId) {
     var _clPct    = parseInt(_clSliderSave.value);
     // Only save checklist if user explicitly set a value (> 0) or if there's already a session for that day
-    var _clEntryEl2 = document.getElementById('t-entry-time');
-    var _clDate2 = (_clEntryEl2 && _clEntryEl2.value) ? _clEntryEl2.value.slice(0,10) : new Date().toISOString().slice(0,10);
-    var _existingCl = (currentChecklistSessions||[]).find(function(s){ return s.session_date===_clDate2; });
+    // Get the date for this trade (use entry_time, fall back to today)
+    var _clEntryEl = document.getElementById('t-entry-time');
+    var _clDate = (_clEntryEl && _clEntryEl.value)
+      ? _clEntryEl.value.slice(0,10)
+      : new Date().toISOString().slice(0,10);
     // Save checklist only if user moved the slider from its original value
     var _userChangedCl = (_checklistOriginalValue !== null) && (_clPct !== _checklistOriginalValue);
     var _shouldSaveCl = !isNaN(_clPct) && _userChangedCl;
     if (_shouldSaveCl) {
-      // Use entry_time date if available (for historical trades), else today
-      var _entryTimeForCl = document.getElementById('t-entry-time');
-      var _clDate = (_entryTimeForCl && _entryTimeForCl.value)
-        ? _entryTimeForCl.value.slice(0,10)
-        : new Date().toISOString().slice(0,10);
       var _clVerdict = _clPct >= 80 ? 'ready' : _clPct >= 50 ? 'caution' : 'not_ready';
       var _clPayload = {
         account_id:   currentAccountId,
+        user_id:      currentUser.id,
         session_date: _clDate,
         items:        [],
         score_pct:    _clPct,
         verdict:      _clVerdict,
-        source:       'manual_trade'
+        source:       'manual_trade',
+        updated_at:   new Date().toISOString()
       };
       try {
         await sb.from('checklist_sessions').upsert(_clPayload, { onConflict: 'account_id,session_date' });
@@ -12059,5 +12058,4 @@ function closeMobileDrawer() {
 }
 </script>
 </body>
-</html>var _checklistOriginalValue = null; // tracks checklist original value
-
+</html>
