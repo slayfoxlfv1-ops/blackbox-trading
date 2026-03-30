@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774897409 -->
+<!-- v1774899167 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -2681,11 +2681,17 @@ async function saveTrade() {
   }
 
   closeLogModal();
-  // Silent reload — don\'t change view or show spinner
+  // Silent reload — updates currentTrades/currentChecklistSessions/etc
   await loadAccountData(currentAccountId, true);
-  // Re-render current view
+  // Re-render current view with fresh data (no second fetch needed)
   if (currentView === 'trades') renderTradesView();
-  else if (currentView === 'dashboard') loadAccountData(currentAccountId);
+  else if (currentView === 'dashboard') {
+    // Re-render dashboard in place using already-updated currentTrades
+    var _dashEl = document.getElementById('main-content');
+    if (_dashEl) loadAccountData(currentAccountId);
+  } else if (currentView === 'psychology') {
+    renderPsychologyView();
+  }
 }
 
 function openEditTrade(id) {
@@ -2754,9 +2760,9 @@ function openEditTrade(id) {
 
 async function confirmDeleteTrade(id) {
   if (!confirm('Delete this trade?')) return;
-  await sb.from('trades').delete().eq('id', id).eq('account_id', currentAccountId);
-  if (currentView==='trades') renderTradesView();
-  else loadAccountData(currentAccountId);
+  var _delRes = await sb.from('trades').delete().eq('id', id).eq('account_id', currentAccountId);
+  // Always do a full reload after delete to ensure all scores recalculate correctly
+  await loadAccountData(currentAccountId);
 }
 
 // ROUTER
