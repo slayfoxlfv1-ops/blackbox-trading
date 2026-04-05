@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1775430501 -->
+<!-- v1775431971 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -2557,7 +2557,8 @@ async function saveTrade() {
     screenshot_url: screenshotUrl || existingScreenshot || null,
     entry_time:     entryTimeVal,
     account_type:   (accounts.find(function(a){return a.id===currentAccountId;})||{}).type,
-    source:         'manual'
+    source:         'manual',
+    updated_at:     new Date().toISOString()
   };
 
   var res;
@@ -5531,27 +5532,32 @@ function getTradeScores(trade) {
 
 // ── Helper: average a set of trade score objects ──
 function avgScores(tradeScoreArr) {
-  if (!tradeScoreArr.length) return null;
+  if (!tradeScoreArr || !tradeScoreArr.length) return null;
   var n = tradeScoreArr.length;
-  var sum = { execution:0, discipline:0, mind:0, pnl:0, wins:0, rMultiples:[] };
-  tradeScoreArr.forEach(function(s) {
-    sum.execution  += s.execution;
-    sum.discipline += s.discipline;
-    sum.mind       += s.mind;
-    sum.pnl        += s.pnl;
-    if (s.win) sum.wins++;
-    if (s.rMultiple !== null) sum.rMultiples.push(s.rMultiple);
-  });
-  var avgR = sum.rMultiples.length ? sum.rMultiples.reduce(function(a,b){return a+b;},0)/sum.rMultiples.length : null;
+
+  // Safe field average: only include non-null values
+  function safeAvg(arr, key) {
+    var valid = arr.filter(function(s) { return s[key] != null && !isNaN(s[key]); });
+    if (!valid.length) return null;
+    return Math.round(valid.reduce(function(sum, s) { return sum + s[key]; }, 0) / valid.length);
+  }
+
+  var totalPnl = tradeScoreArr.reduce(function(s, t) { return s + (t.pnl || 0); }, 0);
+  var wins     = tradeScoreArr.filter(function(s) { return s.win; }).length;
+  var rValid   = tradeScoreArr.filter(function(s) { return s.rMultiple !== null; });
+  var avgR     = rValid.length
+    ? Math.round(rValid.reduce(function(s, t) { return s + t.rMultiple; }, 0) / rValid.length * 100) / 100
+    : null;
+
   return {
     count:      n,
-    execution:  Math.round(sum.execution / n),
-    discipline: Math.round(sum.discipline / n),
-    mind:       Math.round(sum.mind / n),
-    avgPnl:     Math.round(sum.pnl / n),
-    totalPnl:   Math.round(sum.pnl),
-    winRate:    Math.round(sum.wins / n * 100),
-    avgR:       avgR !== null ? Math.round(avgR * 100) / 100 : null
+    execution:  safeAvg(tradeScoreArr, 'execution'),
+    discipline: safeAvg(tradeScoreArr, 'discipline'),
+    mind:       safeAvg(tradeScoreArr, 'mind'),
+    avgPnl:     Math.round(totalPnl / n),
+    totalPnl:   Math.round(totalPnl),
+    winRate:    Math.round(wins / n * 100),
+    avgR:       avgR
   };
 }
 
@@ -5567,7 +5573,8 @@ function calcImpactByTag(trades) {
     var withTag    = trades.filter(function(t){ return (t.discipline_tag||'clean') === tag; });
     var withoutTag = trades.filter(function(t){ return (t.discipline_tag||'clean') !== tag; });
 
-    if (withTag.length < 2) return; // not enough data
+    // Need at least 3 trades in each group for statistically meaningful comparison
+    if (withTag.length < 3 || withoutTag.length < 3) return;
 
     var withScores    = withTag.map(getTradeScores);
     var withoutScores = withoutTag.map(getTradeScores);
@@ -5609,7 +5616,8 @@ function calcImpactByEmotion(trades) {
     var withEmo    = trades.filter(function(t){ return (t.emotion||'neutral') === emo; });
     var withoutEmo = trades.filter(function(t){ return (t.emotion||'neutral') !== emo; });
 
-    if (withEmo.length < 3) return;
+    // Need at least 3 trades in each group for statistically meaningful comparison
+    if (withEmo.length < 3 || withoutEmo.length < 3) return;
 
     var avgWith    = avgScores(withEmo.map(getTradeScores));
     var avgWithout = avgScores(withoutEmo.map(getTradeScores));
@@ -5683,7 +5691,7 @@ function calcImpactByColorDay(trades) {
   var result = {};
   ['green','yellow','red'].forEach(function(level) {
     var ts = groups[level];
-    if (!ts.length) return;
+    if (ts.length < 3) return; // need at least 3 trades for meaningful average
     var scores = avgScores(ts.map(getTradeScores));
     if (!scores) return;
     result[level] = {
