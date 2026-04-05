@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1774901949 -->
+<!-- v1775430501 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -1565,6 +1565,7 @@ function autoLockOldDays() {
         .update({ locked: true, locked_at: new Date().toISOString() })
         .eq('account_id', currentAccountId)
         .eq('session_date', d)
+        .eq('user_id', currentUser.id)
         .then(function(){});
     }
   });
@@ -2561,7 +2562,7 @@ async function saveTrade() {
 
   var res;
   if (editingTradeId) {
-    res = await sb.from('trades').update(payload).eq('id', editingTradeId);
+    res = await sb.from('trades').update(payload).eq('id', editingTradeId).eq('user_id', currentUser.id);
     // editingTradeId cleared after screenshot save
   } else {
     payload.account_id = currentAccountId;
@@ -2760,7 +2761,7 @@ function openEditTrade(id) {
 
 async function confirmDeleteTrade(id) {
   if (!confirm('Delete this trade?')) return;
-  var _delRes = await sb.from('trades').delete().eq('id', id).eq('account_id', currentAccountId);
+  var _delRes = await sb.from('trades').delete().eq('id', id).eq('account_id', currentAccountId).eq('user_id', currentUser.id);
   // Always do a full reload after delete to ensure all scores recalculate correctly
   await loadAccountData(currentAccountId);
 }
@@ -4803,7 +4804,7 @@ function savePersonalRules(accountId, rules) {
   bbStore.set('rules_v2_' + accountId, JSON.stringify(rules));
   // Sync to Supabase so the Chrome extension can read session times
   if (accountId && sb) {
-    sb.from('accounts').update({ rules_v2: rules }).eq('id', accountId).then(function(){});
+    sb.from('accounts').update({ rules_v2: rules }).eq('id', accountId).eq('user_id', currentUser.id).then(function(){});
   }
 }
 
@@ -5030,10 +5031,10 @@ function calcDailyDisciplineScore(dateStr) {
   var rulesPts = Math.round(rulesResult.score / 100 * 35);
 
   // ── Sub 2: Checklist (35 pts) ──
-  var checklistPts;
-  if (!clSession) {
-    checklistPts = 0; // no checklist = 0
-  } else {
+  // null = no checklist filled → exclude from calculation (don't penalize absence of data)
+  // 0 = checklist filled but score 0 → penalize
+  var checklistPts = null;
+  if (clSession) {
     var pct = clSession.score_pct || 0;
     if (pct >= 100)     checklistPts = 35;
     else if (pct >= 80) checklistPts = 28;
@@ -5052,16 +5053,31 @@ function calcDailyDisciplineScore(dateStr) {
       var tag = t.discipline_tag || 'clean';
       return sum + (DISCIPLINE_TAG_PTS[tag] !== undefined ? DISCIPLINE_TAG_PTS[tag] : 30);
     }, 0);
-    var avgTagPts = totalTagPts / dayTrades.length; // avg pts per trade (0–30 scale)
-    tagPts = Math.round(avgTagPts); // already on 0-30 scale
+    var avgTagPts = totalTagPts / dayTrades.length;
+    tagPts = Math.round(avgTagPts);
   }
 
-  // ── Total ──
+  // ── Total: weighted average of available components ──
+  // Only include components that have data (null = no data, exclude from weight)
   var total;
-  if (tagPts === null) {
-    // No trades: score from rules + checklist only, scaled to 100
-    total = Math.round((rulesPts + checklistPts) / 70 * 100);
+  var parts = [];
+  parts.push({ v: rulesPts,  max: 35 }); // rules always present (even if 0 rules = 100%)
+  if (checklistPts !== null) parts.push({ v: checklistPts, max: 35 });
+  if (tagPts !== null)       parts.push({ v: tagPts,       max: 30 });
+
+  if (parts.length === 1) {
+    // Only rules: scale to 100
+    total = Math.round(parts[0].v / parts[0].max * 100);
+  } else if (tagPts === null) {
+    // Rules + maybe checklist, no trades
+    var avail = rulesPts + (checklistPts !== null ? checklistPts : 0);
+    var maxAvail = 35 + (checklistPts !== null ? 35 : 0);
+    total = Math.round(avail / maxAvail * 100);
+  } else if (checklistPts === null) {
+    // Rules + tags, no checklist — scale weights proportionally
+    total = Math.round((rulesPts / 35 * 0.54 + tagPts / 30 * 0.46) * 100);
   } else {
+    // All three present
     total = rulesPts + checklistPts + tagPts;
   }
   total = Math.max(0, Math.min(100, total));
@@ -5494,7 +5510,7 @@ function getTradeScores(trade) {
   if (moodForDay) colorDay = moodForDay.level || 'unknown';
 
   var exec = calcTradeExecution(trade);
-  var disc = calcTradeDiscipline(trade, 100, null); // simplified: no rules/checklist per-trade
+  var disc = calcTradeDiscipline(trade, null, null); // no per-trade rules/checklist — behavior-only weighting
   var mind = calcTradeMind(trade, colorDay);
   var pnl  = trade.pnl || 0;
 
@@ -11000,7 +11016,7 @@ function saveExtSettings(s) {
   try { localStorage.setItem('bb_ext_settings_'+(currentAccountId||''), JSON.stringify(s)); } catch(e) {}
   // Also push to Supabase so extension can read it
   if (currentAccountId && sb) {
-    sb.from('accounts').update({ ext_settings: s }).eq('id', currentAccountId).then(function(){});
+    sb.from('accounts').update({ ext_settings: s }).eq('id', currentAccountId).eq('user_id', currentUser.id).then(function(){});
   }
 }
 function initExtSettings() {
