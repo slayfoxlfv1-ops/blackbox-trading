@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1775434557 -->
+<!-- v1775437125 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -2223,7 +2223,7 @@ async function deleteAccount() {
   var id = document.getElementById('del-acc-id').value;
   var btn = document.getElementById('confirm-del-btn');
   btn.textContent = 'Deleting...';
-  await sb.from('trades').delete().eq('account_id', id);
+  await sb.from('trades').delete().eq('account_id', id).eq('user_id', currentUser.id);
   await sb.from('discipline_notes').delete().eq('account_id', id);
   await sb.from('daily_summaries').delete().eq('account_id', id);
   var res = await sb.from('accounts').delete().eq('id', id).eq('user_id', currentUser.id);
@@ -6283,10 +6283,10 @@ function renderTagPills(selectedTags, onChange) {
     var bg    = isOn ? tag.color + '33' : 'transparent';
     var bd    = isOn ? tag.color        : 'var(--border)';
     var txt   = isOn ? tag.color        : 'var(--text3)';
-    return '<span class="setup-tag-pill" data-tag="' + tag.id + '" '
+    return '<span class="setup-tag-pill" data-tag="' + escapeHtml(tag.id) + '" '
       + 'style="padding:4px 10px;border-radius:20px;border:1px solid ' + bd + ';background:' + bg + ';color:' + txt + ';'
       + 'font-size:10px;cursor:pointer;transition:all .15s;user-select:none">'
-      + tag.label + '</span>';
+      + escapeHtml(tag.label) + '</span>';
   }).join('');
 }
 
@@ -7754,7 +7754,7 @@ function renderRendimientoView() {
   var _iw = _insAvail.weekly;
   var _im = _insAvail.monthly;
 
-  out += '<div id="coach-output" style="min-height:40px;margin-bottom:14px">';
+  out += '<div id="psych-coach-output" style="min-height:40px;margin-bottom:14px">';
   out += coachAnalysis
     ? '<div style="font-size:12px;color:var(--text2);line-height:1.8;white-space:pre-wrap">'+coachAnalysis+'</div>'
     : '<div style="font-size:11px;color:var(--text3);padding:12px 0">No analysis yet for this period.</div>';
@@ -7804,8 +7804,8 @@ function renderRendimientoView() {
 
 function renderCoachView() {
   var el = getTabEl('insights-tab-content');
-  el.innerHTML = '<div id="disc-tab-content"></div>';
-  renderCoachTab(document.getElementById('disc-tab-content'));
+  el.innerHTML = '<div id="coach-tab-content"></div>';
+  renderCoachTab(document.getElementById('coach-tab-content'));
 }
 
 function renderCoachTab(el) {
@@ -7870,7 +7870,7 @@ function generateMindCoachMonthly() {
 async function generateCoachAnalysis() {
   incCoachConsultCount();
   coachLoading = true;
-  var tabEl = document.getElementById("disc-tab-content");
+  var tabEl = document.getElementById("disc-tab-content") || document.getElementById("coach-tab-content");
   if (tabEl) renderCoachTab(tabEl);
   else renderCoachView();
   var ctx = window._coachCtx || {};
@@ -7922,7 +7922,7 @@ async function generateCoachAnalysis() {
     coachAnalysis = 'Error connecting to the coach. Make sure you open Pattro from pattro.com.';
   }
   coachLoading = false;
-  var tabEl2 = document.getElementById("disc-tab-content");
+  var tabEl2 = document.getElementById("disc-tab-content") || document.getElementById("coach-tab-content");
   if (tabEl2) renderCoachTab(tabEl2);
   else renderCoachView();
 }
@@ -10806,7 +10806,7 @@ function initSettingsTags() {
   if (!list) return;
   list.innerHTML = tags.map(function(tag, idx) {
     return '<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;background:'+tag.color+'22;border:1px solid '+tag.color+'44;color:'+tag.color+';font-size:10px">'
-      + tag.label
+      + escapeHtml(tag.label)
       + '<span onclick="deleteSetupTag('+idx+')" style="cursor:pointer;opacity:.7;font-size:12px;line-height:1">×</span>'
       + '</span>';
   }).join('');
@@ -11178,8 +11178,8 @@ async function saveProfile() {
 (function(){
   var _em = document.getElementById('auth-email');
   var _pw = document.getElementById('auth-pass');
-  if (_em) _em.addEventListener('keydown', function(e) { if(e.key==='Enter') authSubmit(); });
-  if (_pw) _pw.addEventListener('keydown', function(e) { if(e.key==='Enter') authSubmit(); });
+  if (_em) _em.addEventListener('keydown', function(e) { if(e.key==='Enter') authSubmit().catch(function(){}); });
+  if (_pw) _pw.addEventListener('keydown', function(e) { if(e.key==='Enter') authSubmit().catch(function(){}); });
 })();
 
 // Auto-retry broken Supabase storage images with auth token
@@ -11910,8 +11910,8 @@ function openLegalModal(type) {
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function() {
         navigator.serviceWorker.register('/service-worker.js')
-          .then(function(reg) { console.log('[PWA] SW registered:', reg.scope); })
-          .catch(function(err) { console.log('[PWA] SW error:', err); });
+          .then(function(reg) { console.info('[PWA] SW registered:', reg.scope); })
+          .catch(function(err) { console.warn('[PWA] SW error:', err); });
       });
     }
 
