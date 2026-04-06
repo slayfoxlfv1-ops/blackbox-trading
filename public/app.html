@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1775437125 -->
+<!-- v1775502693 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -5273,11 +5273,14 @@ function calcDailyMindScore(dateStr) {
 
   if (dayTrades.length === 0) {
     // No trades — score based on color day only
-    var stateOnly = { green:80, yellow:60, red:30, unknown:50 }[colorDay] || 50;
-    total = stateOnly;
-    moodPts = Math.round(stateOnly * 0.4);
+    // stateMap consistent with calcTradeMind: green=100, yellow=70, red=40, unknown=50
+    var stateMap0 = { green:100, yellow:70, red:40, unknown:50 };
+    var stateVal0 = stateMap0[colorDay] || 50;
+    moodPts    = Math.round(stateVal0 * 0.40); // green=40, yellow=28, red=16, unknown=20
     emotionPts = null;
     behaviorPts = 20;
+    // Total: mood(40%) + behavior(20%) only, scaled to 100
+    total = Math.round((moodPts + behaviorPts) / 60 * 100);
   } else {
     // Average calcTradeMind across all day trades
     var tradeMinds = dayTrades.map(function(t) {
@@ -5291,7 +5294,10 @@ function calcDailyMindScore(dateStr) {
 
     total       = avgTotal;
     // Map back to legacy fields for display compatibility
-    moodPts     = Math.round(avgState * 0.40);   // state → mood pts (max 40)
+    // moodPts uses stateMap directly — color day is a binary daily state,
+    // not an average across trades (avoids 38/40 when green day with slight variation)
+    var _stateMap = { green:100, yellow:70, red:40, unknown:50 };
+    moodPts     = Math.round((_stateMap[colorDay] || 50) * 0.40); // green=40, yellow=28, red=16
     emotionPts  = Math.round(avgEmo * 0.40); // emotion score (max 40)
     behaviorPts = Math.round(avgBehav * 0.20); // actual behavior score (max 20)
 
