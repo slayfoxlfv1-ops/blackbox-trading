@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v1775431971 -->
+<!-- v1775434065 -->
 <html lang="en" translate="yes">
 <head>
 <meta charset="UTF-8">
@@ -13,7 +13,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <!-- Apple touch icon (inline SVG fallback) -->
   <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='40' fill='%230d1117'/><text x='90' y='142' text-anchor='middle' font-family='Georgia,serif' font-size='120' font-weight='700' fill='white'>P</text><circle cx='152' cy='28' r='20' fill='%233ecfcf'/></svg>">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -1418,6 +1417,18 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let currentUser = null, accounts = [], currentAccountId = null, currentTrades = null, currentChecklistSessions = [], currentMoodSessions = [], currentChecklistItems = [], currentRules = [], currentView = 'dashboard', authTab = 'login', editingTradeId = null, _checklistOriginalValue = null;
+
+  // ── escapeHtml: sanitize user text before inserting into innerHTML ──
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;');
+  }
+
 let _tradesLoadedForAccount = null; // tracks which account trades are loaded for
 let tlFilters = { date:'', ticker:'', result:'all' };
 // Achievement toasts tracked per-day in localStorage (see _achKey below)
@@ -6530,7 +6541,7 @@ function showDayTrades(dateKey, label) {
       '<td><span class="side-badge '+(t.side||'long')+'">'+(t.side||'').toUpperCase()+'</span></td>'+
       '<td><span class="pnl '+(pnl>=0?'pos':'neg')+'">'+(pnl>=0?'+':'-')+'$'+Math.abs(pnl).toLocaleString()+'</span></td>'+
       '<td><span class="mono-xs">'+time+'</span></td>'+
-      '<td style="font-size:11px;color:var(--text2)">'+(t.notes||'')+'</td></tr>';
+      '<td style="font-size:11px;color:var(--text2)">'+escapeHtml(t.notes)+'</td></tr>';
   }).join('');
   panel.style.display='block';
   panel.innerHTML='<div class="panel-head"><span class="panel-title">'+label+'</span>'+
@@ -11257,7 +11268,7 @@ function _openNoteModalWithData(t) {
   var pnlColor = pnl >= 0 ? 'var(--green)' : 'var(--red)';
   var pnlStr   = (pnl >= 0 ? '+' : '') + '$' + Math.abs(pnl).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
   document.getElementById('note-modal-ticker').innerHTML =
-    '<span style="color:var(--text)">' + (t.ticker||'Trade') + '</span>'
+    '<span style="color:var(--text)">' + escapeHtml(t.ticker||'Trade') + '</span>'
     + '<span class="side-badge '+(t.side||'long')+'" style="margin-left:8px">'+(t.side||'').toUpperCase()+'</span>'
     + '<span style="margin-left:8px;color:'+pnlColor+';font-size:14px;font-weight:700">'+pnlStr+'</span>';
 
@@ -12102,6 +12113,23 @@ function closeMobileDrawer() {
   if (d) d.classList.remove('open');
   if (b) b.classList.remove('open');
 }
+
+// ── Global error handlers ──
+window.addEventListener('unhandledrejection', function(e) {
+  console.error('[Pattro] Unhandled promise rejection:', e.reason);
+  if (e.reason && e.reason.message && (
+    e.reason.message.includes('NetworkError') ||
+    e.reason.message.includes('Failed to fetch') ||
+    e.reason.message.includes('JWT')
+  )) {
+    if (typeof showAlertToast === 'function') {
+      showAlertToast('⚠', 'Connection error', 'Check your network and try again.', 'var(--amber)', 'var(--amber-bd)', 'network_err');
+    }
+  }
+});
+window.addEventListener('error', function(e) {
+  console.error('[Pattro] Uncaught error:', e.message, 'at', e.lineno);
+});
 </script>
 </body>
 </html>
