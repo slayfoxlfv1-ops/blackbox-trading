@@ -1460,7 +1460,7 @@ select.form-input option{background:var(--lift);color:var(--chalk)}
     <a href="/privacy">Privacy</a>
     <a href="/refund">Refund Policy</a>
     <a href="/precios">Pricing</a>
-    <a href="mailto:support@pattro.com">Support</a>
+    <a href="/cdn-cgi/l/email-protection#b4c7c1c4c4dbc6c0f4c4d5c0c0c6db9ad7dbd9">Support</a>
   </div>
   <div class="footer-copy">© 2026 Pattro</div>
 </footer>
@@ -1480,7 +1480,7 @@ select.form-input option{background:var(--lift);color:var(--chalk)}
 </div>
 
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 
 /* ── NAV ── */
 window.addEventListener('scroll',function(){
@@ -1950,6 +1950,23 @@ async function handleRegister() {
           plan_expires_at:  expires.toISOString()
         });
 
+        // Notify backend to link user_id to Paddle subscription
+        // This makes the webhook reliable for future renewal events
+        try {
+          var subscriptionId = data.data && data.data.subscription_id;
+          if (subscriptionId) {
+            fetch('/api/link-paddle-user', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                user_id:         userId,
+                subscription_id: subscriptionId,
+                email:           pending.email
+              })
+            });
+          }
+        } catch(e) {}
+
         // Send welcome email
         try {
           fetch('/api/welcome-email', {
@@ -2020,10 +2037,4 @@ function togglePwd(inputId, eyeId) {
   // Switch between open/closed eye icon
   if (eye) {
     eye.innerHTML = isHidden
-      ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>'
-      : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
-  }
-}
-</script>
-</body>
-</html>
+      ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" 
