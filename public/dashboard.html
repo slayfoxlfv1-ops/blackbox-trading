@@ -6396,14 +6396,10 @@ function renderTradesView() {
     { id: 'log',      label: '&#8801; Trade Log' },
     { id: 'calendar', label: '&#8862; Calendar'  },
   ];
-  var tabBar = '<div style="display:flex;gap:2px;padding:14px 16px 0;border-bottom:1px solid var(--wire);background:var(--surface);margin-bottom:0">'
+  var tabBar = '<div style="display:flex;gap:0;padding:12px 16px 0;border-bottom:1px solid var(--wire);background:var(--bg)">'
     + tabs.map(function(t) {
         var active = _tradesActiveTab === t.id;
-        return '<div onclick="switchTradesTab(\''+t.id+'\')" style="padding:7px 16px;font-size:11px;font-weight:600;cursor:pointer;border-radius:6px 6px 0 0;letter-spacing:.3px;transition:all .15s;'
-          + (active
-              ? 'color:var(--text);background:var(--surface2);border:1px solid var(--wire);border-bottom:1px solid var(--surface2);margin-bottom:-1px'
-              : 'color:var(--text3);background:transparent;border:1px solid transparent')
-          + '">' + t.label + '</div>';
+        return '<div onclick="switchTradesTab(\''+t.id+'\')" style="padding:7px 18px;font-size:9px;font-weight:700;cursor:pointer;border-radius:0;letter-spacing:1px;text-transform:uppercase;font-family:var(--mono);transition:color .18s,border-color .18s;border-bottom:2px solid '+(active?'var(--acid)':'transparent')+';color:'+(active?'var(--acid)':'var(--text3)')+';background:transparent;margin-bottom:-1px">'+t.label+'</div>';
       }).join('')
     + '</div>';
 
@@ -6525,7 +6521,7 @@ function renderTradeLogHTML(trades) {
     if (pEnd-pStart < 4) pStart = Math.max(1, pEnd-4);
     for (var _p=pStart; _p<=pEnd; _p++) {
       var isActive = _p === tlPage;
-      btns += '<button onclick="tlPage='+_p+';renderTradesView()" style="padding:4px 10px;background:'+(isActive?'var(--green)':'var(--surface2)')+';border:1px solid '+(isActive?'var(--green)':'var(--wire)')+';border-radius:5px;color:'+(isActive?'#fff':'var(--text3)')+';font-size:11px;cursor:pointer">'+_p+'</button>';
+      btns += '<button onclick="tlPage='+_p+';renderTradesView()" style="padding:3px 9px;background:'+(isActive?'var(--acid)':'transparent')+';border:1px solid '+(isActive?'var(--acid-bd)':'var(--wire)')+';border-radius:0;color:'+(isActive?'var(--bg)':'var(--text2)')+';font-size:9px;font-family:var(--mono);font-weight:'+(isActive?'700':'400')+';cursor:pointer">'+_p+'</button>';
     }
     // Next
     btns += '<button onclick="tlPage=Math.min(totalPages,tlPage+1);renderTradesView()" style="padding:4px 10px;background:transparent;border:1px solid var(--wire);border-radius:0;color:var(--text2);font-size:10px;cursor:pointer;font-family:var(--mono)"'+(tlPage===totalPages?';opacity:.4;pointer-events:none':'')+'">&rsaquo;</button>';
@@ -6856,13 +6852,10 @@ function renderPsychologyView(subTabIntent) {
     { id: 'discipline', label: '&#8856; Discipline'      },
     { id: 'calendar',   label: '&#9635; Calendar'        },
   ];
-  var tabBar = '<div style="display:flex;gap:2px;padding:14px 16px 0;border-bottom:1px solid var(--wire);background:var(--surface);margin-bottom:0">'
+  var tabBar = '<div style="display:flex;gap:0;padding:12px 16px 0;border-bottom:1px solid var(--wire);background:var(--bg)">'
     + tabs.map(function(t) {
         var active = _psychActiveTab === t.id;
-        return '<div onclick="switchPsychTab(\'' + t.id + '\')" style="padding:7px 16px;font-size:11px;font-weight:600;cursor:pointer;border-radius:6px 6px 0 0;letter-spacing:.3px;transition:all .15s;'
-          + (active ? 'color:var(--text);background:var(--surface2);border:1px solid var(--wire);border-bottom:1px solid var(--surface2);margin-bottom:-1px'
-                    : 'color:var(--text3);background:transparent;border:1px solid transparent')
-          + '">' + t.label + '</div>';
+        return '<div onclick="switchPsychTab(\'' + t.id + '\')" style="padding:7px 18px;font-size:9px;font-weight:700;cursor:pointer;border-radius:0;letter-spacing:1px;text-transform:uppercase;font-family:var(--mono);transition:color .18s,border-color .18s;border-bottom:2px solid '+(active?'var(--acid)':'transparent')+';color:'+(active?'var(--acid)':'var(--text3)')+';background:transparent;margin-bottom:-1px">'+t.label+'</div>';
       }).join('')
     + '</div>';
   el.innerHTML = tabBar + '<div id="psych-tab-content"></div>';
