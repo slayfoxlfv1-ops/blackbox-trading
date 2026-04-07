@@ -1460,7 +1460,7 @@ select.form-input option{background:var(--lift);color:var(--chalk)}
     <a href="/privacy">Privacy</a>
     <a href="/refund">Refund Policy</a>
     <a href="/precios">Pricing</a>
-    <a href="/cdn-cgi/l/email-protection#41323431312e33350131203535332e6f222e2c">Support</a>
+    <a href="/cdn-cgi/l/email-protection#5d2e282d2d322f291d2d3c29292f32733e3230">Support</a>
   </div>
   <div class="footer-copy">© 2026 Pattro</div>
 </footer>
@@ -1799,17 +1799,6 @@ function validate() {
     if (!f.check(val)) { errEl.textContent = f.emsg; ok = false; }
     else { errEl.textContent = ''; }
   });
-  // Si hay errores, hacer scroll al primero para que el usuario lo vea
-  if (!ok) {
-    var firstErr = fields.find(function(f) {
-      var val = document.getElementById(f.id).value.trim();
-      return !f.check(val);
-    });
-    if (firstErr) {
-      var el = document.getElementById(firstErr.id);
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  }
   return ok;
 }
 
@@ -1819,7 +1808,8 @@ async function handleRegister() {
   errEl.textContent = '';
 
   if (!validate()) {
-    errEl.textContent = 'Please fix the errors above before continuing.';
+    errEl.textContent = 'Please review the fields above.';
+    errEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
     return;
   }
 
@@ -1973,20 +1963,14 @@ async function handleRegister() {
           });
         } catch(e) {}
 
-        // Link user_id to Paddle subscription for future webhook events
+        // Link user_id to Paddle for future webhook events (fire and forget)
         try {
-          var subscriptionId = data.data && data.data.subscription_id;
-          if (subscriptionId) {
-            fetch('/api/link-paddle-user', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                user_id:         userId,
-                subscription_id: subscriptionId,
-                email:           pending.email
-              })
-            });
-          }
+          var subId = data.data && data.data.subscription_id;
+          if (subId) fetch('/api/link-paddle-user', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: userId, subscription_id: subId, email: pending.email })
+          });
         } catch(e) {}
 
         window.location.href = '/dashboard?payment=success';
