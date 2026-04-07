@@ -2660,7 +2660,6 @@ async function saveTrade() {
     entry_time:     entryTimeVal,
     account_type:   (accounts.find(function(a){return a.id===currentAccountId;})||{}).type,
     source:         'manual',
-    updated_at:     new Date().toISOString()
   };
 
   var res;
