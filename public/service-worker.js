@@ -1,14 +1,30 @@
 // Pattro Service Worker
-const CACHE_NAME = 'pattro-v1';
+const CACHE_NAME = 'pattro-v2';
 
-// Only cache static assets — never cache app.html (always fresh)
+// Static assets to pre-cache on install
+// These never change between sessions — safe to cache aggressively
 const STATIC_ASSETS = [
-  'https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;600;700;800&display=swap',
+  'https://fonts.googleapis.com/css2?family=Fragment+Mono:ital@0;1&family=Unbounded:wght@300;400;700;900&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;1,9..144,300;1,9..144,700&display=swap',
   'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2',
 ];
 
+// FIX M4: actually cache assets on install (was just calling skipWaiting before)
 self.addEventListener('install', function(e) {
-  self.skipWaiting();
+  e.waitUntil(
+    caches.open(CACHE_NAME).then(function(cache) {
+      // cache.addAll fails if any request fails — use individual adds so one
+      // bad URL doesn't break the whole install
+      return Promise.allSettled(
+        STATIC_ASSETS.map(function(url) {
+          return cache.add(url).catch(function(err) {
+            console.warn('[SW] Could not pre-cache:', url, err.message);
+          });
+        })
+      );
+    }).then(function() {
+      return self.skipWaiting();
+    })
+  );
 });
 
 self.addEventListener('activate', function(e) {
@@ -28,12 +44,12 @@ self.addEventListener('activate', function(e) {
 self.addEventListener('fetch', function(e) {
   var url = e.request.url;
 
-  // Never intercept Supabase or API calls
+  // Never intercept Supabase or API calls — always fresh
   if (url.includes('supabase.co') || url.includes('/api/')) {
     return;
   }
 
-  // For HTML pages — always network first, no cache
+  // HTML pages — network first, fall back to cache if offline
   if (e.request.headers.get('accept') && e.request.headers.get('accept').includes('text/html')) {
     e.respondWith(
       fetch(e.request).catch(function() {
@@ -43,12 +59,16 @@ self.addEventListener('fetch', function(e) {
     return;
   }
 
-  // For fonts and static assets — cache first
+  // Fonts and CDN assets — cache first (they never change)
   if (url.includes('fonts.googleapis.com') || url.includes('fonts.gstatic.com') || url.includes('cdn.jsdelivr.net')) {
     e.respondWith(
       caches.match(e.request).then(function(cached) {
         if (cached) return cached;
         return fetch(e.request).then(function(response) {
+          // Only cache valid responses
+          if (!response || response.status !== 200 || response.type === 'error') {
+            return response;
+          }
           var clone = response.clone();
           caches.open(CACHE_NAME).then(function(cache) {
             cache.put(e.request, clone);
