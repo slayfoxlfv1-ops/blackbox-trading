@@ -110,8 +110,7 @@ body {
   background: var(--surface);
   border: 1px solid var(--wire2);
   border-top: 2px solid var(--acid);
-  border-radius: 0;
-  clip-path: polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,0 100%);
+  border-radius: 4px;
   padding: 36px 40px;
   width: 380px;
   box-shadow: 0 24px 60px rgba(0,0,0,.5);
@@ -122,8 +121,8 @@ body {
 .auth-tab { flex:1; padding:7px; border:none; background:transparent; border-radius:6px; font-family: var(--display); font-size:12px; color:var(--text3); cursor:pointer; transition:all .15s; }
 .auth-tab.active { background:var(--surface3); color:var(--text); }
 .auth-error { font-size:11px; min-height:18px; margin-bottom:10px; color:var(--red); font-family: var(--mono); }
-.btn-primary { width:100%; padding:11px; background:var(--acid); border:none; border-radius:0; color:var(--bg); font-family:var(--display); font-size:11px; font-weight:700; cursor:pointer; transition:all .2s; letter-spacing:1px; text-transform:uppercase; clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,0 100%); position:relative; overflow:hidden; }
-.btn-primary:hover { opacity:.9; transform:translateY(-2px); box-shadow:0 8px 32px rgba(62,207,207,.3); }
+.btn-primary { width:100%; padding:11px; background:var(--acid); border:none; border-radius:0; color:var(--bg); font-family:var(--display); font-size:11px; font-weight:700; cursor:pointer; transition:opacity .2s, transform .2s, box-shadow .2s; letter-spacing:1px; text-transform:uppercase; clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,0 100%); position:relative; overflow:hidden; }
+.btn-primary:hover { opacity:.88; transform:translateY(-1px); box-shadow:0 6px 24px rgba(62,207,207,.25); }
 
 /* ── LAYOUT ── */
 .layout { height:100vh; overflow:hidden; }
@@ -186,7 +185,7 @@ body {
   font-family: var(--mono);
   font-size: 11px;
   color: var(--text2);
-  transition: all .15s;
+  transition: background .15s, color .15s;
   margin-bottom: 2px;
   position: relative;
 }
@@ -269,13 +268,13 @@ body {
   flex-shrink: 0;
   background: var(--bg);
 }
-.page-title { font-family: var(--display); font-size: 11px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; flex: 1; color: var(--text); }
+.page-title { font-family: var(--display); font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; flex: 1; color: var(--text); }
 .page-sub { font-family: var(--mono); font-size: 9px; color: var(--acid); letter-spacing: 2px; text-transform: uppercase; opacity: .85; }
 
 /* ── BUTTONS ── */
-.btn { padding: 7px 14px; border-radius: 0; border: none; cursor: pointer; font-family: var(--display); font-size: 11px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; transition: all .2s; clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,0 100%); }
+.btn { padding: 7px 14px; border-radius: 4px; border: none; cursor: pointer; font-family: var(--display); font-size: 11px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; transition: background .15s, color .15s, box-shadow .15s, opacity .15s; }
 .btn-solid { background: var(--acid); color: var(--bg); font-weight: 700; }
-.btn-solid:hover { opacity: .9; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(62,207,207,.25); }
+.btn-solid:hover { opacity: .88; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(62,207,207,.2); }
 .btn-ghost { background: transparent; color: var(--text2); border: 1px solid var(--wire2); transition: border-color .2s, color .2s; }
 .btn-ghost:hover { border-color: var(--wire3); color: var(--text); }
 
@@ -300,7 +299,7 @@ body {
   border-bottom: 1px solid var(--wire);
   background: var(--surface);
 }
-.panel-title { font-family: var(--display); font-size: 10px; font-weight: 700; color: var(--text); letter-spacing: .5px; text-transform: uppercase; }
+.panel-title { font-family: var(--display); font-size: 9px; font-weight: 700; color: var(--text); letter-spacing: 1px; text-transform: uppercase; }
 .panel-cap { font-family: var(--mono); font-size: 10px; color: var(--text3); }
 
 /* ── METRICS ── */
@@ -313,7 +312,7 @@ body {
   transition: border-color .15s, transform .15s;
   box-shadow: 0 8px 32px rgba(0,0,0,.35);
 }
-.metric:hover { border-color: var(--wire2); transform: translateY(-1px); }
+.metric:hover { border-color: var(--wire2); }
 .m-label { font-family: var(--mono); font-size: 9px; color: var(--text); font-weight: 700; letter-spacing: .5px; margin-bottom: 6px; text-transform: uppercase; }
 .m-val { font-size: 20px; font-weight: 700; line-height: 1; }
 .m-val.pos { color: var(--green); } .m-val.neg { color: var(--red); } .m-val.neutral { color: var(--text); } .m-val.amber { color: var(--amber); }
@@ -355,7 +354,7 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
 .cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 3px; padding: 14px; overflow: visible; }
 .cal-hdr { display: grid; grid-template-columns: repeat(7,1fr); gap: 3px; padding: 10px 14px 0; }
 .cal-hdr-day { font-family: var(--mono); font-size: 8px; color: var(--text); font-weight: 700; text-align: center; letter-spacing: .5px; }
-.cal-cell { aspect-ratio: 1; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: all .15s; border: 1px solid transparent; position: relative; overflow: visible; }
+.cal-cell { aspect-ratio: 1; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: background .15s, border-color .15s; border: 1px solid transparent; position: relative; overflow: visible; }
 .cal-cell:hover { filter: brightness(1.2); transform: scale(1.06); z-index: 2; box-shadow: 0 4px 12px rgba(0,0,0,.4); }
 .cal-cell.win  { background: var(--green-bg); border-color: var(--green-bd); }
 .cal-cell.loss { background: var(--red-bg);   border-color: var(--red-bd); }
@@ -451,8 +450,7 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
   background: var(--surface);
   border: 1px solid var(--wire2);
   border-top: 2px solid var(--acid);
-  border-radius: 0;
-  clip-path: polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,0 100%);
+  border-radius: 4px;
   padding: 20px 24px;
   width: min(560px,94vw);
   max-height: 96vh;
@@ -481,7 +479,7 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
 /* ── NOTE MODAL ── */
 .note-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.65); z-index: 400; display: none; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box; }
 .note-modal-overlay.open { display: flex; }
-.note-modal { background: var(--surface); border: 1px solid var(--wire2); border-top: 2px solid var(--acid); border-radius: 0; clip-path: polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,0 100%); padding: 0; width: min(540px,94vw); max-height: 92vh; overflow-y: auto; overflow-x: hidden; box-sizing: border-box; }
+.note-modal { background: var(--surface); border: 1px solid var(--wire2); border-top: 2px solid var(--acid); border-radius: 4px; padding: 0; width: min(540px,94vw); max-height: 92vh; overflow-y: auto; overflow-x: hidden; box-sizing: border-box; }
 .note-modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
 .note-modal-title { font-size: 13px; font-weight: 600; }
 .note-modal-close { cursor: pointer; color: var(--text3); font-size: 16px; padding: 2px 6px; border-radius: 4px; }
@@ -9399,7 +9397,7 @@ async function showMoodCheck(accountId) {
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:99998;display:flex;align-items:center;justify-content:center;font-family:Unbounded,sans-serif;backdrop-filter:blur(4px)';
 
   var card = document.createElement('div');
-  card.style.cssText = 'background:var(--surface);border:1px solid var(--wire2);border-top:2px solid var(--acid);border-radius:0;padding:28px;width:440px;max-width:90vw;clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,0 100%);box-shadow:0 24px 80px rgba(0,0,0,.6)';
+  card.style.cssText = 'background:var(--surface);border:1px solid var(--wire2);border-top:2px solid var(--acid);border-radius:4px;padding:28px;width:440px;max-width:90vw;box-shadow:0 24px 80px rgba(0,0,0,.6)';
 
   // Header
   var hdr = document.createElement('div');
@@ -9415,7 +9413,7 @@ async function showMoodCheck(accountId) {
   var submitBtn = document.createElement('button');
   submitBtn.textContent = 'View my trading day →';
   submitBtn.setAttribute('type','button');
-  submitBtn.style.cssText = 'width:100%;padding:11px;background:var(--surface2);border:1px solid var(--wire);border-radius:0;color:var(--text3);font-size:11px;font-weight:700;cursor:default;font-family:var(--display);letter-spacing:.5px;text-transform:uppercase;margin-top:2px;opacity:0.5';
+  submitBtn.style.cssText = 'width:100%;padding:11px;background:var(--surface2);border:1px solid var(--wire);border-radius:4px;color:var(--text3);font-size:11px;font-weight:700;cursor:default;font-family:var(--display);letter-spacing:.5px;text-transform:uppercase;margin-top:2px;opacity:0.5';
 
   // Check if all answered and update submit style
   function refresh() {
@@ -9455,7 +9453,7 @@ async function showMoodCheck(accountId) {
       var b = document.createElement('button');
       b.textContent = opt;
       b.setAttribute('type','button');
-      b.style.cssText = 'padding:5px 12px;border-radius:0;border:1px solid var(--wire);background:transparent;color:var(--text2);font-size:9px;cursor:pointer;font-family:var(--mono);letter-spacing:.5px;text-transform:uppercase;clip-path:polygon(0 0,calc(100% - 5px) 0,100% 5px,100% 100%,0 100%)';
+      b.style.cssText = 'padding:4px 10px;border-radius:3px;border:1px solid var(--wire);background:transparent;color:var(--text2);font-size:9px;cursor:pointer;font-family:var(--mono);letter-spacing:.5px;text-transform:uppercase';
       btnGroup.push(b);
       row.appendChild(b);
     });
@@ -10040,7 +10038,7 @@ function showBreakTimer(minutes) {
         + '<div style="font-size:13px;color:var(--text3);margin-bottom:24px">You can come back now. Remember your plan.</div>';
       var backBtn = document.createElement('button');
       backBtn.textContent = 'Volver al dashboard';
-      backBtn.style.cssText = 'padding:10px 24px;background:var(--acid);border:none;border-radius:0;color:var(--bg);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--display);letter-spacing:1px;text-transform:uppercase;clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,0 100%)';
+      backBtn.style.cssText = 'padding:10px 24px;background:var(--acid);border:none;border-radius:4px;color:var(--bg);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--display);letter-spacing:1px;text-transform:uppercase';
       backBtn.onclick = function() { document.getElementById('break-overlay').remove(); };
       doneDiv.appendChild(backBtn);
       overlay.innerHTML = '';
