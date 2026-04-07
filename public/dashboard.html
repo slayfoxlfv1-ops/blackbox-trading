@@ -1763,6 +1763,7 @@ async function signOut() {
   var menu = document.getElementById('user-dropdown-menu');
   if (menu) menu.classList.remove('open');
 
+  if (window._planCheckInterval) clearInterval(window._planCheckInterval);
   await sb.auth.signOut();
   var _mn3 = document.getElementById('mobile-nav'); if (_mn3) _mn3.style.display = 'none';
   window.location.href = '/login';
@@ -2107,6 +2108,33 @@ function showApp() {
   document.getElementById('user-name').textContent = name;
   document.getElementById('user-avatar').textContent = name.charAt(0).toUpperCase();
   loadAccounts();
+
+  // ── M1: Periodic plan check every 30 minutes ──
+  // If subscription expires while tab is open, redirect to login
+  if (window._planCheckInterval) clearInterval(window._planCheckInterval);
+  window._planCheckInterval = setInterval(function() {
+    if (!currentUser) return;
+    sb.from('profiles')
+      .select('plan, plan_expires_at')
+      .eq('id', currentUser.id)
+      .single()
+      .then(function(result) {
+        var profile = result.data;
+        if (!profile) return;
+        var plan    = profile.plan || 'free';
+        var expires = profile.plan_expires_at ? new Date(profile.plan_expires_at) : null;
+        var isPro      = plan === 'pro' && expires && expires > new Date();
+        var isLifetime = plan === 'lifetime';
+        if (!isPro && !isLifetime) {
+          clearInterval(window._planCheckInterval);
+          sb.auth.signOut().then(function() {
+            window.location.href = '/login?error=subscription';
+          });
+        }
+      })
+      .catch(function() {}); // network error — don't log out
+  }, 30 * 60 * 1000); // every 30 minutes
+
   // Show bug notification on Mon/Fri (once)
   window._bugToastTimer = setTimeout(showBugToast, 5000);
 
