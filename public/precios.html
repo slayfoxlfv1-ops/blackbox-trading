@@ -1395,8 +1395,34 @@ footer{
     The price is locked for life for founding members.</p>
   </div>
 
-  <div class="pricing-grid">
-    <!-- Pro plan -->
+  <div class="pricing-grid" style="grid-template-columns:1fr 1fr;gap:24px">
+
+    <!-- FREE plan -->
+    <div class="p-card" style="opacity:.95">
+      <div class="p-badge" style="background:var(--surface2);border-color:var(--wire2);color:var(--chalk3)">
+        <span style="width:5px;height:5px;border-radius:50%;background:var(--chalk3);display:inline-block"></span>
+        Free forever
+      </div>
+      <div class="p-price" style="font-size:56px"><sup>$</sup>0</div>
+      <div class="p-period">/ month · no credit card</div>
+      <div class="p-lock" style="background:transparent;border-color:var(--wire);color:var(--chalk3)">Try Pattro before you commit</div>
+      <ul class="p-features">
+        <li>Up to 10 trades</li>
+        <li>1 trading account</li>
+        <li>Mental Score (Mind + Discipline)</li>
+        <li>Daily pre-session checklist</li>
+        <li>Trading rules</li>
+        <li style="color:var(--chalk4);text-decoration:line-through">AI Coach</li>
+        <li style="color:var(--chalk4);text-decoration:line-through">Calendar & history</li>
+        <li style="color:var(--chalk4);text-decoration:line-through">Insights & analytics</li>
+        <li style="color:var(--chalk4);text-decoration:line-through">Screenshots</li>
+        <li style="color:var(--chalk4);text-decoration:line-through">Export PDF</li>
+      </ul>
+      <a href="/register" class="p-cta" style="background:transparent;border:1px solid var(--wire2);color:var(--chalk);box-shadow:none">Start free →</a>
+      <div class="p-sub">No credit card · No commitment</div>
+    </div>
+
+    <!-- PRO plan -->
     <div class="p-card featured">
       <div class="p-badge">
         <span style="width:5px;height:5px;border-radius:50%;background:var(--acid);display:inline-block"></span>
@@ -1406,54 +1432,21 @@ footer{
       <div class="p-period">/ month · billed monthly</div>
       <div class="p-lock">⚡ Early access — price locked forever for founding members</div>
       <ul class="p-features">
+        <li>Unlimited trades & accounts (up to 5)</li>
         <li>Mental Score + Discipline + Execution</li>
         <li>AI Coach — weekly psychological analysis</li>
+        <li>Calendar & full history</li>
+        <li>Insights & performance analytics</li>
+        <li>Screenshots on every trade</li>
+        <li>Export PDF reports</li>
         <li>Auto-capture (TopstepX Chrome extension)</li>
         <li>Real-time tilt & revenge trade alerts</li>
         <li>Emotion × P&L correlation engine</li>
-        <li>Unlimited trades & accounts</li>
-        <li>Color Day + pre-session checklist</li>
-        <li>Pattern (Pattro) detection</li>
       </ul>
       <a href="/register" class="p-cta">Start for $15/month →</a>
       <div class="p-sub">Cancel anytime · No contracts</div>
     </div>
 
-    <!-- What you get -->
-    <div class="p-card">
-      <div style="font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--chalk3);margin-bottom:20px">What's included</div>
-      <div style="font-family:var(--display);font-size:18px;font-weight:900;letter-spacing:-1px;color:var(--chalk);margin-bottom:24px;text-transform:uppercase">Everything you need to<br>fix your psychology.</div>
-      <div style="display:flex;flex-direction:column;gap:14px">
-        <div style="display:flex;gap:12px;align-items:flex-start">
-          <div style="width:1px;height:40px;background:var(--acid);flex-shrink:0;margin-top:4px;opacity:.5"></div>
-          <div>
-            <div style="font-family:var(--display);font-size:11px;font-weight:700;color:var(--chalk);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Mental Score Engine</div>
-            <div style="font-family:var(--mono);font-size:10px;color:var(--chalk3);line-height:1.6">3-dimensional scoring: Mind, Discipline, Execution — updated after every trade.</div>
-          </div>
-        </div>
-        <div style="display:flex;gap:12px;align-items:flex-start">
-          <div style="width:1px;height:40px;background:var(--acid);flex-shrink:0;margin-top:4px;opacity:.5"></div>
-          <div>
-            <div style="font-family:var(--display);font-size:11px;font-weight:700;color:var(--chalk);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">AI Coach</div>
-            <div style="font-family:var(--mono);font-size:10px;color:var(--chalk3);line-height:1.6">Weekly + monthly diagnosis. Specific actions based on your data — not generic advice.</div>
-          </div>
-        </div>
-        <div style="display:flex;gap:12px;align-items:flex-start">
-          <div style="width:1px;height:40px;background:var(--acid);flex-shrink:0;margin-top:4px;opacity:.5"></div>
-          <div>
-            <div style="font-family:var(--display);font-size:11px;font-weight:700;color:var(--chalk);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Chrome Extension</div>
-            <div style="font-family:var(--mono);font-size:10px;color:var(--chalk3);line-height:1.6">Auto-captures TopstepX trades. Real-time tilt detection and block screen.</div>
-          </div>
-        </div>
-        <div style="display:flex;gap:12px;align-items:flex-start">
-          <div style="width:1px;height:40px;background:var(--acid);flex-shrink:0;margin-top:4px;opacity:.5"></div>
-          <div>
-            <div style="font-family:var(--display);font-size:11px;font-weight:700;color:var(--chalk);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Correlation Engine</div>
-            <div style="font-family:var(--mono);font-size:10px;color:var(--chalk3);line-height:1.6">Compares with-tag vs without-tag. Finds your exact dollar cost per behavior.</div>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 
   <!-- Points -->
@@ -1523,7 +1516,7 @@ footer{
     <a href="/privacy">Privacy</a>
     <a href="/refund">Refund Policy</a>
     <a href="/precios">Pricing</a>
-    <a href="mailto:support@pattro.com">Support</a>
+    <a href="/cdn-cgi/l/email-protection#0b787e7b7b64797f4b7b6a7f7f796425686466">Support</a>
   </div>
   <div class="footer-copy">© 2026 Pattro</div>
 </footer>
@@ -1543,7 +1536,7 @@ footer{
 </div>
 
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 
 /* ── NAV ── */
 window.addEventListener('scroll',function(){
@@ -1786,5 +1779,4 @@ document.getElementById('legal-overlay').addEventListener('click',function(e){if
 ['terms','privacy','refund'].forEach(function(slug){document.querySelectorAll('footer a[href="/'+slug+'"]').forEach(function(a){a.addEventListener('click',function(e){e.preventDefault();showLegal(slug);});});});
 var legalContent={
   terms:'<h3>Terms of Service</h3><p>By using Pattro you agree to these terms. Pattro is a trading psychology tool for educational and analytical purposes only.</p><h3>Usage</h3><p>You may not use Pattro for any unlawful purpose. We reserve the right to terminate accounts that violate our policies.</p>',
-  privacy:'<h3>Privacy Policy</h3><p>We collect only what we need to provide the service. Your trading data is encrypted and never sold to third parties.</p><h3>Data Use</h3><p>We use your data solely to provide Pattro\'s analytics and coaching features.</p>',
-  refund:'<h3>Refund Policy</h3><p>We offer a 7-day money-bac
+  privacy:'<h3>Privacy Policy</h3><p>We collect only what we need to provide the service. Your trading data is encrypted and never sold to third parties.</p><h3>Data Use</h3

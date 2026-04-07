@@ -3,14 +3,25 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Create Account — Pattro</title>
-<link rel="icon" type="image/png" href="/favicon.png" sizes="32x32">
+<title>Pattro — Your Mind Is The Market</title>
+<meta name="description" content="Pattro automatically detects your trading mistakes and tells you exactly what to fix. Revenge trading, overtrading, emotional patterns — identified in real time.">
+<meta property="og:title" content="Pattro — Stop Losing Money Because of Your Psychology">
+<meta property="og:description" content="Pattro detects your trading mistakes automatically and tells you exactly what to fix.">
+<meta property="og:image" content="https://www.pattro.com/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:url" content="https://www.pattro.com">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Pattro — Stop Losing Money Because of Your Psychology">
+<meta name="twitter:description" content="Detects your trading mistakes automatically and tells you exactly what to fix.">
+<meta name="twitter:image" content="https://www.pattro.com/og-image.png">
+<meta name="keywords" content="trading psychology, trading journal, mental score, discipline score, trading mistakes, revenge trading, AI trading coach">
 <link rel="apple-touch-icon" href="/favicon-192.png">
+<link rel="canonical" href="https://www.pattro.com">
+<link rel="icon" type="image/png" href="/favicon.png" sizes="32x32">
 <link href="https://fonts.googleapis.com/css2?family=Fragment+Mono:ital@0;1&family=Unbounded:wght@300;400;700;900&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;1,9..144,300;1,9..144,700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
 <style>
-
 
 /* ════════════════════════════════════════════════════
    TOKENS
@@ -1052,233 +1063,39 @@ footer{
   .pain-ghost,.profile-ghost,.cta-bg-word{display:none}
   nav .btn-nav{padding:7px 14px;font-size:10px}
 }
-
-
-/* ── INNER PAGE LAYOUT ── */
-.page-wrap{
-  min-height:100vh;
-  display:flex;flex-direction:column;
-}
-.page-main{
-  flex:1;
-  display:flex;align-items:center;justify-content:center;
-  padding:120px 24px 60px;
-}
-.auth-box{
-  width:100%;max-width:420px;
-  background:var(--surface);
-  border:1px solid var(--wire2);
-  padding:44px 40px;
-  clip-path:polygon(0 0,calc(100% - 16px) 0,100% 16px,100% 100%,0 100%);
-  position:relative;
-}
-.auth-box::before{
-  content:'';position:absolute;top:0;right:0;
-  width:60px;height:1px;background:var(--acid);opacity:.6;
-}
-.auth-box::after{
-  content:'';position:absolute;top:0;right:0;
-  width:1px;height:60px;background:var(--acid);opacity:.6;
-}
-.auth-title{
-  font-family:var(--display);font-size:22px;font-weight:900;
-  letter-spacing:-1px;text-transform:uppercase;
-  color:var(--chalk);margin-bottom:6px;
-}
-.auth-sub{
-  font-family:var(--mono);font-size:11px;
-  color:var(--chalk3);letter-spacing:.3px;
-  margin-bottom:32px;
-}
-.form-group{margin-bottom:18px}
-.form-label{
-  display:block;
-  font-family:var(--mono);font-size:9px;letter-spacing:1.5px;
-  text-transform:uppercase;color:var(--chalk3);
-  margin-bottom:7px;
-}
-.form-input{
-  width:100%;padding:11px 14px;
-  background:var(--lift);border:1px solid var(--wire2);
-  color:var(--chalk);
-  font-family:var(--mono);font-size:12px;
-  outline:none;transition:border-color .2s;
-  clip-path:none;
-}
-.form-input:focus{border-color:var(--acid)}
-.form-input::placeholder{color:var(--chalk3)}
-.form-error{
-  font-family:var(--mono);font-size:10px;letter-spacing:.3px;
-  color:var(--hot);margin-top:6px;display:none;
-}
-.form-error.show{display:block}
-.btn-submit{
-  width:100%;padding:14px;
-  font-family:var(--display);font-size:13px;font-weight:700;
-  letter-spacing:1px;text-transform:uppercase;
-  background:var(--acid);color:var(--black);
-  border:none;cursor:pointer;
-  clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%);
-  transition:all .25s;margin-top:8px;
-  position:relative;overflow:hidden;
-}
-.btn-submit::before{
-  content:'';position:absolute;inset:0;
-  background:linear-gradient(135deg,rgba(255,255,255,.2) 0%,transparent 55%);
-  opacity:0;transition:opacity .2s;
-}
-.btn-submit:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(62,207,207,.25)}
-.btn-submit:hover::before{opacity:1}
-.btn-submit:disabled{opacity:.5;cursor:default;transform:none;box-shadow:none}
-.auth-link{
-  font-family:var(--mono);font-size:10px;letter-spacing:.3px;
-  color:var(--chalk3);text-align:center;margin-top:20px;
-}
-.auth-link a{color:var(--acid);text-decoration:none}
-.auth-link a:hover{text-decoration:underline}
-
-/* Legal/content pages */
-.content-wrap{
-  max-width:720px;width:100%;
-  padding:40px 0 80px;
-}
-.content-title{
-  font-family:var(--display);font-size:clamp(28px,5vw,48px);
-  font-weight:900;letter-spacing:-2px;text-transform:uppercase;
-  color:var(--chalk);margin-bottom:12px;
-  line-height:.96;
-}
-.content-kicker{
-  font-family:var(--mono);font-size:9px;letter-spacing:2px;
-  text-transform:uppercase;color:var(--acid);
-  display:flex;align-items:center;gap:8px;
-  margin-bottom:20px;
-}
-.content-kicker::before{content:'';width:16px;height:1px;background:var(--acid)}
-.content-body{
-  font-family:var(--mono);font-size:12px;line-height:1.9;
-  color:var(--chalk2);
-}
-.content-body h2{
-  font-family:var(--display);font-size:16px;font-weight:700;
-  letter-spacing:.5px;text-transform:uppercase;
-  color:var(--chalk);margin:36px 0 12px;
-}
-.content-body h3{
-  font-family:var(--mono);font-size:11px;letter-spacing:1px;
-  text-transform:uppercase;color:var(--acid);
-  margin:24px 0 8px;
-}
-.content-body p{margin-bottom:14px}
-.content-body ul{padding-left:20px;margin-bottom:14px}
-.content-body li{margin-bottom:6px}
-.content-divider{
-  border:none;border-top:1px solid var(--wire);
-  margin:32px 0;
-}
-
-/* Error/404 */
-.error-wrap{
-  text-align:center;max-width:480px;width:100%;
-}
-.error-code{
-  font-family:var(--display);font-size:clamp(80px,15vw,140px);
-  font-weight:900;letter-spacing:-6px;
-  -webkit-text-stroke:1px var(--wire3);
-  color:transparent;line-height:1;
-  margin-bottom:16px;
-}
-.error-msg{
-  font-family:var(--display);font-size:20px;font-weight:700;
-  letter-spacing:-1px;text-transform:uppercase;
-  color:var(--chalk);margin-bottom:12px;
-}
-.error-sub{
-  font-family:var(--mono);font-size:12px;
-  color:var(--chalk3);margin-bottom:36px;line-height:1.7;
-}
-
-/* Pricing (precios) */
-.pricing-wrap{max-width:1000px;width:100%;padding:40px 0 80px}
-.pricing-title{
-  font-family:var(--display);font-size:clamp(36px,5vw,64px);
-  font-weight:900;letter-spacing:-2px;text-transform:uppercase;
-  color:var(--chalk);line-height:.96;margin-bottom:16px;
-}
-.pricing-sub{
-  font-family:var(--mono);font-size:13px;
-  color:var(--chalk2);max-width:480px;margin-bottom:60px;line-height:1.8;
-}
-
-
-.reg-box{
-  width:100%;max-width:520px;
-  background:var(--surface);
-  border:1px solid var(--wire2);
-  padding:44px 40px;
-  clip-path:polygon(0 0,calc(100% - 16px) 0,100% 16px,100% 100%,0 100%);
-  position:relative;
-}
-.reg-box::before{content:'';position:absolute;top:0;right:0;width:60px;height:1px;background:var(--acid);opacity:.6;}
-.reg-box::after{content:'';position:absolute;top:0;right:0;width:1px;height:60px;background:var(--acid);opacity:.6;}
-.reg-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.reg-grid .form-group{margin-bottom:0}
-.reg-divider{
-  border:none;border-top:1px solid var(--wire);
-  margin:24px 0;
-}
-.reg-section-lbl{
-  font-family:var(--mono);font-size:8px;letter-spacing:2px;
-  text-transform:uppercase;color:var(--chalk3);
-  margin-bottom:16px;margin-top:8px;
-}
-.field-err{
-  font-family:var(--mono);font-size:9px;color:var(--hot);
-  margin-top:4px;min-height:13px;letter-spacing:.3px;
-}
-.code-badge{
-  font-family:var(--mono);font-size:9px;letter-spacing:.5px;
-  margin-top:5px;min-height:14px;
-}
-.code-badge.valid{color:var(--green2)}
-.code-badge.invalid{color:var(--hot)}
-.pwd-wrap{position:relative}
-.pwd-wrap .form-input{padding-right:44px}
-.pwd-toggle{
-  position:absolute;right:12px;top:50%;transform:translateY(-50%);
-  background:none;border:none;cursor:pointer;
-  color:var(--chalk3);padding:4px;
-  display:flex;align-items:center;
-}
-.pwd-toggle:hover{color:var(--chalk2)}
-.reg-agree{
-  font-family:var(--mono);font-size:10px;color:var(--chalk3);
-  line-height:1.6;margin-top:16px;
-}
-.reg-agree a{color:var(--acid);text-decoration:none}
-.reg-agree a:hover{text-decoration:underline}
-.paywall-banner{
-  padding:12px 14px;
-  background:rgba(255,184,0,.06);
-  border:1px solid rgba(255,184,0,.2);
-  font-family:var(--mono);font-size:10px;
-  color:var(--gold);margin-bottom:24px;line-height:1.6;
-}
-.global-err{
-  font-family:var(--mono);font-size:10px;color:var(--hot);
-  margin-top:10px;min-height:16px;letter-spacing:.3px;
-  line-height:1.5;
-}
-.global-err a{color:var(--acid)}
-select.form-input{cursor:pointer}
-select.form-input option{background:var(--lift);color:var(--chalk)}
-@media(max-width:600px){
-  .reg-box{padding:32px 20px}
-  .reg-grid{grid-template-columns:1fr}
-}
 </style>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Pattro",
+  "url": "https://www.pattro.com",
+  "description": "Trading psychology journal. Detects your trading mistakes automatically and tells you exactly what to fix.",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "https://www.pattro.com/register",
+    "query-input": "required name=search_term_string"
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Pattro",
+  "url": "https://www.pattro.com",
+  "logo": "https://www.pattro.com/og-image.png",
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "email": "support@pattro.com",
+    "contactType": "customer support"
+  }
+}
+</script>
 </head>
 <body>
+
 <div class="scanlines"></div>
 <div class="grain"></div>
 <!-- NAV -->
@@ -1308,155 +1125,384 @@ select.form-input option{background:var(--lift);color:var(--chalk)}
   </div>
 </nav>
 
-
-<div class="page-wrap">
-<main class="page-main">
-
-<div class="reg-box">
-  <div class="auth-title">Create Account</div>
-  <div class="auth-sub">Start your 7-day free trial — cancel anytime</div>
-
-  <div id="paywall-banner" class="paywall-banner" style="display:none">
-    Your account does not have an active subscription.
-    Complete registration and payment to access Pattro.
-  </div>
-
-  <!-- Personal info -->
-  <div class="reg-section-lbl">Personal Information</div>
-  <div class="reg-grid">
-    <div class="form-group">
-      <label class="form-label" for="r-first">First Name</label>
-      <input class="form-input" id="r-first" type="text" placeholder="Jane">
-      <div class="field-err" id="err-first"></div>
-    </div>
-    <div class="form-group">
-      <label class="form-label" for="r-last">Last Name</label>
-      <input class="form-input" id="r-last" type="text" placeholder="Doe">
-      <div class="field-err" id="err-last"></div>
-    </div>
-  </div>
-  <div class="form-group" style="margin-top:14px">
-    <label class="form-label" for="r-username">Username</label>
-    <input class="form-input" id="r-username" type="text" placeholder="traderX" autocomplete="username"
-      oninput="validateUsername(this.value)">
-    <div class="field-err" id="err-username"></div>
-  </div>
-
-  <hr class="reg-divider">
-
-  <!-- Account -->
-  <div class="reg-section-lbl">Account Credentials</div>
-  <div class="form-group">
-    <label class="form-label" for="r-email">Email</label>
-    <input class="form-input" id="r-email" type="email" placeholder="you@email.com" autocomplete="email">
-    <div class="field-err" id="err-email"></div>
-  </div>
-  <div class="form-group">
-    <label class="form-label" for="r-password">Password</label>
-    <div class="pwd-wrap">
-      <input class="form-input" id="r-password" type="password" placeholder="Min. 8 characters" autocomplete="new-password">
-      <button class="pwd-toggle" type="button" onclick="togglePwd('r-password','eye-1')" tabindex="-1">
-        <svg id="eye-1" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-        </svg>
-      </button>
-    </div>
-    <div class="field-err" id="err-password"></div>
-  </div>
-  <div class="form-group">
-    <label class="form-label" for="r-password-confirm">Confirm Password</label>
-    <div class="pwd-wrap">
-      <input class="form-input" id="r-password-confirm" type="password" placeholder="Repeat password" autocomplete="new-password">
-      <button class="pwd-toggle" type="button" onclick="togglePwd('r-password-confirm','eye-2')" tabindex="-1">
-        <svg id="eye-2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-        </svg>
-      </button>
-    </div>
-    <div class="field-err" id="err-password-confirm"></div>
-  </div>
-
-  <hr class="reg-divider">
-
-  <!-- Billing -->
-  <div class="reg-section-lbl">Billing Address</div>
-  <div class="form-group">
-    <label class="form-label" for="r-country">Country</label>
-    <select class="form-input" id="r-country">
-      <option value="">Select country…</option>
-      <option value="US">United States</option>
-      <option value="MX">Mexico</option>
-      <option value="CO">Colombia</option>
-      <option value="ES">Spain</option>
-      <option value="AR">Argentina</option>
-      <option value="CA">Canada</option>
-      <option value="GB">United Kingdom</option>
-      <option value="AU">Australia</option>
-      <option value="DE">Germany</option>
-      <option value="FR">France</option>
-      <option value="BR">Brazil</option>
-      <option value="OTHER">Other</option>
-    </select>
-    <div class="field-err" id="err-country"></div>
-  </div>
-  <div class="form-group">
-    <label class="form-label" for="r-address">Street Address</label>
-    <input class="form-input" id="r-address" type="text" placeholder="123 Main St">
-  </div>
-  <div class="reg-grid" style="margin-top:14px">
-    <div class="form-group">
-      <label class="form-label" for="r-city">City</label>
-      <input class="form-input" id="r-city" type="text" placeholder="New York">
-    </div>
-    <div class="form-group">
-      <label class="form-label" for="r-zip">ZIP / Postal Code</label>
-      <input class="form-input" id="r-zip" type="text" placeholder="10001">
-    </div>
-  </div>
-  <div class="form-group" style="margin-top:14px">
-    <label class="form-label" for="r-state">State / Region</label>
-    <input class="form-input" id="r-state" type="text" placeholder="NY">
-  </div>
-
-  <hr class="reg-divider">
-
-  <!-- Promo -->
-  <div class="reg-section-lbl">Promo Code <span style="color:var(--chalk3);font-size:8px">(optional)</span></div>
-  <div class="form-group">
-    <input class="form-input" id="r-code" type="text" placeholder="LIFETIME2026"
-      style="text-transform:uppercase;letter-spacing:2px"
-      oninput="checkCode(this.value)">
-    <div class="code-badge" id="code-badge"></div>
-  </div>
-
-  <button class="btn-submit" id="continue-btn" onclick="handleRegister()" style="margin-top:20px">
-    Continue → <span id="btn-plan-label" style="opacity:.7;font-size:9px;letter-spacing:.5px"> PRO — $15/mo</span>
-  </button>
-
-  <!-- Free tier option -->
-  <div style="display:flex;align-items:center;gap:10px;margin-top:14px">
-    <div style="flex:1;height:1px;background:var(--wire)"></div>
-    <span style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:.5px">OR</span>
-    <div style="flex:1;height:1px;background:var(--wire)"></div>
-  </div>
-  <button id="free-btn" onclick="handleFreeRegister()" style="width:100%;margin-top:14px;padding:11px;background:transparent;border:1px solid var(--wire2);color:var(--text2);font-family:var(--mono);font-size:11px;cursor:pointer;transition:border-color .2s">
-    Start free — 10 trades, no credit card
-  </button>
-
-  <div id="global-error" class="global-err"></div>
-
-  <div class="reg-agree">
-    By continuing you agree to our
-    <a href="#" onclick="showLegal('terms',null);return false">Terms of Service</a>
-    and <a href="#" onclick="showLegal('privacy',null);return false">Privacy Policy</a>.
-    Payments via Paddle — $15/month · Cancel anytime.
-  </div>
-  <div class="auth-link" style="margin-top:16px">
-    Already have an account? <a href="/login">Sign in →</a>
+<!-- TICKER -->
+<div class="ticker">
+  <div class="ticker-inner">
+    <span class="ti">Mental Score <span class="pos">84</span></span>
+    <span class="ti">Revenge Trades <span class="neg">0×</span></span>
+    <span class="ti">Win Rate <span class="pos">64%</span></span>
+    <span class="ti">FOMO detected <span class="neg">3×</span></span>
+    <span class="ti">Best hour <span class="pos">9am</span></span>
+    <span class="ti">Discipline <span class="pos">91</span></span>
+    <span class="ti">Pattern (Pattro) <span class="neg">Impulse</span></span>
+    <span class="ti">R:R real <span class="pos">2.3</span></span>
+    <span class="ti">Mental Score <span class="pos">84</span></span>
+    <span class="ti">Revenge Trades <span class="neg">0×</span></span>
+    <span class="ti">Win Rate <span class="pos">64%</span></span>
+    <span class="ti">FOMO detected <span class="neg">3×</span></span>
+    <span class="ti">Best hour <span class="pos">9am</span></span>
+    <span class="ti">Discipline <span class="pos">91</span></span>
+    <span class="ti">Pattern (Pattro) <span class="neg">Impulse</span></span>
+    <span class="ti">R:R real <span class="pos">2.3</span></span>
   </div>
 </div>
-</main>
+
+<!-- HERO -->
+<div class="hero-outer">
+<div class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-light"></div>
+
+  <div class="hero-left">
+    <div class="hero-sys-tag fu d1">
+      <span class="sys-dot"></span>
+      PATTRO ON
+    </div>
+    <h1 class="fu d2" data-i18n="hero_h1">
+      STOP<br>LOSING MONEY<br>
+      <span class="line-2">because of your</span>
+      <span class="line-3">PSYCHOLOGY.</span>
+    </h1>
+    <p class="hero-sub fu d3" data-i18n="hero_sub">
+      Pattro detects your trading mistakes automatically
+      and tells you <strong>exactly what to fix</strong> —
+      revenge trading, FOMO, overtrading, emotional patterns.
+      Before they cost you another trade.
+    </p>
+    <div class="hero-btns fu d4">
+      <a href="/register" class="btn-primary" data-i18n="hero_cta">Start analyzing my trades →</a>
+      <a href="#how" class="btn-ghost" data-i18n="hero_cta2">See how it works</a>
+    </div>
+    <div class="hero-trust fu d5"><span style="opacity:.6">🔒</span><span data-i18n="cta_sub">$15/month · Cancel anytime</span></div>
+  </div>
+
+  <div class="hero-right fu d6">
+    <div class="profile-demo">
+      <div class="card-shimmer" aria-hidden="true"></div>
+      <div class="card-bg-data" aria-hidden="true">
+        <div>0.271 // SELL</div><div>0.684 // BUY</div><div>−$373 // LOSS</div>
+        <div>9:03am // ENTRY</div><div>0.271 // SELL</div><div>FRUSTRAT</div>
+        <div>0.684 // BUY</div><div>−$373 // LOSS</div><div>9:03am</div>
+        <div>0.271 // SELL</div><div>0.684 // BUY</div><div>−$373 // LOSS</div>
+        <div>9:03am // ENTRY</div><div>FRUSTRAT</div><div>0.684 // BUY</div>
+      </div>
+      <div class="demo-hdr">
+        <div class="demo-title" data-i18n="demo_title">Your Trader Profile</div>
+        <div class="demo-badge" data-i18n="demo_badge">⚠ Detected</div>
+      </div>
+      <div class="pattern-card">
+        <div class="pattern-label" data-i18n="demo_pattern_label">⚡ Dominant pattern (Pattro)</div>
+        <div class="pattern-title" data-i18n="demo_pattern_title">Revenge Trading</div>
+        <div class="pattern-stat" data-i18n="demo_pattern_stat">You enter <strong>68% of trades</strong> within <strong style="color:var(--hot)">3 minutes</strong> after a loss</div>
+      </div>
+      <div class="pills">
+        <div class="pill">
+          <div class="pill-lbl" data-i18n="demo_loss_label">Loss after revenge</div>
+          <div class="pill-val red">-$373</div>
+          <div class="pill-sub" data-i18n="demo_loss_avg">avg per trade</div>
+        </div>
+        <div class="pill">
+          <div class="pill-lbl" data-i18n="demo_wr_label">Win rate</div>
+          <div class="pill-val amber">27%</div>
+          <div class="pill-sub" data-i18n="demo_wr_sub">on revenge trades</div>
+        </div>
+        <div class="pill">
+          <div class="pill-lbl" data-i18n="demo_hour_label">Best hour</div>
+          <div class="pill-val green">9am</div>
+          <div class="pill-sub" data-i18n="demo_hour_avg">+$136 avg</div>
+        </div>
+      </div>
+      <div class="action-card">
+        <div class="action-ico">🎯</div>
+        <div class="action-txt">
+          <strong data-i18n="demo_action">Today's action:</strong> Stop trading after 2 consecutive losses. Your data shows a 89% chance the next trade will also lose.
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
+</div><!-- /hero-outer -->
+
+<!-- MARQUEE DIVIDER -->
+<div class="marquee-div">
+  <div class="marquee-track">
+    <span class="marquee-item">Your mind is the market</span>
+    <span class="marquee-item">Pattern detected</span>
+    <span class="marquee-item">Stop the bleed</span>
+    <span class="marquee-item">Know yourself</span>
+    <span class="marquee-item">Mental score</span>
+    <span class="marquee-item">Discipline wins</span>
+    <span class="marquee-item">Your mind is the market</span>
+    <span class="marquee-item">Pattern detected</span>
+    <span class="marquee-item">Stop the bleed</span>
+    <span class="marquee-item">Know yourself</span>
+    <span class="marquee-item">Mental score</span>
+    <span class="marquee-item">Discipline wins</span>
+  </div>
+</div>
+
+<!-- PAIN SECTION -->
+<div class="pain-section">
+  <div class="pain-ghost">MIND</div>
+  <div class="pain-inner">
+    <div class="pain-left">
+      <div class="pain-kicker fu" data-i18n="pain_label">The real problem</div>
+      <h2 class="fu d2">
+        YOU DON'T<br>LOSE<br><span class="h2-sub">BECAUSE OF YOUR</span><span class="serif-line"><em>strategy.</em></span>
+      </h2>
+      <p class="fu d3" data-i18n="pain_p">Most traders have a solid edge. They lose because of what happens between trades — the decisions driven by fear, frustration, and impulse that they can't see in real time.</p>
+      <div class="pain-stats fu d4">
+        <div class="p-stat">
+          <div class="p-stat-val" data-count="80">80%</div>
+          <div class="p-stat-lbl" data-i18n="pain_s1_lbl">of trading losses are behavioral, not strategic</div>
+        </div>
+        <div class="p-stat">
+          <div class="p-stat-val">3×</div>
+          <div class="p-stat-lbl" data-i18n="pain_s2_lbl">worse results when trading after a loss</div>
+        </div>
+        <div class="p-stat">
+          <div class="p-stat-val" data-count="68">68%</div>
+          <div class="p-stat-lbl" data-i18n="pain_s3_lbl">of traders repeat the same mistake every week</div>
+        </div>
+        <div class="p-stat">
+          <div class="p-stat-val">0</div>
+          <div class="p-stat-lbl" data-i18n="pain_s4_lbl">tools that tell you exactly what your pattern is</div>
+        </div>
+      </div>
+    </div>
+    <div class="loss-list fu d3">
+      <div class="loss-item">
+        <div class="loss-ico">🔄</div>
+        <div class="loss-copy">
+          <h4 data-i18n="loss1_title">Revenge Trading</h4>
+          <p data-i18n="loss1_p">After a loss you enter the next trade too fast, too big, without a plan. Pattro detects this in real time and alerts you before the next trade.</p>
+        </div>
+      </div>
+      <div class="loss-item">
+        <div class="loss-ico">😰</div>
+        <div class="loss-copy">
+          <h4 data-i18n="loss2_title">Emotional Trading</h4>
+          <p data-i18n="loss2_p">When anxious or frustrated your win rate drops dramatically. Pattro shows you the exact dollar cost of trading in each emotional state.</p>
+        </div>
+      </div>
+      <div class="loss-item">
+        <div class="loss-ico">📈</div>
+        <div class="loss-copy">
+          <h4 data-i18n="loss3_title">Overtrading</h4>
+          <p data-i18n="loss3_p">Too many trades dilute your edge. Pattro tracks your optimal trading window — by hour, by session, by emotional state — and flags when you exceed it.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- INSIGHTS -->
+<div class="insight-section">
+  <div class="insight-inner">
+    <div class="insight-hdr fu">
+      <div class="insight-hdr-grid">
+        <div class="s-kicker" data-i18n="insights_label_kicker">What Pattro tells you</div>
+        <h2 data-i18n="insights_h2">SPECIFIC<br>INSIGHTS.<br><span class="italic-line">Not generic advice.</span></h2>
+        <p data-i18n="insights_p">These are the kind of insights your data generates — based on your numbers, your patterns, your behavior.</p>
+      </div>
+    </div>
+    <div class="insights-grid">
+      <div class="ic hot fu">
+        <div class="ic-number">01</div>
+        <div class="ic-type" data-i18n="ic1_type">⚡ Pattern detected</div>
+        <span class="ic-icon">🔄</span>
+        <div class="ic-title" data-i18n="ic1_title">Your revenge trading costs $250</div>
+        <div class="ic-text" data-i18n="ic1_text">You enter <strong>73 trades</strong> within 3 minutes after a loss. Win rate on those: <span class="bad">27%</span>. Average loss: <span class="bad">-$373</span> per trade. Your normal average: -$44.</div>
+      </div>
+      <div class="ic warm fu d2">
+        <div class="ic-number">02</div>
+        <div class="ic-type" data-i18n="ic2_type">◷ Time pattern (Pattro)</div>
+        <span class="ic-icon">🕐</span>
+        <div class="ic-title" data-i18n="ic2_title">Stop trading after 11am</div>
+        <div class="ic-text" data-i18n="ic2_text">Your best hour is <strong>9am</strong> (avg <span class="good">+$136</span> per trade, 46% WR). After 11am your average drops to <span class="bad">-$45</span>. You're leaving money on the table every afternoon.</div>
+      </div>
+      <div class="ic cool fu d3">
+        <div class="ic-number">03</div>
+        <div class="ic-type" data-i18n="ic3_type">◈ Emotional cost</div>
+        <span class="ic-icon">😤</span>
+        <div class="ic-title" data-i18n="ic3_title">Frustrated = -$88 avg</div>
+        <div class="ic-text" data-i18n="ic3_text">When trading frustrated your average is <span class="bad">-$88</span> per trade across 54 trades. When calm: <span class="good">+$31</span>. The same market, a completely different result.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PROFILE SECTION -->
+<div class="profile-section" id="how">
+  <div class="profile-ghost">KNOW</div>
+  <div class="profile-inner">
+    <div class="big-profile fu">
+      <div class="bp-header">
+        <div>
+          <div class="bp-name">Trader Profile</div>
+          <div class="bp-sub" data-i18n="bp_subtitle">Impulsive · High frequency · Emotional</div>
+        </div>
+        <div class="bp-score-blk">
+          <div class="bp-score" id="mental-score">61</div>
+          <div class="bp-score-lbl" data-i18n="bp_score_lbl">Mental Score</div>
+        </div>
+      </div>
+      <div class="bp-rows">
+        <div class="bp-row"><div class="bp-row-lbl" data-i18n="bp_wr">Win Rate</div><div class="bp-row-val" style="color:var(--hot)">30%</div></div>
+        <div class="bp-row"><div class="bp-row-lbl" data-i18n="bp_error">Main error</div><div class="bp-row-val" style="color:var(--hot)">Revenge trading (73×)</div></div>
+        <div class="bp-row"><div class="bp-row-lbl" data-i18n="bp_hour">Best hour</div><div class="bp-row-val" style="color:var(--acid)">9am (+$5,585 total)</div></div>
+        <div class="bp-row"><div class="bp-row-lbl" data-i18n="bp_emotion">Worst emotion</div><div class="bp-row-val" style="color:var(--hot)">Frustrated (-$88/trade)</div></div>
+        <div class="bp-row"><div class="bp-row-lbl" data-i18n="bp_disc">Discipline</div><div class="bp-row-val" style="color:var(--gold)">65 / 100</div></div>
+      </div>
+      <div class="bp-action">
+        <div class="bp-action-lbl" data-i18n="bp_coach_title">🎯 AI Coach recommendation</div>
+        <div class="bp-action-txt" data-i18n="bp_coach_text">Stop trading after 2 consecutive losses. Your next trade has an 89% chance of losing.</div>
+      </div>
+    </div>
+
+    <div class="profile-right fu d3">
+      <div class="s-kicker" data-i18n="profile_label">Your profile · Automatically</div>
+      <h2 data-i18n="profile_h2">KNOW<br>EXACTLY<br>WHO YOU ARE.</h2>
+      <p data-i18n="profile_p">Pattro builds your psychological profile from your trades. Not a questionnaire — your real behavior, patterns and emotional fingerprint.</p>
+      <div class="pf-list">
+        <div class="pf-item"><div class="pf-icon"></div><span data-i18n="pf1">Dominant pattern (Pattro) detected automatically</span></div>
+        <div class="pf-item"><div class="pf-icon"></div><span data-i18n="pf2">Mental Score updated after every trade</span></div>
+        <div class="pf-item"><div class="pf-icon"></div><span data-i18n="pf3">Best and worst trading hours from your data</span></div>
+        <div class="pf-item"><div class="pf-icon"></div><span data-i18n="pf4">Emotional cost per emotion, in real dollars</span></div>
+        <div class="pf-item"><div class="pf-icon"></div><span data-i18n="pf5">AI Coach weekly diagnosis and action plan</span></div>
+        <div class="pf-item"><div class="pf-icon"></div><span data-i18n="pf6">Red/Yellow/Green day — know before you trade</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<div class="how-section">
+  <div class="how-inner">
+    <div class="how-hdr fu">
+      <div class="s-kicker" data-i18n="how_label" style="justify-content:center">How it works</div>
+      <h2 data-i18n="how_h2_short">FROM TRADE<br>TO INSIGHT.</h2>
+      <p data-i18n="how_p">Four steps. Zero friction. No spreadsheets.</p>
+    </div>
+    <div class="steps-grid">
+      <div class="step-card fu">
+        <div class="step-num">01</div>
+        <h3 data-i18n="step1_h">Connect or log your trades</h3>
+        <p data-i18n="step1_p">Install the Chrome extension for TopstepX and trades are captured automatically — ticker, P&L, entry, exit. Or log manually in 10 seconds with the + Log Trade button.</p>
+      </div>
+      <div class="step-card fu d2">
+        <div class="step-num">02</div>
+        <h3 data-i18n="step2_h">Tag your emotion in 1 click</h3>
+        <p data-i18n="step2_p">After each trade, select how you felt. Calm, anxious, frustrated, confident. That single data point unlocks your emotional P&L analysis over time.</p>
+      </div>
+      <div class="step-card fu d3">
+        <div class="step-num">03</div>
+        <h3 data-i18n="step3_h">Pattro detects your patterns</h3>
+        <p data-i18n="step3_p">Your Mental Score, Discipline Score and Execution Score update in real time. With 20+ trades the AI Coach identifies your dominant pattern (Pattro) — the specific behavior that's costing you the most.</p>
+      </div>
+      <div class="step-card fu d4">
+        <div class="step-num">04</div>
+        <h3 data-i18n="step4_h">Get a concrete action for today</h3>
+        <p data-i18n="step4_p">Not generic advice. Specific instructions based on your data: stop at this hour, this emotion, after this many losses. Measurable improvement session by session.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- COMPARISON -->
+<div class="cmp-section">
+  <div class="cmp-inner">
+    <div class="cmp-hdr fu">
+      <div class="s-kicker muted" data-i18n="cmp_label">Why Pattro</div>
+      <h2 data-i18n="cmp_h2">NOT JUST<br>ANOTHER<br>JOURNAL.</h2>
+      <p data-i18n="cmp_p">Most tools tell you what happened.<br>Pattro tells you why — and what to do about it.</p>
+    </div>
+    <div class="cmp-grid fu d2">
+      <div class="cmp-col bad">
+        <div class="cmp-col-hdr">Manual journal / Other tools</div>
+        <div class="cmp-col-body">
+          <div class="cmp-row" data-i18n="cmp_bad1">Takes 10+ minutes after each session</div>
+          <div class="cmp-row" data-i18n="cmp_bad2">No behavioral analysis</div>
+          <div class="cmp-row" data-i18n="cmp_bad3">No emotional pattern detection</div>
+          <div class="cmp-row" data-i18n="cmp_bad4">Numbers only — no psychology</div>
+          <div class="cmp-row" data-i18n="cmp_bad5">No real-time alerts</div>
+          <div class="cmp-row" data-i18n="cmp_bad6">No AI-generated action plan</div>
+        </div>
+      </div>
+      <div class="cmp-col good">
+        <div class="cmp-col-hdr">Pattro</div>
+        <div class="cmp-col-body">
+          <div class="cmp-row" data-i18n="cmp_good1">Automatic capture — 0 minutes</div>
+          <div class="cmp-row" data-i18n="cmp_good2">Full behavioral analysis</div>
+          <div class="cmp-row" data-i18n="cmp_good3">Emotion × P&L correlation</div>
+          <div class="cmp-row" data-i18n="cmp_good4">Mental Score + psychology insights</div>
+          <div class="cmp-row" data-i18n="cmp_good5">Real-time tilt & revenge alerts</div>
+          <div class="cmp-row" data-i18n="cmp_good6">Weekly AI Coach diagnosis</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MET STRIP -->
+<div class="met-strip">
+  <div class="met-inner">
+    <div class="met fu"><div class="met-val" data-target="20" data-suffix="+">20+</div><div class="met-lbl" data-i18n="met1">Metrics tracked</div></div>
+    <div class="met fu d2"><div class="met-val">1</div><div class="met-lbl" data-i18n="met2">Click to log emotion</div></div>
+    <div class="met fu d3"><div class="met-val">0</div><div class="met-lbl" data-i18n="met3">Spreadsheets needed</div></div>
+    <div class="met fu d4"><div class="met-val">∞</div><div class="met-lbl" data-i18n="met4">Trades analyzable</div></div>
+  </div>
+</div>
+
+<!-- PRICING -->
+<div class="pricing-section" id="pricing">
+  <div class="pricing-inner">
+    <div class="pricing-left fu">
+      <div class="s-kicker" data-i18n="pricing_label">Early access</div>
+      <h2>SIMPLE PRICING.<br>NO SURPRISES.</h2>
+      <p data-i18n="pricing_p">We already have <strong>300+ traders</strong> using Pattro in early access. The price is locked for life for founding members.</p>
+      <div class="pp-list">
+        <div class="pp"><span class="pp-n">01</span><span data-i18n="pp1">First 200 members of 2026 lock the price at $15/month forever. If pricing changes later, you keep yours.</span></div>
+        <div class="pp"><span class="pp-n">02</span><span data-i18n="pp2">Direct access to give feedback. Early members define what we build next.</span></div>
+        <div class="pp"><span class="pp-n">03</span><span data-i18n="pp3">Cancel anytime. No contracts, no commitments.</span></div>
+      </div>
+    </div>
+    <div class="pricing-card fu d3">
+      <div class="price-badge">🔒 Price locked forever</div>
+      <div class="price-amount">$15</div>
+      <div class="price-period">/ month · billed monthly</div>
+      <div class="price-lock" data-i18n="price_lock">⚡ Early access pricing — lock it before it increases</div>
+      <div class="price-feats">
+        <div class="price-feat"><span class="feat-check">✓</span><span data-i18n="pf_1">Mental Score + Discipline + Execution</span></div>
+        <div class="price-feat"><span class="feat-check">✓</span><span data-i18n="pf_2">AI Coach weekly psychological analysis</span></div>
+        <div class="price-feat"><span class="feat-check">✓</span><span data-i18n="pf_3">Automatic capture (TopstepX Chrome extension)</span></div>
+        <div class="price-feat"><span class="feat-check">✓</span><span>Real-time tilt & revenge trade alerts</span></div>
+        <div class="price-feat"><span class="feat-check">✓</span><span>Emotion × P&L correlation</span></div>
+        <div class="price-feat"><span class="feat-check">✓</span><span>Unlimited trades & accounts</span></div>
+        <div class="price-feat"><span class="feat-check">✓</span><span data-i18n="pf_7">Color Day + pre-session check</span></div>
+      </div>
+      <a href="/register" class="price-cta" data-i18n="price_cta">Start for $15/month →</a>
+      <a href="/register" style="display:block;text-align:center;padding:10px;font-family:var(--mono);font-size:11px;color:var(--chalk3);text-decoration:none;margin-top:8px">or start free — 10 trades, no card →</a>
+      <div class="price-sub" data-i18n="price_sub">Cancel anytime</div>
+    </div>
+  </div>
+</div>
+
+<!-- CTA BAND -->
+<div class="cta-band">
+  <div class="cta-bg-word">STOP.</div>
+  <div class="cta-line"></div>
+  <div class="cta-inner fu">
+    <h2 data-i18n="cta_h2">
+      YOUR NEXT<br>LOSING STREAK<br>
+      <span class="italic-accent">is preventable.</span>
+    </h2>
+    <p>Most traders know <em>what</em> they do wrong. Pattro shows you <strong style="color:var(--chalk)">when, how, and why</strong> — so you can actually stop.</p>
+    <a href="/register" class="btn-primary" data-i18n="cta_btn">Start analyzing my trades →</a>
+    <div class="cta-trust" data-i18n="cta_sub">$15/month · Cancel anytime · <a href="/register" style="color:var(--acid);text-decoration:none">Free plan available</a></div>
+  </div>
+</div>
+
 <!-- FOOTER -->
 <footer>
   <div class="footer-logo">
@@ -1471,11 +1517,10 @@ select.form-input option{background:var(--lift);color:var(--chalk)}
     <a href="/privacy">Privacy</a>
     <a href="/refund">Refund Policy</a>
     <a href="/precios">Pricing</a>
-    <a href="/cdn-cgi/l/email-protection#63101613130c11172313021717110c4d000c0e">Support</a>
+    <a href="/cdn-cgi/l/email-protection#d8abada8a8b7aaac98a8b9acacaab7f6bbb7b5">Support</a>
   </div>
   <div class="footer-copy">© 2026 Pattro</div>
 </footer>
-
 
 <!-- LEGAL -->
 <div class="legal-overlay" id="legal-overlay">
@@ -1563,7 +1608,10 @@ var TRANSLATIONS={
     cmp_bad3:'No emotional pattern detection',cmp_bad4:'Numbers only — no psychology',
     cmp_bad5:'No real-time alerts',cmp_bad6:'No AI-generated action plan',
     cmp_good1:'Automatic capture — 0 minutes',cmp_good2:'Full behavioral analysis',
-    cmp_good4:'Mental Score + psychology insights',cmp_good6:'Weekly AI Coach diagnosis',
+    cmp_good3:'Emotion × P&L correlation',
+    cmp_good4:'Mental Score + psychology insights',
+    cmp_good5:'Real-time tilt & revenge alerts',
+    cmp_good6:'Weekly AI Coach diagnosis',
     met1:'Metrics tracked',met2:'Click to log emotion',met3:'Spreadsheets needed',met4:'Trades analyzable',
     pricing_label:'Early access',pricing_h2_short:'SIMPLE PRICING.<br>NO SURPRISES.',
     pricing_p:'We already have <strong>300+ traders</strong> using Pattro in early access. The price is locked for life for founding members.',
@@ -1637,7 +1685,10 @@ var TRANSLATIONS={
     cmp_bad3:'Sin detección de patrones emocionales',cmp_bad4:'Solo números — sin psicología',
     cmp_bad5:'Sin alertas en tiempo real',cmp_bad6:'Sin plan de acción con IA',
     cmp_good1:'Captura automática — 0 minutos',cmp_good2:'Análisis conductual completo',
-    cmp_good4:'Mental Score + insights psicológicos',cmp_good6:'Coach IA — diagnóstico semanal',
+    cmp_good3:'Correlación Emoción × P&L',
+    cmp_good4:'Mental Score + insights psicológicos',
+    cmp_good5:'Alertas en tiempo real de tilt y revenge',
+    cmp_good6:'Coach IA — diagnóstico semanal',
     met1:'Métricas rastreadas',met2:'Clic para registrar emoción',met3:'Hojas de cálculo necesarias',met4:'Trades analizables',
     pricing_label:'Acceso temprano',pricing_h2_short:'PRECIO SIMPLE.<br>SIN SORPRESAS.',
     pricing_p:'Ya tenemos <strong>300+ traders</strong> usando Pattro en acceso temprano. El precio queda bloqueado de por vida para los miembros fundadores.',
@@ -1716,404 +1767,4 @@ function showLegal(tab,btn){
   document.getElementById('legal-overlay').classList.add('open');
 }
 function closeLegal(){document.getElementById('legal-overlay').classList.remove('open')}
-document.getElementById('legal-overlay').addEventListener('click',function(e){if(e.target===this)closeLegal()});
-['terms','privacy','refund'].forEach(function(slug){
-  document.querySelectorAll('footer a[href="/'+slug+'"]').forEach(function(a){
-    a.addEventListener('click',function(e){e.preventDefault();showLegal(slug)});
-  });
-});
-</script>
-<script>
-
-function toggleLangMenu(){var dd=document.getElementById('lang-dropdown');if(dd)dd.classList.toggle('open');}
-document.addEventListener('click',function(e){var w=document.querySelector('.lang-wrap');if(w&&!w.contains(e.target)){var dd=document.getElementById('lang-dropdown');if(dd)dd.classList.remove('open');}});
-function setLang(l){document.documentElement.lang=l;var lb=document.getElementById('lang-label');if(lb)lb.textContent=l.toUpperCase();document.getElementById('lang-dropdown').classList.remove('open');try{localStorage.setItem('pattro_lang',l);}catch(e){}}
-function showLegal(tab,btn){document.querySelectorAll('.legal-tab').forEach(function(t){t.classList.remove('active');});if(btn)btn.classList.add('active');document.getElementById('legal-body').innerHTML=legalContent[tab]||'';document.getElementById('legal-overlay').classList.add('open');}
-function closeLegal(){document.getElementById('legal-overlay').classList.remove('open');}
-document.getElementById('legal-overlay').addEventListener('click',function(e){if(e.target===this)closeLegal();});
-['terms','privacy','refund'].forEach(function(slug){document.querySelectorAll('footer a[href="/'+slug+'"]').forEach(function(a){a.addEventListener('click',function(e){e.preventDefault();showLegal(slug);});});});
-var legalContent={
-  terms:'<h3>Terms of Service</h3><p>By using Pattro you agree to these terms. Pattro is a trading psychology tool for educational and analytical purposes only. It does not constitute financial advice.</p><h3>Usage</h3><p>You may not use Pattro for any unlawful purpose. We reserve the right to terminate accounts that violate our policies.</p>',
-  privacy:'<h3>Privacy Policy</h3><p>We collect only what we need to provide the service. Your trading data is encrypted and never sold to third parties.</p><h3>Data Use</h3><p>We use your data solely to provide Pattro\'s analytics and coaching features.</p>',
-  refund:'<h3>Refund Policy</h3><p>We offer a 7-day money-back guarantee. Contact support@pattro.com within the first 7 days for a full refund.</p><h3>Cancellation</h3><p>You may cancel anytime. Cancellation takes effect at the end of your billing period.</p>'
-};
-const SUPABASE_URL = 'https://qljuusxpzsiqxnpfpdgg.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFsanV1c3hwenNpcXhucGZwZGdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1OTQ5NzUsImV4cCI6MjA4ODE3MDk3NX0.rUEwuG4zFE_EpAM4s3hWqVF81xiW9q_MSwQKKXYZmlk';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-// Redirect if already logged in with active plan
-sb.auth.getSession().then(async function({data}) {
-  if (data.session) {
-    var { data: profile } = await sb.from('profiles')
-      .select('plan').eq('id', data.session.user.id).single();
-    if (profile && (profile.plan === 'pro' || profile.plan === 'lifetime')) {
-      window.location.href = '/dashboard';
-    }
-  }
-});
-
-// Show paywall message if redirected from app
-if (window.location.search.includes('paywall=1')) {
-  var box = document.querySelector('.box');
-  if (box) {
-    var banner = document.createElement('div');
-    banner.style.cssText = 'padding:12px 14px;background:rgba(224,152,64,0.1);border:1px solid rgba(224,152,64,0.25);border-radius:8px;font-size:11px;color:#e09840;margin-bottom:20px;line-height:1.6';
-    banner.textContent = 'Your account does not have an active subscription. Complete registration and payment to access Pattro.';
-    box.insertBefore(banner, box.firstChild);
-  }
-}
-
-var validCode = null;
-var codeCheckTimer = null;
-
-async function checkCode(val) {
-  var badge = document.getElementById('code-badge');
-  if (!val || val.length < 3) { badge.className = 'code-badge'; badge.textContent = ''; validCode = null; return; }
-
-  clearTimeout(codeCheckTimer);
-  codeCheckTimer = setTimeout(async function() {
-    var { data, error } = await sb.from('promo_codes')
-      .select('id, code, used')
-      .eq('code', val.toUpperCase())
-      .single();
-
-    if (error || !data) {
-      badge.className = 'code-badge invalid';
-      badge.textContent = '✗ Invalid code';
-      validCode = null;
-    } else if (data.used) {
-      badge.className = 'code-badge invalid';
-      badge.textContent = '✗ This code has already been used';
-      validCode = null;
-    } else {
-      badge.className = 'code-badge valid';
-      badge.textContent = '✓ Valid code — Free lifetime access!';
-      validCode = data.id;
-    }
-  }, 600);
-}
-
-function validate() {
-  var ok = true;
-  var fields = [
-    { id: 'r-email',    err: 'err-email',    msg: 'Email is required',    check: function(v){ return v && v.includes('@'); }, emsg: 'Enter a valid email' },
-    { id: 'r-password', err: 'err-password', msg: 'Password is required', check: function(v){ return v && v.length >= 8; },   emsg: 'Password must be at least 8 characters' },
-    { id: 'r-password-confirm', err: 'err-password-confirm', msg: 'Please confirm your password', check: function(v){ return v === document.getElementById('r-password').value; }, emsg: 'Passwords do not match' },
-    { id: 'r-username', err: 'err-username', msg: 'Username is required', check: function(v){ return v && v.length >= 3 && /^[a-zA-Z0-9_-]+$/.test(v); }, emsg: 'Username must be at least 3 characters and can only contain letters, numbers, _ and -' },
-    { id: 'r-first',    err: 'err-first',    msg: 'First name is required', check: function(v){ return !!v; }, emsg: 'First name is required' },
-    { id: 'r-last',     err: 'err-last',     msg: 'Last name is required',  check: function(v){ return !!v; }, emsg: 'Last name is required' },
-    { id: 'r-country',  err: 'err-country',  msg: 'Please select a country', check: function(v){ return !!v; }, emsg: 'Please select a country' },
-  ];
-  fields.forEach(function(f) {
-    var val = document.getElementById(f.id).value.trim();
-    var errEl = document.getElementById(f.err);
-    if (!f.check(val)) { errEl.textContent = f.emsg; ok = false; }
-    else { errEl.textContent = ''; }
-  });
-  return ok;
-}
-
-async function handleRegister() {
-  var errEl = document.getElementById('global-error');
-  var btn   = document.getElementById('continue-btn');
-  errEl.textContent = '';
-
-  if (!validate()) {
-    errEl.textContent = 'Please review the fields above.';
-    errEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    return;
-  }
-
-  var email    = document.getElementById('r-email').value.trim();
-  var password        = document.getElementById('r-password').value;
-  var passwordConfirm = document.getElementById('r-password-confirm').value;
-  var username = document.getElementById('r-username').value.trim();
-  var first    = document.getElementById('r-first').value.trim();
-  var last     = document.getElementById('r-last').value.trim();
-  var country  = document.getElementById('r-country').value;
-  var address  = document.getElementById('r-address').value.trim();
-  var city     = document.getElementById('r-city').value.trim();
-  var zip      = document.getElementById('r-zip').value.trim();
-  var state    = document.getElementById('r-state').value.trim();
-  var code     = document.getElementById('r-code').value.trim().toUpperCase();
-  var fullName = first + ' ' + last;
-
-  btn.disabled = true;
-  btn.textContent = 'Checking...';
-
-  // ── PROMO CODE PATH — free lifetime access ──
-  if (validCode) {
-    btn.textContent = 'Creating account...';
-
-    var { data: authData, error: authError } = await sb.auth.signUp({ email, password });
-    if (authError) {
-      if (authError.message && authError.message.toLowerCase().includes('already registered')) {
-        errEl.innerHTML = 'This email is already registered. <a href="/login" style="color:var(--teal)">Log in instead →</a>';
-      } else {
-        errEl.textContent = authError.message;
-      }
-      btn.disabled = false; btn.textContent = 'Continue';
-      return;
-    }
-
-    var userId = authData.user.id;
-
-    // Mark promo code as used
-    await sb.from('promo_codes').update({
-      used: true,
-      used_by: userId,
-      used_at: new Date().toISOString()
-    }).eq('id', validCode);
-
-    // Save profile with free/lifetime plan
-    await sb.from('profiles').upsert({
-      id:               userId,
-      email:            email,
-      username:         username,
-      full_name:        fullName,
-      legal_first_name: first,
-      legal_last_name:  last,
-      country:          country,
-      street_address:   address,
-      city:             city,
-      zip_code:         zip,
-      state_region:     state,
-      referral_code:    code || null,
-      plan:             'free',
-      plan_expires_at:  null
-    });
-
-    // Send welcome email
-    try {
-      fetch('/api/welcome-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email, name: fullName })
-      });
-    } catch(e) {}
-
-    btn.textContent = '✓ Access granted!';
-    setTimeout(function() {
-      window.location.href = '/login?registered=1&plan=lifetime';
-    }, 1200);
-    return;
-  }
-
-  // ── PAYMENT PATH — Paddle first, account after ──
-  btn.textContent = 'Opening payment...';
-
-  // Fetch Paddle config from server
-  let paddleCfg;
-  try {
-    const cfgResp = await fetch('/api/paddle-config');
-    paddleCfg = await cfgResp.json();
-    if (!paddleCfg.token || !paddleCfg.priceId) throw new Error('Missing config');
-  } catch(e) {
-    errEl.textContent = 'Payment system unavailable. Please try again.';
-    btn.disabled = false; btn.textContent = 'Continue';
-    return;
-  }
-
-  // Store form data to use after payment completes
-  window._pendingRegistration = {
-    email, password, username, fullName,
-    first, last, country, address, city, zip, state
-  };
-
-  // Initialize Paddle.js
-  Paddle.Initialize({
-    token: paddleCfg.token,
-    eventCallback: async function(data) {
-
-      if (data.name === 'checkout.completed') {
-        var pending = window._pendingRegistration;
-        if (!pending) return;
-        window._pendingRegistration = null;
-
-        // ── NOW create the Supabase account ──
-        var { data: authData, error: authError } = await sb.auth.signUp({
-          email:    pending.email,
-          password: pending.password
-        });
-
-        if (authError) {
-          // Account already exists — just log them in and redirect
-          window.location.href = '/dashboard?payment=success';
-          return;
-        }
-
-        var userId = authData.user.id;
-
-        // Calculate expiry 1 month from now
-        var expires = new Date();
-        expires.setMonth(expires.getMonth() + 1);
-
-        // Save profile with pro plan
-        await sb.from('profiles').upsert({
-          id:               userId,
-          email:            pending.email,
-          username:         pending.username,
-          full_name:        pending.fullName,
-          legal_first_name: pending.first,
-          legal_last_name:  pending.last,
-          country:          pending.country,
-          street_address:   pending.address,
-          city:             pending.city,
-          zip_code:         pending.zip,
-          state_region:     pending.state,
-          plan:             'pro',
-          plan_expires_at:  expires.toISOString()
-        });
-
-        // Send welcome email
-        try {
-          fetch('/api/welcome-email', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: pending.email, name: pending.fullName })
-          });
-        } catch(e) {}
-
-        // Link user_id to Paddle for future webhook events
-        try {
-          var subId = data.data && data.data.subscription_id;
-          if (subId) fetch('/api/link-paddle-user', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ user_id: userId, subscription_id: subId, email: pending.email })
-          });
-        } catch(e) {}
-
-        window.location.href = '/dashboard?payment=success';
-      }
-
-      if (data.name === 'checkout.closed') {
-        // User closed without paying — no account created
-        btn.disabled = false;
-        btn.textContent = 'Continue';
-        errEl.textContent = 'Payment was not completed. No account has been created.';
-      }
-
-      if (data.name === 'checkout.error') {
-        btn.disabled = false;
-        btn.textContent = 'Continue';
-        errEl.textContent = 'Payment error. Please try again.';
-      }
-    }
-  });
-
-  // Open Paddle checkout overlay
-  Paddle.Checkout.open({
-    items: [{ priceId: paddleCfg.priceId, quantity: 1 }],
-    customer: { email: email },
-    customData: { email: email },
-    settings: {
-      successUrl:  'https://www.pattro.com/dashboard?payment=success',
-      displayMode: 'overlay',
-      theme:       'dark',
-      locale:      'en'
-    }
-  });
-
-  btn.disabled = false;
-  btn.textContent = 'Continue';
-}
-
-
-
-
-// ── FREE REGISTRATION ──
-async function handleFreeRegister() {
-  var errEl = document.getElementById('global-error');
-  var btn   = document.getElementById('free-btn');
-  errEl.textContent = '';
-
-  if (!validate()) {
-    errEl.textContent = 'Please fix the errors above before continuing.';
-    errEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    return;
-  }
-
-  var email    = document.getElementById('r-email').value.trim();
-  var password = document.getElementById('r-password').value;
-  var username = document.getElementById('r-username').value.trim();
-  var first    = document.getElementById('r-first').value.trim();
-  var last     = document.getElementById('r-last').value.trim();
-  var country  = document.getElementById('r-country').value;
-  var address  = document.getElementById('r-address').value.trim();
-  var city     = document.getElementById('r-city').value.trim();
-  var zip      = document.getElementById('r-zip').value.trim();
-  var state    = document.getElementById('r-state').value.trim();
-  var fullName = first + ' ' + last;
-
-  btn.disabled    = true;
-  btn.textContent = 'Creating account...';
-
-  var { data: authData, error: authError } = await sb.auth.signUp({ email, password });
-
-  if (authError) {
-    if (authError.message && authError.message.toLowerCase().includes('already registered')) {
-      errEl.innerHTML = 'This email is already registered. <a href="/login" style="color:var(--teal)">Log in instead →</a>';
-    } else {
-      errEl.textContent = authError.message;
-    }
-    btn.disabled = false;
-    btn.textContent = 'Start free — 10 trades, no credit card';
-    return;
-  }
-
-  var userId = authData.user.id;
-
-  await sb.from('profiles').upsert({
-    id:               userId,
-    email:            email,
-    username:         username,
-    full_name:        fullName,
-    legal_first_name: first,
-    legal_last_name:  last,
-    country:          country,
-    street_address:   address,
-    city:             city,
-    zip_code:         zip,
-    state_region:     state,
-    plan:             'free',
-    plan_expires_at:  null
-  });
-
-  btn.textContent = '✓ Account created!';
-  setTimeout(function() {
-    window.location.href = '/login?registered=1&plan=free';
-  }, 1000);
-}
-
-// ── Username real-time validation ──
-function validateUsername(val) {
-  var errEl = document.getElementById('err-username');
-  if (!errEl) return;
-  if (!val) { errEl.textContent = ''; return; }
-  if (!/^[a-zA-Z0-9_-]+$/.test(val)) {
-    errEl.textContent = 'Only letters, numbers, _ and - are allowed';
-  } else if (val.length < 3) {
-    errEl.textContent = 'Minimum 3 characters';
-  } else {
-    errEl.textContent = '';
-  }
-}
-
-// ── Toggle password visibility ──
-function togglePwd(inputId, eyeId) {
-  var inp = document.getElementById(inputId);
-  var eye = document.getElementById(eyeId);
-  if (!inp) return;
-  var isHidden = inp.type === 'password';
-  inp.type = isHidden ? 'text' : 'password';
-  // Switch between open/closed eye icon
-  if (eye) {
-    eye.innerHTML = isHidden
-      ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>'
-      : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
-  }
-}
-</script>
-</body>
-</html>
+document.getElementById('legal-overlay').addEventListen
