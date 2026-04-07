@@ -1460,7 +1460,7 @@ select.form-input option{background:var(--lift);color:var(--chalk)}
     <a href="/privacy">Privacy</a>
     <a href="/refund">Refund Policy</a>
     <a href="/precios">Pricing</a>
-    <a href="/cdn-cgi/l/email-protection#b4c7c1c4c4dbc6c0f4c4d5c0c0c6db9ad7dbd9">Support</a>
+    <a href="/cdn-cgi/l/email-protection#41323431312e33350131203535332e6f222e2c">Support</a>
   </div>
   <div class="footer-copy">© 2026 Pattro</div>
 </footer>
@@ -1799,6 +1799,17 @@ function validate() {
     if (!f.check(val)) { errEl.textContent = f.emsg; ok = false; }
     else { errEl.textContent = ''; }
   });
+  // Si hay errores, hacer scroll al primero para que el usuario lo vea
+  if (!ok) {
+    var firstErr = fields.find(function(f) {
+      var val = document.getElementById(f.id).value.trim();
+      return !f.check(val);
+    });
+    if (firstErr) {
+      var el = document.getElementById(firstErr.id);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
   return ok;
 }
 
@@ -1807,7 +1818,10 @@ async function handleRegister() {
   var btn   = document.getElementById('continue-btn');
   errEl.textContent = '';
 
-  if (!validate()) return;
+  if (!validate()) {
+    errEl.textContent = 'Please fix the errors above before continuing.';
+    return;
+  }
 
   var email    = document.getElementById('r-email').value.trim();
   var password        = document.getElementById('r-password').value;
@@ -1950,8 +1964,16 @@ async function handleRegister() {
           plan_expires_at:  expires.toISOString()
         });
 
-        // Notify backend to link user_id to Paddle subscription
-        // This makes the webhook reliable for future renewal events
+        // Send welcome email
+        try {
+          fetch('/api/welcome-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: pending.email, name: pending.fullName })
+          });
+        } catch(e) {}
+
+        // Link user_id to Paddle subscription for future webhook events
         try {
           var subscriptionId = data.data && data.data.subscription_id;
           if (subscriptionId) {
@@ -1965,15 +1987,6 @@ async function handleRegister() {
               })
             });
           }
-        } catch(e) {}
-
-        // Send welcome email
-        try {
-          fetch('/api/welcome-email', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: pending.email, name: pending.fullName })
-          });
         } catch(e) {}
 
         window.location.href = '/dashboard?payment=success';
