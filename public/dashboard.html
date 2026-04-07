@@ -2187,8 +2187,8 @@ function renderAccountsList() {
     var dotStyle = 'background:' + a.color + ';' + (!a.is_active ? 'opacity:0.4' : '');
     return '<div class="acc-card ' + (a.id===currentAccountId?'active':'') + '" onclick="selectAccount(\'' + a.id + '\')">' +
       '<div class="acc-dot" style="' + dotStyle + '"></div>' +
-      '<div class="acc-body"><div class="acc-name" style="' + dimStyle + '">' + a.name + (!a.is_active?' <span style="font-size:9px;color:var(--text3)">(inactive)</span>':'') + '</div>' +
-      '<div class="acc-sub">' + a.type + ' - ' + (a.firm||'') + '</div></div>' +
+      '<div class="acc-body"><div class="acc-name" style="' + dimStyle + '">' + escapeHtml(a.name) + (!a.is_active?' <span style="font-size:9px;color:var(--text3)">(inactive)</span>':'') + '</div>' +
+      '<div class="acc-sub">' + escapeHtml(a.type) + ' - ' + escapeHtml(a.firm||'') + '</div></div>' +
       '<div style="display:flex;align-items:center;gap:4px;flex-shrink:0">' +
       '<span class="acc-pnl zero" id="pnl-' + a.id + '">-</span>' +
       '<span class="edit-btn" onclick="event.stopPropagation();openEditModal(\'' + a.id + '\')" title="Edit">e</span>' +
@@ -2709,23 +2709,60 @@ async function saveTrade() {
     return;
   }
 
-  // Save screenshot locally by trade ID
+  // Save screenshot — Supabase Storage (primary) + localStorage (fallback/cache)
   if (screenshotUrl) {
     try {
-      // Get the trade ID that was just inserted
-      var scKey = null;
+      // Resolve the trade ID
+      var scTradeId = null;
       if (editingTradeId) {
-        scKey = 'sc_' + editingTradeId;
+        scTradeId = editingTradeId;
         editingTradeId = null;
       } else if (res.data && res.data[0]) {
-        scKey = 'sc_' + res.data[0].id;
+        scTradeId = res.data[0].id;
       } else {
-        // Fetch latest trade to get its ID
         var lt = await sb.from('trades').select('id').eq('account_id', currentAccountId).order('created_at', {ascending:false}).limit(1);
-        if (lt.data && lt.data[0]) scKey = 'sc_' + lt.data[0].id;
+        if (lt.data && lt.data[0]) scTradeId = lt.data[0].id;
       }
-      if (scKey) bbStore.set(scKey, screenshotUrl);
-    } catch(e) { console.warn('Could not save screenshot locally:', e); }
+
+      if (scTradeId) {
+        // Always save to localStorage as instant cache
+        bbStore.set('sc_' + scTradeId, screenshotUrl);
+
+        // Upload to Supabase Storage so it persists across devices
+        try {
+          // Convert data URL to blob
+          var arr    = screenshotUrl.split(',');
+          var mime   = arr[0].match(/:(.*?);/)[1];
+          var bstr   = atob(arr[1]);
+          var n      = bstr.length;
+          var u8arr  = new Uint8Array(n);
+          while (n--) u8arr[n] = bstr.charCodeAt(n);
+          var blob = new Blob([u8arr], { type: mime });
+
+          var ext      = mime === 'image/png' ? 'png' : 'jpg';
+          var filePath = currentUser.id + '/' + scTradeId + '.' + ext;
+
+          var upResp = await sb.storage
+            .from('screenshots')
+            .upload(filePath, blob, { upsert: true, contentType: mime });
+
+          if (!upResp.error) {
+            // Get public URL and save to the trade record
+            var pubUrl = sb.storage.from('screenshots').getPublicUrl(filePath).data.publicUrl;
+            await sb.from('trades').update({ screenshot_url: pubUrl }).eq('id', scTradeId);
+            // Update localStorage cache with the permanent URL too
+            bbStore.set('sc_' + scTradeId, pubUrl);
+          } else {
+            console.warn('[Screenshot] Upload failed:', upResp.error.message);
+            // Fallback: save data URL directly in trades table (works but larger)
+            await sb.from('trades').update({ screenshot_url: screenshotUrl }).eq('id', scTradeId);
+          }
+        } catch(upErr) {
+          console.warn('[Screenshot] Storage error, saving data URL as fallback:', upErr.message);
+          await sb.from('trades').update({ screenshot_url: screenshotUrl }).eq('id', scTradeId);
+        }
+      }
+    } catch(e) { console.warn('Could not save screenshot:', e); }
   }
 
   btn.textContent = 'Save Trade';
@@ -3166,7 +3203,7 @@ async function loadAccountData(id, silent) {
       var acctTags = getSetupTags(currentAccountId||'');
       t.setup_tags.split(',').filter(Boolean).forEach(function(tid) {
         var found = acctTags.find(function(tg){ return tg.id===tid; });
-        if (found) setupTagsHtml += '<span style="font-size:8px;padding:2px 6px;border-radius:0;background:'+found.color+'22;color:'+found.color+';border:1px solid '+found.color+'44;margin-left:3px">'+found.label+'</span>';
+        if (found) setupTagsHtml += '<span style="font-size:8px;padding:2px 6px;border-radius:0;background:'+found.color+'22;color:'+found.color+';border:1px solid '+found.color+'44;margin-left:3px">'+escapeHtml(found.label)+'</span>';
       });
     }
     return '<tr class="'+(flagged?'flagged':'')+'"><td><span class="ticker">'+(t.ticker||'--')+'</span>'+setupTagsHtml+clBadge+'</td>' +
@@ -6520,7 +6557,7 @@ function renderTradeLogHTML(trades) {
     var notesHtml = '<div class="note-cell" data-tid="'+t.id+'" style="cursor:pointer">'
       + emoIcon
       + (_sc?'<span style="font-size:12px;margin-right:3px">📷</span>':'')
-      + (hasNote?'<span class="note-short">'+noteTrunc.replace(/'/g,"&#39;")+'</span>':'')
+      + (hasNote?'<span class="note-short">'+escapeHtml(noteTrunc)+'</span>':'')
       + (!_sc&&!hasNote&&!t.emotion?'<span style="color:var(--text3);font-size:11px">--</span>':'')
       + '</div>';
     return '<tr class="'+(pnl<0?'flagged':'')+'">'+
