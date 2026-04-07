@@ -10,7 +10,7 @@
     },
     {
       "source": "/dashboard",
-      "destination": "/app.html"
+      "destination": "/dashboard.html"
     },
     {
       "source": "/terms",
