@@ -2409,17 +2409,19 @@ function validateRRvsPnl() {
   var warnEl = document.getElementById('t-pnl-warning');
   if (!pnlEl || !warnEl) return;
   var pnl = parseFloat(pnlEl.value);
-  if (isNaN(pnl) || rrPlan <= 0) return;
-  var existing = warnEl.innerHTML || '';
-  var extra = '';
+  if (isNaN(pnl) || rrPlan <= 0) { warnEl.style.display = 'none'; warnEl.innerHTML = ''; return; }
+  var msg = '';
   if (rrAch > 0 && pnl < 0) {
-    extra = '<br>⚠ R:R Achieved > 0 but P&L is negative — check R:R values.';
+    msg = '⚠ R:R Achieved > 0 but P&L is negative — check R:R values.';
   } else if (rrAch === 0 && pnl > 0) {
-    extra = '<br>⚠ R:R Achieved = 0 but P&L is positive — did you enter R:R achieved?';
+    msg = '⚠ R:R Achieved = 0 but P&L is positive — did you enter R:R achieved?';
   }
-  if (extra && !existing.includes(extra.trim())) {
+  if (msg) {
     warnEl.style.display = 'block';
-    warnEl.innerHTML = existing + extra;
+    warnEl.innerHTML = msg;
+  } else {
+    warnEl.style.display = 'none';
+    warnEl.innerHTML = '';
   }
 }
 
