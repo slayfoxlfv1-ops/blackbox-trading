@@ -1540,20 +1540,11 @@ async function callCoach(prompt, maxTokens) {
     var res = await fetch(COACH_API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        prompt:     prompt,
-        max_tokens: maxTokens || 1000,
-        user_id:    currentUser ? currentUser.id : null
-      })
+      body: JSON.stringify({ prompt: prompt, max_tokens: maxTokens || 1000 })
     });
     if (!res.ok) {
       var err = await res.json().catch(function(){ return {}; });
       console.error('Coach API error:', err);
-      // Rate limit — show friendly message
-      if (res.status === 429) {
-        var resetsAt = err.resets_at ? ' Resets on ' + err.resets_at + '.' : '';
-        return '⚠ You have used all your AI Coach sessions for this month (' + (err.used||5) + '/' + (err.limit||5) + ').' + resetsAt + ' Your sessions reset at the beginning of next month.';
-      }
       return null;
     }
     var data = await res.json();
@@ -7636,12 +7627,11 @@ async function deleteChecklistItem(idx) {
   var items=[]; try { items=JSON.parse(bbStore.get(storageKey)||'[]'); } catch(e){}
   var checks={}; try { checks=JSON.parse(bbStore.get(todayKey)||'{}'); } catch(e){}
   items.splice(idx,1);
-  // Re-index check state so item_0..N stays consistent with new array
+  // Re-index using numeric keys — same system as toggleCheck (checks[0], checks[1]...)
   var newChecks={};
   items.forEach(function(_,i){
-    // Shift keys: old item_(i+1 if > deleted) -> new item_i
-    var oldKey='item_'+(i >= idx ? i+1 : i);
-    newChecks['item_'+i] = !!checks[oldKey];
+    var oldKey = i >= idx ? i+1 : i;  // shift indices above the deleted one
+    newChecks[i] = !!checks[oldKey];
   });
   bbStore.set(storageKey, JSON.stringify(items));
   bbStore.set(todayKey, JSON.stringify(newChecks));
