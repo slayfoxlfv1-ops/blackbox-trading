@@ -4288,8 +4288,8 @@ function calcPeriodMentalScore(tradesInPeriod) {
                             return p.score && p.score.total !== null && !isNaN(p.score.total);
                           });
   if (!scorePairs.length) return null;
-  var scores  = scorePairs.map(function(p){ return p.score; });
-  var dayList = scorePairs.map(function(p){ return p.day; }); // re-align
+  var scores          = scorePairs.map(function(p){ return p.score; });
+  var filteredDayList = scorePairs.map(function(p){ return p.day; }); // days with valid scores
 
   var avg = Math.round(scores.reduce(function(s,x){ return s + x.total; }, 0) / scores.length);
   var bestPair  = scorePairs.reduce(function(a,b){ return a.score.total > b.score.total ? a : b; });
@@ -4307,7 +4307,7 @@ function calcPeriodMentalScore(tradesInPeriod) {
   var label = avg >= 90 ? 'Elite trader 🏆' : avg >= 75 ? 'Solid performance ✅' : avg >= 60 ? 'In progress ⚠️' : avg >= 40 ? 'Needs attention 🔶' : 'Critical state 🔴';
   var color = avg >= 75 ? 'var(--green)' : avg >= 50 ? 'var(--amber)' : 'var(--red)';
 
-  return { avg: avg, label: label, color: color, days: dayList.length, scores: scores, best: best.total, worst: worst.total, bestDay: bestDay, worstDay: worstDay, trend: Math.round(trend) };
+  return { avg: avg, label: label, color: color, days: filteredDayList.length, scores: scores, best: best.total, worst: worst.total, bestDay: bestDay, worstDay: worstDay, trend: Math.round(trend) };
 }
 
 // ── Psychological profile from trades ──

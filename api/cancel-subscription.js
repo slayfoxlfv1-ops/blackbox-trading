@@ -47,12 +47,24 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: data.error?.detail || 'Failed to cancel' });
     }
 
-    // Update Supabase to reflect scheduled cancellation
-    await sb.from('profiles').update({
-      plan: 'pro' // still pro until period ends
-    }).eq('id', user_id);
+    // FIX I7: Paddle returns the real end-of-access date in scheduled_change.effective_at
+    // Save it so the dashboard knows exactly when access expires
+    const accessEndsAt = data.data?.scheduled_change?.effective_at || null;
 
-    return res.status(200).json({ ok: true, message: 'Subscription cancelled successfully' });
+    const profileUpdate = { plan: 'pro' }; // still pro until period ends
+    if (accessEndsAt) {
+      profileUpdate.plan_expires_at = accessEndsAt;
+    }
+
+    await sb.from('profiles')
+      .update(profileUpdate)
+      .eq('id', user_id);
+
+    return res.status(200).json({
+      ok:             true,
+      message:        'Subscription cancelled successfully',
+      access_ends_at: accessEndsAt
+    });
 
   } catch(e) {
     console.error('[Cancel] Exception:', e.message);
