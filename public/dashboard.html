@@ -6672,6 +6672,11 @@ function initRulesTemp() {
 }
 
 function saveRulesConfig() {
+  // If _rulesTemp is null (user navigated away and back without interacting),
+  // rebuild from saved state before saving — prevents wiping rules with empty object
+  if (!_rulesTemp) {
+    _rulesTemp = JSON.parse(JSON.stringify(getPersonalRules(currentAccountId || '')));
+  }
   // Read DOM inputs one last time before saving
   var r = _rulesTemp || {};
   var inputMap = {
