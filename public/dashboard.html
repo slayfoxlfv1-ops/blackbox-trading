@@ -1475,13 +1475,30 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
     <div class="form-group" id="t-checklist-wrap" style="background:var(--surface2);border:1px solid var(--wire);border-radius:8px;padding:10px 12px">
       <div style="display:flex;align-items:center;gap:10px">
         <label class="form-label" style="margin:0;flex:1;font-size:10px">✓ Checklist <span style="color:var(--text3);font-weight:400">how much did you follow today?</span></label>
-        <span id="t-checklist-pct-display" style="font-size:13px;font-weight:800;color:var(--green);min-width:38px;text-align:right">100%</span>
+        <span id="t-checklist-pct-display" style="font-size:13px;font-weight:800;color:var(--text3);min-width:38px;text-align:right">0%</span>
       </div>
       <input type="range" id="t-checklist-pct" min="0" max="100" step="10" value="0"
         style="width:100%;accent-color:var(--green);cursor:pointer;margin-top:6px;display:block"
         data-user-changed="0"
         oninput="this.dataset.userChanged='1';updateChecklistDisplay(this.value)">
       <div id="t-checklist-note" style="font-size:9px;color:var(--text3);margin-top:4px">Will be saved as the day's checklist along with this trade</div>
+    </div>
+    <div class="form-group" id="rules-compliance-group">
+      <div style="display:flex;align-items:center;gap:10px">
+        <label class="form-label" style="margin:0;flex:1;font-size:10px">&#9670; Rules <span style="color:var(--text3);font-weight:400">did you follow your rules? <span id="rules-compliance-note" style="color:var(--text3)"></span></span></label>
+        <span id="t-rules-pct-display" style="font-size:13px;font-weight:800;color:var(--text3);min-width:38px;text-align:right">—</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
+        <span style="font-size:9px;color:var(--text3)">use active rules</span>
+        <input type="checkbox" id="t-rules-override" style="cursor:pointer" onchange="toggleRulesOverride(this.checked)">
+        <span style="font-size:9px;color:var(--text3)">used different rules</span>
+      </div>
+      <div id="t-rules-slider-wrap" style="display:none;margin-top:8px">
+        <input type="range" id="t-rules-pct" min="0" max="100" step="10" value="100"
+          style="width:100%;accent-color:var(--teal);cursor:pointer"
+          oninput="updateRulesDisplay(this.value)">
+        <div style="font-size:9px;color:var(--text3);margin-top:3px">% of your session rules you followed on this trade</div>
+      </div>
     </div>
     <div class="form-group">
       <label class="form-label">Notes</label>
@@ -2193,6 +2210,29 @@ function showApp() {
 }
 
 // ── Multi-tab sync: if another tab changes account or logs out, sync this tab ──
+// ── Rules compliance slider ──
+function updateRulesDisplay(val) {
+  var disp = document.getElementById('t-rules-pct-display');
+  if (!disp) return;
+  disp.textContent = val + '%';
+  disp.style.color = val >= 80 ? 'var(--green)' : val >= 50 ? 'var(--amber)' : 'var(--red)';
+}
+
+function toggleRulesOverride(checked) {
+  var wrap = document.getElementById('t-rules-slider-wrap');
+  var disp = document.getElementById('t-rules-pct-display');
+  if (!wrap || !disp) return;
+  if (checked) {
+    wrap.style.display = 'block';
+    var val = document.getElementById('t-rules-pct') ? document.getElementById('t-rules-pct').value : 100;
+    updateRulesDisplay(val);
+  } else {
+    wrap.style.display = 'none';
+    disp.textContent = '—';
+    disp.style.color = 'var(--text3)';
+  }
+}
+
 // -- FREE TIER BANNER --
 function renderFreeTradesBanner() {
   var existing = document.getElementById("free-trades-banner");
@@ -2897,6 +2937,9 @@ function closeLogModal() {
   if (titleEl) titleEl.textContent = 'Log Trade';
   var saveBtn = document.getElementById('save-trade-btn');
   if (saveBtn) saveBtn.textContent = 'Save Trade';
+  // Reset rules override
+  var rulesOverride = document.getElementById('t-rules-override');
+  if (rulesOverride) { rulesOverride.checked = false; toggleRulesOverride(false); }
 }
 
 function setHistColorDay(level, btn) {
@@ -3015,6 +3058,13 @@ async function saveTrade() {
     entry_time:     entryTimeVal,
     account_type:   (accounts.find(function(a){return a.id===currentAccountId;})||{}).type,
     source:         'manual',
+    // rules_compliance: null = use active rules, 0-100 = manual override %
+    rules_compliance: (function() {
+      var override = document.getElementById('t-rules-override');
+      if (!override || !override.checked) return null;
+      var slider = document.getElementById('t-rules-pct');
+      return slider ? parseInt(slider.value) : null;
+    })(),
   };
 
   if (!editingTradeId && window.isFreePlan()) {
@@ -5477,7 +5527,7 @@ function checkRuleViolations(rulesObj, trades) {
 function calcRulesDisciplineScore(rulesObj, trades) {
   var r = rulesObj || {};
   var activeRules = Object.keys(r).filter(function(k){ return r[k] && r[k].active; });
-  if (!activeRules.length) return { score: 50, violations: [], activeCount: 0 }; // no rules = neutral
+  if (!activeRules.length) return { score: null, violations: [], activeCount: 0 }; // no rules = no score
   var violations = checkRuleViolations(rulesObj, trades);
   var violatedIds = violations.map(function(v){ return v.rule.id; });
   var score;
@@ -5549,11 +5599,28 @@ function calcDailyDisciplineScore(dateStr) {
   var clSession  = (currentChecklistSessions || []).find(function(s){ return s.session_date === today; });
 
   // ── Sub 1: Rules (35 pts) ──
-  var rulesResult = calcRulesDisciplineScore(rulesObj, dayTrades);
-  // rulesResult.score is 0-100, map to 0-35
-  // FIX I6: guard against NaN if rulesResult.score is undefined/null
-  var rulesPts = Math.round((rulesResult.score || 0) / 100 * 35);
-  if (isNaN(rulesPts)) rulesPts = 0;
+  // If ALL trades today have a rules_compliance override, use the average of those
+  // Otherwise use the rules engine (check violations against active rules)
+  var tradesWithOverride = dayTrades.filter(function(t){ return t.rules_compliance !== null && t.rules_compliance !== undefined; });
+  var rulesScore;
+  if (tradesWithOverride.length > 0 && tradesWithOverride.length === dayTrades.length) {
+    // All trades have manual override — use average compliance %
+    var avgCompliance = tradesWithOverride.reduce(function(s,t){ return s + t.rules_compliance; }, 0) / tradesWithOverride.length;
+    rulesScore = Math.round(avgCompliance);
+  } else if (tradesWithOverride.length > 0) {
+    // Mix of override and auto — blend them
+    var autoTrades  = dayTrades.filter(function(t){ return t.rules_compliance === null || t.rules_compliance === undefined; });
+    var autoResult  = calcRulesDisciplineScore(rulesObj, autoTrades);
+    var autoScore   = autoResult.score === null ? 100 : autoResult.score;
+    var manualScore = tradesWithOverride.reduce(function(s,t){ return s + t.rules_compliance; }, 0) / tradesWithOverride.length;
+    rulesScore = Math.round((autoScore * autoTrades.length + manualScore * tradesWithOverride.length) / dayTrades.length);
+  } else {
+    var rulesResult = calcRulesDisciplineScore(rulesObj, dayTrades);
+    rulesScore = rulesResult.score;
+  }
+  // null score = no rules configured → exclude from calculation (don't penalize)
+  var rulesPts = rulesScore === null ? null : Math.round((rulesScore || 0) / 100 * 35);
+  if (rulesPts !== null && isNaN(rulesPts)) rulesPts = null;
 
   // ── Sub 2: Checklist (35 pts) ──
   // null = no checklist filled → exclude from calculation (don't penalize absence of data)
@@ -5586,12 +5653,15 @@ function calcDailyDisciplineScore(dateStr) {
   // Only include components that have data (null = no data, exclude from weight)
   var total;
   var parts = [];
-  parts.push({ v: rulesPts,  max: 35 }); // rules always present (even if 0 rules = 100%)
+  if (rulesPts !== null) parts.push({ v: rulesPts, max: 35 }); // only include if rules are configured
   if (checklistPts !== null) parts.push({ v: checklistPts, max: 35 });
   if (tagPts !== null)       parts.push({ v: tagPts,       max: 30 });
 
-  if (parts.length === 1) {
-    // Only rules: scale to 100
+  if (parts.length === 0) {
+    // No data at all
+    total = 0;
+  } else if (parts.length === 1) {
+    // Only one component: scale to 100
     total = Math.round(parts[0].v / parts[0].max * 100);
   } else if (tagPts === null) {
     // Rules + maybe checklist, no trades
