@@ -5527,7 +5527,7 @@ function checkRuleViolations(rulesObj, trades) {
 function calcRulesDisciplineScore(rulesObj, trades) {
   var r = rulesObj || {};
   var activeRules = Object.keys(r).filter(function(k){ return r[k] && r[k].active; });
-  if (!activeRules.length) return { score: null, violations: [], activeCount: 0 }; // no rules = no score
+  if (!activeRules.length) return { score: 50, violations: [], activeCount: 0 }; // no rules = neutral
   var violations = checkRuleViolations(rulesObj, trades);
   var violatedIds = violations.map(function(v){ return v.rule.id; });
   var score;
@@ -5619,8 +5619,8 @@ function calcDailyDisciplineScore(dateStr) {
     rulesScore = rulesResult.score;
   }
   // null score = no rules configured → exclude from calculation (don't penalize)
-  var rulesPts = rulesScore === null ? null : Math.round((rulesScore || 0) / 100 * 35);
-  if (rulesPts !== null && isNaN(rulesPts)) rulesPts = null;
+  var rulesPts = rulesScore === null ? 17 : Math.round((rulesScore || 0) / 100 * 35); // null = neutral 17/35
+  if (isNaN(rulesPts)) rulesPts = 17;
 
   // ── Sub 2: Checklist (35 pts) ──
   // null = no checklist filled → exclude from calculation (don't penalize absence of data)
@@ -5653,7 +5653,7 @@ function calcDailyDisciplineScore(dateStr) {
   // Only include components that have data (null = no data, exclude from weight)
   var total;
   var parts = [];
-  if (rulesPts !== null) parts.push({ v: rulesPts, max: 35 }); // only include if rules are configured
+  parts.push({ v: rulesPts !== null ? rulesPts : 17, max: 35 }); // null = neutral 50% = ~17pts
   if (checklistPts !== null) parts.push({ v: checklistPts, max: 35 });
   if (tagPts !== null)       parts.push({ v: tagPts,       max: 30 });
 
