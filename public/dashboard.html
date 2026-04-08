@@ -2019,7 +2019,10 @@ async function checkPlanAndShow() {
       var now     = new Date();
       var isPro      = plan === 'pro' && expires && expires > now;
       var isLifetime = plan === 'lifetime';
-      if (!isPro && !isLifetime) {
+      var isFree     = plan === 'free';
+      // Free users and lifetime users enter the dashboard normally
+      // Only boot if pro plan has expired (no valid subscription)
+      if (!isPro && !isLifetime && !isFree) {
         sb.auth.signOut().then(function() { window.location.href = '/login?error=subscription'; });
         return;
       }
@@ -2150,7 +2153,9 @@ function showApp() {
         var expires = profile.plan_expires_at ? new Date(profile.plan_expires_at) : null;
         var isPro      = plan === 'pro' && expires && expires > new Date();
         var isLifetime = plan === 'lifetime';
-        if (!isPro && !isLifetime) {
+        var isFree     = plan === 'free';
+        // Only boot paid users whose subscription has expired
+        if (!isPro && !isLifetime && !isFree) {
           clearInterval(window._planCheckInterval);
           sb.auth.signOut().then(function() {
             window.location.href = '/login?error=subscription';
