@@ -3087,7 +3087,8 @@ async function saveTrade() {
   }
   var res;
   if (editingTradeId) {
-    res = await sb.from('trades').update(payload).eq('id', editingTradeId).eq('user_id', currentUser.id);
+    // Use select() to get the updated trade back (needed for screenshot logic)
+    res = await sb.from('trades').update(payload).eq('id', editingTradeId).eq('user_id', currentUser.id).select();
     // editingTradeId cleared after screenshot save
   } else {
     payload.account_id = currentAccountId;
@@ -3209,18 +3210,13 @@ async function saveTrade() {
   }
 
   closeLogModal();
-  // Silent reload — updates currentTrades/currentChecklistSessions/etc
+  // Silent reload — refreshes currentTrades and all cached data
   await loadAccountData(currentAccountId, true);
   if (window.isFreePlan()) renderFreeTradesBanner();
-  // Re-render current view with fresh data (no second fetch needed)
+  // Re-render current view immediately with fresh data
   if (currentView === 'trades') renderTradesView();
-  else if (currentView === 'dashboard') {
-    // Re-render dashboard in place using already-updated currentTrades
-    var _dashEl = document.getElementById('main-content');
-    if (_dashEl) loadAccountData(currentAccountId);
-  } else if (currentView === 'psychology') {
-    renderPsychologyView();
-  }
+  else if (currentView === 'dashboard') renderDashboardView();
+  else if (currentView === 'psychology') renderPsychologyView();
 }
 
 function openEditTrade(id) {
@@ -9492,30 +9488,31 @@ var TOUR_STEPS = [
     key:'welcome', target:null,
     title:'Welcome to Pattro 👋',
     subtitle:'Your Trading Psychology Engine',
-    body:'Pattro is not a regular trading journal. It tracks your emotions, behavior and patterns across every trade — so you can see <strong>exactly</strong> what is costing you money and fix it.<br><br>This tour takes about 3 minutes and walks you through every section of the app. You can skip it anytime and come back from <strong>Settings → Help</strong>.',
-    tip:null, cta:'Start the tour →'
+    body:'Pattro is not a regular trading journal. It tracks your <strong>emotions, behavior and patterns</strong> across every trade — so you can see exactly what is costing you money and fix it.<br><br>This tour takes 3 minutes. We will walk through every section so you know exactly what to do and how Pattro works.',
+    tip:'💡 You can restart this tour at any time from Settings → Help.',
+    cta:'Let\'s start →'
   },
   {
-    key:'add_account', target:'.add-acc-btn', nav:'dashboard',
+    key:'add_account', target:'.sidebar', nav:'dashboard',
     title:'Step 1 — Add your trading account',
     subtitle:'One account = one funded or real account',
-    body:'Click <strong>"+ Add account"</strong> in the sidebar to create your first account. Each account represents a real trading account — for example "Topstep Funded #1" or "Personal Account".<br><br>You can add as many accounts as you need and switch between them freely. Every account has its own trades, rules, checklist, and analysis — the data is completely independent.',
-    tip:'💡 If you have multiple funded accounts active at the same time, create one for each. This keeps the psychology data accurate and separate.',
+    body:'Click <strong>"+ Add account"</strong> in the sidebar to create your first account. Each account represents a real trading account — for example "Topstep Funded #1" or "Personal Account".<br><br>You can have multiple accounts and switch between them at any time. All data — trades, scores, psychology — is kept completely separate per account.',
+    tip:'💡 If you have multiple funded accounts active at the same time, create one for each. This keeps your psychology data accurate and separate.',
     cta:'Next →'
   },
   {
     key:'log_trade', target:'#log-btn', nav:'dashboard',
     title:'Step 2 — Log Trade',
     subtitle:'The most important button in the app',
-    body:'After every trade click <strong>"+ Log Trade"</strong> to record it. Here is what each field means:<br><br><strong>R:R Planned</strong> — your intended risk/reward before entering. If you risk $100 to make $200, that is 2.0.<br><br><strong>R:R Achieved</strong> — what actually happened. The gap between planned and achieved reveals your execution quality.<br><br><strong>Emotion</strong> — how you felt when you took the trade. This is the most important psychological field — Pattro correlates your emotional state with your P&L over time.<br><br><strong>Discipline tag</strong> — was it a clean trade? Options: Clean, FOMO, Impulse, Overtrading, Moved SL, No confirmation. Be honest — this builds your Discipline Score.<br><br><strong>Checklist slider</strong> — how much of your pre-trade checklist did you complete? 0–100%.<br><br><strong>Color Day</strong> — on historical trades you can record how your session felt that day.',
-    tip:'💡 Even filling just P&L and emotion gives Pattro enough to generate useful insights. The more fields you fill, the more accurate the analysis.',
+    body:'After every trade click <strong>"+ Log Trade"</strong> to record it. Key fields:<br><br><strong>Emotion</strong> — how you felt when you took the trade. This is the core input for your Mind Score.<br><br><strong>Discipline Tag</strong> — was it a clean trade, impulse, FOMO, revenge? This drives your Discipline Score.<br><br><strong>Trade Confirmations %</strong> — what % of your entry conditions did the market give you before you entered? Be honest: 100% = full setup, 50% = half setup.<br><br><strong>R:R Planned / Achieved</strong> — your intended and actual risk/reward. Drives your Execution Score.',
+    tip:'💡 Even filling just P&L and emotion gives Pattro enough to start generating insights. The more fields you fill, the more accurate the analysis.',
     cta:'Next →'
   },
   {
     key:'dashboard', target:'.nav-item[data-view="dashboard"]', nav:'dashboard',
     title:'Step 3 — Dashboard',
     subtitle:'Your daily trading headquarters',
-    body:'The Dashboard is your daily summary. Once you start logging trades, here is what you will find:<br><br><strong>Mental Score</strong> — your overall psychological performance for the day (0–100), updated after every trade.<br><br><strong>Color Day</strong> — Green, Yellow or Red based on your mood check and session P&L, with specific recommendations for each state.<br><br><strong>What your data says</strong> — three key insights: Most Costly Behavior, Time Pattern (your best and worst trading hours), and Emotional Impact (which emotion costs you the most money).<br><br><strong>Mistakes & Positives</strong> — real-time detection of revenge trades, FOMO, overtrading, and clean executions.<br><br><strong>Performance panels</strong> — weekly and monthly Mental Score trends, current streaks, best day.',
+    body:'The Dashboard shows your performance for today. Once you log trades you will see:<br><br><strong>Mental Score</strong> — overall psychological performance 0–100, updated after every trade.<br><br><strong>Mind / Discipline / Execution</strong> — the three sub-scores that make up the Mental Score.<br><br><strong>Color Day</strong> — your pre-session mood check (Green / Yellow / Red). Appears automatically once per day and affects your Mind score.<br><br><strong>Weekly & Monthly view</strong> — swipe between today, this week, and this month.',
     tip:'💡 The Dashboard updates live as you log trades. No refresh needed.',
     cta:'Next →'
   },
@@ -9523,58 +9520,57 @@ var TOUR_STEPS = [
     key:'trades', target:'.nav-item[data-view="trades"]', nav:'trades',
     title:'Step 4 — Trades',
     subtitle:'Your complete trade history',
-    body:'The Trades section has two views:<br><br><strong>Trade Log</strong> — a full list of all your trades with filters, search, and inline editing. You can see notes, screenshots, edit any trade, and review your complete history.<br><br><strong>Calendar</strong> — the same trades in a monthly calendar. Each day shows its result with a color. Click any day to see all trades from that session with full details.',
-    tip:'💡 You can edit any trade directly from the Trade Log — click the edit icon on any row.',
+    body:'The Trades section has two views:<br><br><strong>Trade Log</strong> — full list of all trades with filters and search. Click the edit icon on any row to update any field — the scores for that day update automatically.<br><br><strong>Statistics</strong> — aggregate data: win rate, average P&L, best/worst setups, emotional P&L breakdown, and your dominant behavior pattern (Pattro).',
+    tip:'💡 You can edit any trade at any time — even months later. The Mental Score for that day recalculates automatically with the new values.',
     cta:'Next →'
   },
   {
     key:'psychology', target:'.nav-item[data-view="psychology"]', nav:'psychology',
     title:'Step 5 — Psychology',
-    subtitle:'The most important section in Pattro',
-    body:'This is where all the psychological analysis lives. It has three tabs:<br><br><strong>Psychology</strong> — your AI Coach (generates a full diagnosis with 15+ trades), daily and weekly Mind score, and your Psychological Profile: dominant pattern, main saboteur, and a concrete action plan.<br><br><strong>Discipline</strong> — your Rules and Checklist (covered in the next two steps).<br><br><strong>Calendar</strong> — a monthly calendar of your Mind score. Click any day to review your full psychological state for that session.',
-    tip:'💡 The AI Coach becomes significantly more accurate with 15+ trades. With 30+ days of data you will see clear patterns in your psychology.',
+    subtitle:'The heart of Pattro',
+    body:'Psychology has three tabs:<br><br><strong>Psychology</strong> — your Mind Score breakdown (emotion, behavior, color day), AI Coach diagnosis, and weekly pattern analysis. With 15+ trades the Coach generates a full psychological profile.<br><br><strong>Discipline</strong> — your Discipline Score breakdown: Rules compliance, Trade Confirmations average, and behavior tags. Also shows the Mental Score calendar.<br><br><strong>Calendar</strong> — Mental Score heatmap by day. Instantly see your best and worst days.',
+    tip:'💡 The AI Coach becomes significantly more accurate with 15+ trades. With 30+ days of data you will see clear behavioral patterns.',
     cta:'Next →'
   },
   {
     key:'rules', target:'.nav-item[data-view="psychology"]', nav:'psychology',
-    tab:function(){ if(typeof switchPsychTab==='function') switchPsychTab('discipline'); setTimeout(function(){ if(typeof switchDiscTab==='function') switchDiscTab('rules'); },300); },
+    tab: function(){ if(typeof switchDiscTab===\'function\') switchDiscTab(\'rules\'); },
     title:'Step 6 — Rules',
-    subtitle:'Your fixed trading boundaries',
-    body:'Rules define your hard limits as a trader. They are <strong>fixed categories</strong> — you cannot add or remove them, but you set the values for each one.<br><br>Examples: maximum daily loss, maximum consecutive losses, allowed trading hours, maximum trades per day.<br><br>Pattro automatically detects when you break a rule and flags it in your Discipline Score. The more rules you activate and respect, the higher your score.',
-    tip:'⚠️ Always keep your rules active. A trader with no rules has no discipline score — and no way to improve.',
+    subtitle:'Your fixed session boundaries',
+    body:'Rules are the hard limits of your trading session. They apply to the whole day, not individual trades:<br><br>• Max trades per day<br>• Max consecutive losses before stopping<br>• Allowed trading hours (session times)<br>• No trading on certain days<br>• Max position size<br>• No trading on Red Days<br><br>When you violate a rule, it affects your <strong>Discipline Score</strong> for the day. You can toggle each rule on or off depending on your current trading plan.',
+    tip:'⚠️ Set up your Rules before your first real trading session. They are the guardrails that prevent your worst days.',
     cta:'Next →'
   },
   {
-    key:'checklist', target:'.nav-item[data-view="psychology"]', nav:'psychology',
-    tab:function(){ if(typeof switchPsychTab==='function') switchPsychTab('discipline'); setTimeout(function(){ if(typeof switchDiscTab==='function') switchDiscTab('checklist'); },300); },
+    key:'confirmations', target:'.nav-item[data-view="psychology"]', nav:'psychology',
     title:'Step 7 — Trade Confirmations',
-    subtitle:'How well did the market confirm your entry?',
-    body:'Every time you log a trade, you rate <strong>what % of your entry confirmations the market gave you</strong> before you entered.<br><br>For example, if your strategy requires 4 conditions and only 3 were met, that is 75%. This is completely subjective — only you know your system.<br><br>This % is saved per trade and directly affects your <strong>Discipline Score</strong>. It measures whether you entered trades with a solid setup or chased the market.',
-    tip:'💡 Be honest with this number. A pattern of low confirmation % with losses is one of the most powerful signals Pattro can detect.',
+    subtitle:'Did the market give you a real setup?',
+    body:'Every time you log a trade, you rate <strong>what % of your entry conditions the market met</strong> before you entered.<br><br>For example, if your strategy needs 4 conditions and only 3 were present, that is 75%. This is subjective — only you know your system.<br><br>This % is saved per trade and directly affects your <strong>Discipline Score</strong>. A pattern of low confirmation % combined with losses is one of the strongest signals Pattro can detect.',
+    tip:'💡 Be honest with this number. Entering at 40% confirmations and losing is a clear signal your edge requires a full setup to work.',
     cta:'Next →'
   },
   {
     key:'insights', target:'.nav-item[data-view="insights"]', nav:'insights',
     title:'Step 8 — Insights',
     subtitle:'Weekly coaching and achievements',
-    body:'The Insights section has two parts:<br><br><strong>Weekly AI Coach</strong> — every week Pattro generates a full analysis: what worked, what did not, your dominant pattern this week, and 3 specific actions to take next week. The more trades you have, the more precise the diagnosis.<br><br><strong>Achievements & Streaks</strong> — your long-term consistency tracked as milestones and streaks. Streaks track consecutive days of clean behavior (checklist completed, rules respected, no tilt). Milestones are permanent achievements unlocked once.',
+    body:'Insights has two parts:<br><br><strong>Weekly AI Coach</strong> — every week Pattro generates a full analysis: what worked, what did not, your dominant pattern (Pattro), and 3 specific actions for next week. The more trades you have, the more precise the diagnosis.<br><br><strong>Achievements & Streaks</strong> — your long-term consistency tracked as milestones. Streaks track consecutive days of clean behavior. Milestones are permanent achievements unlocked once.',
     tip:'💡 Achievements are not decoration — they directly reflect your real consistency as a trader.',
     cta:'Next →'
   },
   {
     key:'settings', target:'.nav-item[data-view="settings"]', nav:'settings',
     title:'Step 9 — Settings',
-    subtitle:'Everything you need to configure',
-    body:'Settings has six sections:<br><br><strong>Profile</strong> — change your username and password.<br><br><strong>Plan & Subscription</strong> — view your current plan, days remaining, and manage your subscription.<br><br><strong>Connect Platforms</strong> — download the Pattro Chrome extension for TopstepX. Once installed, trades are captured automatically every time you close a position.<br><br><strong>Setup Tags</strong> — create your personal trade setup labels (e.g., "ICT BOS", "Supply Zone"). These appear in Log Trade and help you analyze which setups perform best.<br><br><strong>Extension Behavior</strong> — configure notifications, trade blocking, and lock behavior once the extension is connected.<br><br><strong>Help</strong> — come back to this tour anytime.',
+    subtitle:'Configure Pattro to match your style',
+    body:'Settings has six sections:<br><br><strong>Profile</strong> — change your username and password.<br><br><strong>Plan & Subscription</strong> — view your current plan and manage your subscription.<br><br><strong>Connect Platforms</strong> — download the Chrome extension for TopstepX. Trades are captured automatically once installed.<br><br><strong>Setup Tags</strong> — create your personal trade setup labels (e.g., "ICT BOS", "Supply Zone"). These appear in Log Trade and help you analyze which setups perform best.<br><br><strong>Help</strong> — restart this tour anytime.',
     tip:'💡 Set up your Setup Tags before logging trades — it makes the pattern analysis much more specific.',
     cta:'Next →'
   },
   {
     key:'done', target:null,
-    title:"You're all set! 🚀",
+    title:"You\'re all set! 🚀",
     subtitle:'Start logging and Pattro does the rest',
-    body:'Here is your quick-start checklist:<br><br>✅ Create your trading account (sidebar → "+ Add account")<br>✅ Set your Rules (Psychology → Discipline → Rules)<br>✅ Add your Setup Tags (Settings → Setup Tags)<br>✅ Log your first trade (top bar → "+ Log Trade")<br>✅ Do your daily mood check (it will appear automatically)<br><br>With <strong>15+ trades</strong> the AI Coach generates your full psychological profile. With <strong>30+ days</strong> you will see clear patterns in your behavior.',
-    tip:'💡 You can return to this guide anytime from Settings → Help.',
+    body:'Quick-start checklist:<br><br>✅ Create your trading account (sidebar → "+ Add account")<br>✅ Set your Rules (Psychology → Discipline → Rules)<br>✅ Add your Setup Tags (Settings → Setup Tags)<br>✅ Log your first trade (top bar → "+ Log Trade")<br>✅ Do your daily mood check (appears automatically each day)<br><br>With <strong>15+ trades</strong> the AI Coach generates your full psychological profile. With <strong>30+ days</strong> you will see clear patterns in your behavior.',
+    tip:'💡 The more consistently you log, the more accurate your Pattro pattern becomes.',
     cta:'Start using Pattro!'
   }
 ];
