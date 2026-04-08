@@ -3407,23 +3407,29 @@ async function loadAccountData(id, silent) {
   if (!silent) el.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
   var acc = accounts.find(function(a){return a.id===id;});
   if (!acc) return;
-  // Load trading_days for this account (Fase 2)
-  if (!silent) await loadTradingDays(id);
   autoLockOldDays();
-  // Fire all Supabase fetches in parallel — much faster than sequential awaits
+  // Fire ALL Supabase fetches in parallel including trading_days — faster load
   var todayStr3 = localDateStr();
   var _results = await Promise.all([
     sb.from('trades').select('*').eq('account_id', id).order('entry_time', { ascending: true }),
     sb.from('checklist_sessions').select('session_date,items,score_pct,verdict').eq('account_id', id).order('session_date', { ascending: false }).limit(60),
     sb.from('mood_sessions').select('answers,score,level,session_date').eq('account_id', id).order('session_date', { ascending: false }).limit(90),
     sb.from('checklist_items').select('items,setup_tags').eq('account_id', id).limit(1),
-    sb.from('mood_sessions').select('answers,score,level,session_date').eq('account_id', id).eq('session_date', todayStr3).limit(1)
+    sb.from('mood_sessions').select('answers,score,level,session_date').eq('account_id', id).eq('session_date', todayStr3).limit(1),
+    sb.from('trading_days').select('*').eq('account_id', id).order('session_date', { ascending: false }).limit(120)
   ]);
   var res        = _results[0];
   var clRes      = _results[1];
   var moodAllRes = _results[2];
   var clItemsRes = _results[3];
   var moodDbRes  = _results[4];
+  var tdRes      = _results[5];
+
+  // Populate trading_days cache from parallel result
+  if (tdRes && tdRes.data) {
+    _tradingDaysCache = {};
+    tdRes.data.forEach(function(td) { _tradingDaysCache[td.session_date] = td; });
+  }
 
   var trades = res.data || [];
   currentTrades = trades;
