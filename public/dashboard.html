@@ -1169,7 +1169,7 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
       <div class="nav-item active" data-view="dashboard"><span class="nav-icon">&#9638;</span> Dashboard</div>
       <div class="nav-item" data-view="trades"><span class="nav-icon">&#8801;</span> Trades</div>
       <div class="nav-item" data-view="psychology"><span class="nav-icon">&#9679;</span> Psychology</div>
-      <div class="nav-item" data-view="insights"><span class="nav-icon">◈</span> Insights<span id="insights-lock-badge" style="display:none;margin-left:auto;font-size:9px;opacity:.5">🔒</span></div>
+      <div class="nav-item" data-view="insights"><span class="nav-icon">◈</span> Insights<span id="insights-lock-badge" style="display:none;margin-left:auto;font-size:9px;opacity:.5">&#128274;</span></div>
     </div>
     <div class="sidebar-footer user-dropdown-wrap" id="user-dropdown-wrap">
       <!-- Dropdown menu (opens upward) -->
@@ -1503,13 +1503,9 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
 </div>
 
 <script>
-// Safe default — overwritten by checkPlanAndShow once profile loads
+// Safe defaults before profile loads
 window.FREE_TRADE_LIMIT = 10;
-window.isFreePlan = function() {
-  // Default to NOT free until we know the real plan
-  // This prevents blocking the dashboard on initial load
-  return false;
-};
+window.isFreePlan = function() { return false; };
 
 const SUPABASE_URL = 'https://qljuusxpzsiqxnpfpdgg.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFsanV1c3hwenNpcXhucGZwZGdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1OTQ5NzUsImV4cCI6MjA4ODE3MDk3NX0.rUEwuG4zFE_EpAM4s3hWqVF81xiW9q_MSwQKKXYZmlk';
@@ -1548,19 +1544,11 @@ async function callCoach(prompt, maxTokens) {
     var res = await fetch(COACH_API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        prompt:     prompt,
-        max_tokens: maxTokens || 1000,
-        user_id:    currentUser ? currentUser.id : null
-      })
+      body: JSON.stringify({ prompt: prompt, max_tokens: maxTokens || 1000, user_id: currentUser ? currentUser.id : null })
     });
     if (!res.ok) {
       var err = await res.json().catch(function(){ return {}; });
       console.error('Coach API error:', err);
-      if (res.status === 429) {
-        var resetsAt = err.resets_at ? ' Resets on ' + err.resets_at + '.' : '';
-        return '⚠ You have used all your AI Coach sessions for this month (' + (err.used||5) + '/' + (err.limit||5) + ').' + resetsAt;
-      }
       return null;
     }
     var data = await res.json();
@@ -2003,44 +1991,19 @@ sb.auth.onAuthStateChange(function(event, session) {
 });
 
 async function checkPlanAndShow() {
-  // Safety timeout — if Supabase doesn't respond in 6s, show app anyway
-  // Prevents permanent black screen on slow connections
-  var _safetyTimer = setTimeout(function() {
-    console.warn('[Pattro] checkPlanAndShow timeout — showing app as fallback');
-    window._userPlan    = window._userPlan || 'free';
-    window.FREE_TRADE_LIMIT = 10;
-    window.isFreePlan = function() {
-      return window._userPlan !== 'pro' && window._userPlan !== 'lifetime';
-    };
-    if (document.getElementById('app').style.display === 'none' ||
-        document.getElementById('app').style.display === '') {
-      showApp();
-    }
-  }, 6000);
-
   sb.from('profiles')
     .select('plan, plan_expires_at, username')
     .eq('id', currentUser.id)
     .single()
     .then(function(result) {
-      clearTimeout(_safetyTimer);
       var profile = result.data;
       if (!profile) {
-        // No profile row — show app as free rather than logging out
-        // (profile may not exist yet for brand new accounts)
-        window._userPlan    = 'free';
-        window._planExpires = null;
-        window._username    = '';
-        window.FREE_TRADE_LIMIT = 10;
-        window.isFreePlan = function() { return true; };
-        showApp();
+        sb.auth.signOut().then(function() { window.location.href = '/login?error=incomplete'; });
         return;
       }
       window._userPlan    = profile.plan || 'free';
       window._planExpires = profile.plan_expires_at || null;
       window._username    = profile.username || '';
-
-      // ── FREE TIER ──
       window.FREE_TRADE_LIMIT = 10;
       window.isFreePlan = function() {
         return window._userPlan !== 'pro' && window._userPlan !== 'lifetime';
@@ -2051,18 +2014,13 @@ async function checkPlanAndShow() {
       var isPro      = plan === 'pro' && expires && expires > now;
       var isLifetime = plan === 'lifetime';
       var isFree     = plan === 'free';
-      // Free users and lifetime users enter the dashboard normally
-      // Only boot if pro plan has expired (no valid subscription)
       if (!isPro && !isLifetime && !isFree) {
-        clearTimeout(_safetyTimer);
         sb.auth.signOut().then(function() { window.location.href = '/login?error=subscription'; });
         return;
       }
       showApp();
     })
-    .catch(function() {
-      clearTimeout(_safetyTimer);
-      showApp(); }); // network error — don't block
+    .catch(function() { showApp(); }); // network error — don't block
 }
 
 
@@ -2160,17 +2118,6 @@ function showApp() {
   document.getElementById('user-avatar').textContent = name.charAt(0).toUpperCase();
   loadAccounts();
 
-  // ── FREE TIER UI: show indicators and lock badges ──
-  setTimeout(function() {
-    if (window.isFreePlan && window.isFreePlan()) {
-      // Show lock on Insights
-      var lb = document.getElementById('insights-lock-badge');
-      if (lb) lb.style.display = 'inline';
-      // Show trade counter banner at top of dashboard
-      renderFreeTradesBanner();
-    }
-  }, 800);
-
   // ── M1: Periodic plan check every 30 minutes ──
   // If subscription expires while tab is open, redirect to login
   if (window._planCheckInterval) clearInterval(window._planCheckInterval);
@@ -2188,7 +2135,6 @@ function showApp() {
         var isPro      = plan === 'pro' && expires && expires > new Date();
         var isLifetime = plan === 'lifetime';
         var isFree     = plan === 'free';
-        // Only boot paid users whose subscription has expired
         if (!isPro && !isLifetime && !isFree) {
           clearInterval(window._planCheckInterval);
           sb.auth.signOut().then(function() {
@@ -2217,100 +2163,70 @@ function showApp() {
 }
 
 // ── Multi-tab sync: if another tab changes account or logs out, sync this tab ──
-
-
-// ── FREE TIER BANNER ──
+// -- FREE TIER BANNER --
 function renderFreeTradesBanner() {
-  var existing = document.getElementById('free-trades-banner');
+  var existing = document.getElementById("free-trades-banner");
   if (existing) existing.remove();
-  if (!window.isFreePlan || !window.isFreePlan()) return;
-
+  if (!window.isFreePlan()) return;
   var used  = (currentTrades || []).length;
   var limit = window.FREE_TRADE_LIMIT || 10;
   var pct   = Math.min(100, Math.round(used / limit * 100));
-  var color = used >= limit ? 'var(--red)' : used >= 7 ? 'var(--amber)' : 'var(--teal)';
-
-  var banner = document.createElement('div');
-  banner.id   = 'free-trades-banner';
-  banner.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:8000;background:var(--surface);border-top:1px solid var(--wire);padding:8px 16px;display:flex;align-items:center;gap:12px;font-family:var(--mono);font-size:11px';
-
-  banner.innerHTML = [
-    '<span style="color:var(--text2);white-space:nowrap">Free plan:</span>',
-    '<span style="color:' + color + ';font-weight:700;white-space:nowrap">' + used + '/' + limit + ' trades</span>',
-    '<div style="flex:1;height:3px;background:var(--wire);border-radius:2px;overflow:hidden">',
-      '<div style="width:' + pct + '%;height:100%;background:' + color + ';transition:width .4s"></div>',
-    '</div>',
-    (used >= limit
-      ? '<a href="/precios" style="background:var(--teal);color:var(--bg);padding:5px 12px;font-size:10px;font-weight:800;font-family:var(--display);text-decoration:none;letter-spacing:.5px;white-space:nowrap">UPGRADE →</a>'
-      : '<a href="/precios" style="color:var(--teal);font-size:10px;text-decoration:none;white-space:nowrap">Upgrade to Pro</a>'
-    ),
-  ].join('');
-
+  var color = used >= limit ? "var(--red)" : used >= 7 ? "var(--amber)" : "var(--teal)";
+  var banner = document.createElement("div");
+  banner.id = "free-trades-banner";
+  banner.style.cssText = "position:fixed;bottom:0;left:0;right:0;z-index:8000;background:var(--surface);border-top:1px solid var(--wire);padding:8px 16px;display:flex;align-items:center;gap:12px;font-family:var(--mono);font-size:11px";
+  banner.innerHTML = "<span style='color:var(--text2)'>Free plan:</span>"
+    + "<span style='color:" + color + ";font-weight:700'>" + used + "/" + limit + " trades</span>"
+    + "<div style='flex:1;height:3px;background:var(--wire);border-radius:2px;overflow:hidden'><div style='width:" + pct + "%;height:100%;background:" + color + "'></div></div>"
+    + "<a href='/precios' style='color:var(--teal);font-size:10px;text-decoration:none;white-space:nowrap'>" + (used >= limit ? "UPGRADE NOW" : "Upgrade to Pro") + "</a>";
   document.body.appendChild(banner);
-
-  // Push content up so banner doesn't overlap mobile nav
-  var mobileNav = document.getElementById('mobile-nav');
-  if (mobileNav) mobileNav.style.bottom = '37px';
+  var mobileNav = document.getElementById("mobile-nav");
+  if (mobileNav) mobileNav.style.bottom = "37px";
 }
 
-// ── FREE TIER UPGRADE MODAL ──
+// -- FREE TIER UPGRADE MODAL --
 function showUpgradeModal(trigger) {
-  // Remove existing modal if any
-  var existing = document.getElementById('upgrade-modal-overlay');
+  var existing = document.getElementById("upgrade-modal-overlay");
   if (existing) existing.remove();
-
-  var messages = {
-    trades:      { title: 'Trade limit reached',      body: "You've used all <strong>10 free trades</strong>. Upgrade to Pro for unlimited trades and full access." },
-    calendar:    { title: 'Calendar is Pro only',     body: 'See your full mental score history, monthly patterns and trading calendar with a Pro account.' },
-    insights:    { title: 'Insights is Pro only',     body: 'Unlock performance analytics, weekly AI Coach analysis, and deep behavioral insights.' },
-    accounts:    { title: 'Multiple accounts is Pro', body: 'Manage up to 5 trading accounts — prop firms, personal, live and demo — all in one place.' },
-    screenshots: { title: 'Screenshots is Pro only',  body: 'Attach chart screenshots to your trades and build a visual library of your setups.' },
-    export:      { title: 'Export is Pro only',       body: 'Export your full trading report as PDF — perfect for reviewing with a coach or mentor.' },
-    coach:       { title: 'AI Coach is Pro only',     body: 'Get personalized psychological analysis from an AI trained on your trading data and patterns.' },
-  };
-
-  var msg = messages[trigger] || messages['trades'];
-
-  var overlay = document.createElement('div');
-  overlay.id  = 'upgrade-modal-overlay';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px)';
-
-  overlay.innerHTML = [
-    '<div style="background:var(--surface);border:1px solid var(--wire2);border-top:2px solid var(--teal);border-radius:0;max-width:400px;width:100%;padding:32px;position:relative;clip-path:polygon(0 0,calc(100% - 16px) 0,100% 16px,100% 100%,0 100%)">',
-
-      // Close button
-      '<button onclick="document.getElementById(\'upgrade-modal-overlay\').remove()" style="position:absolute;top:12px;right:14px;background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;line-height:1">×</button>',
-
-      // Lock icon
-      '<div style="font-size:28px;margin-bottom:16px">🔒</div>',
-
-      // Title
-      '<div style="font-family:var(--display);font-size:16px;font-weight:800;color:var(--text);margin-bottom:10px;letter-spacing:-.3px">' + msg.title + '</div>',
-
-      // Body
-      '<p style="font-size:12px;color:var(--text2);line-height:1.75;margin-bottom:24px">' + msg.body + '</p>',
-
-      // Free trade counter if relevant
-      (trigger === 'trades' ? '<div style="background:var(--surface2);border:1px solid var(--wire);padding:10px 14px;margin-bottom:20px;font-family:var(--mono);font-size:11px;color:var(--text2)">' +
-        '<span style="color:var(--teal);font-weight:700">' + ((currentTrades||[]).length) + '/10</span> free trades used</div>' : ''),
-
-      // CTA
-      '<a href="/precios" style="display:block;text-align:center;background:var(--teal);color:var(--bg);padding:12px 20px;font-family:var(--display);font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;text-decoration:none;margin-bottom:10px">',
-        'UPGRADE TO PRO →',
-      '</a>',
-
-      // Dismiss
-      '<div onclick="document.getElementById('upgrade-modal-overlay').remove()" style="text-align:center;font-size:11px;color:var(--text3);cursor:pointer;padding:4px">Maybe later</div>',
-
-    '</div>'
-  ].join('');
-
+  var titles = { trades:"Trade limit reached", calendar:"Calendar is Pro only", insights:"Insights is Pro only", accounts:"Multiple accounts is Pro", screenshots:"Screenshots is Pro only", export:"Export is Pro only", coach:"AI Coach is Pro only" };
+  var bodies = { trades:"You've used all <strong>10 free trades</strong>. Upgrade to Pro for unlimited trades.", calendar:"See your full mental score history, monthly patterns and trading calendar.", insights:"Unlock performance analytics, weekly AI Coach analysis, and deep behavioral insights.", accounts:"Manage up to 5 trading accounts.", screenshots:"Attach chart screenshots to your trades.", export:"Export your full trading report as PDF.", coach:"Get personalized psychological analysis from an AI trained on your data." };
+  var title = titles[trigger] || titles["trades"];
+  var body  = bodies[trigger] || bodies["trades"];
+  var overlay = document.createElement("div");
+  overlay.id = "upgrade-modal-overlay";
+  overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px";
+  var box = document.createElement("div");
+  box.style.cssText = "background:var(--surface);border:1px solid var(--wire2);border-top:2px solid var(--teal);max-width:400px;width:100%;padding:32px;position:relative";
+  var closeBtn = document.createElement("button");
+  closeBtn.innerHTML = "&times;";
+  closeBtn.style.cssText = "position:absolute;top:12px;right:14px;background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer";
+  closeBtn.onclick = function() { overlay.remove(); };
+  var titleEl = document.createElement("div");
+  titleEl.style.cssText = "font-size:16px;font-weight:800;color:var(--text);margin-bottom:10px";
+  titleEl.textContent = title;
+  var bodyEl = document.createElement("p");
+  bodyEl.style.cssText = "font-size:12px;color:var(--text2);line-height:1.75;margin-bottom:20px";
+  bodyEl.innerHTML = body;
+  var ctaEl = document.createElement("a");
+  ctaEl.href = "/precios";
+  ctaEl.style.cssText = "display:block;text-align:center;background:var(--teal);color:var(--bg);padding:12px 20px;font-size:12px;font-weight:800;text-decoration:none;margin-bottom:8px";
+  ctaEl.textContent = "UPGRADE TO PRO";
+  var dismissEl = document.createElement("div");
+  dismissEl.style.cssText = "text-align:center;font-size:11px;color:var(--text3);cursor:pointer;padding:4px";
+  dismissEl.textContent = "Maybe later";
+  dismissEl.onclick = function() { overlay.remove(); };
+  if (trigger === "trades") {
+    var used = (currentTrades||[]).length;
+    var ctr = document.createElement("div");
+    ctr.style.cssText = "background:var(--surface2);border:1px solid var(--wire);padding:10px 14px;margin-bottom:16px;font-family:var(--mono);font-size:11px";
+    ctr.innerHTML = "<span style='color:var(--teal);font-weight:700'>" + used + "/10</span> trades used";
+    box.appendChild(closeBtn); box.appendChild(titleEl); box.appendChild(bodyEl); box.appendChild(ctr); box.appendChild(ctaEl); box.appendChild(dismissEl);
+  } else {
+    box.appendChild(closeBtn); box.appendChild(titleEl); box.appendChild(bodyEl); box.appendChild(ctaEl); box.appendChild(dismissEl);
+  }
+  overlay.appendChild(box);
   document.body.appendChild(overlay);
-
-  // Close on backdrop click
-  overlay.addEventListener('click', function(e) {
-    if (e.target === overlay) overlay.remove();
-  });
+  overlay.addEventListener("click", function(e) { if (e.target === overlay) overlay.remove(); });
 }
 
 window.addEventListener('storage', function(e) {
@@ -2460,17 +2376,12 @@ async function saveAccount() {
     user_id:           currentUser.id
   };
 
-  // ── FREE TIER: only 1 account allowed ──
-  if (!editingAccountId && window.isFreePlan && window.isFreePlan()) {
-    var existingCount = (accounts || []).length;
-    if (existingCount >= 1) {
-      if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save Account'; }
-      closeModal();
-      showUpgradeModal('accounts');
-      return;
-    }
+  if (!editingAccountId && window.isFreePlan() && (accounts||[]).length >= 1) {
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save Account'; }
+    closeModal();
+    showUpgradeModal('accounts');
+    return;
   }
-
   var res;
   if (editingAccountId) {
     res = await sb.from('accounts').update(payload).eq('id', editingAccountId).eq('user_id', currentUser.id);
@@ -2863,16 +2774,13 @@ async function saveTrade() {
     source:         'manual',
   };
 
-  // ── FREE TIER: block new trades above limit ──
-  if (!editingTradeId && window.isFreePlan && window.isFreePlan()) {
-    var tradeCount = (currentTrades || []).length;
-    if (tradeCount >= window.FREE_TRADE_LIMIT) {
+  if (!editingTradeId && window.isFreePlan()) {
+    if ((currentTrades||[]).length >= window.FREE_TRADE_LIMIT) {
       btn.textContent = 'Save Trade';
       showUpgradeModal('trades');
       return;
     }
   }
-
   var res;
   if (editingTradeId) {
     res = await sb.from('trades').update(payload).eq('id', editingTradeId).eq('user_id', currentUser.id);
@@ -2890,13 +2798,7 @@ async function saveTrade() {
     return;
   }
 
-  // Save screenshot — blocked for free users
-  if (screenshotUrl && window.isFreePlan && window.isFreePlan()) {
-    showUpgradeModal('screenshots');
-    screenshotUrl = null;
-    screenshotDataUrl = null;
-  }
-
+  if (screenshotUrl && window.isFreePlan()) { showUpgradeModal('screenshots'); screenshotUrl = null; screenshotDataUrl = null; }
   // Save screenshot — Supabase Storage (primary) + localStorage (fallback/cache)
   if (screenshotUrl) {
     try {
@@ -3041,8 +2943,7 @@ async function saveTrade() {
   closeLogModal();
   // Silent reload — updates currentTrades/currentChecklistSessions/etc
   await loadAccountData(currentAccountId, true);
-  // Refresh free tier banner with updated trade count
-  if (window.isFreePlan && window.isFreePlan()) renderFreeTradesBanner();
+  if (window.isFreePlan()) renderFreeTradesBanner();
   // Re-render current view with fresh data (no second fetch needed)
   if (currentView === 'trades') renderTradesView();
   else if (currentView === 'dashboard') {
@@ -3174,9 +3075,8 @@ function navigateTo(view) {
   if (view==='trades')     renderTradesView();
   if (view==='psychology') renderPsychologyView(subTabIntent);
   if (view==='insights') {
-    if (window.isFreePlan && window.isFreePlan()) {
+    if (window.isFreePlan()) {
       showUpgradeModal('insights');
-      // Stay on dashboard — render it without recursing into navigateTo
       currentView = 'dashboard';
       document.querySelectorAll('.nav-item').forEach(function(i){i.classList.remove('active');});
       var navEl = document.querySelector('.nav-item[data-view="dashboard"]');
@@ -7118,7 +7018,7 @@ function renderPsychologyView(subTabIntent) {
   var tabs = [
     { id: 'mind',       label: '&#9675; Psychology' },
     { id: 'discipline', label: '&#8856; Discipline'      },
-    { id: 'calendar',   label: (window.isFreePlan && window.isFreePlan() ? '&#9635; Calendar 🔒' : '&#9635; Calendar') },
+    { id: 'calendar',   label: (window.isFreePlan() ? '&#9635; Calendar 🔒' : '&#9635; Calendar') },
   ];
   var tabBar = '<div style="display:flex;gap:0;padding:12px 16px 0;border-bottom:1px solid var(--wire);background:var(--bg)">'
     + tabs.map(function(t) {
@@ -7131,8 +7031,7 @@ function renderPsychologyView(subTabIntent) {
 }
 
 function switchPsychTab(tab) {
-  // Free tier: block Calendar tab
-  if (tab === 'calendar' && window.isFreePlan && window.isFreePlan()) {
+  if (tab === 'calendar' && window.isFreePlan()) {
     showUpgradeModal('calendar');
     return;
   }
@@ -10951,11 +10850,7 @@ function renderAchievementsHtml() {
 }
 
 function exportReportPDF() {
-  // Free tier: block export
-  if (window.isFreePlan && window.isFreePlan()) {
-    showUpgradeModal('export');
-    return;
-  }
+  if (window.isFreePlan()) { showUpgradeModal('export'); return; }
   // Build a snapshot of the current report view for printing
   var trades = currentTrades || [];
   var now    = new Date();
