@@ -875,8 +875,7 @@ nav.bg-on{background:rgba(0,0,0,.92);backdrop-filter:blur(24px)}
 
 .pricing-card{
   background:var(--surface);border:1px solid var(--wire2);
-  padding:38px;position:relative;overflow:hidden;
-  clip-path:polygon(0 0,calc(100% - 20px) 0,100% 20px,100% 100%,0 100%);
+  padding:38px;position:relative;
   box-shadow:0 0 60px rgba(62,207,207,.04),0 40px 100px rgba(0,0,0,.5);
 }
 .pricing-card::before{
@@ -1483,6 +1482,12 @@ footer{
       </div>
       <a href="/register" class="price-cta" data-i18n="price_cta">Start for $15/month →</a>
       <div class="price-sub" data-i18n="price_sub">Cancel anytime</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:18px">
+        <div style="flex:1;height:1px;background:rgba(255,255,255,.1)"></div>
+        <span style="font-family:var(--mono);font-size:9px;color:var(--chalk3);letter-spacing:.5px;text-transform:uppercase">or</span>
+        <div style="flex:1;height:1px;background:rgba(255,255,255,.1)"></div>
+      </div>
+      <a href="/register" id="free-link" style="display:block;text-align:center;padding:10px 0 4px;font-family:var(--mono);font-size:11px;color:var(--chalk3);text-decoration:none;letter-spacing:.3px;transition:color .2s" onmouseover="this.style.color='var(--chalk)'" onmouseout="this.style.color='var(--chalk3)'">Try free - 10 trades, no credit card</a>
     </div>
   </div>
 </div>
@@ -1516,7 +1521,7 @@ footer{
     <a href="/privacy">Privacy</a>
     <a href="/refund">Refund Policy</a>
     <a href="/precios">Pricing</a>
-    <a href="mailto:support@pattro.com">Support</a>
+    <a href="/cdn-cgi/l/email-protection#7605030606190402360617020204195815191b">Support</a>
   </div>
   <div class="footer-copy">© 2026 Pattro</div>
 </footer>
@@ -1535,7 +1540,7 @@ footer{
 </div>
 
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 
 /* ── NAV ── */
 window.addEventListener('scroll',function(){
@@ -1766,8 +1771,4 @@ function showLegal(tab,btn){
   document.getElementById('legal-overlay').classList.add('open');
 }
 function closeLegal(){document.getElementById('legal-overlay').classList.remove('open')}
-document.getElementById('legal-overlay').addEventListener('click',function(e){if(e.target===this)closeLegal()});
-// Footer legal links navigate to dedicated pages (no intercept)
-</script>
-</body>
-</html>
+document.getElementById('legal-overlay').addEventListen
