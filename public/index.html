@@ -1779,4 +1779,10 @@ function showLegal(tab,btn){
   document.getElementById('legal-overlay').classList.add('open');
 }
 function closeLegal(){document.getElementById('legal-overlay').classList.remove('open')}
-document.getElementById('legal-overlay').addEventListen
+document.getElementById('legal-overlay').addEventListener('click',function(e){if(e.target===this)closeLegal()});
+// Footer legal links navigate to dedicated pages (no intercept)
+</script>
+
+
+</body>
+</html>
