@@ -2304,7 +2304,7 @@ function openImportModal() {
   // Import button
   var runBtn = document.createElement("button");
   runBtn.id = "import-run-btn";
-  runBtn.style.cssText = "width:100%;background:var(--teal);color:var(--bg);border:none;padding:12px;font-family:var(--display);font-size:12px;font-weight:800;cursor:pointer;letter-spacing:.5px";
+  runBtn.style.cssText = "width:100%;background:var(--teal);color:var(--bg);border:none;padding:12px;font-family:var(--display);font-size:12px;font-weight:800;cursor:pointer;letter-spacing:.5px;clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,0 100%)";
   runBtn.textContent = "IMPORT TRADES";
   runBtn.onclick = runImportCSV;
 
