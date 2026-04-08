@@ -200,23 +200,11 @@ function parseTradovate(csv) {
 
     if (!opens[symbol]) opens[symbol] = [];
 
-    if (side === 'buy') {
-      opens[symbol].push({ price, qty, time, comm });
-    } else if (side === 'sell' && opens[symbol].length) {
-      const open = opens[symbol].shift();
-      trades.push({
-        ticker:      symbol,
-        side:        'long', // buy then sell = long
-        quantity:    Math.min(open.qty, qty),
-        entry_price: open.price,
-        exit_price:  price,
-        pnl:         pnl ? pnl - Math.abs(comm) - Math.abs(open.comm) : 0,
-        entry_time:  open.time,
-      });
-    } else if (side === 'sell') {
-      // Short trade — sell first
-      opens[symbol].push({ price, qty, time, comm, short: true });
-    } else if (side === 'buy' && opens[symbol].length && opens[symbol][0].short) {
+    const hasOpenShort = opens[symbol].length > 0 && opens[symbol][0].short === true;
+    const hasOpenLong  = opens[symbol].length > 0 && !opens[symbol][0].short;
+
+    if (side === 'buy' && hasOpenShort) {
+      // Buy closes an existing short position
       const open = opens[symbol].shift();
       trades.push({
         ticker:      symbol,
@@ -227,6 +215,24 @@ function parseTradovate(csv) {
         pnl:         pnl ? pnl - Math.abs(comm) - Math.abs(open.comm) : 0,
         entry_time:  open.time,
       });
+    } else if (side === 'buy') {
+      // Buy opens a new long position
+      opens[symbol].push({ price, qty, time, comm, short: false });
+    } else if (side === 'sell' && hasOpenLong) {
+      // Sell closes an existing long position
+      const open = opens[symbol].shift();
+      trades.push({
+        ticker:      symbol,
+        side:        'long',
+        quantity:    Math.min(open.qty, qty),
+        entry_price: open.price,
+        exit_price:  price,
+        pnl:         pnl ? pnl - Math.abs(comm) - Math.abs(open.comm) : 0,
+        entry_time:  open.time,
+      });
+    } else if (side === 'sell') {
+      // Sell opens a new short position
+      opens[symbol].push({ price, qty, time, comm, short: true });
     }
   }
 

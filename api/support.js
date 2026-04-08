@@ -29,7 +29,7 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        from:    'Pattro Support <onboarding@resend.dev>',
+        from:    'Pattro Support <support@pattro.com>',
         to:      [TO_EMAIL],
         subject: `[Pattro Support] ${subject}`,
         html: `

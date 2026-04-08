@@ -32,23 +32,24 @@ async function getCallCount(userId, monthKey) {
   return rows.length ? (rows[0].call_count || 0) : 0;
 }
 
-// ── Incrementar el contador en Supabase (upsert) ──
-async function incrementCallCount(userId, monthKey, currentCount) {
-  await fetch(`${SUPABASE_URL}/rest/v1/coach_usage`, {
+// ── Incrementar el contador ATÓMICAMENTE usando SQL via RPC ──
+// FIX C4: prevents race condition — uses DB-level atomic increment
+// instead of read-then-write which allows double-spending
+async function incrementCallCount(userId, monthKey) {
+  // Use Supabase RPC to run atomic SQL: INSERT ... ON CONFLICT DO UPDATE call_count + 1
+  const resp = await fetch(`${SUPABASE_URL}/rest/v1/rpc/increment_coach_usage`, {
     method: 'POST',
     headers: {
       'apikey':        SUPABASE_KEY,
       'Authorization': `Bearer ${SUPABASE_KEY}`,
-      'Content-Type':  'application/json',
-      'Prefer':        'resolution=merge-duplicates'
+      'Content-Type':  'application/json'
     },
     body: JSON.stringify({
-      user_id:    userId,
-      month:      monthKey,
-      call_count: currentCount + 1,
-      updated_at: new Date().toISOString()
+      p_user_id: userId,
+      p_month:   monthKey
     })
   });
+  return resp.ok;
 }
 
 // ── Verificar que el usuario tiene plan activo ──
@@ -169,11 +170,10 @@ Rules:
       return res.status(500).json({ error: 'AI Coach returned empty response' });
     }
 
-    // ── Incrementar contador solo si la llamada fue exitosa ──
+    // ── Incrementar contador solo si la llamada fue exitosa (atómico) ──
     if (user_id) {
       try {
-        const callCount = await getCallCount(user_id, monthKey);
-        await incrementCallCount(user_id, monthKey, callCount);
+        await incrementCallCount(user_id, monthKey);
       } catch (e) {
         console.warn('[Coach] Failed to increment call count:', e.message);
       }

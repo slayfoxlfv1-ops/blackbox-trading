@@ -1992,14 +1992,33 @@ sb.auth.onAuthStateChange(function(event, session) {
 });
 
 async function checkPlanAndShow() {
+  // Safety timeout: if Supabase doesn't respond in 6s, show app anyway
+  var _safetyTimer = setTimeout(function() {
+    console.warn('[Pattro] checkPlanAndShow timeout — showing app as fallback');
+    window._userPlan = window._userPlan || 'free';
+    window.FREE_TRADE_LIMIT = 10;
+    window.isFreePlan = function() { return window._userPlan !== 'pro' && window._userPlan !== 'lifetime'; };
+    if (document.getElementById('app').style.display === 'none' ||
+        document.getElementById('app').style.display === '') {
+      showApp();
+    }
+  }, 6000);
+
   sb.from('profiles')
     .select('plan, plan_expires_at, username')
     .eq('id', currentUser.id)
     .single()
     .then(function(result) {
+      clearTimeout(_safetyTimer);
       var profile = result.data;
       if (!profile) {
-        sb.auth.signOut().then(function() { window.location.href = '/login?error=incomplete'; });
+        // No profile — show as free rather than logging out
+        window._userPlan = 'free';
+        window._planExpires = null;
+        window._username = '';
+        window.FREE_TRADE_LIMIT = 10;
+        window.isFreePlan = function() { return true; };
+        showApp();
         return;
       }
       window._userPlan    = profile.plan || 'free';
@@ -2021,7 +2040,7 @@ async function checkPlanAndShow() {
       }
       showApp();
     })
-    .catch(function() { showApp(); }); // network error — don't block
+    .catch(function() { clearTimeout(_safetyTimer); showApp(); }); // network error — don't block
 }
 
 
@@ -2479,8 +2498,6 @@ async function selectAccount(id) {
   checkAndShowOnboardingGuide();
   // Show mood check after everything loads
   setTimeout(function() { checkAndShowMoodCheck(id); }, 1800);
-  // Show mood check once per day
-  checkAndShowMoodCheck(id);
 }
 
 // ACCOUNT MODAL
@@ -2611,6 +2628,10 @@ async function deleteAccount() {
   await sb.from('trades').delete().eq('account_id', id).eq('user_id', currentUser.id);
   await sb.from('discipline_notes').delete().eq('account_id', id);
   await sb.from('daily_summaries').delete().eq('account_id', id);
+  await sb.from('trading_days').delete().eq('account_id', id);
+  await sb.from('mood_sessions').delete().eq('account_id', id);
+  await sb.from('checklist_sessions').delete().eq('account_id', id);
+  await sb.from('checklist_items').delete().eq('account_id', id);
   var res = await sb.from('accounts').delete().eq('id', id).eq('user_id', currentUser.id);
   btn.textContent = 'Delete';
   if (!res.error) {
@@ -2905,6 +2926,34 @@ async function saveTrade() {
   btn.textContent = '...';
   var disc   = document.getElementById('t-disc').value;
   var ticker = document.getElementById('t-ticker').value.toUpperCase().trim();
+
+  // ── FIX I7: validate required fields before saving ──
+  var errEl = document.getElementById('log-error') || document.createElement('div');
+  var entryVal  = document.getElementById('t-entry') ? parseFloat(document.getElementById('t-entry').value) : 0;
+  var entryTime = document.getElementById('t-entry-time') ? document.getElementById('t-entry-time').value : '';
+  var pnlVal    = document.getElementById('t-pnl') ? parseFloat(document.getElementById('t-pnl').value) : null;
+
+  if (!ticker) {
+    btn.textContent = 'Save Trade';
+    var errMsg = document.getElementById('log-error');
+    if (errMsg) { errMsg.textContent = 'Ticker is required.'; errMsg.style.color = 'var(--red)'; }
+    else { alert('Ticker is required.'); }
+    return;
+  }
+  if (!entryTime) {
+    btn.textContent = 'Save Trade';
+    var errMsg = document.getElementById('log-error');
+    if (errMsg) { errMsg.textContent = 'Entry time is required.'; errMsg.style.color = 'var(--red)'; }
+    else { alert('Entry time is required.'); }
+    return;
+  }
+  if (pnlVal === 0 && !editingTradeId) {
+    // PnL = 0 — ask for confirmation (may be intentional for breakeven)
+    if (!confirm('PnL is 0. Is this a breakeven trade?')) {
+      btn.textContent = 'Save Trade';
+      return;
+    }
+  }
 
   // Screenshot: store as data URL in localStorage keyed by trade
   // (avoids needing Supabase Storage bucket configuration)
@@ -5493,7 +5542,9 @@ function calcDailyDisciplineScore(dateStr) {
   // ── Sub 1: Rules (35 pts) ──
   var rulesResult = calcRulesDisciplineScore(rulesObj, dayTrades);
   // rulesResult.score is 0-100, map to 0-35
-  var rulesPts = Math.round(rulesResult.score / 100 * 35);
+  // FIX I6: guard against NaN if rulesResult.score is undefined/null
+  var rulesPts = Math.round((rulesResult.score || 0) / 100 * 35);
+  if (isNaN(rulesPts)) rulesPts = 0;
 
   // ── Sub 2: Checklist (35 pts) ──
   // null = no checklist filled → exclude from calculation (don't penalize absence of data)
@@ -5545,6 +5596,7 @@ function calcDailyDisciplineScore(dateStr) {
     // All three present
     total = rulesPts + checklistPts + tagPts;
   }
+  if (isNaN(total) || total === null || total === undefined) total = 0;
   total = Math.max(0, Math.min(100, total));
 
   var label = total >= 90 ? 'Elite 🏆'
