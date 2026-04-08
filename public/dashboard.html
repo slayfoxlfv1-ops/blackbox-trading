@@ -9534,7 +9534,7 @@ var TOUR_STEPS = [
   },
   {
     key:'rules', target:'.nav-item[data-view="psychology"]', nav:'psychology',
-    tab: function(){ if(typeof switchDiscTab===\'function\') switchDiscTab(\'rules\'); },
+    tab: function(){ if(typeof switchDiscTab==='function') switchDiscTab('rules'); },
     title:'Step 6 — Rules',
     subtitle:'Your fixed session boundaries',
     body:'Rules are the hard limits of your trading session. They apply to the whole day, not individual trades:<br><br>• Max trades per day<br>• Max consecutive losses before stopping<br>• Allowed trading hours (session times)<br>• No trading on certain days<br>• Max position size<br>• No trading on Red Days<br><br>When you violate a rule, it affects your <strong>Discipline Score</strong> for the day. You can toggle each rule on or off depending on your current trading plan.',
@@ -9567,7 +9567,7 @@ var TOUR_STEPS = [
   },
   {
     key:'done', target:null,
-    title:"You\'re all set! 🚀",
+    title:'You\'re all set! 🚀',
     subtitle:'Start logging and Pattro does the rest',
     body:'Quick-start checklist:<br><br>✅ Create your trading account (sidebar → "+ Add account")<br>✅ Set your Rules (Psychology → Discipline → Rules)<br>✅ Add your Setup Tags (Settings → Setup Tags)<br>✅ Log your first trade (top bar → "+ Log Trade")<br>✅ Do your daily mood check (appears automatically each day)<br><br>With <strong>15+ trades</strong> the AI Coach generates your full psychological profile. With <strong>30+ days</strong> you will see clear patterns in your behavior.',
     tip:'💡 The more consistently you log, the more accurate your Pattro pattern becomes.',
