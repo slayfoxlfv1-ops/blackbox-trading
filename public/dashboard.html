@@ -1474,14 +1474,14 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
 
     <div class="form-group" id="t-checklist-wrap" style="background:var(--surface2);border:1px solid var(--wire);border-radius:8px;padding:10px 12px">
       <div style="display:flex;align-items:center;gap:10px">
-        <label class="form-label" style="margin:0;flex:1;font-size:10px">✓ Checklist <span style="color:var(--text3);font-weight:400">how much did you follow today?</span></label>
+        <label class="form-label" style="margin:0;flex:1;font-size:10px">✓ Trade confirmations <span style="color:var(--text3);font-weight:400">% of confirmations met before entry</span></label>
         <span id="t-checklist-pct-display" style="font-size:13px;font-weight:800;color:var(--text3);min-width:38px;text-align:right">0%</span>
       </div>
       <input type="range" id="t-checklist-pct" min="0" max="100" step="10" value="0"
         style="width:100%;accent-color:var(--green);cursor:pointer;margin-top:6px;display:block"
         data-user-changed="0"
         oninput="this.dataset.userChanged='1';updateChecklistDisplay(this.value)">
-      <div id="t-checklist-note" style="font-size:9px;color:var(--text3);margin-top:4px">Will be saved as the day's checklist along with this trade</div>
+      <div id="t-checklist-note" style="font-size:9px;color:var(--text3);margin-top:4px">How many of your entry confirmations did the market give you?</div>
     </div>
     <div class="form-group" id="rules-compliance-group">
       <div style="display:flex;align-items:center;gap:10px">
@@ -2907,22 +2907,26 @@ function openLogModal() {
     _checkHistorical();
     checkHistoricalColorDay();
   }
-  // Checklist slider: show existing value if already saved today, else allow input
+  // Trade confirmations slider: prefill from trade if editing, else 0
   var _clSlider = document.getElementById('t-checklist-pct');
   var _clDisp   = document.getElementById('t-checklist-pct-display');
   var _clNote   = document.getElementById('t-checklist-note');
   if (_clSlider) {
-    _clSlider.dataset.userChanged = '0'; // reset tracking
-    var _today0  = localDateStr();
-    var _todayCl = (currentChecklistSessions||[]).find(function(s){ return s.session_date===_today0; });
-    // Pre-fill with existing checklist value if saved today, else 0
-    var _prefill = _todayCl ? _todayCl.score_pct : 0;
+    _clSlider.dataset.userChanged = '0';
+    // If editing a trade, prefill with its saved confirmation %
+    var _prefill = 0;
+    if (editingTradeId) {
+      var _editTrade = (currentTrades || []).find(function(t){ return t.id === editingTradeId; });
+      if (_editTrade && _editTrade.trade_confirmation_pct !== null && _editTrade.trade_confirmation_pct !== undefined) {
+        _prefill = _editTrade.trade_confirmation_pct;
+      }
+    }
     _clSlider.value    = _prefill;
     _checklistOriginalValue = _prefill;
     _clSlider.disabled = false;
     _clSlider.style.opacity = '1';
     if (_clDisp) { _clDisp.textContent = _prefill+'%'; _clDisp.style.color = _prefill>=80?'var(--green)':_prefill>=50?'var(--amber)':'var(--red)'; }
-    if (_clNote) _clNote.textContent = _todayCl ? 'Current value for today: '+_todayCl.score_pct+"% — you can adjust it" : "Will be saved as the day's checklist";
+    if (_clNote) _clNote.textContent = 'How many of your entry confirmations did the market give you?';
   }
 }
 
@@ -3058,6 +3062,13 @@ async function saveTrade() {
     entry_time:     entryTimeVal,
     account_type:   (accounts.find(function(a){return a.id===currentAccountId;})||{}).type,
     source:         'manual',
+    // trade_confirmation_pct: % of entry confirmations met (0-100), null = not set
+    trade_confirmation_pct: (function() {
+      var sl = document.getElementById('t-checklist-pct');
+      if (!sl) return null;
+      var v = parseInt(sl.value);
+      return (!isNaN(v) && v >= 0) ? v : null;
+    })(),
     // rules_compliance: null = use active rules, 0-100 = manual override %
     rules_compliance: (function() {
       var override = document.getElementById('t-rules-override');
@@ -3168,42 +3179,6 @@ async function saveTrade() {
     // Color day saved via second mood_sessions upsert block below
   }
 
-  // ── Save checklist % from slider — use trade's date, not today ──
-  var _clSliderSave = document.getElementById('t-checklist-pct');
-  if (_clSliderSave && currentAccountId) {
-    var _clPct    = parseInt(_clSliderSave.value);
-    // Only save checklist if user explicitly set a value (> 0) or if there's already a session for that day
-    // Get the date for this trade (use entry_time, fall back to today)
-    var _clEntryEl = document.getElementById('t-entry-time');
-    var _clDate = (_clEntryEl && _clEntryEl.value)
-      ? _clEntryEl.value.slice(0,10)
-      : localDateStr();
-    // Save checklist only if user moved the slider from its original value
-    var _userChangedCl = (_checklistOriginalValue !== null) && (_clPct !== _checklistOriginalValue);
-    var _shouldSaveCl = !isNaN(_clPct) && _userChangedCl;
-    if (_shouldSaveCl) {
-      var _clVerdict = _clPct >= 80 ? 'ready' : _clPct >= 50 ? 'caution' : 'not_ready';
-      var _clPayload = {
-        account_id:   currentAccountId,
-        user_id:      currentUser.id,
-        session_date: _clDate,
-        items:        {},
-        score_pct:    _clPct,
-        verdict:      _clVerdict,
-        updated_at:   new Date().toISOString()
-      };
-      try {
-        var _clRes = await sb.from('checklist_sessions').upsert(_clPayload, { onConflict: 'account_id,session_date' });
-        if (_clRes && _clRes.error) {
-          console.error('[Pattro] Checklist save failed:', _clRes.error.message, JSON.stringify(_clRes.error));
-        } else {
-          currentChecklistSessions = currentChecklistSessions.filter(function(s){ return s.session_date!==_clDate; });
-          currentChecklistSessions.unshift({ session_date:_clDate, score_pct:_clPct, verdict:_clVerdict, items:{} });
-        }
-      } catch(e) { console.warn('Checklist save error:', e); }
-    }
-  }
-
   // ── Save color day for historical trades ──
   var _cdInput = document.getElementById('t-colorday');
   var _cdVal = _cdInput ? _cdInput.value : 'today';
@@ -3292,13 +3267,11 @@ function openEditTrade(id) {
   document.getElementById('save-trade-btn').textContent = 'Save Changes';
   editingTradeId = id;
   (function(){ var _ov2=document.getElementById('log-overlay'); if(_ov2){_ov2.style.display='';_ov2.classList.add('open');} })();
-  // On edit: show checklist for that trade's day, read-only
+  // On edit: restore trade_confirmation_pct from the trade being edited
   var _clSliderE = document.getElementById('t-checklist-pct');
   if (_clSliderE) {
-    var _entryEl   = document.getElementById('t-entry-time');
-    var _tradeDayK = _entryEl && _entryEl.value ? _entryEl.value.slice(0,10) : localDateStr();
-    var _clForDay  = (currentChecklistSessions||[]).find(function(s){ return s.session_date===_tradeDayK; });
-    var _prefillE  = _clForDay ? _clForDay.score_pct : 0;
+    var _editTrade = editingTradeId ? (currentTrades||[]).find(function(t){ return t.id===editingTradeId; }) : null;
+    var _prefillE  = (_editTrade && _editTrade.trade_confirmation_pct != null) ? _editTrade.trade_confirmation_pct : 0;
     _clSliderE.value    = _prefillE;
     _checklistOriginalValue = _prefillE;
     _clSliderE.disabled = false;
@@ -3306,7 +3279,7 @@ function openEditTrade(id) {
     var _clDispE = document.getElementById('t-checklist-pct-display');
     var _clNoteE = document.getElementById('t-checklist-note');
     if (_clDispE) { _clDispE.textContent = _prefillE+'%'; _clDispE.style.color = _prefillE>=80?'var(--green)':_prefillE>=50?'var(--amber)':'var(--red)'; }
-    if (_clNoteE) _clNoteE.textContent = _clForDay ? 'Saved value: '+_clForDay.score_pct+'% — you can adjust it' : 'No checklist for this day';
+    if (_clNoteE) _clNoteE.textContent = _editTrade ? 'Saved confirmations: '+_prefillE+'%' : '';
   }
 }
 
@@ -3412,18 +3385,16 @@ async function loadAccountData(id, silent) {
   var todayStr3 = localDateStr();
   var _results = await Promise.all([
     sb.from('trades').select('*').eq('account_id', id).order('entry_time', { ascending: true }),
-    sb.from('checklist_sessions').select('session_date,items,score_pct,verdict').eq('account_id', id).order('session_date', { ascending: false }).limit(60),
     sb.from('mood_sessions').select('answers,score,level,session_date').eq('account_id', id).order('session_date', { ascending: false }).limit(90),
     sb.from('checklist_items').select('items,setup_tags').eq('account_id', id).limit(1),
     sb.from('mood_sessions').select('answers,score,level,session_date').eq('account_id', id).eq('session_date', todayStr3).limit(1),
     sb.from('trading_days').select('*').eq('account_id', id).order('session_date', { ascending: false }).limit(120)
   ]);
   var res        = _results[0];
-  var clRes      = _results[1];
-  var moodAllRes = _results[2];
-  var clItemsRes = _results[3];
-  var moodDbRes  = _results[4];
-  var tdRes      = _results[5];
+  var moodAllRes = _results[1];
+  var clItemsRes = _results[2];
+  var moodDbRes  = _results[3];
+  var tdRes      = _results[4];
 
   // Populate trading_days cache from parallel result
   if (tdRes && tdRes.data) {
@@ -3434,7 +3405,6 @@ async function loadAccountData(id, silent) {
   var trades = res.data || [];
   currentTrades = trades;
   _tradesLoadedForAccount = id;
-  currentChecklistSessions = (clRes.data || []);
   currentMoodSessions = (moodAllRes.data || []);
   // Populate currentRules from bbStore (used in status pills)
   // getPersonalRules returns object {id: {label, is_active, violated}}
@@ -5485,11 +5455,17 @@ function checkRuleViolations(rulesObj, trades) {
     }
   }
 
-  // ── Rule 6: No trade without checklist ──
+  // ── Rule 6: Trade confirmations threshold ──
+  // Flags trades where the trader entered with low confirmation %
   if (r.checklist && r.checklist.active) {
-    var todayCL = (currentChecklistSessions||[]).find(function(s){ return s.session_date === todayStr; });
-    if (todayTrades.length > 0 && (!todayCL || todayCL.score_pct < 1)) {
-      violations.push({ rule:{id:'checklist', label:'Complete checklist before trading'}, detail: 'You traded without completing today\'s checklist' });
+    var minConfirm = r.checklist.minPct || 50; // default: at least 50% confirmations
+    var lowConfirmTrades = todayTrades.filter(function(t) {
+      return t.trade_confirmation_pct !== null &&
+             t.trade_confirmation_pct !== undefined &&
+             t.trade_confirmation_pct < minConfirm;
+    });
+    if (lowConfirmTrades.length > 0) {
+      violations.push({ rule:{id:'checklist', label:'Min ' + minConfirm + '% confirmations per trade'}, detail: lowConfirmTrades.length + ' trade(s) entered below ' + minConfirm + '% confirmations' });
     }
   }
 
@@ -5602,8 +5578,6 @@ function calcDailyDisciplineScore(dateStr) {
   var allTrades  = currentTrades || [];
   var dayTrades  = allTrades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(today); });
   var rulesObj   = getPersonalRules(currentAccountId || '');
-  var clSession  = (currentChecklistSessions || []).find(function(s){ return s.session_date === today; });
-
   // ── Sub 1: Rules (35 pts) ──
   // If ALL trades today have a rules_compliance override, use the average of those
   // Otherwise use the rules engine (check violations against active rules)
@@ -5642,18 +5616,19 @@ function calcDailyDisciplineScore(dateStr) {
     if (isNaN(rulesPts)) rulesPts = 17; // fallback neutral
   }
 
-  // ── Sub 2: Checklist (35 pts) ──
-  // null = no checklist filled → exclude from calculation (don't penalize absence of data)
-  // 0 = checklist filled but score 0 → penalize
+  // ── Sub 2: Trade Confirmations (35 pts) ──
+  // Average of trade_confirmation_pct across all trades today
+  // null = no trades have confirmation % set → exclude from calculation
   var checklistPts = null;
-  if (clSession) {
-    var pct = clSession.score_pct || 0;
-    if (pct >= 100)     checklistPts = 35;
-    else if (pct >= 80) checklistPts = 28;
-    else if (pct >= 60) checklistPts = 20;
-    else if (pct >= 40) checklistPts = 12;
-    else if (pct >= 1)  checklistPts = 5;
-    else                checklistPts = 0;
+  var tradesWithConfirmation = dayTrades.filter(function(t) {
+    return t.trade_confirmation_pct !== null && t.trade_confirmation_pct !== undefined;
+  });
+  if (tradesWithConfirmation.length > 0) {
+    var avgConfirmPct = tradesWithConfirmation.reduce(function(s, t) {
+      return s + t.trade_confirmation_pct;
+    }, 0) / tradesWithConfirmation.length;
+    // Map 0-100% to 0-35 pts proportionally
+    checklistPts = Math.round(avgConfirmPct / 100 * 35);
   }
 
   // ── Sub 3: Discipline tag avg (30 pts) ──
@@ -6050,8 +6025,11 @@ function calcTradeDiscipline(trade, rulesObj, checklistPct) {
     ? Math.round(rawBehavior * 0.60 + 100 * 0.40)
     : rawBehavior;
 
-  var rScore  = (rulesObj !== undefined && rulesObj !== null) ? rulesObj : 100;
-  var clScore = (checklistPct !== undefined && checklistPct !== null) ? checklistPct : null;
+  var rScore = (rulesObj !== undefined && rulesObj !== null) ? rulesObj : 100;
+  // Use trade.trade_confirmation_pct if available, fallback to passed param
+  var clScore = (trade.trade_confirmation_pct !== null && trade.trade_confirmation_pct !== undefined)
+    ? trade.trade_confirmation_pct
+    : (checklistPct !== undefined && checklistPct !== null) ? checklistPct : null;
 
   var total;
   if (clScore === null) {
@@ -7357,8 +7335,7 @@ function openReplay(url) {
 var _psychActiveTab = 'mind'; // 'mind' | 'discipline'
 
 function renderPsychologyView(subTabIntent) {
-  if (subTabIntent === 'checklist') { _psychActiveTab = 'discipline'; window._discTab = 'checklist'; }
-  else if (subTabIntent === 'mind') _psychActiveTab = 'mind';
+  if (subTabIntent === 'mind') _psychActiveTab = 'mind';
   var el = document.getElementById('main-content');
   var tabs = [
     { id: 'mind',       label: '&#9675; Psychology' },
@@ -7609,10 +7586,9 @@ function renderMentalScoreCalendar() {
 // DISCIPLINE VIEW
 function renderDisciplineView() {
   var el=getTabEl('psych-tab-content');
-  var activeTab=window._discTab||'rules';
+  var activeTab=(window._discTab==='checklist')?'rules':(window._discTab||'rules');
   el.innerHTML='<div class="tab-bar fade-in">'+
     '<button class="tab-btn '+(activeTab==='rules'?'active':'')+'" onclick="switchDiscTab(\'rules\')">Rules</button>'+
-    '<button class="tab-btn '+(activeTab==='checklist'?'active':'')+'" onclick="switchDiscTab(\'checklist\')">Checklist</button>'+
     '<button class="tab-btn '+(activeTab==='execution'?'active':'')+'" onclick="switchDiscTab(\'operativa\')">Trading</button>'+
     '</div><div id="disc-tab-content"></div>';
   switchDiscTab(activeTab);
@@ -7626,7 +7602,6 @@ function switchDiscTab(tab) {
   var el=document.getElementById('disc-tab-content');
   if (!el) return;
   if (tab==='rules')     { initRulesTemp(); renderRulesTab(el); }
-  if (tab==='checklist') renderChecklistTab(el);
   if (tab==='execution' || tab==='operativa') renderOperativaTab(el);
 }
 
@@ -8038,128 +8013,6 @@ function renderRulesTab(el) {
 }
 
 // CHECKLIST TAB
-function renderChecklistTab(el) {
-  var storageKey='checklist_'+currentAccountId;
-  var items=[];
-  try { items=JSON.parse(bbStore.get(storageKey)||'[]'); } catch(e){}
-  var todayKey='checks_'+currentAccountId+'_'+localDateStr();
-  var checks={};
-  try { checks=JSON.parse(bbStore.get(todayKey)||'{}'); } catch(e){}
-  var pct=items.length?Math.round(Object.values(checks).filter(Boolean).length/items.length*100):0;
-  var pctColor=pct>=80?'var(--green)':pct>=50?'var(--amber)':'var(--red)';
-  var itemsHtml=items.length===0?'<div style="text-align:center;padding:24px;color:var(--text3);font-size:11px">No items yet - add your first below</div>':
-    items.map(function(item,i) {
-      return '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--wire)">'+
-        '<input type="checkbox" id="chk-'+i+'" '+(checks[i]?'checked':'')+' onchange="toggleCheck('+i+')" style="width:15px;height:15px;accent-color:var(--green);cursor:pointer;flex-shrink:0">'+
-        '<label for="chk-'+i+'" style="font-size:13px;cursor:pointer;flex:1;'+(checks[i]?'text-decoration:line-through;opacity:0.6':'')+'">'+item+'</label>'+
-        '<span style="cursor:pointer;color:var(--text3);font-size:11px;padding:2px 6px;border-radius:4px" onclick="deleteChecklistItem('+i+')">x</span>'+
-        '</div>';
-    }).join('');
-  el.innerHTML='<div class="panel fade-in" style="margin-bottom:12px">'+
-    '<div class="panel-head"><span class="panel-title">Daily Pre-Trade Checklist</span><span class="panel-cap" style="color:'+pctColor+'">'+pct+'% complete</span></div>'+
-    '<div style="padding:8px 18px 4px">'+
-    '<div style="height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;margin-bottom:16px"><div style="height:100%;width:'+pct+'%;background:'+pctColor+';border-radius:2px"></div></div>'+
-    itemsHtml+
-    '</div>'+
-    '<div style="padding:12px 18px;display:flex;gap:8px">'+
-    '<input class="form-input" id="new-check-input" type="text" placeholder="Add checklist item..." style="flex:1" onkeydown="if(event.key===\'Enter\')addChecklistItem()">'+
-    '<button class="btn btn-solid" onclick="addChecklistItem()">+ Add</button>'+
-    '</div></div>'+
-    '<div class="panel fade-in"><div class="panel-head"><span class="panel-title">Last 7 Days</span></div><div style="padding:14px 18px">'+buildChecklistHistory()+'</div></div>';
-}
-
-function buildChecklistHistory() {
-  var storageKey='checklist_'+currentAccountId;
-  var items=[];
-  try { items=JSON.parse(bbStore.get(storageKey)||'[]'); } catch(e){}
-  if (!items.length) return '<span style="font-size:10px;color:var(--text3)">No history yet</span>';
-  var html='';
-  for (var i=6;i>=0;i--) {
-    var d=new Date(); d.setDate(d.getDate()-i);
-    var dk=d.toISOString().slice(0,10);
-    var dayLabel=i===0?'Today':i===1?'Yesterday':d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
-    var checks={}; try { checks=JSON.parse(bbStore.get('checks_'+currentAccountId+'_'+dk)||'{}'); } catch(e){}
-    var done=Object.values(checks).filter(Boolean).length;
-    var pct=items.length?Math.round(done/items.length*100):0;
-    var col=pct>=80?'var(--green)':pct>=50?'var(--amber)':'var(--red)';
-    html+='<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--wire)">'+
-      '<span style="font-size:10px;color:var(--text2);min-width:80px">'+dayLabel+'</span>'+
-      '<div style="flex:1;height:4px;background:var(--surface2);border-radius:2px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:'+col+';border-radius:2px"></div></div>'+
-      '<span style="font-size:10px;color:'+col+';min-width:36px;text-align:right">'+pct+'%</span></div>';
-  }
-  return html;
-}
-
-async function toggleCheck(idx) {
-  var today3=localDateStr();
-  var todayKey='checks_'+currentAccountId+'_'+today3;
-  var storageKey='checklist_'+currentAccountId;
-  var items=[]; try { items=JSON.parse(bbStore.get(storageKey)||'[]'); } catch(e){}
-  var checks={}; try { checks=JSON.parse(bbStore.get(todayKey)||'{}'); } catch(e){}
-  checks[idx]=!checks[idx];
-  bbStore.set(todayKey, JSON.stringify(checks));
-  var done=Object.values(checks).filter(Boolean).length;
-  var pct=items.length?Math.round(done/items.length*100):0;
-  var verdict=pct>=100?'ready':pct>=70?'caution':'no_trade';
-  // Sync to Supabase checklist_sessions
-  await sb.from('checklist_sessions').upsert({
-    account_id: currentAccountId,
-    user_id: currentUser.id,
-    session_date: today3,
-    items: checks,
-    score_pct: pct,
-    verdict: verdict,
-    updated_at: new Date().toISOString()
-  }, { onConflict: 'account_id,session_date' });
-  // Update in-memory cache so dashboard reflects checklist immediately
-  var existing = (currentChecklistSessions||[]).findIndex(function(s){ return s.session_date === today3; });
-  var newSession = { session_date: today3, items: checks, score_pct: pct, verdict: verdict };
-  if (existing >= 0) currentChecklistSessions[existing] = newSession;
-  else currentChecklistSessions.unshift(newSession);
-  switchDiscTab('checklist');
-}
-
-async function addChecklistItem() {
-  var input=document.getElementById('new-check-input');
-  var val=input&&input.value&&input.value.trim();
-  if (!val) return;
-  var storageKey='checklist_'+currentAccountId;
-  var items=[]; try { items=JSON.parse(bbStore.get(storageKey)||'[]'); } catch(e){}
-  items.push(val);
-  bbStore.set(storageKey, JSON.stringify(items));
-  // Sync to Supabase
-  await sb.from('checklist_items').upsert({
-    account_id: currentAccountId,
-    user_id: currentUser.id,
-    items: items,
-    updated_at: new Date().toISOString()
-  }, { onConflict: 'account_id' });
-  switchDiscTab('checklist');
-}
-
-async function deleteChecklistItem(idx) {
-  var storageKey='checklist_'+currentAccountId;
-  var todayKey='checks_'+currentAccountId+'_'+localDateStr();
-  var items=[]; try { items=JSON.parse(bbStore.get(storageKey)||'[]'); } catch(e){}
-  var checks={}; try { checks=JSON.parse(bbStore.get(todayKey)||'{}'); } catch(e){}
-  items.splice(idx,1);
-  // Re-index using numeric keys — same system as toggleCheck (checks[0], checks[1]...)
-  var newChecks={};
-  items.forEach(function(_,i){
-    var oldKey = i >= idx ? i+1 : i;  // shift indices above the deleted one
-    newChecks[i] = !!checks[oldKey];
-  });
-  bbStore.set(storageKey, JSON.stringify(items));
-  bbStore.set(todayKey, JSON.stringify(newChecks));
-  await sb.from('checklist_items').upsert({
-    account_id: currentAccountId,
-    user_id: currentUser.id,
-    items: items,
-    updated_at: new Date().toISOString()
-  }, { onConflict: 'account_id' });
-  switchDiscTab('checklist');
-}
-
 // TRADING TAB
 function renderOperativaTab(el) {
   var trades=currentTrades||[];
@@ -9694,10 +9547,10 @@ var TOUR_STEPS = [
   {
     key:'checklist', target:'.nav-item[data-view="psychology"]', nav:'psychology',
     tab:function(){ if(typeof switchPsychTab==='function') switchPsychTab('discipline'); setTimeout(function(){ if(typeof switchDiscTab==='function') switchDiscTab('checklist'); },300); },
-    title:'Step 7 — Checklist',
-    subtitle:'Your personal pre-trade conditions',
-    body:'Unlike Rules, the Checklist is <strong>fully customizable</strong>. Add the specific conditions you need to verify before every trade — for example:<br><br>• "Stop loss defined before entry"<br>• "Minimum R:R of 1.5"<br>• "No trading in the first 15 minutes"<br>• "I have identified a clear setup"<br><br>Before each session you rate how well you completed it using the 0–100% slider in the Log Trade form. This directly affects your Discipline Score.',
-    tip:'⚠️ The checklist and rules are the foundation of your discipline score. Set them up before logging your first trade.',
+    title:'Step 7 — Trade Confirmations',
+    subtitle:'How well did the market confirm your entry?',
+    body:'Every time you log a trade, you rate <strong>what % of your entry confirmations the market gave you</strong> before you entered.<br><br>For example, if your strategy requires 4 conditions and only 3 were met, that is 75%. This is completely subjective — only you know your system.<br><br>This % is saved per trade and directly affects your <strong>Discipline Score</strong>. It measures whether you entered trades with a solid setup or chased the market.',
+    tip:'💡 Be honest with this number. A pattern of low confirmation % with losses is one of the most powerful signals Pattro can detect.',
     cta:'Next →'
   },
   {
@@ -9720,7 +9573,7 @@ var TOUR_STEPS = [
     key:'done', target:null,
     title:"You're all set! 🚀",
     subtitle:'Start logging and Pattro does the rest',
-    body:'Here is your quick-start checklist:<br><br>✅ Create your trading account (sidebar → "+ Add account")<br>✅ Set your Rules (Psychology → Discipline → Rules)<br>✅ Set your Checklist (Psychology → Discipline → Checklist)<br>✅ Add your Setup Tags (Settings → Setup Tags)<br>✅ Log your first trade (top bar → "+ Log Trade")<br>✅ Do your daily mood check (it will appear automatically)<br><br>With <strong>15+ trades</strong> the AI Coach generates your full psychological profile. With <strong>30+ days</strong> you will see clear patterns in your behavior.',
+    body:'Here is your quick-start checklist:<br><br>✅ Create your trading account (sidebar → "+ Add account")<br>✅ Set your Rules (Psychology → Discipline → Rules)<br>✅ Add your Setup Tags (Settings → Setup Tags)<br>✅ Log your first trade (top bar → "+ Log Trade")<br>✅ Do your daily mood check (it will appear automatically)<br><br>With <strong>15+ trades</strong> the AI Coach generates your full psychological profile. With <strong>30+ days</strong> you will see clear patterns in your behavior.',
     tip:'💡 You can return to this guide anytime from Settings → Help.',
     cta:'Start using Pattro!'
   }
