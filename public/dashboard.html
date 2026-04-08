@@ -1204,6 +1204,7 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
       </div>
       <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
 <button class="btn btn-solid" id="log-btn" style="display:none" onclick="openLogModal()">+ Log Trade</button>
+<button class="btn btn-ghost" id="import-btn" style="display:none;font-size:10px" onclick="openImportModal()">&#8679; Import CSV</button>
       </div>
     </div>
 
@@ -2229,6 +2230,188 @@ function showUpgradeModal(trigger) {
   overlay.addEventListener("click", function(e) { if (e.target === overlay) overlay.remove(); });
 }
 
+
+// ── CSV IMPORT MODAL ──
+function openImportModal() {
+  var existing = document.getElementById("import-modal-overlay");
+  if (existing) existing.remove();
+
+  var overlay = document.createElement("div");
+  overlay.id = "import-modal-overlay";
+  overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px";
+
+  var box = document.createElement("div");
+  box.style.cssText = "background:var(--surface);border:1px solid var(--wire2);border-top:2px solid var(--teal);max-width:480px;width:100%;padding:32px;position:relative;max-height:90vh;overflow-y:auto";
+
+  // Close button
+  var closeBtn = document.createElement("button");
+  closeBtn.innerHTML = "&times;";
+  closeBtn.style.cssText = "position:absolute;top:12px;right:14px;background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer";
+  closeBtn.onclick = function() { overlay.remove(); };
+
+  // Title
+  var titleEl = document.createElement("div");
+  titleEl.style.cssText = "font-size:15px;font-weight:800;color:var(--text);margin-bottom:6px";
+  titleEl.textContent = "Import Trades from CSV";
+
+  // Subtitle
+  var subEl = document.createElement("div");
+  subEl.style.cssText = "font-size:11px;color:var(--text3);margin-bottom:20px;font-family:var(--mono)";
+  subEl.textContent = "Supported: NinjaTrader · Tradovate · TopstepX · MetaTrader 4/5";
+
+  // Broker label
+  var brokerLabel = document.createElement("label");
+  brokerLabel.style.cssText = "font-family:var(--mono);font-size:10px;color:var(--text2);display:block;margin-bottom:6px";
+  brokerLabel.textContent = "BROKER (auto-detected if empty)";
+
+  // Broker select
+  var brokerSelect = document.createElement("select");
+  brokerSelect.id = "import-broker";
+  brokerSelect.style.cssText = "width:100%;background:var(--surface2);border:1px solid var(--wire2);color:var(--text);padding:9px 12px;font-family:var(--mono);font-size:11px;margin-bottom:16px";
+  [["","Auto-detect"],["ninjatrader","NinjaTrader"],["tradovate","Tradovate"],["topstepx","TopstepX"],["metatrader4","MetaTrader 4"],["metatrader5","MetaTrader 5"]].forEach(function(opt) {
+    var o = document.createElement("option");
+    o.value = opt[0]; o.textContent = opt[1];
+    brokerSelect.appendChild(o);
+  });
+
+  // File label
+  var fileLabel = document.createElement("label");
+  fileLabel.style.cssText = "font-family:var(--mono);font-size:10px;color:var(--text2);display:block;margin-bottom:6px";
+  fileLabel.textContent = "CSV FILE";
+
+  // File input
+  var fileInput = document.createElement("input");
+  fileInput.type = "file";
+  fileInput.id = "import-file";
+  fileInput.accept = ".csv,.txt";
+  fileInput.style.cssText = "width:100%;background:var(--surface2);border:1px solid var(--wire2);color:var(--text);padding:9px 12px;font-family:var(--mono);font-size:11px;box-sizing:border-box;margin-bottom:16px";
+
+  // Instructions box
+  var instrEl = document.createElement("div");
+  instrEl.id = "import-instructions";
+  instrEl.style.cssText = "background:var(--surface2);border:1px solid var(--wire);padding:14px;margin-bottom:20px;font-family:var(--mono);font-size:10px;color:var(--text3);line-height:1.8";
+  instrEl.innerHTML = "<strong style='color:var(--text2)'>How to export from your broker:</strong><br>"
+    + "NinjaTrader: Control Center &rarr; Account Performance &rarr; Trades &rarr; Export<br>"
+    + "Tradovate: Reports &rarr; Fills Report &rarr; Export CSV<br>"
+    + "TopstepX: Trading History &rarr; Export<br>"
+    + "MetaTrader 4/5: Account History &rarr; right-click &rarr; Save as Detailed Report";
+
+  // Status
+  var statusEl = document.createElement("div");
+  statusEl.id = "import-status";
+  statusEl.style.cssText = "min-height:20px;font-family:var(--mono);font-size:11px;margin-bottom:16px";
+
+  // Import button
+  var runBtn = document.createElement("button");
+  runBtn.id = "import-run-btn";
+  runBtn.style.cssText = "width:100%;background:var(--teal);color:var(--bg);border:none;padding:12px;font-family:var(--display);font-size:12px;font-weight:800;cursor:pointer;letter-spacing:.5px";
+  runBtn.textContent = "IMPORT TRADES";
+  runBtn.onclick = runImportCSV;
+
+  // Assemble
+  box.appendChild(closeBtn);
+  box.appendChild(titleEl);
+  box.appendChild(subEl);
+  box.appendChild(brokerLabel);
+  box.appendChild(brokerSelect);
+  box.appendChild(fileLabel);
+  box.appendChild(fileInput);
+  box.appendChild(instrEl);
+  box.appendChild(statusEl);
+  box.appendChild(runBtn);
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+
+  overlay.addEventListener("click", function(e) { if (e.target === overlay) overlay.remove(); });
+
+  brokerSelect.addEventListener("change", function() {
+    updateImportInstructions(this.value, instrEl);
+  });
+}
+
+
+function updateImportInstructions(broker, instrEl) {
+  var el = instrEl || document.getElementById("import-instructions");
+  if (!el) return;
+  var instructions = {
+    ninjatrader:  "NinjaTrader: Control Center &rarr; Account Performance &rarr; Trades tab &rarr; right-click &rarr; Export",
+    tradovate:    "Tradovate: Reports &rarr; Fills Report &rarr; select date range &rarr; Export CSV",
+    topstepx:     "TopstepX: Dashboard &rarr; Trading History &rarr; select dates &rarr; Export",
+    metatrader4:  "MetaTrader 4: Terminal &rarr; Account History tab &rarr; right-click &rarr; Save as Detailed Report",
+    metatrader5:  "MetaTrader 5: Toolbox &rarr; History tab &rarr; right-click &rarr; Save as Report (Detailed)"
+  };
+  el.innerHTML = "<strong style='color:var(--text2)'>How to export:</strong><br>" + (instructions[broker] || el.innerHTML.split("<br>").slice(1).join("<br>"));
+}
+
+async function runImportCSV() {
+  var btn      = document.getElementById("import-run-btn");
+  var statusEl = document.getElementById("import-status");
+  var fileEl   = document.getElementById("import-file");
+  var broker   = document.getElementById("import-broker").value;
+
+  if (!fileEl || !fileEl.files.length) {
+    statusEl.style.color = "var(--red)";
+    statusEl.textContent = "Please select a CSV file first.";
+    return;
+  }
+
+  btn.disabled    = true;
+  btn.textContent = "Importing...";
+  statusEl.style.color = "var(--text3)";
+  statusEl.textContent = "Reading file...";
+
+  var reader = new FileReader();
+  reader.onload = async function(e) {
+    var csv = e.target.result;
+    statusEl.textContent = "Sending to parser...";
+
+    try {
+      var resp = await fetch("/api/import-csv", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          csv:        csv,
+          broker:     broker || null,
+          account_id: currentAccountId,
+          user_id:    currentUser.id
+        })
+      });
+
+      var data = await resp.json();
+
+      if (!resp.ok || data.error) {
+        statusEl.style.color = "var(--red)";
+        statusEl.textContent = "Error: " + (data.error || "Import failed");
+        btn.disabled    = false;
+        btn.textContent = "IMPORT TRADES";
+        return;
+      }
+
+      // Success
+      statusEl.style.color = "var(--green)";
+      statusEl.innerHTML = "Imported <strong>" + data.inserted + "</strong> trades from " + data.broker
+        + (data.skipped ? " &nbsp;(" + data.skipped + " duplicates skipped)" : "");
+
+      btn.textContent = "Done!";
+
+      // Reload data and close modal after 2s
+      await loadAccountData(currentAccountId, true);
+      setTimeout(function() {
+        var overlay = document.getElementById("import-modal-overlay");
+        if (overlay) overlay.remove();
+      }, 2000);
+
+    } catch (err) {
+      statusEl.style.color = "var(--red)";
+      statusEl.textContent = "Connection error. Please try again.";
+      btn.disabled    = false;
+      btn.textContent = "IMPORT TRADES";
+    }
+  };
+
+  reader.readAsText(fileEl.files[0]);
+}
+
 window.addEventListener('storage', function(e) {
   if (e.key === 'bb_last_account' && e.newValue && e.newValue !== currentAccountId) {
     // Another tab switched account — reload accounts list
@@ -2283,6 +2466,7 @@ async function selectAccount(id) {
   var acc = accounts.find(function(a) { return a.id===id; });
   document.getElementById('page-title').textContent = acc ? acc.name : '-';
   document.getElementById('log-btn').style.display = 'inline-flex';
+  var importBtn = document.getElementById('import-btn'); if (importBtn) importBtn.style.display = 'inline-flex';
   // Show loading state
   var main = document.getElementById('main-content');
   if (main) main.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:200px;color:var(--text3);font-size:12px">Loading account...</div>';
