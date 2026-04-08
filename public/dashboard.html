@@ -1995,14 +1995,37 @@ sb.auth.onAuthStateChange(function(event, session) {
 });
 
 async function checkPlanAndShow() {
+  // Safety timeout — if Supabase doesn't respond in 6s, show app anyway
+  // Prevents permanent black screen on slow connections
+  var _safetyTimer = setTimeout(function() {
+    console.warn('[Pattro] checkPlanAndShow timeout — showing app as fallback');
+    window._userPlan    = window._userPlan || 'free';
+    window.FREE_TRADE_LIMIT = 10;
+    window.isFreePlan = function() {
+      return window._userPlan !== 'pro' && window._userPlan !== 'lifetime';
+    };
+    if (document.getElementById('app').style.display === 'none' ||
+        document.getElementById('app').style.display === '') {
+      showApp();
+    }
+  }, 6000);
+
   sb.from('profiles')
     .select('plan, plan_expires_at, username')
     .eq('id', currentUser.id)
     .single()
     .then(function(result) {
+      clearTimeout(_safetyTimer);
       var profile = result.data;
       if (!profile) {
-        sb.auth.signOut().then(function() { window.location.href = '/login?error=incomplete'; });
+        // No profile row — show app as free rather than logging out
+        // (profile may not exist yet for brand new accounts)
+        window._userPlan    = 'free';
+        window._planExpires = null;
+        window._username    = '';
+        window.FREE_TRADE_LIMIT = 10;
+        window.isFreePlan = function() { return true; };
+        showApp();
         return;
       }
       window._userPlan    = profile.plan || 'free';
@@ -2023,12 +2046,15 @@ async function checkPlanAndShow() {
       // Free users and lifetime users enter the dashboard normally
       // Only boot if pro plan has expired (no valid subscription)
       if (!isPro && !isLifetime && !isFree) {
+        clearTimeout(_safetyTimer);
         sb.auth.signOut().then(function() { window.location.href = '/login?error=subscription'; });
         return;
       }
       showApp();
     })
-    .catch(function() { showApp(); }); // network error — don't block
+    .catch(function() {
+      clearTimeout(_safetyTimer);
+      showApp(); }); // network error — don't block
 }
 
 
