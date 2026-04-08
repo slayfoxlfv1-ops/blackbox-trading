@@ -1729,6 +1729,14 @@ function applyTranslations(lang){
   document.documentElement.lang=lang;
 }
 
+/* ── SCROLL REVEAL FALLBACK ── */
+// If IntersectionObserver fails, show all elements after 2s
+setTimeout(function() {
+  document.querySelectorAll('.fu').forEach(function(el) {
+    el.classList.add('in');
+  });
+}, 2000);
+
 /* ── SCROLL REVEAL ── */
 window.addEventListener('load',function(){
   var obs=new IntersectionObserver(function(entries){
