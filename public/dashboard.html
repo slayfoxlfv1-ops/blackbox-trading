@@ -5630,8 +5630,17 @@ function calcDailyDisciplineScore(dateStr) {
   }
   } // end: dayTrades.length > 0 check
   // null score = no rules configured or no trades → exclude from calculation (don't penalize)
-  var rulesPts = rulesScore === null ? 17 : Math.round((rulesScore || 0) / 100 * 35); // null = neutral 17/35
-  if (isNaN(rulesPts)) rulesPts = 17;
+  // rulesPts: null when no trades or no rules → excluded from weighted average
+  // When rules exist and trades exist: 0-35 based on violation score
+  // When no rules (neutral): 17.5 = 50% of 35 — treated as neutral, always included
+  var rulesPts;
+  if (rulesScore === null) {
+    // No trades today → exclude rules from calculation entirely
+    rulesPts = null;
+  } else {
+    rulesPts = Math.round((rulesScore || 0) / 100 * 35);
+    if (isNaN(rulesPts)) rulesPts = 17; // fallback neutral
+  }
 
   // ── Sub 2: Checklist (35 pts) ──
   // null = no checklist filled → exclude from calculation (don't penalize absence of data)
@@ -5664,7 +5673,7 @@ function calcDailyDisciplineScore(dateStr) {
   // Only include components that have data (null = no data, exclude from weight)
   var total;
   var parts = [];
-  parts.push({ v: rulesPts !== null ? rulesPts : 17, max: 35 }); // null = neutral 50% = ~17pts
+  if (rulesPts !== null) parts.push({ v: rulesPts, max: 35 });
   if (checklistPts !== null) parts.push({ v: checklistPts, max: 35 });
   if (tagPts !== null)       parts.push({ v: tagPts,       max: 30 });
 
