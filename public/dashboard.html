@@ -1503,6 +1503,14 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
 </div>
 
 <script>
+// Safe default — overwritten by checkPlanAndShow once profile loads
+window.FREE_TRADE_LIMIT = 10;
+window.isFreePlan = function() {
+  // Default to NOT free until we know the real plan
+  // This prevents blocking the dashboard on initial load
+  return false;
+};
+
 const SUPABASE_URL = 'https://qljuusxpzsiqxnpfpdgg.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFsanV1c3hwenNpcXhucGZwZGdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1OTQ5NzUsImV4cCI6MjA4ODE3MDk3NX0.rUEwuG4zFE_EpAM4s3hWqVF81xiW9q_MSwQKKXYZmlk';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -3168,9 +3176,12 @@ function navigateTo(view) {
   if (view==='insights') {
     if (window.isFreePlan && window.isFreePlan()) {
       showUpgradeModal('insights');
-      // Don't navigate — stay on current view
-      currentView = currentView === 'insights' ? 'dashboard' : currentView;
-      navigateTo(currentView === 'insights' ? 'dashboard' : currentView);
+      // Stay on dashboard — render it without recursing into navigateTo
+      currentView = 'dashboard';
+      document.querySelectorAll('.nav-item').forEach(function(i){i.classList.remove('active');});
+      var navEl = document.querySelector('.nav-item[data-view="dashboard"]');
+      if (navEl) navEl.classList.add('active');
+      loadAccountData(currentAccountId);
       return;
     }
     renderInsightsView(subTabIntent);
