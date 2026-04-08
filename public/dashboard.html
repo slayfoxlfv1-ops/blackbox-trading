@@ -1504,6 +1504,16 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
 </div>
 
 <script>
+// ── Local date helper (fixes UTC vs local timezone bug) ──
+// new Date().toISOString() always returns UTC — wrong for users in UTC-5 etc.
+function localDateStr(d) {
+  var dt = d || new Date();
+  var year  = dt.getFullYear();
+  var month = String(dt.getMonth() + 1).padStart(2, '0');
+  var day   = String(dt.getDate()).padStart(2, '0');
+  return year + '-' + month + '-' + day;
+}
+
 // Safe defaults before profile loads
 window.FREE_TRADE_LIMIT = 10;
 window.isFreePlan = function() { return false; };
@@ -1906,7 +1916,7 @@ function showBugToast() {
 function showAlertToast(icon, title, message, color, borderColor, dismissKey) {
   if (dismissKey) {
     try {
-      if (localStorage.getItem('alert_dismissed_' + dismissKey + '_' + new Date().toISOString().slice(0,10))) return;
+      if (localStorage.getItem('alert_dismissed_' + dismissKey + '_' + localDateStr())) return;
     } catch(e) {}
   }
   var toastId = 'alert-toast-' + (dismissKey || 'default');
@@ -1920,7 +1930,7 @@ function showAlertToast(icon, title, message, color, borderColor, dismissKey) {
     + 'border-radius:0;padding:12px 14px;box-shadow:0 8px 32px rgba(0,0,0,.6);'
     + 'z-index:9998;animation:toastIn .4s ease;font-family:var(--mono);'
     + 'display:flex;gap:10px;align-items:flex-start';
-  var key = 'alert_dismissed_' + (dismissKey || '') + '_' + new Date().toISOString().slice(0,10);
+  var key = 'alert_dismissed_' + (dismissKey || '') + '_' + localDateStr();
   toast.innerHTML = '<span style="font-size:22px;flex-shrink:0">' + icon + '</span>'
     + '<div style="flex:1"><div style="font-size:12px;font-weight:700;color:' + (color || 'var(--red)') + ';margin-bottom:3px">' + title + '</div>'
     + '<div style="font-size:10px;color:var(--text3);line-height:1.6">' + message + '</div></div>'
@@ -2863,7 +2873,7 @@ function openLogModal() {
   var _clNote   = document.getElementById('t-checklist-note');
   if (_clSlider) {
     _clSlider.dataset.userChanged = '0'; // reset tracking
-    var _today0  = new Date().toISOString().slice(0,10);
+    var _today0  = localDateStr();
     var _todayCl = (currentChecklistSessions||[]).find(function(s){ return s.session_date===_today0; });
     // Pre-fill with existing checklist value if saved today, else 0
     var _prefill = _todayCl ? _todayCl.score_pct : 0;
@@ -3117,7 +3127,7 @@ async function saveTrade() {
     var _clEntryEl = document.getElementById('t-entry-time');
     var _clDate = (_clEntryEl && _clEntryEl.value)
       ? _clEntryEl.value.slice(0,10)
-      : new Date().toISOString().slice(0,10);
+      : localDateStr();
     // Save checklist only if user moved the slider from its original value
     var _userChangedCl = (_checklistOriginalValue !== null) && (_clPct !== _checklistOriginalValue);
     var _shouldSaveCl = !isNaN(_clPct) && _userChangedCl;
@@ -3236,7 +3246,7 @@ function openEditTrade(id) {
   var _clSliderE = document.getElementById('t-checklist-pct');
   if (_clSliderE) {
     var _entryEl   = document.getElementById('t-entry-time');
-    var _tradeDayK = _entryEl && _entryEl.value ? _entryEl.value.slice(0,10) : new Date().toISOString().slice(0,10);
+    var _tradeDayK = _entryEl && _entryEl.value ? _entryEl.value.slice(0,10) : localDateStr();
     var _clForDay  = (currentChecklistSessions||[]).find(function(s){ return s.session_date===_tradeDayK; });
     var _prefillE  = _clForDay ? _clForDay.score_pct : 0;
     _clSliderE.value    = _prefillE;
@@ -3351,7 +3361,7 @@ async function loadAccountData(id, silent) {
   if (!silent) await loadTradingDays(id);
   autoLockOldDays();
   // Fire all Supabase fetches in parallel — much faster than sequential awaits
-  var todayStr3 = new Date().toISOString().slice(0,10);
+  var todayStr3 = localDateStr();
   var _results = await Promise.all([
     sb.from('trades').select('*').eq('account_id', id).order('entry_time', { ascending: true }),
     sb.from('checklist_sessions').select('session_date,items,score_pct,verdict').eq('account_id', id).order('session_date', { ascending: false }).limit(60),
@@ -3473,7 +3483,7 @@ async function loadAccountData(id, silent) {
 
   var disc = calcDiscipline(trades);
   // ── Color Day: always read from the actual date, never bleed between days ──
-  var today = new Date().toISOString().slice(0,10);
+  var today = localDateStr();
   var todayMood = getMoodForDate(today);
   // Fallback: if no real mood check, derive synthetic from today's P&L
   if (!todayMood) {
@@ -3559,7 +3569,7 @@ async function loadAccountData(id, silent) {
     try { coachMem = JSON.parse(bbStore.get('coach_mem_' + id) || '{}'); } catch(e) {}
 
     // Current loss streak alert — TODAY only to avoid stale alerts from previous days
-    var todayStr = new Date().toISOString().slice(0,10);
+    var todayStr = localDateStr();
     var todayTradesOnly = trades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(todayStr); });
     var lossStreak = 0;
     var sortedByExit = todayTradesOnly.slice().sort(function(a,b){ return new Date(b.exit_time||b.entry_time) - new Date(a.exit_time||a.entry_time); });
@@ -3687,7 +3697,7 @@ async function loadAccountData(id, silent) {
       window[_sessionKey] = true;
 
       // Guard 2: Only once per day per badge (persisted in localStorage)
-      var _today  = new Date().toISOString().slice(0,10);
+      var _today  = localDateStr();
       var _lsKey  = 'ach_shown_' + id + '_' + _today;
       var _seen   = [];
       try { _seen = JSON.parse(localStorage.getItem(_lsKey) || '[]'); } catch(e) {}
@@ -3715,7 +3725,7 @@ async function loadAccountData(id, silent) {
   var moodLabel2  = todayMood?(todayMood.level==='green'?'🟢 Green Day':todayMood.level==='yellow'?'🟡 Yellow Day':'🔴 Red Day'):'—';
 
   // ── Precompute everything needed ──
-  var today     = new Date().toISOString().slice(0,10);
+  var today     = localDateStr();
   var ms        = calcMentalScore(today);
   var mindData  = calcDailyMindScore(today);
   var _dq       = mindData.dataQuality;
@@ -3996,7 +4006,7 @@ async function loadAccountData(id, silent) {
   // ── ROW 0: Mental Score — Monthly (main) + Today ──
   (function(){
     var _now2    = new Date();
-    var today    = _now2.toISOString().slice(0,10);
+    var today    = localDateStr(_now2);
 
     // Monthly trades
     var _mStart  = new Date(_now2.getFullYear(), _now2.getMonth(), 1);
@@ -4516,7 +4526,7 @@ function buildDisciplineRing(score) {
 function calcReadinessScore(todayMood, clSessions, trades) {
   var score = 50; // base
   var factors = [];
-  var today = new Date().toISOString().slice(0,10);
+  var today = localDateStr();
 
   // Mood (40%) — use real check for this specific date
   var _readMoodData  = getMoodForDate(today);
@@ -4559,7 +4569,7 @@ function calcReadinessScore(todayMood, clSessions, trades) {
   }
 
   // Loss streak (20%) — penalize for active streak TODAY only
-  var todayForStreak = new Date().toISOString().slice(0,10);
+  var todayForStreak = localDateStr();
   var todayTradesForStreak = (trades||[]).filter(function(t){ return t.entry_time && t.entry_time.startsWith(todayForStreak); });
   var lossStreak = 0;
   var sorted = todayTradesForStreak.slice().sort(function(a,b){ return new Date(b.exit_time||b.entry_time)-new Date(a.exit_time||a.entry_time); });
@@ -4781,7 +4791,7 @@ function incCoachConsultCount() {
 }
 
 function calcAllAchievements(trades, clSessions, moodSessions) {
-  var today      = new Date().toISOString().slice(0,10);
+  var today      = localDateStr();
   var sortedT    = (trades||[]).slice().sort(function(a,b){ return new Date(a.entry_time||0)-new Date(b.entry_time||0); });
   var cl         = clSessions || [];
   var moods      = moodSessions || [];
@@ -5300,7 +5310,7 @@ function tradeDateStr(trade) {
 // Format NY session time in user's local timezone for display
 function sessionLocalTime(dateStr, nyHHMM) {
   try {
-    var nyOffset = getNYOffset(dateStr || new Date().toISOString().slice(0,10));
+    var nyOffset = getNYOffset(dateStr || localDateStr());
     var parts = nyHHMM.split(':');
     var utcH = parseInt(parts[0]) - nyOffset;
     var m    = parseInt(parts[1]);
@@ -5324,8 +5334,7 @@ function savePersonalRules(accountId, rules) {
 
 // ── Check all active rules against today's trades ──
 function checkRuleViolations(rulesObj, trades) {
-  var now      = new Date();
-  var todayStr = now.toISOString().slice(0, 10);
+  var todayStr = localDateStr();
   var todayTrades = trades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(todayStr); });
   var violations  = [];
   var r = rulesObj || {};
@@ -5533,7 +5542,7 @@ var EMOTION_CONTROL_SCORE = {
 // ── Unified daily Discipline Score (0–100) ──
 // 3 sub-components: Rules (35) + Checklist (35) + Tag avg (30)
 function calcDailyDisciplineScore(dateStr) {
-  var today = dateStr || new Date().toISOString().slice(0,10);
+  var today = dateStr || localDateStr();
   var allTrades  = currentTrades || [];
   var dayTrades  = allTrades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(today); });
   var rulesObj   = getPersonalRules(currentAccountId || '');
@@ -5744,7 +5753,7 @@ function emotionToMindPts(emotionScore) {
 // ── Unified daily Mind Score (0–100) ──
 // Mood(40) + Emotion avg(40) + Behavior(20)
 function calcDailyMindScore(dateStr) {
-  var today     = dateStr || new Date().toISOString().slice(0,10);
+  var today     = dateStr || localDateStr();
   var allTrades = currentTrades || [];
   var dayTrades = allTrades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(today); });
 
@@ -6275,7 +6284,7 @@ function calcMentalScorePnlCorrelation(trades) {
 
 // ── Unified daily Execution Score (0–100) ──
 function calcDailyExecutionScore(dateStr) {
-  var today     = dateStr || new Date().toISOString().slice(0,10);
+  var today     = dateStr || localDateStr();
   var allTrades = currentTrades || [];
   var dayTrades = allTrades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(today); });
 
@@ -6322,7 +6331,7 @@ function calcDailyExecutionScore(dateStr) {
 
 // ── Mental Score (0–100) = Discipline(40%) + Mind(35%) + Execution(25%) ──
 function calcMentalScore(dateStr) {
-  var today = dateStr || new Date().toISOString().slice(0,10);
+  var today = dateStr || localDateStr();
 
   // Only score days with actual trades — return null for empty days
   var dayTrades = (currentTrades || []).filter(function(t) {
@@ -6381,7 +6390,7 @@ function renderRulesView() {
   var trades = currentTrades || [];
   var violations = checkRuleViolations(rules, trades);
   var activeCount = Object.keys(rules).filter(function(k){ return rules[k] && rules[k].active; }).length;
-  var today  = new Date().toISOString().slice(0,10);
+  var today  = localDateStr();
   var todayTrades = trades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(today); });
   var dscore = calcRulesDisciplineScore(rules, trades);
   var dcolor = dscore.score>=80?'var(--green)':dscore.score>=50?'var(--amber)':'var(--red)';
@@ -6449,7 +6458,7 @@ function renderRulesView() {
       + '</div></div>';
   }
 
-  var todayD = new Date().toISOString().slice(0,10);
+  var todayD = localDateStr();
 
   // ── Rule 1: Sessions ──
   var r1 = rules.session || {};
@@ -7336,7 +7345,7 @@ function renderMentalScoreCalendar() {
   var startOffset = (firstDay === 0) ? 6 : firstDay - 1;
   var daysInMonth = new Date(year, month+1, 0).getDate();
 
-  var today = new Date().toISOString().slice(0,10);
+  var today = localDateStr();
   var todayMonth = today.slice(0,7);
   var isCurrentMonth = monthStr === todayMonth;
 
@@ -7599,7 +7608,7 @@ function renderRulesTab(el) {
   var saved  = getPersonalRules(currentAccountId || '');
   var violations = checkRuleViolations(saved, trades); // violations always from SAVED rules
   var activeCount = Object.keys(rules).filter(function(k){ return rules[k] && rules[k].active; }).length;
-  var today  = new Date().toISOString().slice(0,10);
+  var today  = localDateStr();
   var todayTrades = trades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(today); });
   var dscore = calcRulesDisciplineScore(saved, trades);
   var dcolor = dscore.score>=80?'var(--green)':dscore.score>=50?'var(--amber)':'var(--red)';
@@ -7700,7 +7709,7 @@ function renderRulesTab(el) {
       + '</div>';
   }
 
-  var todayD = new Date().toISOString().slice(0,10);
+  var todayD = localDateStr();
 
   // Rule 1: Sessions
   var r1 = rules.session || {};
@@ -7933,7 +7942,7 @@ function renderChecklistTab(el) {
   var storageKey='checklist_'+currentAccountId;
   var items=[];
   try { items=JSON.parse(bbStore.get(storageKey)||'[]'); } catch(e){}
-  var todayKey='checks_'+currentAccountId+'_'+new Date().toISOString().slice(0,10);
+  var todayKey='checks_'+currentAccountId+'_'+localDateStr();
   var checks={};
   try { checks=JSON.parse(bbStore.get(todayKey)||'{}'); } catch(e){}
   var pct=items.length?Math.round(Object.values(checks).filter(Boolean).length/items.length*100):0;
@@ -7982,7 +7991,7 @@ function buildChecklistHistory() {
 }
 
 async function toggleCheck(idx) {
-  var today3=new Date().toISOString().slice(0,10);
+  var today3=localDateStr();
   var todayKey='checks_'+currentAccountId+'_'+today3;
   var storageKey='checklist_'+currentAccountId;
   var items=[]; try { items=JSON.parse(bbStore.get(storageKey)||'[]'); } catch(e){}
@@ -8030,7 +8039,7 @@ async function addChecklistItem() {
 
 async function deleteChecklistItem(idx) {
   var storageKey='checklist_'+currentAccountId;
-  var todayKey='checks_'+currentAccountId+'_'+new Date().toISOString().slice(0,10);
+  var todayKey='checks_'+currentAccountId+'_'+localDateStr();
   var items=[]; try { items=JSON.parse(bbStore.get(storageKey)||'[]'); } catch(e){}
   var checks={}; try { checks=JSON.parse(bbStore.get(todayKey)||'{}'); } catch(e){}
   items.splice(idx,1);
@@ -8501,7 +8510,7 @@ function buildMindView(trades) {
   // sortedTrades = ALL trades for stats (streaks, calibration, etc.)
   var sortedTrades  = trades.slice().sort(function(a,b){ return new Date(a.entry_time)-new Date(b.entry_time); });
   // todaySortedTrades = today only, for behavior score display
-  var _todayKeyMind = new Date().toISOString().slice(0,10);
+  var _todayKeyMind = localDateStr();
   var todaySortedTrades = sortedTrades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(_todayKeyMind); });
   for (var i=1; i<sortedTrades.length; i++) {
     var prev = sortedTrades[i-1], cur = sortedTrades[i];
@@ -8544,7 +8553,7 @@ function buildMindView(trades) {
   var maxStreak = maxLossStreak; // backward compat
 
   // Current streak — TODAY only to avoid stale alerts from previous sessions
-  var todayOnlyStr = new Date().toISOString().slice(0,10);
+  var todayOnlyStr = localDateStr();
   var todayOnlyTrades = sortedTrades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(todayOnlyStr); });
   var currentLossStreak = 0, currentWinStreak = 0;
   for (var j = todayOnlyTrades.length-1; j >= 0; j--) {
@@ -8589,7 +8598,7 @@ function buildMindView(trades) {
 
   // Mind score (0-100)
   // Mind score — new unified scoring
-  var mindData   = calcDailyMindScore(new Date().toISOString().slice(0,10));
+  var mindData   = calcDailyMindScore(localDateStr());
   var mindScore  = mindData.total;
   var cleanPct   = Math.round((discCounts.clean / totalTagged) * 100);
 
@@ -8602,7 +8611,7 @@ function buildMindView(trades) {
 
   // ── ALERT: current loss streak ──
   if (currentLossStreak >= 2) {
-    var _lsKey = 'mind_loss_streak_' + currentAccountId + '_' + new Date().toISOString().slice(0,10);
+    var _lsKey = 'mind_loss_streak_' + currentAccountId + '_' + localDateStr();
     var _lsDismissed = false;
     try { _lsDismissed = JSON.parse(sessionStorage.getItem('bb_dismissed_alerts')||'{}')[_lsKey]; } catch(e) {}
     if (!_lsDismissed) {
@@ -9478,7 +9487,7 @@ async function autoCoachCheck(trades, accountId) {
   var dayOfWeek = today.getDay();
 
   // ── 1. Repeated error detection — today's trades only to avoid stale alerts ──
-  var todayKeyCoach = new Date().toISOString().slice(0,10);
+  var todayKeyCoach = localDateStr();
   var todayTradesCoach = trades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(todayKeyCoach); });
   var last10   = todayTradesCoach.slice(-10).filter(function(t){ return t.discipline_tag; });
   var tagCount = {};
@@ -9794,7 +9803,7 @@ function _showPaywall() {
 function checkAndShowMoodCheck(accountId) {
   if (document.getElementById('onboarding-overlay')) return;
   if (document.getElementById('mood-overlay')) return;
-  var today = new Date().toISOString().slice(0,10);
+  var today = localDateStr();
   sb.from('mood_sessions')
     .select('level')
     .eq('account_id', accountId)
@@ -9936,7 +9945,7 @@ async function showMoodCheck(accountId) {
         ? { level:'yellow', emoji:'🟡', title:'Yellow Day', color:'var(--amber)', bg:'var(--amber-bg)', bd:'var(--amber-bd)', msg:'Factors may affect your judgment. Reduce position size by half and be more selective.' }
         : { level:'red',    emoji:'🔴', title:'Red Day',    color:'var(--red)',   bg:'var(--red-bg)',   bd:'var(--red-bd)',   msg:'Conditions are not optimal for trading. Consider not taking trades today or using minimum size.' };
 
-    var today = new Date().toISOString().slice(0,10);
+    var today = localDateStr();
     var moodData = { date:today, answers:state, score:score, level:result.level };
     try { localStorage.setItem('mood_' + accountId + '_' + today, JSON.stringify(moodData)); } catch(e) {}
     bbStore.set('mood_today_' + accountId, JSON.stringify(moodData));
@@ -10000,7 +10009,7 @@ async function showMoodCheck(accountId) {
   skipBtn.setAttribute('type','button');
   skipBtn.style.cssText = 'width:100%;padding:8px;background:none;border:none;color:var(--text3);font-size:10px;cursor:pointer;font-family:var(--mono);margin-top:6px';
   skipBtn.addEventListener('click', function() {
-    var today = new Date().toISOString().slice(0,10);
+    var today = localDateStr();
     try { localStorage.setItem('mood_' + accountId + '_' + today, 'skipped'); } catch(e) {}
     overlay.remove();
   });
@@ -10413,7 +10422,7 @@ function notifyChecklistReminder() {
 var _remindersChecked = false;
 function checkSessionReminders() {
   if (_remindersChecked) return;
-  var today = new Date().toISOString().slice(0,10);
+  var today = localDateStr();
   var todayTrades = (currentTrades||[]).filter(function(t){ return t.entry_time && t.entry_time.startsWith(today); });
   if (!todayTrades.length) return; // No trades yet — don't remind
   _remindersChecked = true;
@@ -10494,7 +10503,7 @@ function startTiltMonitor() {
   tiltCheckInterval = setInterval(function() {
     if (!currentTrades || !currentTrades.length) return;
     // Only check tilt on TODAY's trades — avoids stale alerts from previous sessions
-    var todayKey = new Date().toISOString().slice(0,10);
+    var todayKey = localDateStr();
     var todayT   = currentTrades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(todayKey); });
     if (!todayT.length) return; // no trades today → no tilt possible
     var tilt = detectTilt(todayT);
