@@ -5607,8 +5607,12 @@ function calcDailyDisciplineScore(dateStr) {
   // ── Sub 1: Rules (35 pts) ──
   // If ALL trades today have a rules_compliance override, use the average of those
   // Otherwise use the rules engine (check violations against active rules)
-  var tradesWithOverride = dayTrades.filter(function(t){ return t.rules_compliance !== null && t.rules_compliance !== undefined; });
+  // Rules score is null when no trades today — don't show 35/35 on trade-free days
   var rulesScore;
+  if (dayTrades.length === 0) {
+    rulesScore = null;
+  } else {
+  var tradesWithOverride = dayTrades.filter(function(t){ return t.rules_compliance !== null && t.rules_compliance !== undefined; });
   if (tradesWithOverride.length > 0 && tradesWithOverride.length === dayTrades.length) {
     // All trades have manual override — use average compliance %
     var avgCompliance = tradesWithOverride.reduce(function(s,t){ return s + t.rules_compliance; }, 0) / tradesWithOverride.length;
@@ -5624,7 +5628,8 @@ function calcDailyDisciplineScore(dateStr) {
     var rulesResult = calcRulesDisciplineScore(rulesObj, dayTrades);
     rulesScore = rulesResult.score;
   }
-  // null score = no rules configured → exclude from calculation (don't penalize)
+  } // end: dayTrades.length > 0 check
+  // null score = no rules configured or no trades → exclude from calculation (don't penalize)
   var rulesPts = rulesScore === null ? 17 : Math.round((rulesScore || 0) / 100 * 35); // null = neutral 17/35
   if (isNaN(rulesPts)) rulesPts = 17;
 
@@ -6701,6 +6706,11 @@ function saveRulesConfig() {
 
   savePersonalRules(currentAccountId || '', r);
   _rulesTemp = null; // clear — next open reads saved state
+
+  // Re-render psychology view so scores update immediately without page reload
+  if (typeof renderPsychologyView === 'function') {
+    setTimeout(function() { renderPsychologyView(); }, 100);
+  }
 
   var btn = document.getElementById('save-rules-btn');
   if (btn) {
