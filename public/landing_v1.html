@@ -876,8 +876,13 @@ nav.bg-on{background:rgba(0,0,0,.92);backdrop-filter:blur(24px)}
 .pricing-card{
   background:var(--surface);border:1px solid var(--wire2);
   padding:38px;position:relative;
-  clip-path:polygon(0 0,calc(100% - 20px) 0,100% 20px,100% 100%,0 100%);
   box-shadow:0 0 60px rgba(62,207,207,.04),0 40px 100px rgba(0,0,0,.5);
+}
+.pricing-card-corner{
+  position:absolute;top:0;right:0;width:0;height:0;
+  border-left:20px solid transparent;
+  border-top:20px solid var(--black);
+  pointer-events:none;
 }
 .pricing-card::before{
   content:'';position:absolute;top:0;left:0;right:0;height:1px;
@@ -1468,6 +1473,7 @@ footer{
       </div>
     </div>
     <div class="pricing-card fu d3">
+      <div class="pricing-card-corner"></div>
       <div class="price-badge">🔒 Price locked forever</div>
       <div class="price-amount">$15</div>
       <div class="price-period">/ month · billed monthly</div>
