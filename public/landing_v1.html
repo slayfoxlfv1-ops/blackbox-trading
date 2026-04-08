@@ -878,12 +878,6 @@ nav.bg-on{background:rgba(0,0,0,.92);backdrop-filter:blur(24px)}
   padding:38px;position:relative;
   box-shadow:0 0 60px rgba(62,207,207,.04),0 40px 100px rgba(0,0,0,.5);
 }
-.pricing-card-corner{
-  position:absolute;top:0;right:0;width:0;height:0;
-  border-left:20px solid transparent;
-  border-top:20px solid var(--black);
-  pointer-events:none;
-}
 .pricing-card::before{
   content:'';position:absolute;top:0;left:0;right:0;height:1px;
   background:linear-gradient(90deg,var(--acid),transparent);opacity:.7;
@@ -1473,7 +1467,6 @@ footer{
       </div>
     </div>
     <div class="pricing-card fu d3">
-      <div class="pricing-card-corner"></div>
       <div class="price-badge">🔒 Price locked forever</div>
       <div class="price-amount">$15</div>
       <div class="price-period">/ month · billed monthly</div>
@@ -1489,12 +1482,12 @@ footer{
       </div>
       <a href="/register" class="price-cta" data-i18n="price_cta">Start for $15/month →</a>
       <div class="price-sub" data-i18n="price_sub">Cancel anytime</div>
-      <div style="display:flex;align-items:center;gap:10px;margin-top:16px">
-        <div style="flex:1;height:1px;background:rgba(255,255,255,.08)"></div>
-        <span style="font-family:var(--mono);font-size:9px;color:var(--chalk3);letter-spacing:.5px">OR</span>
-        <div style="flex:1;height:1px;background:rgba(255,255,255,.08)"></div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:18px;margin-bottom:4px">
+        <div style="flex:1;height:1px;background:rgba(255,255,255,.1)"></div>
+        <span style="font-family:var(--mono);font-size:9px;color:var(--chalk3);letter-spacing:.5px;text-transform:uppercase">or</span>
+        <div style="flex:1;height:1px;background:rgba(255,255,255,.1)"></div>
       </div>
-      <a href="/register" style="display:block;text-align:center;margin-top:12px;font-family:var(--mono);font-size:11px;color:var(--chalk3);text-decoration:none;transition:color .2s" onmouseover="this.style.color='var(--chalk)'" onmouseout="this.style.color='var(--chalk3)'">Try free — 10 trades, no credit card →</a>
+      <a href="/register" style="display:block;text-align:center;padding:10px;font-family:var(--mono);font-size:11px;color:var(--chalk3);text-decoration:none;letter-spacing:.3px;transition:color .2s" onmouseover="this.style.color='var(--chalk)'" onmouseout="this.style.color='var(--chalk3)'">Try free — 10 trades, no credit card →</a>
     </div>
   </div>
 </div>
@@ -1528,7 +1521,7 @@ footer{
     <a href="/privacy">Privacy</a>
     <a href="/refund">Refund Policy</a>
     <a href="/precios">Pricing</a>
-    <a href="/cdn-cgi/l/email-protection#4635333636293432063627323234296825292b">Support</a>
+    <a href="/cdn-cgi/l/email-protection#e0939590908f9294a090819494928fce838f8d">Support</a>
   </div>
   <div class="footer-copy">© 2026 Pattro</div>
 </footer>
@@ -1630,7 +1623,7 @@ var TRANSLATIONS={
     pp2:'Direct access to give feedback. Early members define what we build next.',
     pp3:'Cancel anytime. No contracts, no commitments.',
     price_lock:'⚡ Early access pricing — lock it before it increases',
-    price_cta:'Start for $15/month →',price_sub:'Cancel anytime',price_free:'Try free — 10 trades, no credit card →',
+    price_cta:'Start for $15/month →',price_sub:'Cancel anytime',
     pf_1:'Mental Score + Discipline + Execution',pf_2:'AI Coach weekly psychological analysis',
     pf_3:'Automatic capture (TopstepX Chrome extension)',pf_7:'Color Day + pre-session check',
     cta_h2:'YOUR NEXT<br>LOSING STREAK<br><span class="italic-accent">is preventable.</span>',
@@ -1707,7 +1700,7 @@ var TRANSLATIONS={
     pp2:'Acceso directo para dar feedback. Los primeros miembros definen qué construimos después.',
     pp3:'Cancela cuando quieras. Sin contratos ni compromisos.',
     price_lock:'⚡ Precio de acceso temprano — bloquéalo antes de que suba',
-    price_cta:'Empezar por $15/mes →',price_sub:'Cancela cuando quieras',price_free:'Prueba gratis — 10 trades, sin tarjeta →',
+    price_cta:'Empezar por $15/mes →',price_sub:'Cancela cuando quieras',
     pf_1:'Mental Score + Disciplina + Ejecución',pf_2:'Coach IA — análisis psicológico semanal',
     pf_3:'Captura automática (extensión Chrome TopstepX)',pf_7:'Color Day + check pre-sesión',
     cta_h2:'TU PRÓXIMA<br>RACHA DE PÉRDIDAS<br><span class="italic-accent">es prevenible.</span>',
