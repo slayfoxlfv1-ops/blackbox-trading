@@ -1135,6 +1135,54 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
 
 .hist-color-btn { flex:1; padding:6px; border:1px solid var(--wire); border-radius:0; background:var(--surface); font-family:var(--mono); font-size:9px; letter-spacing:.3px; text-transform:uppercase; cursor:pointer; transition:border-color .18s,color .18s; }
 </style>
+<!-- ── Error monitoring (Sentry) ──
+     To enable: create a free Sentry project at sentry.io, get your DSN,
+     replace YOUR_SENTRY_DSN below and uncomment the init block.
+-->
+<script src="https://browser.sentry-cdn.com/7.99.0/bundle.tracing.min.js" crossorigin="anonymous"></script>
+<script>
+(function() {
+  var SENTRY_DSN = ''; // ← paste your Sentry DSN here, e.g. 'https://abc123@o123.ingest.sentry.io/456'
+  if (SENTRY_DSN && typeof Sentry !== 'undefined') {
+    Sentry.init({
+      dsn:                SENTRY_DSN,
+      environment:        window.location.hostname === 'localhost' ? 'development' : 'production',
+      release:            'pattro@1.0.0',
+      tracesSampleRate:   0.1,
+      replaysOnErrorSampleRate: 0,
+      beforeSend: function(event) {
+        if (window.location.hostname === 'localhost') return null; // skip local errors
+        return event;
+      }
+    });
+  }
+
+  // ── Global error handlers — work with OR without Sentry ──
+  window.addEventListener('error', function(e) {
+    var msg = e.message || 'Unknown error';
+    var src = (e.filename || '').split('/').pop() + ':' + e.lineno;
+    console.error('[Pattro error]', msg, src);
+    // Report to Sentry if configured
+    if (SENTRY_DSN && typeof Sentry !== 'undefined') {
+      Sentry.captureException(e.error || new Error(msg));
+    }
+    // Show non-intrusive toast for critical errors (not benign ones)
+    var benign = ['Script error', 'ResizeObserver', 'Non-Error promise'];
+    var isBenign = benign.some(function(b) { return msg.indexOf(b) !== -1; });
+    if (!isBenign && typeof showAlertToast === 'function') {
+      showAlertToast('⚠', 'Unexpected error', msg.slice(0, 80), 'var(--amber)', 'rgba(224,152,64,0.15)', 'js_error_' + Date.now());
+    }
+  });
+
+  window.addEventListener('unhandledrejection', function(e) {
+    var msg = (e.reason && e.reason.message) ? e.reason.message : String(e.reason || 'Unhandled promise rejection');
+    console.error('[Pattro unhandled rejection]', msg);
+    if (SENTRY_DSN && typeof Sentry !== 'undefined') {
+      Sentry.captureException(e.reason instanceof Error ? e.reason : new Error(msg));
+    }
+  });
+})();
+</script>
 </head>
 <body>
 <div class="scanlines" aria-hidden="true"></div>
