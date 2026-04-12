@@ -10296,9 +10296,19 @@ function showTiltAlert(tilt) {
   var title    = isDanger ? '🔴 TILT DETECTED' : '⚠ Tilt signals';
   // Also send browser push notification
   notifyTilt(isDanger);
-  var msg      = isDanger
-    ? 'You\'re in tilt. Stop now, close the charts and take a break of at least 15 minutes.'
-    : 'There are signs you may be losing objectivity. Review before your next trade.';
+  // Build retroactive message based on today's trade data
+  var todayDate = localDateStr();
+  var todayTrades = (currentTrades||[]).filter(function(t){
+    return t.entry_time && t.entry_time.startsWith(todayDate);
+  });
+  var tradeCount = todayTrades.length;
+  var totalLoss  = todayTrades.filter(function(t){return (t.pnl||0)<0;})
+                              .reduce(function(s,t){return s+(t.pnl||0);},0);
+  var lossStr    = totalLoss < 0 ? ' (-$'+Math.abs(Math.round(totalLoss))+' so far today)' : '';
+
+  var msg = isDanger
+    ? 'In your ' + tradeCount + ' trades today' + lossStr + ', Pattro detected a tilt pattern. For your next trading day, take a break before re-entering the market.'
+    : 'Looking at your ' + tradeCount + ' trades today' + lossStr + ', there are signs of emotional trading. For your next session, review these signals before opening a position.';
 
   var notif = document.createElement('div');
   notif.id  = 'tilt-notif';
@@ -10566,11 +10576,19 @@ async function generateErrorAlert(errors, tagCount, trades, accountId) {
 
   var errorNames = errors.map(function(e){ return (errorLabels[e]||e)+' ('+tagCount[e]+'x)'; }).join(' y ');
 
-  var prompt = 'Eres el coach personal of this trader. Detectaste un patron repetido en sus ultimos 10 trades: '+ errorNames +'. '
-    + 'Perdida acumulada en estos trades: $'+totalLoss.toFixed(0)+'. '
-    + 'Habla directamente en segunda persona, con empatia pero firmeza. '
-    + 'Estructura: 1) Nombra el patron especifico con datos 2) Explica el costo psicologico y financiero 3) Da UNA tecnica concreta para romperlo HOY. '
-    + 'Tono: como un coach que te conoce bien, no robotico. Max 180 palabras.';
+  var todayDateErr = localDateStr();
+  var todayTradeCount = (currentTrades||[]).filter(function(t){
+    return t.entry_time && t.entry_time.startsWith(todayDateErr);
+  }).length;
+
+  var prompt = 'Eres el coach personal de este trader. Analizando sus ' + todayTradeCount + ' trades de hoy, '
+    + 'detectaste un patron repetido: '+ errorNames +'. '
+    + 'Perdida acumulada en estos trades: $'+Math.abs(totalLoss).toFixed(0)+'. '
+    + 'IMPORTANTE: No hables como si fuera en tiempo real. Habla como si fueras un coach revisando la sesion del dia DESPUES de que termino. '
+    + 'Estructura: 1) "En tu sesion de hoy..." — nombra el patron con datos especificos '
+    + '2) "Esto te costo..." — el impacto financiero y psicologico '
+    + '3) "Para tu proximo dia operativo..." — UNA accion concreta y especifica. '
+    + 'Tono: directo, empatico, como un coach que conoce bien al trader. Max 180 palabras.';
 
   try {
     var msg = await callCoach(prompt, 400);
@@ -10700,7 +10718,7 @@ function showCoachNotification(message, type, errors) {
   if (existing) existing.remove();
 
   var isError  = type === 'error_alert';
-  var title    = isError ? '⚠️ Coach detected a repeated pattern (Pattro)' : '📊 Coach Analysis — ' + (errors[0]||'Reporte semanal');
+  var title    = isError ? '⚠️ Pattern detected in today\'s session' : '📊 Session analysis — ' + (errors && errors[0] ? errors[0] : 'Weekly report');
   var accentColor = isError ? '#e05c5c' : '#6c8bff';
 
   var notif = document.createElement('div');
@@ -12469,12 +12487,20 @@ function openLegalModal(type) {
     window.addEventListener('beforeinstallprompt', function(e) {
       e.preventDefault();
       _pwaPrompt = e;
-      // Show subtle install banner after user has been in app 30s
-      setTimeout(function() {
-        if (_pwaPrompt && !localStorage.getItem('pattro_pwa_installed')) {
-          showPwaInstallBanner();
-        }
-      }, 30000);
+      // Show install banner once per day at a random time (30s - 20min after load)
+      (function() {
+        var today = new Date().toISOString().slice(0,10);
+        var lastShown = '';
+        try { lastShown = localStorage.getItem('pattro_pwa_shown_date') || ''; } catch(e) {}
+        if (lastShown === today) return; // already shown today
+        var randomDelay = 30000 + Math.floor(Math.random() * 1170000); // 30s to 20min
+        setTimeout(function() {
+          if (_pwaPrompt && !localStorage.getItem('pattro_pwa_installed')) {
+            try { localStorage.setItem('pattro_pwa_shown_date', today); } catch(e) {}
+            showPwaInstallBanner();
+          }
+        }, randomDelay);
+      })();
     });
 
     window.addEventListener('appinstalled', function() {
