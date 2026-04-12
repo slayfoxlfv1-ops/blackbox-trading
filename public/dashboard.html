@@ -1139,23 +1139,11 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
      To enable: create a free Sentry project at sentry.io, get your DSN,
      replace YOUR_SENTRY_DSN below and uncomment the init block.
 -->
-<script src="https://browser.sentry-cdn.com/7.99.0/bundle.tracing.min.js" crossorigin="anonymous"></script>
+<script src="https://js.sentry-cdn.com/74237e2e506baa4f9b15b12561fce1f1.min.js" crossorigin="anonymous"></script>
 <script>
 (function() {
   var SENTRY_DSN = ''; // ← paste your Sentry DSN here, e.g. 'https://abc123@o123.ingest.sentry.io/456'
-  if (SENTRY_DSN && typeof Sentry !== 'undefined') {
-    Sentry.init({
-      dsn:                SENTRY_DSN,
-      environment:        window.location.hostname === 'localhost' ? 'development' : 'production',
-      release:            'pattro@1.0.0',
-      tracesSampleRate:   0.1,
-      replaysOnErrorSampleRate: 0,
-      beforeSend: function(event) {
-        if (window.location.hostname === 'localhost') return null; // skip local errors
-        return event;
-      }
-    });
-  }
+  // Sentry initialized automatically by the loader script above
 
   // ── Global error handlers — work with OR without Sentry ──
   window.addEventListener('error', function(e) {
@@ -1163,9 +1151,7 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
     var src = (e.filename || '').split('/').pop() + ':' + e.lineno;
     console.error('[Pattro error]', msg, src);
     // Report to Sentry if configured
-    if (SENTRY_DSN && typeof Sentry !== 'undefined') {
-      Sentry.captureException(e.error || new Error(msg));
-    }
+    if (typeof Sentry !== 'undefined') { Sentry.captureException(e.error || new Error(msg)); }
     // Show non-intrusive toast for critical errors (not benign ones)
     var benign = ['Script error', 'ResizeObserver', 'Non-Error promise'];
     var isBenign = benign.some(function(b) { return msg.indexOf(b) !== -1; });
@@ -1177,9 +1163,7 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
   window.addEventListener('unhandledrejection', function(e) {
     var msg = (e.reason && e.reason.message) ? e.reason.message : String(e.reason || 'Unhandled promise rejection');
     console.error('[Pattro unhandled rejection]', msg);
-    if (SENTRY_DSN && typeof Sentry !== 'undefined') {
-      Sentry.captureException(e.reason instanceof Error ? e.reason : new Error(msg));
-    }
+    if (typeof Sentry !== 'undefined') { Sentry.captureException(e.reason instanceof Error ? e.reason : new Error(msg)); }
   });
 })();
 </script>
@@ -3420,7 +3404,7 @@ function calcDiscipline(trades) {
 }
 
 // DATA LOADING
-async async function loadAccountData(id, silent) {
+async function loadAccountData(id, silent) {
   var el = document.getElementById('main-content');
   if (!silent) el.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
   var acc = accounts.find(function(a){return a.id===id;});
@@ -5162,12 +5146,12 @@ function buildOnboardingScreen(acc) {
 
     // ── Quick setup cards ──
     + '<div class="empty-steps-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">'
-    + '<div class="panel" style="padding:14px;cursor:pointer;border-color:var(--wire2)" onclick="navigateTo('psychology')">'
+    + '<div class="panel" style="padding:14px;cursor:pointer;border-color:var(--wire2)" onclick="navigateTo(\'psychology\')">'
     + '<div style="font-size:9px;color:var(--teal);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;font-weight:700">Setup 1</div>'
     + '<div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:4px">⚖ Define your rules</div>'
     + '<div style="font-size:9px;color:var(--text3);line-height:1.5">Daily loss limit, max trades, trading hours. Pattro monitors them automatically.</div>'
     + '</div>'
-    + '<div class="panel" style="padding:14px;cursor:pointer;border-color:var(--wire2)" onclick="navigateTo('settings')">'
+    + '<div class="panel" style="padding:14px;cursor:pointer;border-color:var(--wire2)" onclick="navigateTo(\'settings\')">'
     + '<div style="font-size:9px;color:var(--teal);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;font-weight:700">Setup 2</div>'
     + '<div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:4px">🏷 Add your setup tags</div>'
     + '<div style="font-size:9px;color:var(--text3);line-height:1.5">Label your trade setups (e.g. "ICT BOS"). Pattro shows which ones perform best.</div>'
