@@ -5767,7 +5767,7 @@ function calcDailyDisciplineScore(dateStr) {
     rulesMax:     35,
     checklistMax: 35,
     tagMax:       30,
-    violations:   rulesResult.violations,
+    violations:   (typeof rulesResult !== 'undefined' ? rulesResult.violations : []),
     hasTrades:    dayTrades.length > 0,
     tradeCount:   dayTrades.length
   };
