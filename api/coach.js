@@ -68,8 +68,24 @@ async function getUserPlan(userId) {
   return rows.length ? rows[0] : null;
 }
 
+// ── IP rate limiting — max 10 requests per IP per 5 min ──
+const _ipRateMap = new Map();
+function isIpAllowed(ip) {
+  const now   = Date.now();
+  const key   = ip || 'unknown';
+  const entry = _ipRateMap.get(key) || { count: 0, reset: now + 5*60*1000};
+  if (now > entry.reset) { entry.count = 0; entry.reset = now + 5*60*1000; }
+  entry.count++;
+  _ipRateMap.set(key, entry);
+  return entry.count <= 10;
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
+
+  // IP rate limit
+  const _ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.socket?.remoteAddress || '';
+  if (!isIpAllowed(_ip)) return res.status(429).json({ error: 'Too many requests. Try again in a few minutes.' });
 
   // ── Validar que tenemos las env vars necesarias ──
   if (!ANTHROPIC_API_KEY) {

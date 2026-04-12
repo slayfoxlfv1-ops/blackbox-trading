@@ -1,10 +1,26 @@
 // api/support.js — Vercel serverless function
 // Destination email is stored server-side only — never exposed to client
 
+// ── IP rate limiting — max 5 requests per IP per 10 min ──
+const _ipRateMap = new Map();
+function isIpAllowed(ip) {
+  const now   = Date.now();
+  const key   = ip || 'unknown';
+  const entry = _ipRateMap.get(key) || { count: 0, reset: now + 10*60*1000};
+  if (now > entry.reset) { entry.count = 0; entry.reset = now + 10*60*1000; }
+  entry.count++;
+  _ipRateMap.set(key, entry);
+  return entry.count <= 5;
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
+
+  // IP rate limit — max 5 support messages per IP per 10 minutes
+  const _ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.socket?.remoteAddress || '';
+  if (!isIpAllowed(_ip)) return res.status(429).json({ error: 'Too many requests. Please wait before sending another message.' });
 
   const { from_name, from_email, subject, message } = req.body || {};
 
