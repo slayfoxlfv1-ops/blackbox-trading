@@ -181,16 +181,19 @@ export default async function handler(req, res) {
         const listR = await sbAuth('GET', `/admin/users?email=${encodeURIComponent(email)}&per_page=1`);
         const user = listR.data?.users?.[0] || null;
 
+        console.log('[Paddle] user found:', !!user, '| subscriptionId:', !!subscriptionId);
         if (!user && subscriptionId) {
           // New user — create account
           const username  = data.custom_data?.username || email.split('@')[0];
           const full_name = data.custom_data?.full_name || '';
           const country   = data.custom_data?.country || '';
           try {
+            console.log('[Paddle] Attempting to create user:', email);
             const createResp = await sbAuth('POST', '/admin/users', {
               email, email_confirm: true,
               user_metadata: { username, full_name }
             });
+            console.log('[Paddle] Create user response:', createResp.status, JSON.stringify(createResp.data).slice(0,200));
             if (createResp.ok && createResp.data?.id) {
               const userId  = createResp.data.id;
               const expires = new Date();
