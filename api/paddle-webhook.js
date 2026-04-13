@@ -168,63 +168,76 @@ export default async function handler(req, res) {
       }
     }
 
-    // ── transaction.completed — one-time or renewal payment ──
+    // ── transaction.completed — new subscription or renewal payment ──
     if (type === 'transaction.completed') {
       const email          = data.customer?.email || data.custom_data?.email || '';
       const customerId     = data.customer_id;
       const subscriptionId = data.subscription_id;
+      const username       = data.custom_data?.username || (email ? email.split('@')[0] : '');
+      const full_name      = data.custom_data?.full_name || '';
+      const country        = data.custom_data?.country || '';
 
-      console.log('[Paddle] transaction.completed — email:', email, '| subscriptionId:', subscriptionId, '| customData:', JSON.stringify(data.custom_data));
+      console.log('[Paddle] transaction.completed — email:', email, '| sub:', subscriptionId);
 
-      if (email) {
-        // Check if user exists
-        const listR = await sbAuth('GET', `/admin/users?email=${encodeURIComponent(email)}&per_page=1`);
-        const user = listR.data?.users?.[0] || null;
-
-        console.log('[Paddle] listUsers status:', listR.status, '| data:', JSON.stringify(listR.data).slice(0,300));
-        console.log('[Paddle] user found:', !!user, '| subscriptionId:', !!subscriptionId);
-        if (!user && subscriptionId) {
-          // New user — create account
-          const username  = data.custom_data?.username || email.split('@')[0];
-          const full_name = data.custom_data?.full_name || '';
-          const country   = data.custom_data?.country || '';
-          try {
-            console.log('[Paddle] Attempting to create user:', email);
-            const createResp = await sbAuth('POST', '/admin/users', {
-              email, email_confirm: true,
-              user_metadata: { username, full_name }
-            });
-            console.log('[Paddle] Create user response:', createResp.status, JSON.stringify(createResp.data).slice(0,200));
-            if (createResp.ok && createResp.data?.id) {
-              const userId  = createResp.data.id;
-              const expires = new Date();
-              expires.setMonth(expires.getMonth() + 1);
-              await sbAdmin('POST', '/rest/v1/profiles', {
-                id: userId, email, username, full_name, country,
-                plan: 'pro',
-                plan_expires_at:        expires.toISOString(),
-                paddle_customer_id:     customerId,
-                paddle_subscription_id: subscriptionId
-              });
-              await sbAuth('POST', '/admin/generate_link', {
-                type: 'magiclink', email,
-                options: { redirect_to: 'https://www.pattro.com/dashboard?payment=success' }
-              });
-              console.log('[Paddle] New account created via transaction.completed:', email);
-            }
-          } catch(e) { console.error('[Paddle] Create account error:', e.message); }
-        }
-
-        if (user) {
-          // Calculate next billing date (30 days from now)
-          const expires = new Date();
-          expires.setDate(expires.getDate() + 31);
-          await sbAdmin('PATCH', `/rest/v1/profiles?id=eq.${user.id}`, {
-            plan:                   'pro',
-            plan_expires_at:        expires.toISOString(),
-            paddle_customer_id:     customerId,
-            paddle_subscription_id: subscriptionId
+      if (email && subscriptionId) {
+        try {
+          // Try to create user — handle already-exists gracefully
+          const createResp = await sbAuth('POST', '/admin/users', {
+            email,
+            email_confirm: true,
+            user_metadata: { username, full_name }
           });
+
+          console.log('[Paddle] createUser status:', createResp.status);
+
+          let userId = null;
+
+          if (createResp.ok && createResp.data?.id) {
+            // New user created
+            userId = createResp.data.id;
+            console.log('[Paddle] New user created:', userId);
+          } else {
+            // User already exists — find them by fetching all users and filtering
+            console.log('[Paddle] User may exist, searching...', JSON.stringify(createResp.data).slice(0,100));
+            const allR = await sbAuth('GET', '/admin/users?per_page=1000&page=1');
+            const found = (allR.data?.users || []).find(u => u.email === email);
+            if (found) {
+              userId = found.id;
+              console.log('[Paddle] Found existing user:', userId);
+            }
+          }
+
+          if (userId) {
+            const expires = new Date();
+            expires.setMonth(expires.getMonth() + 1);
+
+            // Upsert profile
+            const profileResp = await sbAdmin('POST', '/rest/v1/profiles', {
+              id:                     userId,
+              email,
+              username:               username || email.split('@')[0],
+              full_name,
+              country,
+              plan:                   'pro',
+              plan_expires_at:        expires.toISOString(),
+              paddle_customer_id:     customerId,
+              paddle_subscription_id: subscriptionId
+            });
+            console.log('[Paddle] Profile upsert status:', profileResp.status);
+
+            // Send magic link for login
+            const linkResp = await sbAuth('POST', '/admin/generate_link', {
+              type:    'magiclink',
+              email,
+              options: { redirect_to: 'https://www.pattro.com/dashboard?payment=success' }
+            });
+            console.log('[Paddle] Magic link status:', linkResp.status);
+            console.log('[Paddle] ✅ Account ready for:', email);
+          } else {
+            console.error('[Paddle] Could not find or create user for:', email);
+          }
+        } catch(e) {
+          console.error('[Paddle] Account creation error:', e.message);
         }
       }
     }
