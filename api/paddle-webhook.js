@@ -74,11 +74,14 @@ export default async function handler(req, res) {
 
   const rawBody = await getRawBody(req);
   const signature = req.headers['paddle-signature'] || '';
-  const secret = process.env.PADDLE_WEBHOOK_SECRET;
 
-  // Verify Paddle signature — skip in sandbox for testing resent events
-  const isSandbox = process.env.PADDLE_ENV === 'sandbox';
-  if (secret && !isSandbox && !verifyPaddleSignature(rawBody, signature, secret)) {
+  // Verify Paddle signature — use sandbox secret when in sandbox mode
+  const isSandbox = (process.env.PADDLE_ENV || '').toLowerCase() === 'sandbox';
+  const secret    = isSandbox
+    ? (process.env.PADDLE_WEBHOOK_SECRET_SANDBOX || process.env.PADDLE_WEBHOOK_SECRET)
+    : process.env.PADDLE_WEBHOOK_SECRET;
+
+  if (secret && !verifyPaddleSignature(rawBody, signature, secret)) {
     console.error('[Paddle] Invalid signature');
     return res.status(401).json({ error: 'Invalid signature' });
   }
