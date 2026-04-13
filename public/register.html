@@ -1919,9 +1919,14 @@ async function handleRegister() {
     email, password, username, fullName,
     first, last, country, address, city, zip, state
   };
-  // Also persist to sessionStorage in case page reloads during checkout
+
+  // Generate a short token to retrieve data after Paddle redirect
+  var _regToken = Math.random().toString(36).slice(2) + Date.now().toString(36);
+
+  // Store full data in localStorage (more persistent than sessionStorage)
   try {
-    sessionStorage.setItem('pattro_pending_reg', JSON.stringify(window._pendingRegistration));
+    localStorage.setItem('pattro_reg_' + _regToken, JSON.stringify(window._pendingRegistration));
+    localStorage.setItem('pattro_reg_latest', _regToken);
   } catch(e) {}
 
   // Initialize Paddle.js
@@ -1952,7 +1957,7 @@ async function handleRegister() {
         }
         console.log('[Pattro] Creating account for:', pending.email);
         window._pendingRegistration = null;
-        try { sessionStorage.removeItem('pattro_pending_reg'); } catch(e) {}
+
 
         // ── NOW create the Supabase account ──
         var { data: authData, error: authError } = await sb.auth.signUp({
@@ -2032,7 +2037,7 @@ async function handleRegister() {
     customer: { email: email },
     customData: { email: email },
     settings: {
-      successUrl:  'https://www.pattro.com/register?checkout=complete',
+      successUrl:  'https://www.pattro.com/register?checkout=complete&t=' + _regToken,
       displayMode: 'overlay',
       theme:       'dark',
       locale:      'en'
@@ -2053,11 +2058,20 @@ async function handleRegister() {
   // Clean URL
   window.history.replaceState({}, '', '/register');
 
-  // Restore pending registration from sessionStorage
+  // Restore pending registration from localStorage using token from URL
   var pending = null;
   try {
-    var stored = sessionStorage.getItem('pattro_pending_reg');
-    if (stored) pending = JSON.parse(stored);
+    var urlParams = new URLSearchParams(window.location.search);
+    var token = urlParams.get('t') || localStorage.getItem('pattro_reg_latest');
+    if (token) {
+      var stored = localStorage.getItem('pattro_reg_' + token);
+      if (stored) {
+        pending = JSON.parse(stored);
+        // Clean up
+        localStorage.removeItem('pattro_reg_' + token);
+        localStorage.removeItem('pattro_reg_latest');
+      }
+    }
   } catch(e) {}
 
   if (!pending) {
