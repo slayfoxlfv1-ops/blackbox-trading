@@ -181,6 +181,7 @@ export default async function handler(req, res) {
         const listR = await sbAuth('GET', `/admin/users?email=${encodeURIComponent(email)}&per_page=1`);
         const user = listR.data?.users?.[0] || null;
 
+        console.log('[Paddle] listUsers status:', listR.status, '| data:', JSON.stringify(listR.data).slice(0,300));
         console.log('[Paddle] user found:', !!user, '| subscriptionId:', !!subscriptionId);
         if (!user && subscriptionId) {
           // New user — create account
