@@ -1,40 +1,20 @@
-// api/paddle-config.js
+// api/paddle-config.js — TEMP TEST
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).end();
 
-  const isSandbox = process.env.PADDLE_ENV === 'sandbox';
+  // Log ALL env vars that start with PADDLE
+  const paddleVars = Object.keys(process.env)
+    .filter(k => k.startsWith('PADDLE'))
+    .reduce((acc, k) => {
+      acc[k] = process.env[k] ? '✓ set (' + process.env[k].slice(0,6) + '...)' : '✗ missing';
+      return acc;
+    }, {});
 
-  console.log('[paddle-config] PADDLE_ENV:', process.env.PADDLE_ENV);
-  console.log('[paddle-config] isSandbox:', isSandbox);
-  console.log('[paddle-config] PADDLE_TOKEN exists:', !!process.env.PADDLE_TOKEN);
-  console.log('[paddle-config] PADDLE_TOKEN_SANDBOX exists:', !!process.env.PADDLE_TOKEN_SANDBOX);
-  console.log('[paddle-config] PADDLE_PRICE_ID exists:', !!process.env.PADDLE_PRICE_ID);
-  console.log('[paddle-config] PADDLE_PRICE_ID_SANDBOX exists:', !!process.env.PADDLE_PRICE_ID_SANDBOX);
-
-  const token   = isSandbox
-    ? process.env.PADDLE_TOKEN_SANDBOX
-    : process.env.PADDLE_TOKEN;
-
-  const priceId = isSandbox
-    ? process.env.PADDLE_PRICE_ID_SANDBOX
-    : process.env.PADDLE_PRICE_ID;
-
-  if (!token || !priceId) {
-    console.error('[paddle-config] Missing:', { token: !!token, priceId: !!priceId });
-    return res.status(500).json({ 
-      error: 'Paddle not configured',
-      debug: {
-        env: process.env.PADDLE_ENV,
-        isSandbox,
-        hasToken: !!token,
-        hasPriceId: !!priceId
-      }
-    });
-  }
+  console.log('[paddle-config] All PADDLE vars:', JSON.stringify(paddleVars));
 
   return res.status(200).json({
-    token,
-    priceId,
-    sandbox: isSandbox
+    paddleVars,
+    nodeEnv: process.env.NODE_ENV,
+    vercelEnv: process.env.VERCEL_ENV
   });
 }
