@@ -174,6 +174,8 @@ export default async function handler(req, res) {
       const customerId     = data.customer_id;
       const subscriptionId = data.subscription_id;
 
+      console.log('[Paddle] transaction.completed — email:', email, '| subscriptionId:', subscriptionId, '| customData:', JSON.stringify(data.custom_data));
+
       if (email) {
         // Check if user exists
         const listR = await sbAuth('GET', `/admin/users?email=${encodeURIComponent(email)}&per_page=1`);
