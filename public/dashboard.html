@@ -1341,6 +1341,20 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
     <div style="font-family:Fragment Mono,monospace;font-size:9px;color:var(--text3);margin-bottom:14px;padding:8px 12px;background:var(--surface2);border-radius:6px;border:1px solid var(--wire)">
       Note: Daily Loss Limit and Max Drawdown must be negative numbers e.g. -1500
     </div>
+    <!-- Account Balance -->
+    <div style="padding:0 0 14px">
+      <div class="form-group">
+        <label class="form-label">Account Balance ($)</label>
+        <input class="form-input" id="m-balance" type="number" placeholder="e.g. 52350" step="0.01">
+        <div style="font-size:9px;color:var(--text3);margin-top:5px;line-height:1.6">
+          Your current account balance — the amount your account is at right now. Pattro will track gains and losses from this number as you log trades.
+        </div>
+        <div id="m-balance-warning" style="display:none;margin-top:8px;padding:8px 10px;background:rgba(224,92,92,0.08);border:1px solid var(--red-bd);border-radius:6px;font-size:9px;color:var(--red);line-height:1.7">
+          ⚠️ <strong>Editing this value resets your balance tracking.</strong><br>
+          Pattro will start counting from this new number — previous trades will no longer affect the balance shown in the sidebar. Only trades added after this change will be counted.
+        </div>
+      </div>
+    </div>
     </div><!-- end modal-body-scroll -->
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
@@ -2630,6 +2644,10 @@ var editingAccountId = null;
 function openModal() {
   editingAccountId = null;
   document.getElementById('modal-title').textContent = 'Add Account';
+  var balEl2 = document.getElementById('m-balance');
+  if (balEl2) balEl2.value = '';
+  var warnEl2 = document.getElementById('m-balance-warning');
+  if (warnEl2) warnEl2.style.display = 'none';
   document.getElementById('m-name').value = '';
   document.getElementById('m-firm').value = '';
   document.getElementById('m-size').value = '';
@@ -2658,6 +2676,15 @@ function openEditModal(id) {
   document.getElementById('m-pt').value = a.profit_target||'';
   document.getElementById('m-max-contracts').value = a.max_contracts||'';
   document.getElementById('m-active').value = a.is_active===false ? 'false' : 'true';
+  // Account balance
+  var balEl = document.getElementById('m-balance');
+  if (balEl) balEl.value = a.account_balance != null ? a.account_balance : '';
+  // Show warning when editing an existing account that already has a balance
+  var warnEl = document.getElementById('m-balance-warning');
+  if (warnEl) warnEl.style.display = a.account_balance != null ? 'block' : 'none';
+  if (balEl) balEl.addEventListener('input', function() {
+    if (warnEl && this.value !== String(a.account_balance || '')) warnEl.style.display = 'block';
+  }, { once: true });
   selectedColor = a.color || '#5a9e72';
   document.querySelectorAll('.cswatch').forEach(function(s) { s.classList.toggle('selected', s.dataset.color===selectedColor); });
   document.getElementById('modal-overlay').classList.add('open');
@@ -2697,7 +2724,23 @@ async function saveAccount() {
     max_contracts:     parseInt(document.getElementById('m-max-contracts').value) || null,
     is_active:         document.getElementById('m-active').value === 'true',
     color:             selectedColor,
-    user_id:           currentUser.id
+    user_id:           currentUser.id,
+    // Account balance — reset tracking timestamp when balance is edited
+    account_balance: (function() {
+      var v = document.getElementById('m-balance').value;
+      return v !== '' ? parseFloat(v) : null;
+    })(),
+    balance_updated_at: (function() {
+      if (!editingAccountId) return new Date().toISOString();
+      // Only update timestamp if balance changed
+      var existingAcc = accounts.find(function(a){ return a.id === editingAccountId; });
+      var newBal = document.getElementById('m-balance').value;
+      var newBalNum = newBal !== '' ? parseFloat(newBal) : null;
+      if (existingAcc && existingAcc.account_balance !== newBalNum) {
+        return new Date().toISOString(); // balance changed — reset tracking
+      }
+      return existingAcc ? existingAcc.balance_updated_at : new Date().toISOString();
+    })()
   };
 
   if (!editingAccountId && window.isFreePlan() && (accounts||[]).length >= 1) {
@@ -4590,11 +4633,28 @@ async function loadAccountData(id, silent) {
 
   '</div>'; // end fade-in
 
-  // Update sidebar PNL
+  // Update sidebar — show account balance if set, otherwise raw P&L
   var pnlEl = document.getElementById('pnl-'+id);
   if (pnlEl) {
-    var _abs = Math.abs(netPnl); pnlEl.textContent = (netPnl>=0?'+':'-')+'$'+(_abs%1===0?_abs.toLocaleString():_abs.toFixed(2));
-    pnlEl.className = 'acc-pnl ' + (netPnl>0?'pos':netPnl<0?'neg':'zero');
+    var _acc = accounts.find(function(a){ return a.id === id; });
+    var _displayVal;
+    if (_acc && _acc.account_balance != null) {
+      // Calculate balance: account_balance + P&L from trades after balance_updated_at
+      var _balanceCutoff = _acc.balance_updated_at ? new Date(_acc.balance_updated_at) : new Date(0);
+      var _tradesAfterCutoff = trades.filter(function(t){
+        return t.entry_time && new Date(t.entry_time) >= _balanceCutoff;
+      });
+      var _pnlAfterCutoff = _tradesAfterCutoff.reduce(function(s,t){ return s+(t.pnl||0); }, 0);
+      _displayVal = _acc.account_balance + _pnlAfterCutoff;
+      var _absVal = Math.abs(_displayVal);
+      pnlEl.textContent = '$' + (_absVal%1===0 ? Math.round(_absVal).toLocaleString() : _absVal.toFixed(2));
+      pnlEl.className = 'acc-pnl ' + (_displayVal > _acc.account_balance ? 'pos' : _displayVal < _acc.account_balance ? 'neg' : 'zero');
+    } else {
+      // No balance set — show raw P&L as before
+      var _abs = Math.abs(netPnl);
+      pnlEl.textContent = (netPnl>=0?'+':'-')+'$'+(_abs%1===0?_abs.toLocaleString():_abs.toFixed(2));
+      pnlEl.className = 'acc-pnl ' + (netPnl>0?'pos':netPnl<0?'neg':'zero');
+    }
   }
   } catch(err) {
     console.error('[Pattro] loadAccountData error:', err);
