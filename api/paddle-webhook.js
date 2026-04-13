@@ -76,23 +76,16 @@ export default async function handler(req, res) {
   const signature = req.headers['paddle-signature'] || '';
   const secret = process.env.PADDLE_WEBHOOK_SECRET;
 
-  // Verify signature — skip if no secret configured (dev/sandbox testing)
-  if (secret) {
-    const sigValid = verifyPaddleSignature(rawBody, signature, secret);
-    if (!sigValid) {
-      // Check if it's a timestamp issue (replayed/resent event)
-      const parts = {};
-      (signature || '').split(';').forEach(p => { const [k,v] = p.split('='); parts[k]=v; });
-      const ts = parseInt(parts['ts'] || '0');
-      const age = Math.abs(Date.now()/1000 - ts);
-      if (age > 300) {
-        // Event older than 5 min — likely a resent test event, log but continue
-        console.warn('[Paddle] Signature invalid but event is old (' + Math.round(age) + 's) — processing anyway for testing');
-      } else {
-        console.error('[Paddle] Invalid signature on recent event');
-        return res.status(401).json({ error: 'Invalid signature' });
-      }
+  // Signature verification
+  // In sandbox mode, skip verification to allow resent test events
+  const isSandboxMode = process.env.PADDLE_ENV === 'sandbox';
+  if (secret && !isSandboxMode) {
+    if (!verifyPaddleSignature(rawBody, signature, secret)) {
+      console.error('[Paddle] Invalid signature');
+      return res.status(401).json({ error: 'Invalid signature' });
     }
+  } else if (!isSandboxMode && !secret) {
+    console.warn('[Paddle] No webhook secret configured');
   }
 
   let event;
