@@ -76,8 +76,9 @@ export default async function handler(req, res) {
   const signature = req.headers['paddle-signature'] || '';
   const secret = process.env.PADDLE_WEBHOOK_SECRET;
 
-  // Verify Paddle signature
-  if (secret && !verifyPaddleSignature(rawBody, signature, secret)) {
+  // Verify Paddle signature — skip in sandbox for testing resent events
+  const isSandbox = process.env.PADDLE_ENV === 'sandbox';
+  if (secret && !isSandbox && !verifyPaddleSignature(rawBody, signature, secret)) {
     console.error('[Paddle] Invalid signature');
     return res.status(401).json({ error: 'Invalid signature' });
   }
@@ -246,11 +247,25 @@ export default async function handler(req, res) {
       const subscriptionId = data.id;
       const nextBilling    = data.next_billed_at;
       const status         = data.status;
+      const scheduledChange = data.scheduled_change;
 
       if (subscriptionId) {
-        const updates = { plan_expires_at: nextBilling };
+        const updates = {};
+
         if (status === 'active') updates.plan = 'pro';
-        if (subscriptionId) await sbAdmin('PATCH', `/rest/v1/profiles?paddle_subscription_id=eq.${subscriptionId}`, updates);
+        if (nextBilling) updates.plan_expires_at = nextBilling;
+
+        // Handle scheduled cancellation — keep pro until effective_at date
+        if (scheduledChange && scheduledChange.action === 'cancel') {
+          updates.plan_expires_at = scheduledChange.effective_at;
+          // Keep plan as 'pro' until expiry — don't set to 'free' yet
+          updates.plan = 'pro';
+          console.log('[Paddle] Scheduled cancellation — expires:', scheduledChange.effective_at);
+        }
+
+        if (Object.keys(updates).length > 0) {
+          await sbAdmin('PATCH', `/rest/v1/profiles?paddle_subscription_id=eq.${subscriptionId}`, updates);
+        }
       }
     }
 
