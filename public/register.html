@@ -1915,19 +1915,10 @@ async function handleRegister() {
   }
 
   // Store form data to use after payment completes
-  window._pendingRegistration = {
-    email, password, username, fullName,
-    first, last, country, address, city, zip, state
-  };
+  // Store email for confirmation message after payment
+  window._pendingRegistration = { email };
 
-  // Generate a short token to retrieve data after Paddle redirect
-  var _regToken = Math.random().toString(36).slice(2) + Date.now().toString(36);
 
-  // Store full data in localStorage (more persistent than sessionStorage)
-  try {
-    localStorage.setItem('pattro_reg_' + _regToken, JSON.stringify(window._pendingRegistration));
-    localStorage.setItem('pattro_reg_latest', _regToken);
-  } catch(e) {}
 
   // Initialize Paddle.js
   // Set sandbox environment if needed (before Initialize)
@@ -1940,83 +1931,20 @@ async function handleRegister() {
     eventCallback: async function(data) {
 
       if (data.name === 'checkout.completed') {
-        console.log('[Pattro] checkout.completed fired');
-        console.log('[Pattro] window._pendingRegistration:', window._pendingRegistration);
-        var pending = window._pendingRegistration;
-        // Restore from sessionStorage if page was reloaded during checkout
-        if (!pending) {
-          try {
-            var stored = sessionStorage.getItem('pattro_pending_reg');
-            console.log('[Pattro] sessionStorage pending:', stored ? 'found' : 'not found');
-            if (stored) pending = JSON.parse(stored);
-          } catch(e) { console.error('[Pattro] sessionStorage error:', e); }
-        }
-        if (!pending) {
-          console.error('[Pattro] No pending registration found — cannot create account');
-          return;
-        }
-        console.log('[Pattro] Creating account for:', pending.email);
+        // Account is created server-side by the webhook
+        // Show "check your email" message
+        var email = window._pendingRegistration ? window._pendingRegistration.email : '';
+        document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0a0a0b;font-family:Fragment Mono,monospace;padding:24px">'
+          + '<div style="max-width:420px;width:100%;text-align:center">'
+          + '<div style="position:relative;width:44px;height:44px;margin:0 auto 24px"><span style="font-family:Unbounded,sans-serif;font-size:40px;font-weight:700;color:#fff;line-height:1;position:absolute;left:0;bottom:0">P</span><span style="position:absolute;top:0;right:0;width:10px;height:10px;border-radius:50%;background:#3ecfcf"></span></div>'
+          + '<div style="font-size:20px;font-weight:800;color:#fff;margin-bottom:12px;letter-spacing:-.3px">Payment confirmed! &#x1F389;</div>'
+          + '<div style="font-size:12px;color:#9898a6;line-height:1.8;margin-bottom:24px">We are activating your account.<br>Check your email <strong style="color:#fff">' + (email || '') + '</strong><br>for a link to access your dashboard.</div>'
+          + '<div style="font-size:10px;color:#52525e;line-height:1.7">Did not receive the email? Check your spam folder<br>or contact <a href="mailto:support@pattro.com" style="color:#3ecfcf">support@pattro.com</a></div>'
+          + '</div></div>';
         window._pendingRegistration = null;
-
-
-        // ── NOW create the Supabase account ──
-        var { data: authData, error: authError } = await sb.auth.signUp({
-          email:    pending.email,
-          password: pending.password
-        });
-
-        if (authError) {
-          // Account already exists — just log them in and redirect
-          window.location.href = '/dashboard?payment=success';
-          return;
-        }
-
-        var userId = authData.user.id;
-
-        // Calculate expiry 1 month from now
-        var expires = new Date();
-        expires.setMonth(expires.getMonth() + 1);
-
-        // Save profile with pro plan
-        await sb.from('profiles').upsert({
-          id:               userId,
-          email:            pending.email,
-          username:         pending.username,
-          full_name:        pending.fullName,
-          legal_first_name: pending.first,
-          legal_last_name:  pending.last,
-          country:          pending.country,
-          street_address:   pending.address,
-          city:             pending.city,
-          zip_code:         pending.zip,
-          state_region:     pending.state,
-          plan:             'pro',
-          plan_expires_at:  expires.toISOString()
-        });
-
-        // Send welcome email
-        try {
-          fetch('/api/welcome-email', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: pending.email, name: pending.fullName })
-          });
-        } catch(e) {}
-
-        // Link user_id to Paddle for future webhook events
-        try {
-          var subId = data.data && data.data.subscription_id;
-          if (subId) fetch('/api/link-paddle-user', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ user_id: userId, subscription_id: subId, email: pending.email })
-          });
-        } catch(e) {}
-
-        window.location.href = '/dashboard?payment=success';
       }
 
-      if (data.name === 'checkout.closed') {
+            if (data.name === 'checkout.closed') {
         // User closed without paying — no account created
         btn.disabled = false;
         btn.textContent = 'Continue';
@@ -2035,9 +1963,14 @@ async function handleRegister() {
   Paddle.Checkout.open({
     items: [{ priceId: paddleCfg.priceId, quantity: 1 }],
     customer: { email: email },
-    customData: { email: email },
+    customData: {
+      email:     email,
+      username:  username,
+      full_name: fullName,
+      country:   country
+    },
     settings: {
-      successUrl:  'https://www.pattro.com/register?checkout=complete&t=' + _regToken,
+      successUrl:  'https://www.pattro.com/dashboard?payment=success',
       displayMode: 'overlay',
       theme:       'dark',
       locale:      'en'
@@ -2051,204 +1984,4 @@ async function handleRegister() {
 
 
 
-// ── Handle Paddle redirect back to register after checkout ──
-(async function() {
-  if (!window.location.search.includes('checkout=complete')) return;
-
-  // Clean URL
-  window.history.replaceState({}, '', '/register');
-
-  // Restore pending registration from localStorage using token from URL
-  var pending = null;
-  try {
-    var urlParams = new URLSearchParams(window.location.search);
-    var token = urlParams.get('t') || localStorage.getItem('pattro_reg_latest');
-    if (token) {
-      var stored = localStorage.getItem('pattro_reg_' + token);
-      if (stored) {
-        pending = JSON.parse(stored);
-        // Clean up
-        localStorage.removeItem('pattro_reg_' + token);
-        localStorage.removeItem('pattro_reg_latest');
-      }
-    }
-  } catch(e) {}
-
-  if (!pending) {
-    // No pending data — show error
-    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:monospace;flex-direction:column;gap:16px;background:#0a0a0b;color:#fff">'
-      + '<div style="font-size:32px">⚠️</div>'
-      + '<div style="font-size:14px;font-weight:700">Payment received but registration data was lost</div>'
-      + '<div style="font-size:11px;color:#888;text-align:center;max-width:360px">Please contact support@pattro.com with your email and we will activate your account manually.</div>'
-      + '</div>';
-    return;
-  }
-
-  // Show creating account UI
-  document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:monospace;flex-direction:column;gap:16px;background:#0a0a0b;color:#fff">'
-    + '<div style="font-size:13px;color:#3ecfcf;font-weight:700">&#x27F3; Creating your account...</div>'
-    + '</div>';
-
-  try {
-    // Initialize Supabase
-    var sb2 = window.supabase ? window.supabase.createClient(
-      'https://qljuusxpzsiqxnpfpdgg.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFsanV1c3hwenNpcXhucGZwZGdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzkzODM4MjgsImV4cCI6MjA1NDk1OTgyOH0.mFTuLUVAON2HHBvD5KOXV31sOeVZSy1lYp3MbMYPBak'
-    ) : null;
-
-    if (!sb2) throw new Error('Supabase not available');
-
-    // Create auth account
-    var signupResult = await sb2.auth.signUp({
-      email:    pending.email,
-      password: pending.password
-    });
-
-    if (signupResult.error && !signupResult.error.message.includes('already registered')) {
-      throw signupResult.error;
-    }
-
-    var userId = signupResult.data && signupResult.data.user
-      ? signupResult.data.user.id
-      : null;
-
-    // If already exists, sign in to get userId
-    if (!userId) {
-      var signinResult = await sb2.auth.signInWithPassword({
-        email:    pending.email,
-        password: pending.password
-      });
-      if (signinResult.error) throw signinResult.error;
-      userId = signinResult.data.user.id;
-    }
-
-    // Save profile with pro plan
-    var expires = new Date();
-    expires.setMonth(expires.getMonth() + 1);
-    await sb2.from('profiles').upsert({
-      id:               userId,
-      email:            pending.email,
-      username:         pending.username,
-      full_name:        pending.fullName,
-      legal_first_name: pending.first,
-      legal_last_name:  pending.last,
-      country:          pending.country,
-      street_address:   pending.address,
-      city:             pending.city,
-      zip_code:         pending.zip,
-      state_region:     pending.state,
-      plan:             'pro',
-      plan_expires_at:  expires.toISOString()
-    });
-
-    // Clean up sessionStorage
-    try { sessionStorage.removeItem('pattro_pending_reg'); } catch(e) {}
-
-    // Redirect to dashboard
-    window.location.href = '/dashboard?payment=success';
-
-  } catch(err) {
-    console.error('[Pattro] Account creation failed:', err);
-    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:monospace;flex-direction:column;gap:16px;background:#0a0a0b;color:#fff">'
-      + '<div style="font-size:32px">⚠️</div>'
-      + '<div style="font-size:14px;font-weight:700;color:#e05c5c">Account creation failed</div>'
-      + '<div style="font-size:11px;color:#888;text-align:center;max-width:360px">Payment was received. Please contact support@pattro.com — we will activate your account manually. Error: ' + (err.message || 'Unknown') + '</div>'
-      + '</div>';
-  }
-})();
-
 // ── FREE REGISTRATION ──
-async function handleFreeRegister() {
-  var errEl = document.getElementById('global-error');
-  var btn   = document.getElementById('free-btn');
-  errEl.textContent = '';
-
-  if (!validate()) {
-    errEl.textContent = 'Please fix the errors above before continuing.';
-    errEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    return;
-  }
-
-  var email    = document.getElementById('r-email').value.trim();
-  var password = document.getElementById('r-password').value;
-  var username = document.getElementById('r-username').value.trim();
-  var first    = document.getElementById('r-first').value.trim();
-  var last     = document.getElementById('r-last').value.trim();
-  var country  = document.getElementById('r-country').value;
-  var address  = document.getElementById('r-address').value.trim();
-  var city     = document.getElementById('r-city').value.trim();
-  var zip      = document.getElementById('r-zip').value.trim();
-  var state    = document.getElementById('r-state').value.trim();
-  var fullName = first + ' ' + last;
-
-  btn.disabled    = true;
-  btn.textContent = 'Creating account...';
-
-  var { data: authData, error: authError } = await sb.auth.signUp({ email, password });
-
-  if (authError) {
-    if (authError.message && authError.message.toLowerCase().includes('already registered')) {
-      errEl.innerHTML = 'This email is already registered. <a href="/login" style="color:var(--teal)">Log in instead →</a>';
-    } else {
-      errEl.textContent = authError.message;
-    }
-    btn.disabled = false;
-    btn.textContent = 'Start free — 10 trades, no credit card';
-    return;
-  }
-
-  var userId = authData.user.id;
-
-  await sb.from('profiles').upsert({
-    id:               userId,
-    email:            email,
-    username:         username,
-    full_name:        fullName,
-    legal_first_name: first,
-    legal_last_name:  last,
-    country:          country,
-    street_address:   address,
-    city:             city,
-    zip_code:         zip,
-    state_region:     state,
-    plan:             'free',
-    plan_expires_at:  null
-  });
-
-  btn.textContent = '✓ Account created!';
-  setTimeout(function() {
-    window.location.href = '/login?registered=1&plan=free';
-  }, 1000);
-}
-
-// ── Username real-time validation ──
-function validateUsername(val) {
-  var errEl = document.getElementById('err-username');
-  if (!errEl) return;
-  if (!val) { errEl.textContent = ''; return; }
-  if (!/^[a-zA-Z0-9_-]+$/.test(val)) {
-    errEl.textContent = 'Only letters, numbers, _ and - are allowed';
-  } else if (val.length < 3) {
-    errEl.textContent = 'Minimum 3 characters';
-  } else {
-    errEl.textContent = '';
-  }
-}
-
-// ── Toggle password visibility ──
-function togglePwd(inputId, eyeId) {
-  var inp = document.getElementById(inputId);
-  var eye = document.getElementById(eyeId);
-  if (!inp) return;
-  var isHidden = inp.type === 'password';
-  inp.type = isHidden ? 'text' : 'password';
-  // Switch between open/closed eye icon
-  if (eye) {
-    eye.innerHTML = isHidden
-      ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>'
-      : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
-  }
-}
-</script>
-</body>
-</html>
