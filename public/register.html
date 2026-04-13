@@ -1985,3 +1985,97 @@ async function handleRegister() {
 
 
 // ── FREE REGISTRATION ──
+async function handleFreeRegister() {
+  var errEl = document.getElementById('global-error');
+  var btn   = document.getElementById('free-btn');
+  errEl.textContent = '';
+
+  if (!validate()) {
+    errEl.textContent = 'Please fix the errors above before continuing.';
+    errEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+
+  var email    = document.getElementById('r-email').value.trim();
+  var password = document.getElementById('r-password').value;
+  var username = document.getElementById('r-username').value.trim();
+  var first    = document.getElementById('r-first').value.trim();
+  var last     = document.getElementById('r-last').value.trim();
+  var country  = document.getElementById('r-country').value;
+  var address  = document.getElementById('r-address').value.trim();
+  var city     = document.getElementById('r-city').value.trim();
+  var zip      = document.getElementById('r-zip').value.trim();
+  var state    = document.getElementById('r-state').value.trim();
+  var fullName = first + ' ' + last;
+
+  btn.disabled    = true;
+  btn.textContent = 'Creating account...';
+
+  var { data: authData, error: authError } = await sb.auth.signUp({ email, password });
+
+  if (authError) {
+    if (authError.message && authError.message.toLowerCase().includes('already registered')) {
+      errEl.innerHTML = 'This email is already registered. <a href="/login" style="color:var(--teal)">Log in instead →</a>';
+    } else {
+      errEl.textContent = authError.message;
+    }
+    btn.disabled = false;
+    btn.textContent = 'Start free — 10 trades, no credit card';
+    return;
+  }
+
+  var userId = authData.user.id;
+
+  await sb.from('profiles').upsert({
+    id:               userId,
+    email:            email,
+    username:         username,
+    full_name:        fullName,
+    legal_first_name: first,
+    legal_last_name:  last,
+    country:          country,
+    street_address:   address,
+    city:             city,
+    zip_code:         zip,
+    state_region:     state,
+    plan:             'free',
+    plan_expires_at:  null
+  });
+
+  btn.textContent = '✓ Account created!';
+  setTimeout(function() {
+    window.location.href = '/login?registered=1&plan=free';
+  }, 1000);
+}
+
+// ── Username real-time validation ──
+function validateUsername(val) {
+  var errEl = document.getElementById('err-username');
+  if (!errEl) return;
+  if (!val) { errEl.textContent = ''; return; }
+  if (!/^[a-zA-Z0-9_-]+$/.test(val)) {
+    errEl.textContent = 'Only letters, numbers, _ and - are allowed';
+  } else if (val.length < 3) {
+    errEl.textContent = 'Minimum 3 characters';
+  } else {
+    errEl.textContent = '';
+  }
+}
+
+// ── Toggle password visibility ──
+function togglePwd(inputId, eyeId) {
+  var inp = document.getElementById(inputId);
+  var eye = document.getElementById(eyeId);
+  if (!inp) return;
+  var isHidden = inp.type === 'password';
+  inp.type = isHidden ? 'text' : 'password';
+  // Switch between open/closed eye icon
+  if (eye) {
+    eye.innerHTML = isHidden
+      ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>'
+      : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+  }
+}
+</script>
+</body>
+</html>
