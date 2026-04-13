@@ -101,8 +101,8 @@ export default async function handler(req, res) {
   console.log('[Paddle] Event:', type);
 
   try {
-    // ── subscription.activated — new subscriber ──
-    if (type === 'subscription.activated') {
+    // ── subscription.activated / subscription.created — new subscriber ──
+    if (type === 'subscription.activated' || type === 'subscription.created') {
       const email           = data.custom_data?.email || data.customer?.email || '';
       const username        = data.custom_data?.username || '';
       const full_name       = data.custom_data?.full_name || '';
@@ -174,10 +174,41 @@ export default async function handler(req, res) {
       const customerId     = data.customer_id;
       const subscriptionId = data.subscription_id;
 
-      if (email && subscriptionId) {
-        // Extend subscription
+      if (email) {
+        // Check if user exists
         const listR = await sbAuth('GET', `/admin/users?email=${encodeURIComponent(email)}&per_page=1`);
         const user = listR.data?.users?.[0] || null;
+
+        if (!user && subscriptionId) {
+          // New user — create account
+          const username  = data.custom_data?.username || email.split('@')[0];
+          const full_name = data.custom_data?.full_name || '';
+          const country   = data.custom_data?.country || '';
+          try {
+            const createResp = await sbAuth('POST', '/admin/users', {
+              email, email_confirm: true,
+              user_metadata: { username, full_name }
+            });
+            if (createResp.ok && createResp.data?.id) {
+              const userId  = createResp.data.id;
+              const expires = new Date();
+              expires.setMonth(expires.getMonth() + 1);
+              await sbAdmin('POST', '/rest/v1/profiles', {
+                id: userId, email, username, full_name, country,
+                plan: 'pro',
+                plan_expires_at:        expires.toISOString(),
+                paddle_customer_id:     customerId,
+                paddle_subscription_id: subscriptionId
+              });
+              await sbAuth('POST', '/admin/generate_link', {
+                type: 'magiclink', email,
+                options: { redirect_to: 'https://www.pattro.com/dashboard?payment=success' }
+              });
+              console.log('[Paddle] New account created via transaction.completed:', email);
+            }
+          } catch(e) { console.error('[Paddle] Create account error:', e.message); }
+        }
+
         if (user) {
           // Calculate next billing date (30 days from now)
           const expires = new Date();
