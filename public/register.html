@@ -2032,7 +2032,7 @@ async function handleRegister() {
     customer: { email: email },
     customData: { email: email },
     settings: {
-      successUrl:  'https://www.pattro.com/dashboard?payment=success',
+      successUrl:  'https://www.pattro.com/register?checkout=complete',
       displayMode: 'overlay',
       theme:       'dark',
       locale:      'en'
@@ -2045,6 +2045,103 @@ async function handleRegister() {
 
 
 
+
+// ── Handle Paddle redirect back to register after checkout ──
+(async function() {
+  if (!window.location.search.includes('checkout=complete')) return;
+
+  // Clean URL
+  window.history.replaceState({}, '', '/register');
+
+  // Restore pending registration from sessionStorage
+  var pending = null;
+  try {
+    var stored = sessionStorage.getItem('pattro_pending_reg');
+    if (stored) pending = JSON.parse(stored);
+  } catch(e) {}
+
+  if (!pending) {
+    // No pending data — show error
+    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:monospace;flex-direction:column;gap:16px;background:#0a0a0b;color:#fff">'
+      + '<div style="font-size:32px">⚠️</div>'
+      + '<div style="font-size:14px;font-weight:700">Payment received but registration data was lost</div>'
+      + '<div style="font-size:11px;color:#888;text-align:center;max-width:360px">Please contact support@pattro.com with your email and we will activate your account manually.</div>'
+      + '</div>';
+    return;
+  }
+
+  // Show creating account UI
+  document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:monospace;flex-direction:column;gap:16px;background:#0a0a0b;color:#fff">'
+    + '<div style="font-size:13px;color:#3ecfcf;font-weight:700">&#x27F3; Creating your account...</div>'
+    + '</div>';
+
+  try {
+    // Initialize Supabase
+    var sb2 = window.supabase ? window.supabase.createClient(
+      'https://qljuusxpzsiqxnpfpdgg.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFsanV1c3hwenNpcXhucGZwZGdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzkzODM4MjgsImV4cCI6MjA1NDk1OTgyOH0.mFTuLUVAON2HHBvD5KOXV31sOeVZSy1lYp3MbMYPBak'
+    ) : null;
+
+    if (!sb2) throw new Error('Supabase not available');
+
+    // Create auth account
+    var signupResult = await sb2.auth.signUp({
+      email:    pending.email,
+      password: pending.password
+    });
+
+    if (signupResult.error && !signupResult.error.message.includes('already registered')) {
+      throw signupResult.error;
+    }
+
+    var userId = signupResult.data && signupResult.data.user
+      ? signupResult.data.user.id
+      : null;
+
+    // If already exists, sign in to get userId
+    if (!userId) {
+      var signinResult = await sb2.auth.signInWithPassword({
+        email:    pending.email,
+        password: pending.password
+      });
+      if (signinResult.error) throw signinResult.error;
+      userId = signinResult.data.user.id;
+    }
+
+    // Save profile with pro plan
+    var expires = new Date();
+    expires.setMonth(expires.getMonth() + 1);
+    await sb2.from('profiles').upsert({
+      id:               userId,
+      email:            pending.email,
+      username:         pending.username,
+      full_name:        pending.fullName,
+      legal_first_name: pending.first,
+      legal_last_name:  pending.last,
+      country:          pending.country,
+      street_address:   pending.address,
+      city:             pending.city,
+      zip_code:         pending.zip,
+      state_region:     pending.state,
+      plan:             'pro',
+      plan_expires_at:  expires.toISOString()
+    });
+
+    // Clean up sessionStorage
+    try { sessionStorage.removeItem('pattro_pending_reg'); } catch(e) {}
+
+    // Redirect to dashboard
+    window.location.href = '/dashboard?payment=success';
+
+  } catch(err) {
+    console.error('[Pattro] Account creation failed:', err);
+    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:monospace;flex-direction:column;gap:16px;background:#0a0a0b;color:#fff">'
+      + '<div style="font-size:32px">⚠️</div>'
+      + '<div style="font-size:14px;font-weight:700;color:#e05c5c">Account creation failed</div>'
+      + '<div style="font-size:11px;color:#888;text-align:center;max-width:360px">Payment was received. Please contact support@pattro.com — we will activate your account manually. Error: ' + (err.message || 'Unknown') + '</div>'
+      + '</div>';
+  }
+})();
 
 // ── FREE REGISTRATION ──
 async function handleFreeRegister() {
