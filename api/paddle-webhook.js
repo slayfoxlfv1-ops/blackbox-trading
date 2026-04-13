@@ -76,16 +76,10 @@ export default async function handler(req, res) {
   const signature = req.headers['paddle-signature'] || '';
   const secret = process.env.PADDLE_WEBHOOK_SECRET;
 
-  // Signature verification
-  // In sandbox mode, skip verification to allow resent test events
-  const isSandboxMode = process.env.PADDLE_ENV === 'sandbox';
-  if (secret && !isSandboxMode) {
-    if (!verifyPaddleSignature(rawBody, signature, secret)) {
-      console.error('[Paddle] Invalid signature');
-      return res.status(401).json({ error: 'Invalid signature' });
-    }
-  } else if (!isSandboxMode && !secret) {
-    console.warn('[Paddle] No webhook secret configured');
+  // Verify Paddle signature
+  if (secret && !verifyPaddleSignature(rawBody, signature, secret)) {
+    console.error('[Paddle] Invalid signature');
+    return res.status(401).json({ error: 'Invalid signature' });
   }
 
   let event;
@@ -177,7 +171,6 @@ export default async function handler(req, res) {
       const full_name      = data.custom_data?.full_name || '';
       const country        = data.custom_data?.country || '';
 
-      console.log('[Paddle] transaction.completed — email:', email, '| sub:', subscriptionId);
 
       if (email && subscriptionId) {
         try {
@@ -188,23 +181,19 @@ export default async function handler(req, res) {
             user_metadata: { username, full_name }
           });
 
-          console.log('[Paddle] createUser status:', createResp.status);
 
           let userId = null;
 
           if (createResp.ok && createResp.data?.id) {
             // New user created
             userId = createResp.data.id;
-            console.log('[Paddle] New user created:', userId);
           } else {
             // User already exists — find them by fetching all users and filtering
-            console.log('[Paddle] User may exist, searching...', JSON.stringify(createResp.data).slice(0,100));
-            const allR = await sbAuth('GET', '/admin/users?per_page=1000&page=1');
+              const allR = await sbAuth('GET', '/admin/users?per_page=1000&page=1');
             const found = (allR.data?.users || []).find(u => u.email === email);
             if (found) {
               userId = found.id;
-              console.log('[Paddle] Found existing user:', userId);
-            }
+              }
           }
 
           if (userId) {
@@ -235,7 +224,6 @@ export default async function handler(req, res) {
               body: JSON.stringify(profileBody)
             });
             const profileResp2 = { status: profileResp.status, ok: profileResp.ok };
-            console.log('[Paddle] Profile upsert status:', profileResp2.status);
 
             // Send magic link for login
             const linkResp = await sbAuth('POST', '/admin/generate_link', {
@@ -243,7 +231,6 @@ export default async function handler(req, res) {
               email,
               options: { redirect_to: 'https://www.pattro.com/dashboard?payment=success' }
             });
-            console.log('[Paddle] Magic link status:', linkResp.status);
             console.log('[Paddle] ✅ Account ready for:', email);
           } else {
             console.error('[Paddle] Could not find or create user for:', email);
