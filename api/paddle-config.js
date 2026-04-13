@@ -1,14 +1,16 @@
 // api/paddle-config.js
-// Returns only the Paddle CLIENT token (safe to expose) and price ID
-// The actual API key (apikey_) stays server-side only
-// Called by register.html before opening checkout
-
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).end();
 
   const isSandbox = process.env.PADDLE_ENV === 'sandbox';
 
-  // Use sandbox credentials if PADDLE_ENV=sandbox, else production
+  console.log('[paddle-config] PADDLE_ENV:', process.env.PADDLE_ENV);
+  console.log('[paddle-config] isSandbox:', isSandbox);
+  console.log('[paddle-config] PADDLE_TOKEN exists:', !!process.env.PADDLE_TOKEN);
+  console.log('[paddle-config] PADDLE_TOKEN_SANDBOX exists:', !!process.env.PADDLE_TOKEN_SANDBOX);
+  console.log('[paddle-config] PADDLE_PRICE_ID exists:', !!process.env.PADDLE_PRICE_ID);
+  console.log('[paddle-config] PADDLE_PRICE_ID_SANDBOX exists:', !!process.env.PADDLE_PRICE_ID_SANDBOX);
+
   const token   = isSandbox
     ? process.env.PADDLE_TOKEN_SANDBOX
     : process.env.PADDLE_TOKEN;
@@ -18,14 +20,21 @@ export default async function handler(req, res) {
     : process.env.PADDLE_PRICE_ID;
 
   if (!token || !priceId) {
-    return res.status(500).json({ error: 'Paddle not configured' });
+    console.error('[paddle-config] Missing:', { token: !!token, priceId: !!priceId });
+    return res.status(500).json({ 
+      error: 'Paddle not configured',
+      debug: {
+        env: process.env.PADDLE_ENV,
+        isSandbox,
+        hasToken: !!token,
+        hasPriceId: !!priceId
+      }
+    });
   }
 
-  // Return token, priceId, AND whether we're in sandbox
-  // register.html uses the sandbox flag to call Paddle.Environment.set('sandbox')
   return res.status(200).json({
-    token:      token,
-    priceId:    priceId,
-    sandbox:    isSandbox
+    token,
+    priceId,
+    sandbox: isSandbox
   });
 }
