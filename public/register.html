@@ -1921,6 +1921,11 @@ async function handleRegister() {
   };
 
   // Initialize Paddle.js
+  // Set sandbox environment if needed (before Initialize)
+  if (paddleCfg.sandbox) {
+    Paddle.Environment.set('sandbox');
+  }
+
   Paddle.Initialize({
     token: paddleCfg.token,
     eventCallback: async function(data) {
