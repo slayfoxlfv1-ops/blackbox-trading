@@ -1,20 +1,24 @@
-// api/paddle-config.js — TEMP TEST
+// api/paddle-config.js
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).end();
 
-  // Log ALL env vars that start with PADDLE
-  const paddleVars = Object.keys(process.env)
-    .filter(k => k.startsWith('PADDLE'))
-    .reduce((acc, k) => {
-      acc[k] = process.env[k] ? '✓ set (' + process.env[k].slice(0,6) + '...)' : '✗ missing';
-      return acc;
-    }, {});
+  const isSandbox = (process.env.PADDLE_ENV || '').toLowerCase() === 'sandbox';
 
-  console.log('[paddle-config] All PADDLE vars:', JSON.stringify(paddleVars));
+  const token   = isSandbox
+    ? process.env.PADDLE_TOKEN_SANDBOX
+    : process.env.PADDLE_TOKEN;
+
+  const priceId = isSandbox
+    ? process.env.PADDLE_PRICE_ID_SANDBOX
+    : process.env.PADDLE_PRICE_ID;
+
+  if (!token || !priceId) {
+    return res.status(500).json({ error: 'Paddle not configured' });
+  }
 
   return res.status(200).json({
-    paddleVars,
-    nodeEnv: process.env.NODE_ENV,
-    vercelEnv: process.env.VERCEL_ENV
+    token,
+    priceId,
+    sandbox: isSandbox
   });
 }
