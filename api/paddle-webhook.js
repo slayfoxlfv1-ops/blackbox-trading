@@ -187,7 +187,7 @@ export default async function handler(req, res) {
             plan_expires_at:        expires.toISOString(),
             paddle_customer_id:     customerId,
             paddle_subscription_id: subscriptionId
-          }).eq('id', user.id);
+          });
         }
       }
     }
