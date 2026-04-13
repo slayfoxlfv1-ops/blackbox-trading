@@ -212,7 +212,8 @@ export default async function handler(req, res) {
             expires.setMonth(expires.getMonth() + 1);
 
             // Upsert profile
-            const profileResp = await sbAdmin('POST', '/rest/v1/profiles', {
+            // Use upsert to handle both new and existing profiles
+            const profileBody = {
               id:                     userId,
               email,
               username:               username || email.split('@')[0],
@@ -222,8 +223,19 @@ export default async function handler(req, res) {
               plan_expires_at:        expires.toISOString(),
               paddle_customer_id:     customerId,
               paddle_subscription_id: subscriptionId
+            };
+            const profileResp = await fetch(`${SUPABASE_URL}/rest/v1/profiles`, {
+              method: 'POST',
+              headers: {
+                'apikey':        SUPABASE_SERVICE_KEY,
+                'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
+                'Content-Type':  'application/json',
+                'Prefer':        'resolution=merge-duplicates,return=minimal'
+              },
+              body: JSON.stringify(profileBody)
             });
-            console.log('[Paddle] Profile upsert status:', profileResp.status);
+            const profileResp2 = { status: profileResp.status, ok: profileResp.ok };
+            console.log('[Paddle] Profile upsert status:', profileResp2.status);
 
             // Send magic link for login
             const linkResp = await sbAuth('POST', '/admin/generate_link', {
