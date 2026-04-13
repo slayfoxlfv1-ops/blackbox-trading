@@ -1919,6 +1919,10 @@ async function handleRegister() {
     email, password, username, fullName,
     first, last, country, address, city, zip, state
   };
+  // Also persist to sessionStorage in case page reloads during checkout
+  try {
+    sessionStorage.setItem('pattro_pending_reg', JSON.stringify(window._pendingRegistration));
+  } catch(e) {}
 
   // Initialize Paddle.js
   // Set sandbox environment if needed (before Initialize)
@@ -1932,8 +1936,16 @@ async function handleRegister() {
 
       if (data.name === 'checkout.completed') {
         var pending = window._pendingRegistration;
+        // Restore from sessionStorage if page was reloaded during checkout
+        if (!pending) {
+          try {
+            var stored = sessionStorage.getItem('pattro_pending_reg');
+            if (stored) pending = JSON.parse(stored);
+          } catch(e) {}
+        }
         if (!pending) return;
         window._pendingRegistration = null;
+        try { sessionStorage.removeItem('pattro_pending_reg'); } catch(e) {}
 
         // ── NOW create the Supabase account ──
         var { data: authData, error: authError } = await sb.auth.signUp({
