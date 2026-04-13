@@ -1,13 +1,44 @@
 // api/paddle-webhook.js
 // Receives Paddle events and updates Supabase accordingly
 
-import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
 
-const sb = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY  // service role key — has full access
-);
+const SUPABASE_URL         = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
+const SUPABASE_ANON_KEY    = process.env.SUPABASE_KEY;
+
+// Helper: Supabase REST call with service key
+async function sbAdmin(method, path, body) {
+  const resp = await fetch(`${SUPABASE_URL}${path}`, {
+    method,
+    headers: {
+      'apikey':        SUPABASE_SERVICE_KEY,
+      'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
+      'Content-Type':  'application/json',
+      'Prefer':        'return=representation'
+    },
+    body: body ? JSON.stringify(body) : undefined
+  });
+  const text = await resp.text();
+  try { return { ok: resp.ok, status: resp.status, data: JSON.parse(text) }; }
+  catch(e) { return { ok: resp.ok, status: resp.status, data: text }; }
+}
+
+// Helper: Supabase Auth Admin API
+async function sbAuth(method, path, body) {
+  const resp = await fetch(`${SUPABASE_URL}/auth/v1${path}`, {
+    method,
+    headers: {
+      'apikey':        SUPABASE_SERVICE_KEY,
+      'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
+      'Content-Type':  'application/json'
+    },
+    body: body ? JSON.stringify(body) : undefined
+  });
+  const text = await resp.text();
+  try { return { ok: resp.ok, status: resp.status, data: JSON.parse(text) }; }
+  catch(e) { return { ok: resp.ok, status: resp.status, data: text }; }
+}
 
 function verifyPaddleSignature(rawBody, signatureHeader, secret) {
   // Paddle sends: ts=timestamp;h1=hash
@@ -76,36 +107,35 @@ export default async function handler(req, res) {
 
       if (email) {
         // Check if user already exists
-        const { data: existingUsers } = await sb.auth.admin.listUsers();
-        const existingUser = existingUsers?.users?.find(u => u.email === email);
+        // Find user by email via admin API
+        const listResp = await sbAuth('GET', `/admin/users?email=${encodeURIComponent(email)}&per_page=1`);
+        const existingUser = listResp.data?.users?.[0] || null;
 
         if (existingUser) {
           // User already exists — just update plan
-          await sb.from('profiles').update({
+          await sbAdmin('PATCH', `/rest/v1/profiles?id=eq.${existingUser.id}`, {
             plan:                   'pro',
             plan_expires_at:        nextBilling,
             paddle_customer_id:     customerId,
             paddle_subscription_id: subscriptionId
-          }).eq('id', existingUser.id);
+          });
         } else {
           // New user — create account server-side
           try {
             // Create auth user
-            const { data: newUser, error: createErr } = await sb.auth.admin.createUser({
+            const createResp = await sbAuth('POST', '/admin/users', {
               email,
               email_confirm: true,
               user_metadata: { username, full_name }
             });
-
-            if (createErr) throw createErr;
-
-            const userId = newUser.user.id;
+            if (!createResp.ok) throw new Error(JSON.stringify(createResp.data));
+            const userId = createResp.data.id;
 
             // Save profile with pro plan
             const expires = new Date();
             expires.setMonth(expires.getMonth() + 1);
 
-            await sb.from('profiles').upsert({
+            await sbAdmin('POST', '/rest/v1/profiles', {
               id:                     userId,
               email,
               username:               username || email.split('@')[0],
@@ -118,12 +148,10 @@ export default async function handler(req, res) {
             });
 
             // Send magic link so user can set password and log in
-            await sb.auth.admin.generateLink({
+            await sbAuth('POST', '/admin/generate_link', {
               type: 'magiclink',
               email,
-              options: {
-                redirectTo: 'https://www.pattro.com/dashboard?payment=success'
-              }
+              options: { redirect_to: 'https://www.pattro.com/dashboard?payment=success' }
             });
 
             console.log('[Paddle] Account created for:', email);
@@ -142,13 +170,13 @@ export default async function handler(req, res) {
 
       if (email && subscriptionId) {
         // Extend subscription
-        const { data: users } = await sb.auth.admin.listUsers();
-        const user = users?.users?.find(u => u.email === email);
+        const listR = await sbAuth('GET', `/admin/users?email=${encodeURIComponent(email)}&per_page=1`);
+        const user = listR.data?.users?.[0] || null;
         if (user) {
           // Calculate next billing date (30 days from now)
           const expires = new Date();
           expires.setDate(expires.getDate() + 31);
-          await sb.from('profiles').update({
+          await sbAdmin('PATCH', `/rest/v1/profiles?id=eq.${user.id}`, {
             plan:                   'pro',
             plan_expires_at:        expires.toISOString(),
             paddle_customer_id:     customerId,
@@ -167,9 +195,7 @@ export default async function handler(req, res) {
       if (subscriptionId) {
         const updates = { plan_expires_at: nextBilling };
         if (status === 'active') updates.plan = 'pro';
-        await sb.from('profiles')
-          .update(updates)
-          .eq('paddle_subscription_id', subscriptionId);
+        if (subscriptionId) await sbAdmin('PATCH', `/rest/v1/profiles?paddle_subscription_id=eq.${subscriptionId}`, updates);
       }
     }
 
@@ -179,10 +205,10 @@ export default async function handler(req, res) {
       const canceledAt     = data.canceled_at || new Date().toISOString();
 
       if (subscriptionId) {
-        await sb.from('profiles').update({
+        if (subscriptionId) await sbAdmin('PATCH', `/rest/v1/profiles?paddle_subscription_id=eq.${subscriptionId}`, {
           plan:            'free',
           plan_expires_at: canceledAt
-        }).eq('paddle_subscription_id', subscriptionId);
+        });
       }
     }
 
