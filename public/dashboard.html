@@ -2731,15 +2731,18 @@ async function saveAccount() {
       return v !== '' ? parseFloat(v) : null;
     })(),
     balance_updated_at: (function() {
-      if (!editingAccountId) return new Date().toISOString();
-      // Only update timestamp if balance changed
+      // New account: use epoch so all trades count from the start
+      if (!editingAccountId) return new Date(0).toISOString();
+      // Editing: only reset timestamp if balance actually changed
       var existingAcc = accounts.find(function(a){ return a.id === editingAccountId; });
       var newBal = document.getElementById('m-balance').value;
       var newBalNum = newBal !== '' ? parseFloat(newBal) : null;
       if (existingAcc && existingAcc.account_balance !== newBalNum) {
-        return new Date().toISOString(); // balance changed — reset tracking
+        // Balance changed — reset to now so only future trades count
+        return new Date().toISOString();
       }
-      return existingAcc ? existingAcc.balance_updated_at : new Date().toISOString();
+      // Balance unchanged — keep existing cutoff
+      return existingAcc ? existingAcc.balance_updated_at : new Date(0).toISOString();
     })()
   };
 
@@ -3331,7 +3334,7 @@ async function saveTrade() {
   if (window.isFreePlan()) renderFreeTradesBanner();
   // Re-render current view immediately with fresh data
   if (currentView === 'trades') renderTradesView();
-  else if (currentView === 'dashboard') renderDashboardView();
+  else if (currentView === 'dashboard') loadAccountData(currentAccountId);
   else if (currentView === 'psychology') renderPsychologyView();
 }
 
@@ -4640,9 +4643,10 @@ async function loadAccountData(id, silent) {
     var _displayVal;
     if (_acc && _acc.account_balance != null) {
       // Calculate balance: account_balance + P&L from trades after balance_updated_at
+      // Use epoch (0) as cutoff when no balance_updated_at — counts all trades
       var _balanceCutoff = _acc.balance_updated_at ? new Date(_acc.balance_updated_at) : new Date(0);
-      var _tradesAfterCutoff = trades.filter(function(t){
-        return t.entry_time && new Date(t.entry_time) >= _balanceCutoff;
+      var _tradesAfterCutoff = (currentTrades || trades).filter(function(t){
+        return t.entry_time && t.account_id === id && new Date(t.entry_time) >= _balanceCutoff;
       });
       var _pnlAfterCutoff = _tradesAfterCutoff.reduce(function(s,t){ return s+(t.pnl||0); }, 0);
       _displayVal = _acc.account_balance + _pnlAfterCutoff;
