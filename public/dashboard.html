@@ -2947,10 +2947,7 @@ function openLogModal() {
         if (idx >= 0) sel.splice(idx, 1); else sel.push(tagId);
         inp.value = sel.filter(Boolean).join(',');
         tagWrap.innerHTML = renderTagPills(sel, null);
-        tagWrap.querySelectorAll('.setup-tag-pill').forEach(function(p2) {
-          p2.addEventListener('click', arguments.callee);
-        });
-        // Re-attach after re-render
+        // Re-attach listeners after re-render
         attachTagPillListeners(tagWrap, inp);
       });
     });
