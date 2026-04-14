@@ -12589,7 +12589,7 @@ function openLegalModal(type) {
       _pwaPrompt = e;
       // Show install banner once per day at a random time (30s - 20min after load)
       (function() {
-        var today = new Date().toISOString().slice(0,10);
+        var today = localDateStr();
         var lastShown = '';
         try { lastShown = localStorage.getItem('pattro_pwa_shown_date') || ''; } catch(e) {}
         if (lastShown === today) return; // already shown today
