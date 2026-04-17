@@ -1384,7 +1384,10 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
   <div class="modal" onclick="event.stopPropagation()" onkeyup="if(event.key==='Escape'){event.stopPropagation();closeLogModal();}">
     <div class="modal-title" style="display:flex;align-items:center;justify-content:space-between">
       <span>Log Trade</span>
-      <button onclick="closeLogModal()" style="background:none;border:none;color:var(--text3);font-size:22px;cursor:pointer;line-height:1;padding:0 2px;font-family:var(--mono)" title="Close (Esc)">×</button>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button onclick="openNoTradeModal()" style="background:none;border:1px solid var(--wire);color:var(--text2);font-size:9px;font-weight:700;cursor:pointer;padding:4px 10px;font-family:var(--mono);letter-spacing:.5px;border-radius:4px" title="Log a day where you were in the market but did not trade">+ No Trade Day</button>
+        <button onclick="closeLogModal()" style="background:none;border:none;color:var(--text3);font-size:22px;cursor:pointer;line-height:1;padding:0 2px;font-family:var(--mono)" title="Close (Esc)">×</button>
+      </div>
     </div>
     <div class="modal-body-scroll">
     <div class="form-row">
@@ -3915,11 +3918,11 @@ async function loadAccountData(id, silent) {
   });
   var weekDayVals = Object.values(weekDayMap);
   var bestDayW  = weekDayVals.length ? (Math.max.apply(null,weekDayVals) > 0 ? Math.max.apply(null,weekDayVals) : 0) : null;
-  var worstDayW = weekDayVals.length ? Math.min.apply(null,weekDayVals) : null;
+  var worstDayW = weekDayVals.length ? (Math.min.apply(null,weekDayVals) < 0 ? Math.min.apply(null,weekDayVals) : null) : null;
 
   // Find the actual date keys for best/worst to build insight text
   var bestDayKey  = weekDayVals.length ? Object.keys(weekDayMap).reduce(function(a,b){ return weekDayMap[a]>weekDayMap[b]?a:b; }) : null;
-  var worstDayKey = weekDayVals.length ? Object.keys(weekDayMap).reduce(function(a,b){ return weekDayMap[a]<weekDayMap[b]?a:b; }) : null;
+  var worstDayKey = worstDayW !== null ? Object.keys(weekDayMap).reduce(function(a,b){ return weekDayMap[a]<weekDayMap[b]?a:b; }) : null;
 
   // Build psychological insight for best day
   var bestDayInsight = '';
@@ -4609,7 +4612,7 @@ async function loadAccountData(id, silent) {
   // Worst day
   '<div class="metric" style="display:flex;flex-direction:column;gap:4px;padding:12px">' +
   '<div class="m-label">Worst day this week</div>' +
-  '<div class="m-val neg">'+(worstDayW!==null?fmt(worstDayW,false):'--')+'</div>' +
+  '<div class="m-val neg">'+(worstDayW!==null?fmt(worstDayW,true):'--')+'</div>' +
   (worstDayInsight ? '<div style="font-size:9px;color:var(--text3);line-height:1.5;margin-top:3px;border-top:1px solid var(--wire);padding-top:5px">⚠ '+worstDayInsight+'</div>' : '') +
   '</div>' +
   '</div>' +
@@ -5573,7 +5576,7 @@ function checkRuleViolations(rulesObj, trades) {
 
   // ── Rule 2: No Monday / No Friday ──
   if (r.nodays && r.nodays.active && r.nodays.days && r.nodays.days.length) {
-    var dayNames = ['domingo','lunes','martes','wednesday','jueves','viernes','saturday'];
+    var dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
     var badDayTrades = todayTrades.filter(function(t) {
       var d = new Date(t.entry_time);
       var dow = d.getDay(); // 0=Sun,1=Mon,...,5=Fri
@@ -6025,11 +6028,11 @@ function calcDailyMindScore(dateStr) {
     // stateMap consistent with calcTradeMind: green=100, yellow=70, red=40, unknown=50
     var stateMap0 = { green:100, yellow:70, red:40, unknown:50 };
     var stateVal0 = stateMap0[colorDay] || 50;
-    moodPts    = Math.round(stateVal0 * 0.40); // green=40, yellow=28, red=16, unknown=20
+    moodPts    = Math.round(stateVal0 * 0.10); // green=10, yellow=7, red=4, unknown=5
     emotionPts = null;
-    behaviorPts = 20;
-    // Total: mood(40%) + behavior(20%) only, scaled to 100
-    total = Math.round((moodPts + behaviorPts) / 60 * 100);
+    behaviorPts = 30;
+    // Total: mood(10%) + behavior(30%) only, scaled to 100
+    total = Math.round((moodPts + behaviorPts) / 40 * 100);
   } else {
     // Average calcTradeMind across all day trades
     var tradeMinds = dayTrades.map(function(t) {
@@ -6046,9 +6049,9 @@ function calcDailyMindScore(dateStr) {
     // moodPts uses stateMap directly — color day is a binary daily state,
     // not an average across trades (avoids 38/40 when green day with slight variation)
     var _stateMap = { green:100, yellow:70, red:40, unknown:50 };
-    moodPts     = Math.round((_stateMap[colorDay] || 50) * 0.40); // green=40, yellow=28, red=16
-    emotionPts  = Math.round(avgEmo * 0.40); // emotion score (max 40)
-    behaviorPts = Math.round(avgBehav * 0.20); // actual behavior score (max 20)
+    moodPts     = Math.round((_stateMap[colorDay] || 50) * 0.10); // green=10, yellow=7, red=4
+    emotionPts  = Math.round(avgEmo * 0.60); // emotion score (max 60)
+    behaviorPts = Math.round(avgBehav * 0.30); // actual behavior score (max 30)
 
     // Behavior details for display
     var revengeCount = dayTrades.filter(function(t){ return (t.discipline_tag||'') === 'revenge'; }).length;
@@ -6232,7 +6235,7 @@ function calcTradeDiscipline(trade, rulesObj, checklistPct) {
 // Mind = 0.5 × Emotion + 0.3 × Behavior tag + 0.2 × Color day
 // Overtrading, fomo, impulse, revenge are all mental signals
 function calcTradeMind(trade, colorDay) {
-  // ── 1. Emotion tag (50%) ──
+  // ── 1. Emotion tag (60%) ──
   var emo = (trade.emotion || 'neutral').toLowerCase();
   var emoScore = EMOTION_CONTROL_SCORE[emo] !== undefined ? EMOTION_CONTROL_SCORE[emo] : 70;
 
@@ -6260,9 +6263,9 @@ function calcTradeMind(trade, colorDay) {
     ? stateMap[colorDay || 'unknown'] : 50;
 
   var total = Math.round(
-    emoScore       * 0.50 +
+    emoScore       * 0.60 +
     behaviorMindScore * 0.30 +
-    stateScore     * 0.20
+    stateScore     * 0.10
   );
 
   return {
@@ -6273,7 +6276,7 @@ function calcTradeMind(trade, colorDay) {
     emotion:           emo,
     disciplineTag:     tag,
     // Legacy fields for display compatibility
-    controlScore:      Math.round(emoScore * 0.50 + behaviorMindScore * 0.30),
+    controlScore:      Math.round(emoScore * 0.60 + behaviorMindScore * 0.30),
     total:             Math.min(100, Math.max(0, total))
   };
 }
@@ -6586,8 +6589,31 @@ function calcMentalScore(dateStr) {
 
   // Only score days with actual trades — return null for empty days
   var dayTrades = (currentTrades || []).filter(function(t) {
-    return t.entry_time && t.entry_time.startsWith(today);
+    return t.entry_time && t.entry_time.startsWith(today) && !t.is_no_trade;
   });
+
+  // Check for no-trade day record
+  var noTradeDayRecord = (currentTrades || []).find(function(t) {
+    return t.entry_time && t.entry_time.startsWith(today) && t.is_no_trade;
+  });
+
+  if (!dayTrades.length && noTradeDayRecord) {
+    // No Trade Day — score based on reason, no execution component
+    var ntMind = noTradeDayRecord.no_trade_mind || 50;
+    var ntDisc = noTradeDayRecord.no_trade_disc || 50;
+    var ntTotal = Math.round(ntMind * 0.50 + ntDisc * 0.50);
+    var ntLabel = ntTotal >= 80 ? 'Disciplined' : ntTotal >= 60 ? 'Acceptable' : 'Review';
+    var ntColor = ntTotal >= 80 ? 'var(--green)' : ntTotal >= 60 ? 'var(--amber)' : 'var(--red)';
+    var ntResult = { total: ntTotal, label: ntLabel, color: ntColor,
+      discScore: ntDisc, mindScore: ntMind, execScore: null,
+      discLabel: ntDisc >= 80 ? 'Disciplined' : 'Review',
+      mindLabel: ntMind >= 80 ? 'Focused' : 'Struggling',
+      execLabel: 'No trade', isNoTradeDay: true,
+      noTradeReason: noTradeDayRecord.no_trade_reason };
+    _mentalScoreCache[today] = ntResult;
+    return ntResult;
+  }
+
   if (!dayTrades.length) {
     var _nullResult = { total: null, label: 'No trades', color: 'var(--text3)',
              discScore: null, mindScore: null, execScore: null,
@@ -6736,7 +6762,7 @@ function renderRulesView() {
   var r2 = rules.nodays || {};
   var sel2 = r2.days || [];
   var ndHtml = '<div style="display:flex;gap:8px">'
-    + [{d:1,lbl:'Lunes'},{d:5,lbl:'Viernes'}].map(function(o) {
+    + [{d:0,lbl:'Sun'},{d:1,lbl:'Mon'},{d:2,lbl:'Tue'},{d:3,lbl:'Wed'},{d:4,lbl:'Thu'},{d:5,lbl:'Fri'},{d:6,lbl:'Sat'}].map(function(o) {
         var on = sel2.includes(o.d);
         return '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:' + (on?'rgba(158,90,90,0.15)':'var(--surface2)') + ';border:1px solid ' + (on?'var(--red)':'var(--wire)') + ';border-radius:7px;padding:7px 14px;user-select:none">'
           + '<input type="checkbox" ' + (on?'checked':'') + ' onchange="toggleRuleNoday(' + o.d + ')" style="accent-color:#9e5a5a;width:13px;height:13px">'
@@ -7690,12 +7716,22 @@ function renderMentalScoreCalendar() {
     var ms = dayScores[dateStr];
     var hasTrades = !!tradingDays[dateStr];
 
+    // Check for no-trade day
+    var noTradeDay = (currentTrades || []).find(function(t) {
+      return t.is_no_trade && t.entry_time && t.entry_time.startsWith(dateStr);
+    });
+
     // Color day for this date
     var colorDayMood = getMoodForDate(dateStr);
     var colorDotStr = '';
     if (!isFuture && colorDayMood) {
       var cdEmoji = colorDayMood.level === 'green' ? '🟢' : colorDayMood.level === 'yellow' ? '🟡' : colorDayMood.level === 'red' ? '🔴' : '';
       if (cdEmoji) colorDotStr = '<div style="font-size:7px;line-height:1">' + cdEmoji + '</div>';
+    }
+    // No-trade day indicator
+    if (!isFuture && noTradeDay) {
+      var ntEmoji = noTradeDay.no_trade_reason === 'fear' ? '😰' : '🚫';
+      colorDotStr += '<div style="font-size:7px;line-height:1" title="No trade day">' + ntEmoji + '</div>';
     }
 
     // P&L for this date
@@ -7997,7 +8033,7 @@ function renderRulesTab(el) {
   var r2 = rules.nodays || {};
   var sel2 = r2.days || [];
   var ndHtml = '<div style="display:flex;gap:8px">';
-  [{d:1,lbl:'Lunes'},{d:5,lbl:'Viernes'}].forEach(function(o) {
+  [{d:0,lbl:'Sun'},{d:1,lbl:'Mon'},{d:2,lbl:'Tue'},{d:3,lbl:'Wed'},{d:4,lbl:'Thu'},{d:5,lbl:'Fri'},{d:6,lbl:'Sat'}].forEach(function(o) {
     var on = sel2.includes(o.d);
     ndHtml += '<div class="noday-toggle" data-dow="' + o.d + '" style="display:flex;align-items:center;gap:6px;cursor:pointer;background:' + (on?'rgba(158,90,90,0.15)':'var(--surface2)') + ';border:1px solid ' + (on?'var(--red)':'var(--wire)') + ';border-radius:7px;padding:7px 14px;user-select:none">'
       + '<div style="width:12px;height:12px;border-radius:3px;border:1.5px solid ' + (on?'var(--red)':'#555') + ';background:' + (on?'var(--red)':'transparent') + ';flex-shrink:0"></div>'
@@ -12815,6 +12851,187 @@ window.addEventListener('unhandledrejection', function(e) {
 window.addEventListener('error', function(e) {
   console.error('[Pattro] Uncaught error:', e.message, 'at', e.lineno);
 });
+
+// ── NO TRADE DAY ────────────────────────────────────────────────
+// Score map per reason: { mind, discipline }
+var NO_TRADE_SCORES = {
+  no_confirmation: { mind: 90, discipline: 100, label: 'No confirmation',  color: 'var(--green)' },
+  no_setup:        { mind: 85, discipline: 100, label: 'Waiting for setup', color: 'var(--teal)'  },
+  news_event:      { mind: 80, discipline: 100, label: 'News / Event risk', color: 'var(--amber)' },
+  fear:            { mind: 35, discipline:  50, label: 'Fear / Hesitation', color: 'var(--red)'   }
+};
+
+var _selectedNoTradeReason = null;
+
+function openNoTradeModal() {
+  _selectedNoTradeReason = null;
+  // Set today's date
+  document.getElementById('nt-date').value = localDateStr();
+  // Clear reason selection
+  document.querySelectorAll('.nt-reason-btn').forEach(function(b){
+    b.style.borderColor = 'var(--wire)';
+    b.style.background  = 'transparent';
+  });
+  document.getElementById('nt-reason-err').style.display   = 'none';
+  document.getElementById('nt-score-preview').style.display = 'none';
+  document.getElementById('nt-notes').value = '';
+  // Show modal
+  var overlay = document.getElementById('no-trade-overlay');
+  overlay.style.display = 'flex';
+  // Close log modal
+  closeLogModal();
+}
+
+function closeNoTradeModal() {
+  document.getElementById('no-trade-overlay').style.display = 'none';
+}
+
+function selectNoTradeReason(el) {
+  _selectedNoTradeReason = el.dataset.reason;
+  // Reset all
+  document.querySelectorAll('.nt-reason-btn').forEach(function(b){
+    b.style.borderColor = 'var(--wire)';
+    b.style.background  = 'transparent';
+  });
+  // Highlight selected
+  el.style.borderColor = 'var(--teal)';
+  el.style.background  = 'rgba(62,207,207,.08)';
+  document.getElementById('nt-reason-err').style.display = 'none';
+
+  // Show score preview
+  var s = NO_TRADE_SCORES[_selectedNoTradeReason];
+  if (s) {
+    var mental = Math.round(s.mind * 0.50 + s.discipline * 0.50);
+    var preview = document.getElementById('nt-score-preview');
+    preview.style.display = 'block';
+    preview.innerHTML = '<div style="font-weight:700;color:' + s.color + ';margin-bottom:4px">' + s.label + '</div>'
+      + '<div>Mind Score: <strong>' + s.mind + '</strong> · Discipline Score: <strong>' + s.discipline + '</strong></div>'
+      + '<div style="margin-top:4px">Mental Score (no execution): <strong style="color:' + s.color + '">' + mental + '</strong></div>'
+      + (s.mind < 60 ? '<div style="margin-top:6px;color:var(--red);font-size:8px">⚠ This will lower your daily Mental Score — fear-based inaction is a pattern worth tracking.</div>' : '');
+  }
+}
+
+async function saveNoTradeDay() {
+  if (!_selectedNoTradeReason) {
+    document.getElementById('nt-reason-err').style.display = 'block';
+    return;
+  }
+  var dateVal = document.getElementById('nt-date').value;
+  if (!dateVal) { alert('Please select a date'); return; }
+  if (!currentAccountId || !currentUser) return;
+
+  var btn = document.getElementById('save-no-trade-btn');
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+
+  var s = NO_TRADE_SCORES[_selectedNoTradeReason];
+  var notes = document.getElementById('nt-notes').value.trim();
+
+  try {
+    // Save as a special trade record with is_no_trade = true
+    var payload = {
+      account_id:       currentAccountId,
+      user_id:          currentUser.id,
+      entry_time:       dateVal + 'T12:00:00',
+      is_no_trade:      true,
+      no_trade_reason:  _selectedNoTradeReason,
+      no_trade_mind:    s.mind,
+      no_trade_disc:    s.discipline,
+      notes:            notes || null,
+      ticker:           'NO_TRADE',
+      side:             'long',
+      pnl:              0,
+      quantity:         0
+    };
+
+    var res = await sb.from('trades').insert([payload]).select();
+    if (res.error) throw res.error;
+
+    closeNoTradeModal();
+    // Invalidate cache and reload
+    _mentalScoreCache = {};
+    await loadAccountData(currentAccountId);
+
+    // Show confirmation toast
+    var toast = document.createElement('div');
+    toast.style.cssText = 'position:fixed;bottom:24px;right:24px;width:280px;background:var(--surface);border:1px solid var(--wire);border-left:2px solid var(--teal);padding:12px 14px;z-index:9999;font-family:var(--mono);animation:toastIn .4s ease';
+    toast.innerHTML = '<div style="font-size:11px;font-weight:700;color:var(--teal);margin-bottom:3px">No Trade Day logged ✓</div>'
+      + '<div style="font-size:9px;color:var(--text3)">' + s.label + ' · Mental Score: ' + Math.round(s.mind * 0.5 + s.discipline * 0.5) + '</div>';
+    document.body.appendChild(toast);
+    setTimeout(function(){ toast.style.animation='toastOut .3s ease forwards'; setTimeout(function(){ toast.remove(); }, 300); }, 4000);
+
+  } catch(err) {
+    alert('Error saving: ' + (err.message || err));
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Log No Trade Day';
+  }
+}
+
 </script>
+
+<!-- NO TRADE DAY MODAL -->
+<div id="no-trade-overlay" class="overlay" onclick="if(event.target===this)closeNoTradeModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1100;display:none;align-items:center;justify-content:center">
+  <div class="modal" onclick="event.stopPropagation()" style="width:380px;max-width:95vw">
+    <div class="modal-title" style="display:flex;align-items:center;justify-content:space-between">
+      <span>No Trade Day</span>
+      <button onclick="closeNoTradeModal()" style="background:none;border:none;color:var(--text3);font-size:22px;cursor:pointer;line-height:1;padding:0 2px;font-family:var(--mono)">×</button>
+    </div>
+    <div class="modal-body-scroll" style="padding:16px">
+      <div style="font-size:10px;color:var(--text3);margin-bottom:16px;line-height:1.7">
+        You were in the market today but chose not to take a trade.<br>
+        Log your reason — this counts toward your Mental Score.
+      </div>
+
+      <!-- Date -->
+      <div class="form-group" style="margin-bottom:14px">
+        <label class="form-label">Date</label>
+        <input class="form-input" id="nt-date" type="date">
+      </div>
+
+      <!-- Reason -->
+      <div class="form-group" style="margin-bottom:6px">
+        <label class="form-label">Reason <span style="color:var(--red)">*</span></label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px" id="nt-reason-grid">
+          <div class="nt-reason-btn" data-reason="no_confirmation" onclick="selectNoTradeReason(this)" style="padding:12px 10px;border:1px solid var(--wire);cursor:pointer;text-align:center;border-radius:4px;font-family:var(--mono)">
+            <div style="font-size:18px;margin-bottom:4px">✅</div>
+            <div style="font-size:9px;font-weight:700;color:var(--green)">No confirmation</div>
+            <div style="font-size:8px;color:var(--text3);margin-top:2px">Setup not present</div>
+          </div>
+          <div class="nt-reason-btn" data-reason="no_setup" onclick="selectNoTradeReason(this)" style="padding:12px 10px;border:1px solid var(--wire);cursor:pointer;text-align:center;border-radius:4px;font-family:var(--mono)">
+            <div style="font-size:18px;margin-bottom:4px">⏳</div>
+            <div style="font-size:9px;font-weight:700;color:var(--teal)">Waiting for setup</div>
+            <div style="font-size:8px;color:var(--text3);margin-top:2px">Watching, not ready</div>
+          </div>
+          <div class="nt-reason-btn" data-reason="news_event" onclick="selectNoTradeReason(this)" style="padding:12px 10px;border:1px solid var(--wire);cursor:pointer;text-align:center;border-radius:4px;font-family:var(--mono)">
+            <div style="font-size:18px;margin-bottom:4px">📰</div>
+            <div style="font-size:9px;font-weight:700;color:var(--amber)">News / Event risk</div>
+            <div style="font-size:8px;color:var(--text3);margin-top:2px">High volatility day</div>
+          </div>
+          <div class="nt-reason-btn" data-reason="fear" onclick="selectNoTradeReason(this)" style="padding:12px 10px;border:1px solid var(--wire);cursor:pointer;text-align:center;border-radius:4px;font-family:var(--mono)">
+            <div style="font-size:18px;margin-bottom:4px">😰</div>
+            <div style="font-size:9px;font-weight:700;color:var(--red)">Fear / Hesitation</div>
+            <div style="font-size:8px;color:var(--text3);margin-top:2px">Saw setup, didn't take it</div>
+          </div>
+        </div>
+        <div id="nt-reason-err" style="font-size:9px;color:var(--red);margin-top:6px;display:none">Please select a reason</div>
+      </div>
+
+      <!-- Notes -->
+      <div class="form-group" style="margin-top:14px">
+        <label class="form-label">Notes <span style="color:var(--text3);font-weight:400">(optional)</span></label>
+        <textarea class="form-input" id="nt-notes" rows="2" placeholder="What did you observe? What stopped you?" style="resize:vertical;min-height:52px"></textarea>
+      </div>
+
+      <!-- Score preview -->
+      <div id="nt-score-preview" style="display:none;margin-top:14px;padding:10px 12px;background:var(--surface2);border:1px solid var(--wire);border-radius:4px;font-size:9px;color:var(--text2);line-height:1.8">
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeNoTradeModal()">Cancel</button>
+      <button class="btn btn-solid" id="save-no-trade-btn" onclick="saveNoTradeDay()">Log No Trade Day</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
