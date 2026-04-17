@@ -4448,9 +4448,9 @@ async function loadAccountData(id, silent) {
   '<span style="font-size:10px;color:var(--text3)">/100</span></div>' +
   '<div style="font-size:10px;color:var(--text2);font-weight:600;margin-bottom:8px">'+mindData.label+'</div>' +
   '<div style="display:flex;flex-direction:column;gap:4px">' +
-  '<div style="display:flex;justify-content:space-between"><span style="font-size:9px;color:var(--text3)">Mood</span><span style="font-size:9px;color:var(--text2)">'+mindData.moodPts+'/40</span></div>' +
-  '<div style="display:flex;justify-content:space-between"><span style="font-size:9px;color:var(--text3)">Emotion</span><span style="font-size:9px;color:var(--text2)">'+(mindData.emotionPts!==null?mindData.emotionPts+'/40':'—')+'</span></div>' +
-  '<div style="display:flex;justify-content:space-between"><span style="font-size:9px;color:var(--text3)">Behavior</span><span style="font-size:9px;color:var(--text2)">'+mindData.behaviorPts+'/20</span></div>' +
+  '<div style="display:flex;justify-content:space-between"><span style="font-size:9px;color:var(--text3)">Mood</span><span style="font-size:9px;color:var(--text2)">'+mindData.moodPts+'/10</span></div>' +
+  '<div style="display:flex;justify-content:space-between"><span style="font-size:9px;color:var(--text3)">Emotion</span><span style="font-size:9px;color:var(--text2)">'+(mindData.emotionPts!==null?mindData.emotionPts+'/60':'—')+'</span></div>' +
+  '<div style="display:flex;justify-content:space-between"><span style="font-size:9px;color:var(--text3)">Behavior</span><span style="font-size:9px;color:var(--text2)">'+mindData.behaviorPts+'/30</span></div>' +
   '</div></div>' +
 
   // Discipline
@@ -8872,9 +8872,9 @@ function buildMindView(trades) {
     + '<div style="flex:1">'
     + '<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px">'+mindData.label+'</div>'
     + '<div style="display:flex;flex-direction:column;gap:7px">'
-    + '<div><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:9px;color:var(--text3)">Mood</span><span style="font-size:9px;color:var(--text2);font-weight:600">'+mindData.moodPts+' / 40</span></div><div style="height:4px;background:var(--surface3);border-radius:2px;overflow:hidden"><div style="height:100%;width:'+Math.round(mindData.moodPts/40*100)+'%;background:'+(mindData.moodPts>=32?'var(--green)':mindData.moodPts>=20?'var(--amber)':'var(--red)')+';border-radius:2px"></div></div></div>'
-    + '<div><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:9px;color:var(--text3)">Trade emotion</span><span style="font-size:9px;color:var(--text2);font-weight:600">'+(mindData.emotionPts!==null?mindData.emotionPts+' / 40':'— / 40')+'</span></div><div style="height:4px;background:var(--surface3);border-radius:2px;overflow:hidden"><div style="height:100%;width:'+(mindData.emotionPts!==null?Math.round(mindData.emotionPts/40*100):0)+'%;background:'+(mindData.emotionPts===null?'var(--wire)':mindData.emotionPts>=32?'var(--green)':mindData.emotionPts>=20?'var(--amber)':'var(--red)')+';border-radius:2px"></div></div></div>'
-    + '<div><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:9px;color:var(--text3)">Behavior</span><span style="font-size:9px;color:var(--text2);font-weight:600">'+mindData.behaviorPts+' / 20</span></div><div style="height:4px;background:var(--surface3);border-radius:2px;overflow:hidden"><div style="height:100%;width:'+Math.round(mindData.behaviorPts/20*100)+'%;background:'+(mindData.behaviorPts>=16?'var(--green)':mindData.behaviorPts>=10?'var(--amber)':'var(--red)')+';border-radius:2px"></div></div></div>'
+    + '<div><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:9px;color:var(--text3)">Mood</span><span style="font-size:9px;color:var(--text2);font-weight:600">'+mindData.moodPts+' / 40</span></div><div style="height:4px;background:var(--surface3);border-radius:2px;overflow:hidden"><div style="height:100%;width:'+Math.round(mindData.moodPts/10*100)+'%;background:'+(mindData.moodPts>=32?'var(--green)':mindData.moodPts>=20?'var(--amber)':'var(--red)')+';border-radius:2px"></div></div></div>'
+    + '<div><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:9px;color:var(--text3)">Trade emotion</span><span style="font-size:9px;color:var(--text2);font-weight:600">'+(mindData.emotionPts!==null?mindData.emotionPts+' / 60':'— / 60')+'</span></div><div style="height:4px;background:var(--surface3);border-radius:2px;overflow:hidden"><div style="height:100%;width:'+(mindData.emotionPts!==null?Math.round(mindData.emotionPts/60*100):0)+'%;background:'+(mindData.emotionPts===null?'var(--wire)':mindData.emotionPts>=32?'var(--green)':mindData.emotionPts>=20?'var(--amber)':'var(--red)')+';border-radius:2px"></div></div></div>'
+    + '<div><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:9px;color:var(--text3)">Behavior</span><span style="font-size:9px;color:var(--text2);font-weight:600">'+mindData.behaviorPts+' / 20</span></div><div style="height:4px;background:var(--surface3);border-radius:2px;overflow:hidden"><div style="height:100%;width:'+Math.round(mindData.behaviorPts/30*100)+'%;background:'+(mindData.behaviorPts>=16?'var(--green)':mindData.behaviorPts>=10?'var(--amber)':'var(--red)')+';border-radius:2px"></div></div></div>'
     + '</div></div></div></div>';
 
   // Panel rico: Mental Score Semana + Mes (con sparklines, tendencia, mejor/peor d)
@@ -12971,7 +12971,7 @@ async function saveNoTradeDay() {
 </script>
 
 <!-- NO TRADE DAY MODAL -->
-<div id="no-trade-overlay" class="overlay" onclick="if(event.target===this)closeNoTradeModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1100;display:none;align-items:center;justify-content:center">
+<div id="no-trade-overlay" class="overlay" onclick="if(event.target===this)closeNoTradeModal()" style="z-index:1100;">
   <div class="modal" onclick="event.stopPropagation()" style="width:380px;max-width:95vw">
     <div class="modal-title" style="display:flex;align-items:center;justify-content:space-between">
       <span>No Trade Day</span>
