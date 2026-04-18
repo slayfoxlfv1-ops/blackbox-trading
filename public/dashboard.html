@@ -1586,7 +1586,7 @@ const SUPABASE_URL = 'https://qljuusxpzsiqxnpfpdgg.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFsanV1c3hwenNpcXhucGZwZGdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1OTQ5NzUsImV4cCI6MjA4ODE3MDk3NX0.rUEwuG4zFE_EpAM4s3hWqVF81xiW9q_MSwQKKXYZmlk';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let currentUser = null, accounts = [], currentAccountId = null, currentTrades = null, currentChecklistSessions = [], currentMoodSessions = [], currentChecklistItems = [], currentRules = [], currentView = 'dashboard', authTab = 'login', editingTradeId = null, _checklistOriginalValue = null;
+let currentUser = null, accounts = [], currentAccountId = null, currentTrades = null, currentNoTradeDays = [], currentChecklistSessions = [], currentMoodSessions = [], currentChecklistItems = [], currentRules = [], currentView = 'dashboard', authTab = 'login', editingTradeId = null, _checklistOriginalValue = null;
 
   // ── escapeHtml: sanitize user text before inserting into innerHTML ──
   function escapeHtml(str) {
@@ -2617,6 +2617,7 @@ function renderAccountsList() {
 async function selectAccount(id) {
   currentAccountId = id;
   currentTrades = [];  // Clear immediately for visual feedback
+  currentNoTradeDays = [];
   try { localStorage.setItem('bb_last_account', id); } catch(e) {}
   renderAccountsList();
   updateMobileAccBar();
@@ -3520,7 +3521,9 @@ async function loadAccountData(id, silent) {
   }
 
   var trades = res.data || [];
-  currentTrades = trades;
+  // Separate no-trade day records from real trades
+  currentNoTradeDays = trades.filter(function(t){ return t.is_no_trade; });
+  currentTrades = trades.filter(function(t){ return !t.is_no_trade; });
   _mentalScoreCache = {}; // clear memo cache — fresh data loaded
   _tradesLoadedForAccount = id;
   currentMoodSessions = (moodAllRes.data || []);
@@ -5760,7 +5763,7 @@ var EMOTION_CONTROL_SCORE = {
 function calcDailyDisciplineScore(dateStr) {
   var today = dateStr || localDateStr();
   var allTrades  = currentTrades || [];
-  var dayTrades  = allTrades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(today); });
+  var dayTrades  = allTrades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(today) && !t.is_no_trade; });
   var rulesObj   = getPersonalRules(currentAccountId || '');
   // ── Sub 1: Rules (35 pts) ──
   // If ALL trades today have a rules_compliance override, use the average of those
@@ -6004,7 +6007,7 @@ function emotionToMindPts(emotionScore) {
 function calcDailyMindScore(dateStr) {
   var today     = dateStr || localDateStr();
   var allTrades = currentTrades || [];
-  var dayTrades = allTrades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(today); });
+  var dayTrades = allTrades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(today) && !t.is_no_trade; });
 
   // Get color day for this specific date
   var moodSess  = getMoodForDate(today);
@@ -6538,7 +6541,7 @@ function calcMentalScorePnlCorrelation(trades) {
 function calcDailyExecutionScore(dateStr) {
   var today     = dateStr || localDateStr();
   var allTrades = currentTrades || [];
-  var dayTrades = allTrades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(today); });
+  var dayTrades = allTrades.filter(function(t){ return t.entry_time && t.entry_time.startsWith(today) && !t.is_no_trade; });
 
   if (!dayTrades.length) {
     return { total: null, label: 'No trades', rrPts: null, entryPts: null, resultPts: null, hasTrades: false, tradeCount: 0 };
@@ -6594,8 +6597,8 @@ function calcMentalScore(dateStr) {
   });
 
   // Check for no-trade day record
-  var noTradeDayRecord = (currentTrades || []).find(function(t) {
-    return t.entry_time && t.entry_time.startsWith(today) && t.is_no_trade;
+  var noTradeDayRecord = (currentNoTradeDays || []).find(function(t) {
+    return t.entry_time && t.entry_time.startsWith(today);
   });
 
   if (!dayTrades.length && noTradeDayRecord) {
@@ -7151,6 +7154,7 @@ function renderTradeLogHTML(trades) {
     return new Date(b.entry_time||0) - new Date(a.entry_time||0);
   });
   var filtered = sorted.filter(function(t) {
+    if (t.is_no_trade) return false; // exclude no-trade day records from trade list
     if (tlFilters.date && !(t.entry_time||'').startsWith(tlFilters.date)) return false;
     if (tlFilters.ticker && !(t.ticker||'').toLowerCase().includes(tlFilters.ticker.toLowerCase())) return false;
     if (tlFilters.result==='win' && (t.pnl||0)<=0) return false;
@@ -7718,8 +7722,8 @@ function renderMentalScoreCalendar() {
     var hasTrades = !!tradingDays[dateStr];
 
     // Check for no-trade day
-    var noTradeDay = (currentTrades || []).find(function(t) {
-      return t.is_no_trade && t.entry_time && t.entry_time.startsWith(dateStr);
+    var noTradeDay = (currentNoTradeDays || []).find(function(t) {
+      return t.entry_time && t.entry_time.startsWith(dateStr);
     });
 
     // Color day for this date
