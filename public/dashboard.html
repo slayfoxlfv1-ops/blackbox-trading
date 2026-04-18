@@ -1236,6 +1236,7 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
       </div>
       <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
 <button class="btn btn-solid" id="log-btn" style="display:none" onclick="openLogModal()">+ Log Trade</button>
+<button class="btn btn-ghost" id="no-trade-btn" style="display:none;font-size:11px" onclick="openNoTradeModal()" title="Log a day you were in the market but did not trade">No Trade Day</button>
 <button class="btn btn-ghost" id="import-btn" style="display:none;font-size:10px" onclick="openImportModal()">&#8679; Import CSV</button>
       </div>
     </div>
@@ -1384,10 +1385,7 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
   <div class="modal" onclick="event.stopPropagation()" onkeyup="if(event.key==='Escape'){event.stopPropagation();closeLogModal();}">
     <div class="modal-title" style="display:flex;align-items:center;justify-content:space-between">
       <span>Log Trade</span>
-      <div style="display:flex;align-items:center;gap:8px">
-        <button onclick="openNoTradeModal()" style="background:none;border:1px solid var(--wire);color:var(--text2);font-size:9px;font-weight:700;cursor:pointer;padding:4px 10px;font-family:var(--mono);letter-spacing:.5px;border-radius:4px" title="Log a day where you were in the market but did not trade">+ No Trade Day</button>
-        <button onclick="closeLogModal()" style="background:none;border:none;color:var(--text3);font-size:22px;cursor:pointer;line-height:1;padding:0 2px;font-family:var(--mono)" title="Close (Esc)">×</button>
-      </div>
+      <button onclick="closeLogModal()" style="background:none;border:none;color:var(--text3);font-size:22px;cursor:pointer;line-height:1;padding:0 2px;font-family:var(--mono)" title="Close (Esc)">×</button>
     </div>
     <div class="modal-body-scroll">
     <div class="form-row">
@@ -2625,6 +2623,7 @@ async function selectAccount(id) {
   var acc = accounts.find(function(a) { return a.id===id; });
   document.getElementById('page-title').textContent = acc ? acc.name : '-';
   document.getElementById('log-btn').style.display = 'inline-flex';
+  var _ntBtn = document.getElementById('no-trade-btn'); if (_ntBtn) _ntBtn.style.display = 'inline-flex';
   var importBtn = document.getElementById('import-btn'); if (importBtn) importBtn.style.display = 'inline-flex';
   // Show loading state
   var main = document.getElementById('main-content');
@@ -2813,6 +2812,7 @@ async function deleteAccount() {
     if (currentAccountId === id) {
       currentAccountId = null;
       document.getElementById('log-btn').style.display = 'none';
+      var _ntBtn2 = document.getElementById('no-trade-btn'); if (_ntBtn2) _ntBtn2.style.display = 'none';
       document.getElementById('page-title').textContent = 'Select an account';
       if (accounts.length > 0) selectAccount(accounts[0].id);
       else document.getElementById('main-content').innerHTML = '<div class="empty-state"><div class="empty-icon">*</div><div class="empty-title">'+'No accounts'+'</div><div class="empty-msg">'+'Add your first trading account.'+'</div><button class="btn btn-solid" onclick="openModal()">'+'+ Add account'+'</button></div>';
@@ -3448,6 +3448,7 @@ function navigateTo(view) {
   document.getElementById('page-title').textContent = acc ? acc.name : titles[view];
   document.getElementById('page-sub').textContent = (titles[view] || view || '').toUpperCase();
   document.getElementById('log-btn').style.display = (currentAccountId && view!=='settings') ? 'inline-flex' : 'none';
+  var _ntBtn3 = document.getElementById('no-trade-btn'); if (_ntBtn3) _ntBtn3.style.display = (currentAccountId && view!=='settings') ? 'inline-flex' : 'none';
   if (!currentAccountId && view!=='settings') {
     document.getElementById('main-content').innerHTML = '<div class="empty-state"><div class="empty-icon">*</div><div class="empty-title">No account selected</div><div class="empty-msg">Select or create an account first.</div></div>';
     return;
@@ -12864,33 +12865,23 @@ var NO_TRADE_SCORES = {
 var _selectedNoTradeReason = null;
 
 function openNoTradeModal() {
-  // Close log modal first
-  closeLogModal();
-
-  // Small delay to let log modal close before opening no-trade modal
-  setTimeout(function() {
-    _selectedNoTradeReason = null;
-
-    var dateEl    = document.getElementById('nt-date');
-    var notesEl   = document.getElementById('nt-notes');
-    var errEl     = document.getElementById('nt-reason-err');
-    var previewEl = document.getElementById('nt-score-preview');
-    var overlay   = document.getElementById('no-trade-overlay');
-
-    if (!overlay) { console.error('[Pattro] no-trade-overlay not found'); return; }
-
-    if (dateEl)    dateEl.value    = localDateStr();
-    if (notesEl)   notesEl.value   = '';
-    if (errEl)     errEl.style.display    = 'none';
-    if (previewEl) previewEl.style.display = 'none';
-
-    document.querySelectorAll('.nt-reason-btn').forEach(function(b) {
-      b.style.borderColor = 'var(--wire)';
-      b.style.background  = 'transparent';
-    });
-
-    overlay.style.display = 'flex';
-  }, 50);
+  _selectedNoTradeReason = null;
+  var overlay = document.getElementById('no-trade-overlay');
+  if (!overlay) return;
+  // Reset fields
+  var dateEl = document.getElementById('nt-date');
+  if (dateEl) dateEl.value = localDateStr();
+  var notesEl = document.getElementById('nt-notes');
+  if (notesEl) notesEl.value = '';
+  var errEl = document.getElementById('nt-reason-err');
+  if (errEl) errEl.style.display = 'none';
+  var previewEl = document.getElementById('nt-score-preview');
+  if (previewEl) previewEl.style.display = 'none';
+  document.querySelectorAll('.nt-reason-btn').forEach(function(b) {
+    b.style.borderColor = 'var(--wire)';
+    b.style.background  = 'transparent';
+  });
+  overlay.style.display = 'flex';
 }
 
 function closeNoTradeModal() {
