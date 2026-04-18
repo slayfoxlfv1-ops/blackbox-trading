@@ -7814,7 +7814,8 @@ function renderMentalScoreCalendar() {
     var border = isToday ? '1px solid var(--teal)' : '1px solid var(--wire)';
     var opacity = isFuture ? 'opacity:.25' : '';
 
-    html += '<div style="border-radius:6px;background:' + bgColor + ';border:' + border + ';display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:4px 2px 3px;position:relative;min-height:52px;gap:1px;' + opacity + '">';
+    var _calClickable = !isFuture && (ms || noTradeDay);
+    html += '<div ' + (_calClickable ? 'onclick="showCalDayDetail(\'' + dateStr + '\')" style="cursor:pointer;' : 'style="') + 'border-radius:6px;background:' + bgColor + ';border:' + border + ';display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:4px 2px 3px;position:relative;min-height:52px;gap:1px;' + opacity + '">';
     // Day number + color dot on same row
     html += '<div style="display:flex;align-items:center;justify-content:space-between;width:100%;padding:0 2px">';
     html += '<span style="font-size:9px;color:' + (isToday?'var(--teal)':textColor) + ';font-weight:' + (isToday?'800':'500') + '">' + day + '</span>';
@@ -13018,6 +13019,91 @@ async function saveNoTradeDay() {
     btn.disabled = false;
     btn.textContent = 'Log No Trade Day';
   }
+}
+
+
+// ── Psychology Calendar Day Detail ──────────────────────────────
+function showCalDayDetail(dateStr) {
+  var ms        = calcMentalScore(dateStr);
+  var dayTrades = (currentTrades || []).filter(function(t) {
+    return t.entry_time && t.entry_time.startsWith(dateStr);
+  });
+  var noTradeRec = (currentNoTradeDays || []).find(function(t) {
+    return t.entry_time && t.entry_time.startsWith(dateStr);
+  });
+
+  var label = dateStr.slice(5).replace('-', '/');
+
+  var html = '<div id="cal-day-popup" style="position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;display:flex;align-items:center;justify-content:center;padding:16px" onclick="if(event.target===this)this.remove()">'
+    + '<div style="background:var(--surface);border:1px solid var(--wire);border-radius:0;width:360px;max-width:95vw;max-height:80vh;overflow-y:auto;font-family:var(--mono)">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--wire)">'
+    + '<div style="font-size:11px;font-weight:700;color:var(--text)">' + label + '</div>'
+    + '<button onclick="document.getElementById('cal-day-popup').remove()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;font-family:var(--mono)">×</button>'
+    + '</div>'
+    + '<div style="padding:14px">';
+
+  // Mental Score
+  if (ms && ms.total !== null) {
+    var msColor = ms.total >= 75 ? 'var(--green)' : ms.total >= 50 ? 'var(--amber)' : 'var(--red)';
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--wire)">'
+      + '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Mental Score</div>'
+      + '<div style="font-size:28px;font-weight:800;color:' + msColor + ';letter-spacing:-1px">' + ms.total + '</div>'
+      + '</div>';
+    if (ms.isNoTradeDay) {
+      var ntLabels = { no_confirmation: 'No confirmation', no_setup: 'Waiting for setup', news_event: 'News / Event risk', fear: 'Fear / Hesitation' };
+      html += '<div style="font-size:9px;color:var(--text3);margin-bottom:12px">🚫 No Trade Day · ' + (ntLabels[ms.noTradeReason] || ms.noTradeReason) + '</div>';
+      if (ms.noTradePenalty) html += '<div style="font-size:8px;color:var(--red);margin-bottom:12px">⚠ Traded on a No Trade Day — −20 pts penalty applied</div>';
+    } else if (!ms.isNoTradeDay && ms.mindScore !== null) {
+      html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">';
+      var pills = [
+        { label: 'Mind',       val: ms.mindScore  },
+        { label: 'Discipline', val: ms.discScore  },
+        { label: 'Execution',  val: ms.execScore  }
+      ];
+      pills.forEach(function(p) {
+        var c = p.val === null ? 'var(--text3)' : p.val >= 75 ? 'var(--green)' : p.val >= 50 ? 'var(--amber)' : 'var(--red)';
+        html += '<div style="text-align:center;padding:8px 4px;background:var(--surface2);border-radius:4px">'
+          + '<div style="font-size:16px;font-weight:800;color:' + c + '">' + (p.val !== null ? p.val : '—') + '</div>'
+          + '<div style="font-size:8px;color:var(--text3);margin-top:2px">' + p.label + '</div>'
+          + '</div>';
+      });
+      html += '</div>';
+    }
+  }
+
+  // Trades list
+  if (dayTrades.length > 0) {
+    html += '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">' + dayTrades.length + ' Trade' + (dayTrades.length > 1 ? 's' : '') + '</div>';
+    var totalPnl = dayTrades.reduce(function(s,t){ return s+(t.pnl||0); }, 0);
+    dayTrades.forEach(function(t) {
+      var pnlColor = (t.pnl||0) > 0 ? 'var(--green)' : (t.pnl||0) < 0 ? 'var(--red)' : 'var(--text3)';
+      var pnlAbs   = Math.abs(t.pnl||0);
+      var pnlStr   = ((t.pnl||0) >= 0 ? '+' : '-') + '$' + (pnlAbs % 1 === 0 ? pnlAbs.toLocaleString() : pnlAbs.toFixed(2));
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--wire)">'
+        + '<div>'
+        + '<div style="font-size:10px;font-weight:700;color:var(--text)">' + (t.ticker || '—') + ' <span style="font-size:8px;color:var(--text3);font-weight:400">' + (t.side || '') + '</span></div>'
+        + '<div style="font-size:8px;color:var(--text3);margin-top:2px">'
+        + (t.emotion ? t.emotion : '') + (t.discipline_tag && t.discipline_tag !== 'clean' ? ' · ' + t.discipline_tag.replace('_',' ') : '') + '</div>'
+        + '</div>'
+        + '<div style="font-size:11px;font-weight:700;color:' + pnlColor + '">' + pnlStr + '</div>'
+        + '</div>';
+    });
+    var totalColor = totalPnl >= 0 ? 'var(--green)' : 'var(--red)';
+    var totalAbs   = Math.abs(totalPnl);
+    html += '<div style="display:flex;justify-content:space-between;margin-top:8px;font-size:10px;font-weight:700">'
+      + '<span style="color:var(--text3)">Day P&L</span>'
+      + '<span style="color:' + totalColor + '">' + (totalPnl >= 0 ? '+' : '-') + '$' + (totalAbs % 1 === 0 ? totalAbs.toLocaleString() : totalAbs.toFixed(2)) + '</span>'
+      + '</div>';
+  } else if (!noTradeRec) {
+    html += '<div style="font-size:9px;color:var(--text3);text-align:center;padding:16px 0">No trades logged</div>';
+  }
+
+  html += '</div></div></div>';
+
+  // Remove existing popup if any
+  var existing = document.getElementById('cal-day-popup');
+  if (existing) existing.remove();
+  document.body.insertAdjacentHTML('beforeend', html);
 }
 
 </script>
