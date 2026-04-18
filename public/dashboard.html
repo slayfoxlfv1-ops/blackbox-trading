@@ -2611,7 +2611,7 @@ function renderAccountsList() {
       '<span class="edit-btn del-btn" onclick="event.stopPropagation();confirmDelete(\'' + a.id + '\',\'' + a.name.replace(/'/g,"\\'") + '\')" title="Delete">x</span>' +
       '</div></div>';
   }).join('');
-  updateMobileAccBar();
+  if (typeof updateMobileAccBar === 'function') updateMobileAccBar();
 }
 
 async function selectAccount(id) {
@@ -13038,7 +13038,7 @@ function showCalDayDetail(dateStr) {
     + '<div style="background:var(--surface);border:1px solid var(--wire);border-radius:0;width:360px;max-width:95vw;max-height:80vh;overflow-y:auto;font-family:var(--mono)">'
     + '<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--wire)">'
     + '<div style="font-size:11px;font-weight:700;color:var(--text)">' + label + '</div>'
-    + '<button onclick="document.getElementById('cal-day-popup').remove()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;font-family:var(--mono)">×</button>'
+    + '<button onclick="document.getElementById(\'cal-day-popup\').remove()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;font-family:var(--mono)">×</button>'
     + '</div>'
     + '<div style="padding:14px">';
 
