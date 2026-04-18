@@ -4193,6 +4193,9 @@ async function loadAccountData(id, silent) {
     }
     var _todayColor = _todayTotal !== null ? ms.color : 'var(--text3)';
     var _todayLabel = _todayTotal !== null ? ms.label : 'No trades';
+    var _noTradePenaltyWarning = (ms && ms.noTradePenalty)
+      ? '<div style="margin-top:6px;padding:5px 8px;background:rgba(224,85,85,0.10);border:1px solid var(--red-bd);border-radius:4px;font-size:8px;color:var(--red);text-align:center">⚠ Traded on a No Trade Day<br>−20 pts penalty applied</div>'
+      : '';
 
     // Yesterday = last day with actual trades (not calendar day)
     var prevDay = null;
@@ -4250,6 +4253,7 @@ async function loadAccountData(id, silent) {
     out += '<div style="font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:2px">Mental Score · Today</div>';
     out += '<div style="font-size:28px;font-weight:800;color:' + _todayColor + ';letter-spacing:-1px;line-height:1">' + (_todayTotal !== null ? _todayTotal : '—') + '</div>';
     out += '<div style="font-size:9px;color:var(--text3)">' + _todayLabel + '</div>';
+    if (_noTradePenaltyWarning) out += _noTradePenaltyWarning;
     if (_yestTotal !== null) {
       var _diff = _todayTotal !== null ? (_todayTotal - _yestTotal) : null;
       var _diffColor = _diff === null ? 'var(--text3)' : _diff > 0 ? 'var(--green)' : _diff < 0 ? 'var(--red)' : 'var(--text3)';
@@ -4860,12 +4864,30 @@ function calcDisciplineProgress(trades) {
 
 // ── Mental Score for a period (weekly/monthly) ──
 function calcPeriodMentalScore(tradesInPeriod) {
-  if (!tradesInPeriod.length) return null;
-  // Get unique trading days in period
+  // Get unique days — include both trading days AND no-trade days in the period
   var days = {};
   tradesInPeriod.forEach(function(t) {
     if (t.entry_time) days[t.entry_time.slice(0,10)] = true;
   });
+  // Add no-trade days that fall within the same date range
+  if (tradesInPeriod.length > 0) {
+    var _minDate = tradesInPeriod.reduce(function(m,t){ return t.entry_time < m ? t.entry_time : m; }, tradesInPeriod[0].entry_time).slice(0,10);
+    var _maxDate = tradesInPeriod.reduce(function(m,t){ return t.entry_time > m ? t.entry_time : m; }, tradesInPeriod[0].entry_time).slice(0,10);
+    (currentNoTradeDays || []).forEach(function(t) {
+      if (t.entry_time) {
+        var d = t.entry_time.slice(0,10);
+        if (d >= _minDate && d <= _maxDate) days[d] = true;
+      }
+    });
+  }
+  // Also include no-trade days even if no real trades exist in period
+  if (!tradesInPeriod.length) {
+    if (!(currentNoTradeDays || []).length) return null;
+    (currentNoTradeDays || []).forEach(function(t) {
+      if (t.entry_time) days[t.entry_time.slice(0,10)] = true;
+    });
+    if (!Object.keys(days).length) return null;
+  }
   var dayList = Object.keys(days).sort();
   if (!dayList.length) return null;
 
@@ -6601,21 +6623,36 @@ function calcMentalScore(dateStr) {
     return t.entry_time && t.entry_time.startsWith(today);
   });
 
-  if (!dayTrades.length && noTradeDayRecord) {
-    // No Trade Day — score based on reason, no execution component
-    var ntMind = noTradeDayRecord.no_trade_mind || 50;
-    var ntDisc = noTradeDayRecord.no_trade_disc || 50;
-    var ntTotal = Math.round(ntMind * 0.50 + ntDisc * 0.50);
-    var ntLabel = ntTotal >= 80 ? 'Disciplined' : ntTotal >= 60 ? 'Acceptable' : 'Review';
-    var ntColor = ntTotal >= 80 ? 'var(--green)' : ntTotal >= 60 ? 'var(--amber)' : 'var(--red)';
-    var ntResult = { total: ntTotal, label: ntLabel, color: ntColor,
-      discScore: ntDisc, mindScore: ntMind, execScore: null,
-      discLabel: ntDisc >= 80 ? 'Disciplined' : 'Review',
-      mindLabel: ntMind >= 80 ? 'Focused' : 'Struggling',
-      execLabel: 'No trade', isNoTradeDay: true,
-      noTradeReason: noTradeDayRecord.no_trade_reason };
-    _mentalScoreCache[today] = ntResult;
-    return ntResult;
+  if (noTradeDayRecord) {
+    // No Trade Day — single score metric, enters weekly/monthly average
+    var _ntScoreMap = { no_confirmation: 85, no_setup: 80, news_event: 75, fear: 40 };
+    var _ntBase  = _ntScoreMap[noTradeDayRecord.no_trade_reason] || 75;
+    var _ntTotal = _ntBase;
+    var _ntTraded = dayTrades.length > 0; // traded on a declared no-trade day
+
+    if (_ntTraded) {
+      // Penalty: traded despite logging no-trade day — 20pt penalty to score
+      _ntTotal = Math.max(0, _ntTotal - 20);
+    }
+
+    var _ntLabel = _ntTotal >= 80 ? 'No Trade · Disciplined' : _ntTotal >= 60 ? 'No Trade · Acceptable' : 'No Trade · Review';
+    var _ntColor = _ntTotal >= 80 ? 'var(--green)' : _ntTotal >= 60 ? 'var(--amber)' : 'var(--red)';
+    var _ntResult = {
+      total:          _ntTotal,
+      label:          _ntLabel,
+      color:          _ntColor,
+      discScore:      null,
+      mindScore:      null,
+      execScore:      null,
+      discLabel:      '—',
+      mindLabel:      '—',
+      execLabel:      '—',
+      isNoTradeDay:   true,
+      noTradeReason:  noTradeDayRecord.no_trade_reason,
+      noTradePenalty: _ntTraded
+    };
+    _mentalScoreCache[today] = _ntResult;
+    return _ntResult;
   }
 
   if (!dayTrades.length) {
@@ -7309,7 +7346,8 @@ function renderCalendarFull(year, month, trades) {
     var pnl=daily[dateStr];
     var hasData=pnl!==undefined&&pnl!==null;
     var isToday=d===today.getDate()&&month===today.getMonth()&&year===today.getFullYear();
-    var cls=hasData?(pnl>0?'win':pnl<0?'loss':'flat'):'flat';
+    var _ntDayRec=(currentNoTradeDays||[]).find(function(t){return t.entry_time&&t.entry_time.startsWith(dateStr);});
+    var cls=hasData?(pnl>0?'win':pnl<0?'loss':'flat'):(_ntDayRec?'flat':'flat');
     var todayCls=isToday?' today':'';
     var dimStyle=(!hasData&&!isToday)?'opacity:0.2':'';
     var _cpnl=Math.abs(pnl); var pnlStr=hasData?'<div class="cal-lg-pnl '+(pnl>=0?'pos':'neg')+'">'+(pnl>=0?'+':'-')+'$'+(_cpnl%1===0?_cpnl.toLocaleString():_cpnl.toFixed(2))+'</div>':'';
@@ -7332,8 +7370,10 @@ function renderCalendarFull(year, month, trades) {
     }
     var calTipAttr=calTip?'data-tip="'+calTip.replace(/"/g,'&quot;')+'"':'';
     var calHoverAttr=calTip?'onmouseenter="showCalTooltip(event,this)" onmouseleave="hideCalTooltip()"':'';
-    cells+='<div class="cal-cell-lg '+cls+todayCls+'" style="'+dimStyle+'" '+calTipAttr+' '+calHoverAttr+' onclick="showDayTrades(\''+dateStr+'\',\''+monthNames[month]+' '+d+'\')">' +
-      '<div class="cal-lg-day">'+d+'</div>'+pnlStr+cntStr+discBar+'</div>';
+        var _ntIcon=_ntDayRec?'<div style="font-size:9px;text-align:center;margin-top:2px" title="No Trade Day">'+((_ntDayRec.no_trade_reason==='fear')?'😰':'🚫')+'</div>':'';
+    var _ntDimStyle=(!hasData&&!isToday&&!_ntDayRec)?'opacity:0.2':dimStyle;
+    cells+='<div class="cal-cell-lg '+cls+todayCls+'" style="'+_ntDimStyle+'" '+calTipAttr+' '+calHoverAttr+' onclick="showDayTrades(\''+dateStr+'\',\''+monthNames[month]+' '+d+'\')">'+
+      '<div class="cal-lg-day">'+d+'</div>'+pnlStr+cntStr+discBar+_ntIcon+'</div>';
   }
   var prevMonth=month===0?11:month-1;
   var prevYear=month===0?year-1:year;
@@ -7611,9 +7651,17 @@ function renderMentalScoreCalendar() {
     tradingDays[d].push(t);
   });
 
-  // Calculate Mental Score for each trading day in THIS month only
+  // Calculate Mental Score for each trading day in THIS month
+  // Also include no-trade days for this month
   var dayScores = {};
-  Object.keys(tradingDays).forEach(function(d) {
+  var allScoredDates = Object.keys(tradingDays).slice();
+  (currentNoTradeDays || []).forEach(function(t) {
+    if (t.entry_time && t.entry_time.startsWith(monthStr)) {
+      var d = t.entry_time.slice(0,10);
+      if (!allScoredDates.includes(d)) allScoredDates.push(d);
+    }
+  });
+  allScoredDates.forEach(function(d) {
     var ms = calcMentalScore(d);
     if (ms && ms.total !== null && !isNaN(ms.total)) {
       dayScores[d] = ms;
@@ -12860,10 +12908,10 @@ window.addEventListener('error', function(e) {
 // ── NO TRADE DAY ────────────────────────────────────────────────
 // Score map per reason: { mind, discipline }
 var NO_TRADE_SCORES = {
-  no_confirmation: { mind: 90, discipline: 100, label: 'No confirmation',  color: 'var(--green)' },
-  no_setup:        { mind: 85, discipline: 100, label: 'Waiting for setup', color: 'var(--teal)'  },
-  news_event:      { mind: 80, discipline: 100, label: 'News / Event risk', color: 'var(--amber)' },
-  fear:            { mind: 35, discipline:  50, label: 'Fear / Hesitation', color: 'var(--red)'   }
+  no_confirmation: { total: 85, label: 'No confirmation',  color: 'var(--green)' },
+  no_setup:        { total: 80, label: 'Waiting for setup', color: 'var(--teal)'  },
+  news_event:      { total: 75, label: 'News / Event risk', color: 'var(--amber)' },
+  fear:            { total: 40, label: 'Fear / Hesitation', color: 'var(--red)'   }
 };
 
 var _selectedNoTradeReason = null;
@@ -12907,13 +12955,11 @@ function selectNoTradeReason(el) {
   // Show score preview
   var s = NO_TRADE_SCORES[_selectedNoTradeReason];
   if (s) {
-    var mental = Math.round(s.mind * 0.50 + s.discipline * 0.50);
     var preview = document.getElementById('nt-score-preview');
     preview.style.display = 'block';
-    preview.innerHTML = '<div style="font-weight:700;color:' + s.color + ';margin-bottom:4px">' + s.label + '</div>'
-      + '<div>Mind Score: <strong>' + s.mind + '</strong> · Discipline Score: <strong>' + s.discipline + '</strong></div>'
-      + '<div style="margin-top:4px">Mental Score (no execution): <strong style="color:' + s.color + '">' + mental + '</strong></div>'
-      + (s.mind < 60 ? '<div style="margin-top:6px;color:var(--red);font-size:8px">⚠ This will lower your daily Mental Score — fear-based inaction is a pattern worth tracking.</div>' : '');
+    preview.innerHTML = '<div style="font-weight:700;color:' + s.color + ';margin-bottom:6px">' + s.label + '</div>'
+      + '<div>Mental Score for this day: <strong style="font-size:14px;color:' + s.color + '">' + s.total + '</strong> / 100</div>'
+      + (s.total < 60 ? '<div style="margin-top:8px;color:var(--red);font-size:8px">⚠ Fear-based inaction will lower your weekly average — this is worth tracking.</div>' : '<div style="margin-top:8px;color:var(--text3);font-size:8px">This score will be included in your weekly and monthly Mental Score average.</div>');
   }
 }
 
@@ -12941,8 +12987,8 @@ async function saveNoTradeDay() {
       entry_time:       dateVal + 'T12:00:00',
       is_no_trade:      true,
       no_trade_reason:  _selectedNoTradeReason,
-      no_trade_mind:    s.mind,
-      no_trade_disc:    s.discipline,
+      no_trade_mind:    s.total,
+      no_trade_disc:    s.total,
       notes:            notes || null,
       ticker:           'NO_TRADE',
       side:             'long',
@@ -12962,7 +13008,7 @@ async function saveNoTradeDay() {
     var toast = document.createElement('div');
     toast.style.cssText = 'position:fixed;bottom:24px;right:24px;width:280px;background:var(--surface);border:1px solid var(--wire);border-left:2px solid var(--teal);padding:12px 14px;z-index:9999;font-family:var(--mono);animation:toastIn .4s ease';
     toast.innerHTML = '<div style="font-size:11px;font-weight:700;color:var(--teal);margin-bottom:3px">No Trade Day logged ✓</div>'
-      + '<div style="font-size:9px;color:var(--text3)">' + s.label + ' · Mental Score: ' + Math.round(s.mind * 0.5 + s.discipline * 0.5) + '</div>';
+      + '<div style="font-size:9px;color:var(--text3)">' + s.label + ' · Mental Score: ' + s.total + '</div>';
     document.body.appendChild(toast);
     setTimeout(function(){ toast.style.animation='toastOut .3s ease forwards'; setTimeout(function(){ toast.remove(); }, 300); }, 4000);
 
