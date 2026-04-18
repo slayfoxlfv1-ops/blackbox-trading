@@ -12864,22 +12864,33 @@ var NO_TRADE_SCORES = {
 var _selectedNoTradeReason = null;
 
 function openNoTradeModal() {
-  _selectedNoTradeReason = null;
-  // Set today's date
-  document.getElementById('nt-date').value = localDateStr();
-  // Clear reason selection
-  document.querySelectorAll('.nt-reason-btn').forEach(function(b){
-    b.style.borderColor = 'var(--wire)';
-    b.style.background  = 'transparent';
-  });
-  document.getElementById('nt-reason-err').style.display   = 'none';
-  document.getElementById('nt-score-preview').style.display = 'none';
-  document.getElementById('nt-notes').value = '';
-  // Show modal
-  var overlay = document.getElementById('no-trade-overlay');
-  overlay.style.display = 'flex';
-  // Close log modal
+  // Close log modal first
   closeLogModal();
+
+  // Small delay to let log modal close before opening no-trade modal
+  setTimeout(function() {
+    _selectedNoTradeReason = null;
+
+    var dateEl    = document.getElementById('nt-date');
+    var notesEl   = document.getElementById('nt-notes');
+    var errEl     = document.getElementById('nt-reason-err');
+    var previewEl = document.getElementById('nt-score-preview');
+    var overlay   = document.getElementById('no-trade-overlay');
+
+    if (!overlay) { console.error('[Pattro] no-trade-overlay not found'); return; }
+
+    if (dateEl)    dateEl.value    = localDateStr();
+    if (notesEl)   notesEl.value   = '';
+    if (errEl)     errEl.style.display    = 'none';
+    if (previewEl) previewEl.style.display = 'none';
+
+    document.querySelectorAll('.nt-reason-btn').forEach(function(b) {
+      b.style.borderColor = 'var(--wire)';
+      b.style.background  = 'transparent';
+    });
+
+    overlay.style.display = 'flex';
+  }, 50);
 }
 
 function closeNoTradeModal() {
