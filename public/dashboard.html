@@ -3229,6 +3229,17 @@ async function saveTrade() {
       var v = parseInt(sl.value);
       return (!isNaN(v) && v >= 0) ? v : null;
     })(),
+    // strategy_checks: JSON object {itemId: true/false} for each checklist item
+    strategy_checks: (function() {
+      var _items = (currentChecklistItems || []).filter(function(x){ return x.is_active !== false; });
+      if (!_items.length) return null;
+      var _checks = {};
+      _items.forEach(function(item) {
+        var cb = document.getElementById('cl-check-' + item.id);
+        if (cb) _checks[item.id] = cb.checked;
+      });
+      return Object.keys(_checks).length ? JSON.stringify(_checks) : null;
+    })(),
     // rules_compliance: null = use active rules, 0-100 = manual override %
     rules_compliance: (function() {
       var override = document.getElementById('t-rules-override');
@@ -3369,7 +3380,8 @@ async function saveTrade() {
     }
   }
 
-  // Save per-item check state to bbStore for Strategy analysis
+  // Save per-item check state to bbStore (local cache) for Strategy analysis
+  // The source of truth is strategy_checks on the trade record (saved in payload above)
   try {
     var _items = (currentChecklistItems || []).filter(function(x){ return x.is_active !== false; });
     if (_items.length) {
@@ -3379,6 +3391,7 @@ async function saveTrade() {
         var cb = document.getElementById('cl-check-' + item.id);
         if (cb) _checks[item.id] = cb.checked;
       });
+      // Keep bbStore in sync as fast local cache
       bbStore.set('checks_' + currentAccountId + '_' + _tradeDate, JSON.stringify(_checks));
     }
   } catch(e) {}
@@ -13337,10 +13350,19 @@ function _renderLogTradeChecklist() {
   var checks = {};
   try {
     var editTrade = editingTradeId ? (currentTrades||[]).find(function(t){return t.id===editingTradeId;}) : null;
-    if (editTrade && editTrade.trade_confirmation_pct != null) {
-      var pct = editTrade.trade_confirmation_pct;
-      var numChecked = Math.round(pct / 100 * items.length);
-      items.slice(0, numChecked).forEach(function(item){ checks[item.id] = true; });
+    if (editTrade) {
+      // Primary: restore from strategy_checks (Supabase field)
+      if (editTrade.strategy_checks) {
+        var _savedChecks = typeof editTrade.strategy_checks === 'string'
+          ? JSON.parse(editTrade.strategy_checks)
+          : editTrade.strategy_checks;
+        checks = _savedChecks || {};
+      } else if (editTrade.trade_confirmation_pct != null) {
+        // Fallback: approximate from % (for trades logged before this feature)
+        var pct = editTrade.trade_confirmation_pct;
+        var numChecked = Math.round(pct / 100 * items.length);
+        items.slice(0, numChecked).forEach(function(item){ checks[item.id] = true; });
+      }
     }
   } catch(e) {}
 
@@ -13417,7 +13439,8 @@ function buildStrategySectionHTML(trades) {
   var itemStats = items.map(function(item) {
     var checkedDays = 0;
     var totalDays   = 0;
-    // Look through last 30 days of check data
+    // Look through last 30 days using strategy_checks from trades (Supabase)
+    // Falls back to bbStore local cache if trade has no strategy_checks
     for (var d = 0; d < 30; d++) {
       var date = new Date();
       date.setDate(date.getDate() - d);
@@ -13428,8 +13451,21 @@ function buildStrategySectionHTML(trades) {
       if (!dayTrades.length) continue;
       totalDays++;
       try {
-        var checks = JSON.parse(bbStore.get('checks_' + currentAccountId + '_' + dateStr) || '{}');
-        if (checks[item.id]) checkedDays++;
+        // Primary: use strategy_checks from the trade record (persisted in Supabase)
+        var dayChecked = false;
+        for (var ti = 0; ti < dayTrades.length; ti++) {
+          var tradeChecks = dayTrades[ti].strategy_checks;
+          if (tradeChecks) {
+            var parsed = typeof tradeChecks === 'string' ? JSON.parse(tradeChecks) : tradeChecks;
+            if (parsed[item.id]) { dayChecked = true; break; }
+          }
+        }
+        // Fallback: bbStore local cache (for trades logged before this feature)
+        if (!dayChecked) {
+          var cached = JSON.parse(bbStore.get('checks_' + currentAccountId + '_' + dateStr) || '{}');
+          if (cached[item.id]) dayChecked = true;
+        }
+        if (dayChecked) checkedDays++;
       } catch(e) {}
     }
     var pct = totalDays > 0 ? Math.round(checkedDays / totalDays * 100) : null;
