@@ -1191,10 +1191,7 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
       </div>
     </div>
     <div class="section">
-      <div class="section-title" style="display:flex;align-items:center;justify-content:space-between">
-        <span>Accounts</span>
-        <span id="checklist-setup-btn" onclick="openChecklistSetupModal()" title="Configure strategy checklist for this account" style="display:none;cursor:pointer;font-size:14px;color:var(--text3);padding:2px 6px;border:1px solid var(--wire);border-radius:3px;font-family:var(--mono);line-height:1">✏ checklist</span>
-      </div>
+      <div class="section-title">Accounts</div>
     </div>
     <div class="acc-list" id="accounts-list"></div>
     <div style="padding:8px">
@@ -1523,15 +1520,35 @@ tr.flagged td { background: rgba(224,85,85,0.04); }
     </div>
 
     <div class="form-group" id="t-checklist-wrap" style="background:var(--surface2);border:1px solid var(--wire);border-radius:8px;padding:10px 12px">
-      <div style="display:flex;align-items:center;gap:10px">
+      <!-- Header: label + pct + configure toggle -->
+      <div style="display:flex;align-items:center;gap:8px">
         <label class="form-label" style="margin:0;flex:1;font-size:10px">✓ Trade confirmations <span style="color:var(--text3);font-weight:400">% of confirmations met before entry</span></label>
         <span id="t-checklist-pct-display" style="font-size:13px;font-weight:800;color:var(--text3);min-width:38px;text-align:right">0%</span>
+        <button onclick="_toggleClConfig()" id="cl-config-toggle" title="Configure checklist items" style="background:none;border:1px solid var(--wire);color:var(--text3);font-size:8px;cursor:pointer;padding:2px 7px;font-family:var(--mono);white-space:nowrap;border-radius:3px">⚙ edit</button>
       </div>
-      <input type="range" id="t-checklist-pct" min="0" max="100" step="10" value="0"
-        style="width:100%;accent-color:var(--green);cursor:pointer;margin-top:6px;display:block"
-        data-user-changed="0"
-        oninput="this.dataset.userChanged='1';updateChecklistDisplay(this.value)">
-      <div id="t-checklist-note" style="font-size:9px;color:var(--text3);margin-top:4px">How many of your entry confirmations did the market give you?</div>
+
+      <!-- Inline item editor (hidden by default) -->
+      <div id="cl-config-panel" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--wire)">
+        <div style="font-size:8px;color:var(--text3);margin-bottom:8px">Your strategy confirmations for this account. Mark them on each trade to auto-calculate %.</div>
+        <div id="cl-items-list" style="display:flex;flex-direction:column;gap:4px;margin-bottom:8px"></div>
+        <div style="display:flex;gap:6px">
+          <input class="form-input" id="cl-new-item-input" type="text" placeholder="e.g. FVG present, BOS confirmed..." style="flex:1;font-size:9px;padding:5px 8px" onkeydown="if(event.key==='Enter'){event.preventDefault();_clAddItem();}">
+          <button class="btn btn-ghost" onclick="_clAddItem()" style="font-size:9px;padding:4px 10px;flex-shrink:0">+ Add</button>
+        </div>
+        <button onclick="_clSaveItems()" style="margin-top:8px;width:100%;padding:6px;background:var(--teal);border:none;color:#0a0a0b;font-size:9px;font-weight:700;cursor:pointer;font-family:var(--mono)">Save checklist</button>
+      </div>
+
+      <!-- Interactive checklist (shown when items exist) -->
+      <div id="t-checklist-interactive"></div>
+
+      <!-- Manual slider (shown when no items configured) -->
+      <div id="cl-slider-wrap">
+        <input type="range" id="t-checklist-pct" min="0" max="100" step="10" value="0"
+          style="width:100%;accent-color:var(--green);cursor:pointer;margin-top:6px;display:block"
+          data-user-changed="0"
+          oninput="this.dataset.userChanged='1';updateChecklistDisplay(this.value)">
+        <div id="t-checklist-note" style="font-size:9px;color:var(--text3);margin-top:4px">How many of your entry confirmations did the market give you?</div>
+      </div>
     </div>
     <div class="form-group" id="rules-compliance-group">
       <div style="display:flex;align-items:center;gap:10px">
@@ -2628,7 +2645,6 @@ async function selectAccount(id) {
   document.getElementById('page-title').textContent = acc ? acc.name : '-';
   document.getElementById('log-btn').style.display = 'inline-flex';
   var _ntBtn = document.getElementById('no-trade-btn'); if (_ntBtn) _ntBtn.style.display = 'inline-flex';
-  var _clSetupBtn = document.getElementById('checklist-setup-btn'); if (_clSetupBtn) _clSetupBtn.style.display = 'flex';
   var importBtn = document.getElementById('import-btn'); if (importBtn) importBtn.style.display = 'inline-flex';
   // Show loading state
   var main = document.getElementById('main-content');
@@ -2818,7 +2834,6 @@ async function deleteAccount() {
       currentAccountId = null;
       document.getElementById('log-btn').style.display = 'none';
       var _ntBtn2 = document.getElementById('no-trade-btn'); if (_ntBtn2) _ntBtn2.style.display = 'none';
-      var _clSetupBtn2 = document.getElementById('checklist-setup-btn'); if (_clSetupBtn2) _clSetupBtn2.style.display = 'none';
       document.getElementById('page-title').textContent = 'Select an account';
       if (accounts.length > 0) selectAccount(accounts[0].id);
       else document.getElementById('main-content').innerHTML = '<div class="empty-state"><div class="empty-icon">*</div><div class="empty-title">'+'No accounts'+'</div><div class="empty-msg">'+'Add your first trading account.'+'</div><button class="btn btn-solid" onclick="openModal()">'+'+ Add account'+'</button></div>';
@@ -3475,7 +3490,6 @@ function navigateTo(view) {
   document.getElementById('page-sub').textContent = (titles[view] || view || '').toUpperCase();
   document.getElementById('log-btn').style.display = (currentAccountId && view!=='settings') ? 'inline-flex' : 'none';
   var _ntBtn3 = document.getElementById('no-trade-btn'); if (_ntBtn3) _ntBtn3.style.display = (currentAccountId && view!=='settings') ? 'inline-flex' : 'none';
-  var _clSetupBtn3 = document.getElementById('checklist-setup-btn'); if (_clSetupBtn3) _clSetupBtn3.style.display = currentAccountId ? 'flex' : 'none';
   if (!currentAccountId && view!=='settings') {
     document.getElementById('main-content').innerHTML = '<div class="empty-state"><div class="empty-icon">*</div><div class="empty-title">No account selected</div><div class="empty-msg">Select or create an account first.</div></div>';
     return;
@@ -13311,63 +13325,124 @@ async function saveChecklistSetup() {
   }
 }
 
-// ── LOG TRADE: Interactive Checklist ────────────────────────────
+// ── LOG TRADE: Inline Checklist Editor + Interactive Checklist ──
+
+function _toggleClConfig() {
+  var panel = document.getElementById('cl-config-panel');
+  if (!panel) return;
+  var isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : 'block';
+  if (!isOpen) _renderClItemsList();
+}
+
+function _renderClItemsList() {
+  var el = document.getElementById('cl-items-list');
+  if (!el) return;
+  var items = currentChecklistItems || [];
+  if (!items.length) {
+    el.innerHTML = '<div style="font-size:8px;color:var(--text3);text-align:center;padding:8px 0">No items yet</div>';
+    return;
+  }
+  el.innerHTML = items.map(function(item, i) {
+    var active = item.is_active !== false;
+    return '<div style="display:flex;align-items:center;gap:6px;padding:4px 0">'
+      + '<span style="flex:1;font-size:9px;color:' + (active ? 'var(--text)' : 'var(--text3)') + '">' + escapeHtml(item.label || item.text || '') + '</span>'
+      + '<button onclick="_clToggleItem(' + i + ')" style="background:none;border:1px solid var(--wire);color:var(--text3);font-size:7px;cursor:pointer;padding:2px 6px;font-family:var(--mono)">' + (active ? 'on' : 'off') + '</button>'
+      + '<button onclick="_clDeleteItem(' + i + ')" style="background:none;border:none;color:var(--red);font-size:13px;cursor:pointer;padding:0 3px;line-height:1">×</button>'
+      + '</div>';
+  }).join('');
+}
+
+function _clAddItem() {
+  var inp = document.getElementById('cl-new-item-input');
+  var val = (inp ? inp.value : '').trim();
+  if (!val) return;
+  if (!currentChecklistItems) currentChecklistItems = [];
+  currentChecklistItems.push({ id: Date.now(), label: val, is_active: true });
+  inp.value = '';
+  _renderClItemsList();
+}
+
+function _clToggleItem(i) {
+  if (currentChecklistItems && currentChecklistItems[i]) {
+    currentChecklistItems[i].is_active = currentChecklistItems[i].is_active === false ? true : false;
+    _renderClItemsList();
+  }
+}
+
+function _clDeleteItem(i) {
+  if (currentChecklistItems) {
+    currentChecklistItems.splice(i, 1);
+    _renderClItemsList();
+    _renderLogTradeChecklist(); // re-render interactive checklist
+  }
+}
+
+async function _clSaveItems() {
+  if (!currentAccountId || !currentUser) return;
+  var btn = document.querySelector('#cl-config-panel button:last-child');
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
+  try {
+    var itemsJson = JSON.stringify(currentChecklistItems || []);
+    var res = await sb.from('checklist_items').upsert({
+      account_id: currentAccountId,
+      user_id:    currentUser.id,
+      items:      itemsJson
+    }, { onConflict: 'account_id' });
+    if (res.error) throw res.error;
+    bbStore.set('checklist_' + currentAccountId, itemsJson);
+    // Close config panel and re-render interactive checklist
+    var panel = document.getElementById('cl-config-panel');
+    if (panel) panel.style.display = 'none';
+    _renderLogTradeChecklist();
+  } catch(err) {
+    alert('Error saving: ' + (err.message || err));
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Save checklist'; }
+  }
+}
+
 // Called when log trade modal opens — renders checklist if items exist
 function _renderLogTradeChecklist() {
   var items = (currentChecklistItems || []).filter(function(x){ return x.is_active !== false; });
-  var wrap  = document.getElementById('t-checklist-wrap');
-  if (!wrap) return;
+  var interactive = document.getElementById('t-checklist-interactive');
+  var sliderWrap  = document.getElementById('cl-slider-wrap');
+  if (!interactive || !sliderWrap) return;
 
   if (!items.length) {
-    // No items — show slider only
-    wrap.querySelector && wrap.querySelector('#t-checklist-interactive') && wrap.querySelector('#t-checklist-interactive').remove();
-    var slider = document.getElementById('t-checklist-pct');
-    if (slider) slider.closest('.form-group') && (slider.closest('.form-group').style.display = '');
+    // No items — show slider, clear interactive
+    interactive.innerHTML = '';
+    sliderWrap.style.display = '';
+    var sl = document.getElementById('t-checklist-pct');
+    if (sl) { sl.value = 0; updateChecklistDisplay(0); }
     return;
   }
 
-  // Has items — show interactive checklist, hide manual slider
-  var sliderGroup = document.getElementById('t-checklist-pct') ? document.getElementById('t-checklist-pct').closest('[style]') : null;
+  // Has items — build interactive checklist, hide slider
+  sliderWrap.style.display = 'none';
 
-  // Build interactive checklist HTML
+  // Restore checks if editing a trade
   var checks = {};
   try {
     var editTrade = editingTradeId ? (currentTrades||[]).find(function(t){return t.id===editingTradeId;}) : null;
     if (editTrade && editTrade.trade_confirmation_pct != null) {
-      // Restore as many checked as match the pct
       var pct = editTrade.trade_confirmation_pct;
       var numChecked = Math.round(pct / 100 * items.length);
       items.slice(0, numChecked).forEach(function(item){ checks[item.id] = true; });
     }
   } catch(e) {}
 
-  var interHtml = '<div id="t-checklist-interactive" style="margin-top:8px">'
-    + '<div style="font-size:9px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Trade Confirmations</div>'
-    + items.map(function(item) {
-        var checked = !!checks[item.id];
-        return '<label style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--wire);cursor:pointer">'
-          + '<input type="checkbox" id="cl-check-' + item.id + '" ' + (checked ? 'checked' : '') + ' onchange="_updateClPct()" style="accent-color:var(--teal);width:14px;height:14px;flex-shrink:0">'
-          + '<span style="font-size:10px;color:var(--text)">' + escapeHtml(item.label || item.text || '') + '</span>'
-          + '</label>';
-      }).join('')
-    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding-top:8px">'
-    + '<span style="font-size:9px;color:var(--text3)">Confirmations %</span>'
-    + '<span id="cl-pct-display" style="font-size:16px;font-weight:800;color:var(--teal)">0%</span>'
-    + '</div>'
-    + '</div>';
-
-  // Remove existing interactive if any
-  var existing = document.getElementById('t-checklist-interactive');
-  if (existing) existing.remove();
-
-  wrap.insertAdjacentHTML('beforeend', interHtml);
-
-  // Hide the manual slider since checklist is active
-  var manualSlider = document.getElementById('t-checklist-pct');
-  if (manualSlider) {
-    var manualGroup = manualSlider.parentElement;
-    if (manualGroup) manualGroup.style.display = 'none';
-  }
+  interactive.innerHTML = items.map(function(item) {
+    var checked = !!checks[item.id];
+    return '<label style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--wire);cursor:pointer">'
+      + '<input type="checkbox" id="cl-check-' + item.id + '" ' + (checked ? 'checked' : '') + ' onchange="_updateClPct()" style="accent-color:var(--teal);width:14px;height:14px;flex-shrink:0">'
+      + '<span style="font-size:10px;color:var(--text)">' + escapeHtml(item.label || item.text || '') + '</span>'
+      + '</label>';
+  }).join('')
+  + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding-top:6px">'
+  + '<span style="font-size:9px;color:var(--text3)">Confirmations %</span>'
+  + '<span id="cl-pct-display" style="font-size:14px;font-weight:800;color:var(--teal)">0%</span>'
+  + '</div>';
 
   _updateClPct();
 }
@@ -13559,28 +13634,5 @@ function buildStrategySectionHTML(trades) {
   </div>
 </div>
 
-<!-- STRATEGY CHECKLIST SETUP MODAL -->
-<div id="checklist-setup-overlay" class="overlay" onclick="if(event.target===this)closeChecklistSetupModal()" style="z-index:1100;">
-  <div class="modal" onclick="event.stopPropagation()" style="width:420px;max-width:95vw">
-    <div class="modal-title" style="display:flex;align-items:center;justify-content:space-between">
-      <span>Strategy Checklist</span>
-      <button onclick="closeChecklistSetupModal()" style="background:none;border:none;color:var(--text3);font-size:22px;cursor:pointer;line-height:1;font-family:var(--mono)">×</button>
-    </div>
-    <div class="modal-body-scroll" style="padding:16px">
-      <div style="font-size:9px;color:var(--text3);margin-bottom:14px;line-height:1.7">
-        Add the confirmation criteria you need before taking a trade. In Log Trade you'll mark each one — the % is calculated automatically.
-      </div>
-      <div id="cl-setup-items" style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px"></div>
-      <div style="display:flex;gap:8px">
-        <input class="form-input" id="cl-setup-new-input" type="text" placeholder="e.g. FVG present, BOS confirmed..." style="flex:1" onkeydown="if(event.key==='Enter')addChecklistSetupItem()">
-        <button class="btn btn-ghost" onclick="addChecklistSetupItem()" style="flex-shrink:0">+ Add</button>
-      </div>
-    </div>
-    <div class="modal-foot">
-      <button class="btn btn-ghost" onclick="closeChecklistSetupModal()">Cancel</button>
-      <button class="btn btn-solid" onclick="saveChecklistSetup()">Save Checklist</button>
-    </div>
-  </div>
-</div>
 </body>
 </html>
