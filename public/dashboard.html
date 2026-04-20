@@ -2605,8 +2605,11 @@ window.addEventListener('storage', function(e) {
 async function loadAccounts() {
   // Request push notification permission
   requestNotifPermission();
-  var res = await sb.from('accounts').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: true });
-  accounts = res.data || [];
+  var res;
+  try {
+    res = await sb.from('accounts').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: true });
+  } catch(e) { console.error('[Pattro] loadAccounts error:', e); accounts = []; }
+  accounts = (res && res.data) || [];
   renderAccountsList();
   if (accounts.length > 0) {
     var lastAccId = null;
@@ -2725,15 +2728,18 @@ async function saveAccount() {
   if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving...'; }
 
   // Ensure profile row exists (accounts.user_id → profiles.id foreign key)
-  var { data: profileCheck } = await sb.from('profiles').select('id').eq('id', currentUser.id).single();
-  if (!profileCheck) {
-    // Create minimal profile so foreign key is satisfied
-    await sb.from('profiles').upsert({
-      id:         currentUser.id,
-      email:      currentUser.email,
-      full_name:  (currentUser.user_metadata && currentUser.user_metadata.full_name) || '',
-      plan:       'free'
-    });
+  try {
+    var { data: profileCheck } = await sb.from('profiles').select('id').eq('id', currentUser.id).single();
+    if (!profileCheck) {
+      await sb.from('profiles').upsert({
+        id:         currentUser.id,
+        email:      currentUser.email,
+        full_name:  (currentUser.user_metadata && currentUser.user_metadata.full_name) || '',
+        plan:       'free'
+      });
+    }
+  } catch(e) {
+    console.warn('[Pattro] Profile check error:', e);
   }
 
   var payload = {
@@ -2776,10 +2782,16 @@ async function saveAccount() {
     return;
   }
   var res;
-  if (editingAccountId) {
-    res = await sb.from('accounts').update(payload).eq('id', editingAccountId).eq('user_id', currentUser.id);
-  } else {
-    res = await sb.from('accounts').insert([payload]).select();
+  try {
+    if (editingAccountId) {
+      res = await sb.from('accounts').update(payload).eq('id', editingAccountId).eq('user_id', currentUser.id);
+    } else {
+      res = await sb.from('accounts').insert([payload]).select();
+    }
+  } catch(e) {
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save Account'; }
+    alert('Network error saving account: ' + (e.message || e));
+    return;
   }
 
   if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save Account'; }
@@ -2817,13 +2829,17 @@ async function deleteAccount() {
   var id = document.getElementById('del-acc-id').value;
   var btn = document.getElementById('confirm-del-btn');
   btn.textContent = 'Deleting...';
-  await sb.from('trades').delete().eq('account_id', id).eq('user_id', currentUser.id);
-  await sb.from('discipline_notes').delete().eq('account_id', id);
-  await sb.from('daily_summaries').delete().eq('account_id', id);
-  await sb.from('trading_days').delete().eq('account_id', id);
-  await sb.from('mood_sessions').delete().eq('account_id', id);
-  await sb.from('checklist_sessions').delete().eq('account_id', id);
-  await sb.from('checklist_items').delete().eq('account_id', id);
+  try {
+    await sb.from('trades').delete().eq('account_id', id).eq('user_id', currentUser.id);
+    await sb.from('discipline_notes').delete().eq('account_id', id);
+    await sb.from('daily_summaries').delete().eq('account_id', id);
+    await sb.from('trading_days').delete().eq('account_id', id);
+    await sb.from('mood_sessions').delete().eq('account_id', id);
+    await sb.from('checklist_sessions').delete().eq('account_id', id);
+    await sb.from('checklist_items').delete().eq('account_id', id);
+  } catch(e) {
+    console.warn('[Pattro] deleteAccount related data error:', e);
+  }
   var res = await sb.from('accounts').delete().eq('id', id).eq('user_id', currentUser.id);
   btn.textContent = 'Delete';
   if (!res.error) {
@@ -3443,8 +3459,14 @@ function openEditTrade(id) {
 
 async function confirmDeleteTrade(id) {
   if (!confirm('Delete this trade?')) return;
-  var _delRes = await sb.from('trades').delete().eq('id', id).eq('account_id', currentAccountId).eq('user_id', currentUser.id);
-  // Always do a full reload after delete to ensure all scores recalculate correctly
+  try {
+    var _delRes = await sb.from('trades').delete().eq('id', id).eq('account_id', currentAccountId).eq('user_id', currentUser.id);
+    if (_delRes.error) throw _delRes.error;
+  } catch(e) {
+    console.error('[Pattro] Delete trade error:', e);
+    alert('Error deleting trade: ' + (e.message || e));
+    return;
+  }
   await loadAccountData(currentAccountId);
 }
 
@@ -5685,7 +5707,7 @@ function savePersonalRules(accountId, rules) {
   bbStore.set('rules_v2_' + accountId, JSON.stringify(rules));
   // Sync to Supabase so the Chrome extension can read session times
   if (accountId && sb) {
-    sb.from('accounts').update({ rules_v2: rules }).eq('id', accountId).eq('user_id', currentUser.id).then(function(){});
+    sb.from('accounts').update({ rules_v2: rules }).eq('id', accountId).eq('user_id', currentUser.id).then(function(){}).catch(function(e){ console.warn('[Pattro] rules sync error:', e); });
   }
 }
 
@@ -8152,36 +8174,7 @@ function renderRulesTab(el) {
   }
 
   // rCard helper — uses data-rule-id attribute, no inline JS with quotes
-  function rCard(id, icon, title, desc, cfgHtml, isActive, isViolated) {
-    var bc = isViolated ? 'var(--red)' : isActive ? '#5a9e9e' : 'var(--wire)';
-    var bg = isViolated ? 'var(--red-bg)' : 'var(--surface)';
-    var toggleBg = isActive ? '#5a9e9e' : '#333';
-    var toggleX  = isActive ? '18px' : '2px';
-    // Row layout: icon+text on left, toggle on right
-    // Config below title, dimmed if inactive
-    return '<div style="background:' + bg + ';border:1px solid ' + bc + ';border-radius:0;padding:14px 16px;margin-bottom:6px">'
-      // Top row: icon, title+desc, toggle
-      + '<div style="display:flex;align-items:center;gap:12px">'
-      + '<div style="font-size:18px;flex-shrink:0">' + icon + '</div>'
-      + '<div style="flex:1;min-width:0">'
-      + '<div style="display:flex;align-items:center;gap:7px">'
-      + '<span style="font-size:12px;font-weight:600;color:var(--text)">' + title + '</span>'
-      + (isViolated ? '<span style="font-size:8px;color:var(--red);font-weight:700;background:var(--red-bg);padding:1px 6px;border-radius:6px">VIOLATED</span>' : '')
-      + '</div>'
-      + '<div style="font-size:10px;color:var(--text3);margin-top:1px">' + desc + '</div>'
-      + '</div>'
-      // Toggle on far right
-      + '<div class="rule-toggle" data-rule-id="' + id + '" style="cursor:pointer;flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:2px;user-select:none">'
-      + '<div style="width:36px;height:20px;background:' + toggleBg + ';border-radius:0;position:relative;transition:background .2s">'
-      + '<div style="width:16px;height:16px;background:#fff;border-radius:50%;position:absolute;top:2px;left:' + toggleX + ';transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,0.5)"></div>'
-      + '</div>'
-      + '<span style="font-size:8px;font-weight:700;color:' + (isActive?'#5a9e9e':'#555') + '">' + (isActive?'ON':'OFF') + '</span>'
-      + '</div>'
-      + '</div>'
-      // Config row below, only shown when active
-      + (cfgHtml ? '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--wire);' + (!isActive?'opacity:0.35;pointer-events:none;user-select:none;':'') + '">' + cfgHtml + '</div>' : '')
-      + '</div>';
-  }
+  
 
   var todayD = localDateStr();
 
@@ -8578,16 +8571,15 @@ function renderRendimientoView() {
   var monthWR   = monthTrades.length ? Math.round(monthWins/monthTrades.length*100) : null;
   var weekClean = weekTrades.length  ? Math.round(weekTrades.filter(function(t){ return (t.discipline_tag||'clean')==='clean'; }).length/weekTrades.length*100) : null;
 
-  function fmt(n) { return (n>=0?'+':'')+n.toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}); }
-  function pnlColor(n) { return n>0?'var(--green)':n<0?'var(--red)':'var(--text3)'; }
+    function pnlColor(n) { return n>0?'var(--green)':n<0?'var(--red)':'var(--text3)'; }
 
   // Header metrics grid
   out += '<div class="panel" style="padding:0;overflow:hidden">';
   out += '<div class="panel-head"><span class="panel-title">◈ Performance</span><span class="panel-cap">This week · ' + now.toLocaleDateString('es',{month:'long',year:'numeric'}) + '</span></div>';
   out += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0">';
   var metrics2 = [
-    { label:'P&L Week',   val: weekTrades.length  ? fmt(weekPnl)  : '--', color: weekTrades.length  ? pnlColor(weekPnl)  : 'var(--text3)', sub: (weekTrades.length||'0') + ' trades' },
-    { label:'P&L Mes',      val: monthTrades.length ? fmt(monthPnl) : '--', color: monthTrades.length ? pnlColor(monthPnl) : 'var(--text3)', sub: (monthTrades.length||'0') + ' trades' },
+    { label:'P&L Week',   val: weekTrades.length  ? fmt(weekPnl, true)  : '--', color: weekTrades.length  ? pnlColor(weekPnl)  : 'var(--text3)', sub: (weekTrades.length||'0') + ' trades' },
+    { label:'P&L Mes',      val: monthTrades.length ? fmt(monthPnl, true) : '--', color: monthTrades.length ? pnlColor(monthPnl) : 'var(--text3)', sub: (monthTrades.length||'0') + ' trades' },
     { label:'Win Rate Week', val: weekWR!==null ? weekWR+'%' : '--', color: weekWR>=60?'var(--green)':weekWR>=40?'var(--amber)':'var(--red)', sub: weekWR!==null?'':'No trades' },
     { label:'Win Rate Mes',    val: monthWR!==null ? monthWR+'%' : '--', color: monthWR>=60?'var(--green)':monthWR>=40?'var(--amber)':'var(--red)', sub: monthWR!==null?'':'No trades' },
     { label:'Clean Week',  val: weekClean!==null ? weekClean+'%' : '--', color: weekClean>=70?'var(--green)':weekClean>=50?'var(--amber)':'var(--red)', sub: 'trades clean' },
@@ -8955,8 +8947,7 @@ function buildMindView(trades) {
   var cleanPct   = Math.round((discCounts.clean / totalTagged) * 100);
 
   function scoreColor(s) { return s>=70?'var(--green)':s>=40?'var(--amber)':'var(--red)'; }
-  function pnlColor(p)   { return p>=0?'var(--green)':'var(--red)'; }
-  function pct(n,t)      { return t?Math.round(n/t*100):0; }
+    function pct(n,t)      { return t?Math.round(n/t*100):0; }
 
   // ── Render ──
   var html = '<div style="padding:20px;display:flex;flex-direction:column;gap:20px">';
@@ -11924,7 +11915,7 @@ function saveExtSettings(s) {
   try { localStorage.setItem('bb_ext_settings_'+(currentAccountId||''), JSON.stringify(s)); } catch(e) {}
   // Also push to Supabase so extension can read it
   if (currentAccountId && sb) {
-    sb.from('accounts').update({ ext_settings: s }).eq('id', currentAccountId).eq('user_id', currentUser.id).then(function(){});
+    sb.from('accounts').update({ ext_settings: s }).eq('id', currentAccountId).eq('user_id', currentUser.id).then(function(){}).catch(function(e){ console.warn('[Pattro] ext settings sync error:', e); });
   }
 }
 function initExtSettings() {
@@ -13232,98 +13223,19 @@ function showCalDayDetail(dateStr) {
 // ── STRATEGY CHECKLIST SETUP ─────────────────────────────────────
 var _clSetupItems = []; // temp items while modal is open
 
-function openChecklistSetupModal() {
-  if (!currentAccountId) return;
-  // Load current items
-  _clSetupItems = [];
-  try { _clSetupItems = JSON.parse(JSON.stringify(currentChecklistItems || [])); } catch(e) {}
-  _renderClSetupItems();
-  document.getElementById('cl-setup-new-input').value = '';
-  document.getElementById('checklist-setup-overlay').style.display = 'flex';
-}
 
-function closeChecklistSetupModal() {
-  document.getElementById('checklist-setup-overlay').style.display = 'none';
-}
 
-function _renderClSetupItems() {
-  var el = document.getElementById('cl-setup-items');
-  if (!el) return;
-  if (!_clSetupItems.length) {
-    el.innerHTML = '<div style="font-size:9px;color:var(--text3);text-align:center;padding:12px 0">No items yet — add your first confirmation below</div>';
-    return;
-  }
-  el.innerHTML = _clSetupItems.map(function(item, i) {
-    return '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface2);border:1px solid var(--wire);border-radius:4px">'
-      + '<span style="flex:1;font-size:10px;color:' + (item.is_active !== false ? 'var(--text)' : 'var(--text3)') + '">' + escapeHtml(item.label || item.text || '') + '</span>'
-      + '<button onclick="_clSetupToggle(' + i + ')" style="background:none;border:1px solid var(--wire);color:var(--text3);font-size:8px;cursor:pointer;padding:3px 7px;font-family:var(--mono)">'
-      + (item.is_active !== false ? 'active' : 'off') + '</button>'
-      + '<button onclick="_clSetupDelete(' + i + ')" style="background:none;border:none;color:var(--red);font-size:14px;cursor:pointer;padding:0 4px;line-height:1">×</button>'
-      + '</div>';
-  }).join('');
-}
 
-function addChecklistSetupItem() {
-  var inp = document.getElementById('cl-setup-new-input');
-  var val = (inp.value || '').trim();
-  if (!val) return;
-  _clSetupItems.push({ id: Date.now(), label: val, is_active: true });
-  inp.value = '';
-  _renderClSetupItems();
-  inp.focus();
-}
 
-function _clSetupToggle(i) {
-  if (_clSetupItems[i]) {
-    _clSetupItems[i].is_active = _clSetupItems[i].is_active === false ? true : false;
-    _renderClSetupItems();
-  }
-}
 
-function _clSetupDelete(i) {
-  _clSetupItems.splice(i, 1);
-  _renderClSetupItems();
-}
 
-async function saveChecklistSetup() {
-  if (!currentAccountId || !currentUser) return;
-  var btn = document.querySelector('#checklist-setup-overlay .btn-solid');
-  if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
 
-  try {
-    var itemsJson = JSON.stringify(_clSetupItems);
-    var res = await sb.from('checklist_items').upsert({
-      account_id: currentAccountId,
-      user_id:    currentUser.id,
-      items:      itemsJson
-    }, { onConflict: 'account_id' });
 
-    if (res.error) throw res.error;
 
-    // Update local state
-    currentChecklistItems = _clSetupItems;
-    bbStore.set('checklist_' + currentAccountId, itemsJson);
 
-    closeChecklistSetupModal();
 
-    // Refresh Log Trade modal checklist if open
-    if (document.getElementById('log-overlay') && document.getElementById('log-overlay').classList.contains('open')) {
-      _renderLogTradeChecklist();
-    }
 
-    // Show toast
-    var t = document.createElement('div');
-    t.style.cssText = 'position:fixed;bottom:24px;right:24px;width:260px;background:var(--surface);border:1px solid var(--wire);border-left:2px solid var(--green);padding:12px 14px;z-index:9999;font-family:var(--mono);animation:toastIn .4s ease';
-    t.innerHTML = '<div style="font-size:10px;font-weight:700;color:var(--green)">Checklist saved ✓</div><div style="font-size:9px;color:var(--text3);margin-top:2px">' + _clSetupItems.filter(function(x){return x.is_active!==false;}).length + ' active items</div>';
-    document.body.appendChild(t);
-    setTimeout(function(){ t.style.animation='toastOut .3s ease forwards'; setTimeout(function(){ t.remove(); },300); }, 3000);
-
-  } catch(err) {
-    alert('Error saving checklist: ' + (err.message || err));
-  } finally {
-    if (btn) { btn.disabled = false; btn.textContent = 'Save Checklist'; }
-  }
-}
+async 
 
 // ── LOG TRADE: Inline Checklist Editor + Interactive Checklist ──
 
