@@ -6862,6 +6862,34 @@ function calcMentalScore(dateStr) {
   return _result;
 }
 
+
+// ── Rule card helper (global — used by renderRulesView and renderRulesTab) ──
+function rCard(id, icon, title, desc, cfgHtml, isActive, isViolated) {
+    var bc = isViolated ? 'var(--red)' : isActive ? '#5a9e9e' : 'var(--wire)';
+    var bg = isViolated ? 'var(--red-bg)' : isActive ? 'rgba(90,158,158,0.06)' : 'var(--surface)';
+    var toggleBg  = isActive ? '#5a9e9e' : 'var(--surface2)';
+    var toggleDot = isActive ? 'translateX(16px)' : 'translateX(2px)';
+    return '<div style="background:' + bg + ';border:1px solid ' + bc + ';border-radius:0;padding:14px 16px;margin-bottom:8px">'
+      + '<div style="display:flex;align-items:flex-start;gap:12px">'
+      + '<div style="font-size:20px;flex-shrink:0;margin-top:2px">' + icon + '</div>'
+      + '<div style="flex:1;min-width:0">'
+      + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">'
+      + '<span style="font-size:13px;font-weight:600;color:var(--text)">' + title + '</span>'
+      + (isViolated ? '<span style="font-size:8px;color:var(--red);font-weight:700;background:var(--red-bg);padding:2px 7px;border-radius:8px;border:1px solid var(--red-bd)">VIOLATED HOY</span>' : '')
+      + '</div>'
+      + '<div style="font-size:10px;color:var(--text3);margin-bottom:12px">' + desc + '</div>'
+      + cfgHtml
+      + '</div>'
+      // Toggle switch
+      + '<div onclick="toggleRuleV2(\'' + id + '\')" style="cursor:pointer;flex-shrink:0;margin-top:2px">'
+      + '<div style="width:36px;height:20px;background:' + toggleBg + ';border-radius:0;position:relative;transition:background .2s">'
+      + '<div style="width:16px;height:16px;background:#fff;border-radius:50%;position:absolute;top:2px;transition:transform .2s;transform:' + toggleDot + '"></div>'
+      + '</div>'
+      + '<div style="font-size:8px;color:' + (isActive?'#5a9e9e':'var(--text3)') + ';text-align:center;margin-top:3px;font-weight:600">' + (isActive?'ON':'OFF') + '</div>'
+      + '</div>'
+      + '</div></div>';
+  }
+
 function renderRulesView() {
   var el     = document.getElementById('main-content');
   var acctId = currentAccountId || '';
@@ -6909,33 +6937,6 @@ function renderRulesView() {
         }).join('') + '</div>';
   }
 
-  // ── Rule card helper ──
-  // Config always visible. Toggle on right activates rule.
-  function rCard(id, icon, title, desc, cfgHtml, isActive, isViolated) {
-    var bc = isViolated ? 'var(--red)' : isActive ? '#5a9e9e' : 'var(--wire)';
-    var bg = isViolated ? 'var(--red-bg)' : isActive ? 'rgba(90,158,158,0.06)' : 'var(--surface)';
-    var toggleBg  = isActive ? '#5a9e9e' : 'var(--surface2)';
-    var toggleDot = isActive ? 'translateX(16px)' : 'translateX(2px)';
-    return '<div style="background:' + bg + ';border:1px solid ' + bc + ';border-radius:0;padding:14px 16px;margin-bottom:8px">'
-      + '<div style="display:flex;align-items:flex-start;gap:12px">'
-      + '<div style="font-size:20px;flex-shrink:0;margin-top:2px">' + icon + '</div>'
-      + '<div style="flex:1;min-width:0">'
-      + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">'
-      + '<span style="font-size:13px;font-weight:600;color:var(--text)">' + title + '</span>'
-      + (isViolated ? '<span style="font-size:8px;color:var(--red);font-weight:700;background:var(--red-bg);padding:2px 7px;border-radius:8px;border:1px solid var(--red-bd)">VIOLATED HOY</span>' : '')
-      + '</div>'
-      + '<div style="font-size:10px;color:var(--text3);margin-bottom:12px">' + desc + '</div>'
-      + cfgHtml
-      + '</div>'
-      // Toggle switch
-      + '<div onclick="toggleRuleV2(\'' + id + '\')" style="cursor:pointer;flex-shrink:0;margin-top:2px">'
-      + '<div style="width:36px;height:20px;background:' + toggleBg + ';border-radius:0;position:relative;transition:background .2s">'
-      + '<div style="width:16px;height:16px;background:#fff;border-radius:50%;position:absolute;top:2px;transition:transform .2s;transform:' + toggleDot + '"></div>'
-      + '</div>'
-      + '<div style="font-size:8px;color:' + (isActive?'#5a9e9e':'var(--text3)') + ';text-align:center;margin-top:3px;font-weight:600">' + (isActive?'ON':'OFF') + '</div>'
-      + '</div>'
-      + '</div></div>';
-  }
 
   var todayD = localDateStr();
 
