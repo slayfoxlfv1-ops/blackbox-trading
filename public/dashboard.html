@@ -3567,6 +3567,13 @@ function calcDiscipline(trades) {
 }
 
 // DATA LOADING
+// ── Global fmt helper — formats dollar amounts ──
+function fmt(n, sign) {
+  var abs = Math.abs(n);
+  var formatted = (abs % 1 === 0) ? abs.toLocaleString() : abs.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return (sign&&n>0?'+':'') + (n<0?'-':'') + '$' + formatted;
+}
+
 async function loadAccountData(id, silent) {
   var el = document.getElementById('main-content');
   if (!silent) el.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
@@ -4177,12 +4184,6 @@ async function loadAccountData(id, silent) {
       +'</svg>';
   }
 
-  function fmt(n, sign) {
-    var abs = Math.abs(n);
-    var formatted = (abs % 1 === 0) ? abs.toLocaleString() : abs.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-    var s = (sign&&n>0?'+':'') + (n<0?'-':'') + '$' + formatted;
-    return s;
-  }
 
   var tagLabels2 = {clean:'Clean',moved_sl:'Moved SL',scaled_in:'Scaled in',no_confirmation:'No confirm',overtrading:'Overtrade',impulse:'Impulse',fomo:'FOMO',revenge:'Revenge'};
 
@@ -12169,7 +12170,7 @@ function _openNoteModalWithData(t) {
   // ── Stats grid ──
   var entryDt = t.entry_time ? new Date(t.entry_time) : null;
   var exitDt  = t.exit_time  ? new Date(t.exit_time)  : null;
-  var fmt = function(d){ return d ? d.toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:false}) : '--'; };
+  var fmtDate = function(d){ return d ? d.toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:false}) : '--'; };
   var dur = (entryDt && exitDt) ? Math.round((exitDt - entryDt)/60000) + ' min' : '--';
   var dtag = t.discipline_tag || '--';
   var dtagColor = dtag==='A+'?'var(--green)':dtag==='B'?'var(--amber)':(dtag==='C'||dtag==='Revenge')?'var(--red)':'var(--text2)';
@@ -12188,8 +12189,8 @@ function _openNoteModalWithData(t) {
 
   document.getElementById('note-modal-info').innerHTML =
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px">'
-    + _infoCell('Entry',   fmt(entryDt))
-    + (exitDt ? _infoCell('Exit', fmt(exitDt)) : '')
+    + _infoCell('Entry',   fmtDate(entryDt))
+    + (exitDt ? _infoCell('Exit', fmtDate(exitDt)) : '')
     + (dur !== '--' ? _infoCell('Duration', dur) : '')
     + _infoCell('Qty',     t.quantity||'--')
     + _infoCell('Entry $', t.entry_price ? '$'+t.entry_price : '--')
